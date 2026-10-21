@@ -19,7 +19,7 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának specifikáció
 
 ## 0.1 Indítás
 
-> **C64-eltérés (E5):** parancssor, környezeti változó és felhasználónév nincs. Az eredeti `rogue`, `rogue <fájl>`, `rogue -r`, `rogue -s` kapcsolók helyett címképernyő-menü van; a `rogue -d` teszt-halál a fejlesztői mód része ([M03-04](../issues/M03_szintgeneralas/M03-04_fejlesztoi_mod.md)). A terminálméret-ellenőrzés („Sorry, the screen must be at least 24x80”) kimarad.
+> **C64-eltérés (E5):** parancssor, környezeti változó és felhasználónév nincs. Az eredeti `rogue`, `rogue <fájl>`, `rogue -r`, `rogue -s` kapcsolók helyett címképernyő-menü van; a `rogue -d` teszt-halál a fejlesztői mód része (lásd az M03-04 issue-t). A terminálméret-ellenőrzés („Sorry, the screen must be at least 24x80”) kimarad.
 
 ```
 bekapcsolás / betöltés után:
@@ -44,7 +44,7 @@ bekapcsolás / betöltés után:
   O: beállítások (4.2.5), utána vissza a címképernyőre
 játék vége (halál, kilépés, győzelem, mentés) után: vissza a címképernyőre
 ```
-A forrásban lévő „varázsló” (wizard) mód egy külön fordítási változat hibakereső eszköze, a játék része nem; helyette a fejlesztői mód szolgál ([M03-04](../issues/M03_szintgeneralas/M03-04_fejlesztoi_mod.md)), amely csak külön fordítási beállítással kerül a programba.
+A forrásban lévő „varázsló” (wizard) mód egy külön fordítási változat hibakereső eszköze, a játék része nem; helyette a fejlesztői mód szolgál (lásd az M03-04 issue-t), amely csak külön fordítási beállítással kerül a programba.
 
 ---
 
