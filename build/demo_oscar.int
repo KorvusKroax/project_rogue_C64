@@ -1,30 +1,30 @@
 --------------------------------------------------------------------
-main: C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c:6
+main: C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c:16
 $00 R0(I), $10 R1(I), $00 R2(P), 
 L0: <= D-1: (1)  P-1 C:/oscar64/include/conio.c
 0000 ( 345)		CONST	R0(C)[147..147]	<-	CI:147	{S}
 0001 ( 193)		JSR		<-	R0(CF)[147..147], V(-1 '')+0 	{}
-0002 (  10)		CONST	R1(I)[0..0]	<-	CI:0	{}
-0003 (  11)		CONST	R2(P)[0..0]	<-	CG0(27:0 '')	{IS}
-0004 (  11)		JUMP		<-		{}
+0002 (  20)		CONST	R1(I)[0..0]	<-	CI:0	{}
+0003 (  21)		CONST	R2(P)[0..0]	<-	CG0(27:0 '')	{IS}
+0004 (  21)		JUMP		<-		{}
 		==> 6
-L6: <= D-1: (2) Head P123 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
-0000 (  11)		STOREG2		<-	V(-1 'sstack')+0 , R2(P)+0 {V(27 '')} [0..0]	{}
-0001 (  11)		STOREG2		<-	V(-1 'sstack')+2 , R1(I)[0..9]	{}
+L6: <= D-1: (2) Head P133 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  21)		STOREG2		<-	V(-1 'sstack')+0 , R2(P)+0 {V(27 '')} [0..0]	{}
+0001 (  21)		STOREG2		<-	V(-1 'sstack')+2 , R1(I)[0..9]	{}
 0002 (  15)		CALLN	R0(I)	<-	V(6 'RN_asm')+0 	{}
 0003 (  15)		BINOP6	R0(I)[0..99]	<-	R0(IF), CI:100	{}
-0004 (  11)		STOREG2		<-	V(-1 'sstack')+4 , R0(IF)[0..99]	{}
-0005 (  11)		CALLN		<-	V(1 'printf')+0 	{}
-0006 (  10)		BINOP1	R1(I)[1..10]	<-	R1(IF)[0..9], CI:1	{}
-0007 (  10)		RELOP28	R0(B)[0..1]	<-	R1(I)[1..10], CI:10	{}
-0008 (  10)		BRANCH		<-	R0(BF)[0..1]	{}
+0004 (  21)		STOREG2		<-	V(-1 'sstack')+4 , R0(IF)[0..99]	{}
+0005 (  21)		CALLN		<-	V(1 'printf')+0 	{}
+0006 (  20)		BINOP1	R1(I)[1..10]	<-	R1(IF)[0..9], CI:1	{}
+0007 (  20)		RELOP28	R0(B)[0..1]	<-	R1(I)[1..10], CI:10	{}
+0008 (  20)		BRANCH		<-	R0(BF)[0..1]	{}
 		==> 6
 		==> 8
 L8: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/room.c
 0000 (   8)		CONST	R0(I)[0..0]	<-	CI:0	{}
 0001 (   9)		JUMP		<-		{}
 		==> 13
-L13: <= D-1: (2) Head P122 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/room.c
+L13: <= D-1: (2) Head P132 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/room.c
 0000 (   9)		LEAA	R1(P)[1156..1165]	<-	V(-1 '')+1156 , R0(I)[0..9]	{}
 0001 (   9)		STOREI1		<-	R1(P)+0 {V(-1 'ABS')} [1156..1165], CC:67	{}
 0002 (  10)		STOREI1		<-	R1(PF)+160 {V(-1 'ABS')} [1156..1165], CC:67	{}
@@ -40,7 +40,22 @@ L17: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/ro
 0003 (  14)		STOREA1		<-	V(-1 '')+1245 , CC:66	{}
 0004 (  13)		STOREA1		<-	V(-1 '')+1276 , CC:66	{}
 0005 (  14)		STOREA1		<-	V(-1 '')+1285 , CC:66	{}
-0006 (  16)		RETV		<-	CI:0	{}
+0006 (  26)		CONST	R0(P)[0..0]	<-	CG0(29:0 '')	{S}
+0007 (  26)		STOREG2		<-	V(-1 'sstack')+0 , R0(PF)+0 {V(29 '')} [0..0]	{}
+0008 (  26)		CALLN		<-	V(1 'printf')+0 	{}
+0009 (  27)		CALLN	R0(I)	<-	V(7 'ram_test')+0 	{}
+000a (  27)		STOREG2		<-	V(-1 'sstack')+2 , R0(IF)	{}
+000b (  27)		CONST	R0(P)[0..0]	<-	CG0(30:0 '')	{S}
+000c (  27)		STOREG2		<-	V(-1 'sstack')+0 , R0(PF)+0 {V(30 '')} [0..0]	{}
+000d (  27)		CALLN		<-	V(1 'printf')+0 	{}
+000e (  80)		STOREA1		<-	V(-1 '')+1 , CC:54	{VM}
+000f (  29)		CALLN	R0(I)	<-	V(7 'ram_test')+0 	{}
+0010 (  29)		STOREG2		<-	V(-1 'sstack')+2 , R0(IF)	{}
+0011 (  29)		CONST	R0(P)[0..0]	<-	CG0(31:0 '')	{S}
+0012 (  29)		STOREG2		<-	V(-1 'sstack')+0 , R0(PF)+0 {V(31 '')} [0..0]	{}
+0013 (  29)		CALLN		<-	V(1 'printf')+0 	{}
+0014 (  80)		STOREA1		<-	V(-1 '')+1 , CC:55	{VM}
+0015 (  32)		RETV		<-	CI:0	{}
 --------------------------------------------------------------------
 printf: C:/oscar64/include/stdio.h:18
 $00 R0(L), $10 R1(I), $12 R2(P), $13 R3(P), $00 R4(P), $15 R5(P), $17 R6(B), $18 R7(C), $00 R8(C), 
@@ -1427,3 +1442,44 @@ $00 R0(L),
 L0: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/oscar64/platform.c
 0000 (  13)		JSR	R0(L)	<-	V(-1 '')+0 	{}
 0001 (  12)		RETV		<-	R0(IF)	{}
+--------------------------------------------------------------------
+ram_test: C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c:7
+$00 R0(P), $00 R1(I), $02 R2(I), $00 R3(B), 
+L0: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  11)		CONST	R0(P)[40960..40960]	<-	CA0(-1:40960 '')	{}
+0001 (  11)		CONST	R1(I)[3..3]	<-	CI:3	{}
+0002 (  10)		CONST	R2(I)[0..0]	<-	CI:0	{}
+0003 (  11)		JUMP		<-		{}
+		==> 2
+L2: <= D-1: (2) Head P112 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  11)		STOREI1		<-	R0(P)+0 {V(-1 'ABS')} [40960..49151], R1(C)[3..]	{V}
+0001 (  11)		LEAA	R0(P)[40961..49151]	<-	R0(PF)[40960..49151], CI:1	{}
+0002 (  11)		BINOP1	R1(I)[10..]	<-	CI:7, R1(IF)[3..]	{}
+0003 (  11)		RELOP20	R3(B)[0..1]	<-	R1(I)[10..], CI:57347	{}
+0004 (  11)		BRANCH		<-	R3(BF)[0..1]	{}
+		==> 2
+		==> 4
+L4: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  12)		CONST	R0(P)[40960..40960]	<-	CA0(-1:40960 '')	{}
+0001 (  12)		CONST	R1(I)[3..3]	<-	CI:3	{}
+0002 (  12)		JUMP		<-		{}
+		==> 6
+L6: <= D-1: (2) Head P111 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  12)		LOADI1	R3(C)[0..255]	<-	R0(P)+0 {V(-1 'ABS')} [40960..49151]	{V}
+0001 (  12)		RELOP20	R3(B)[0..1]	<-	R3(CF)[0..255], R1(C)[3..57340]	{}
+0002 (  12)		BRANCH		<-	R3(BF)[0..1]	{}
+		==> 9
+		==> 5
+L9: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  12)		BINOP1	R2(I)[1..]	<-	R2(IF)[0..], CI:1	{}
+0001 (  12)		JUMP		<-		{}
+		==> 5
+L5: <= D-1: (2)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  12)		LEAA	R0(P)[40961..49151]	<-	R0(PF)[40960..49151], CI:1	{}
+0001 (  12)		BINOP1	R1(I)[10..57347]	<-	R1(IF)[3..57340], CI:7	{}
+0002 (  12)		RELOP20	R3(B)[0..1]	<-	R1(I)[10..57347], CI:57347	{}
+0003 (  12)		BRANCH		<-	R3(BF)[0..1]	{}
+		==> 6
+		==> 8
+L8: <= D-1: (1)  P-1 C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c
+0000 (  13)		RETV		<-	R2(IF)[0..]	{}
