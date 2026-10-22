@@ -1,8 +1,8 @@
 sections
-0880 - 19b7 : DATA, code
-19b7 - 19d8 : DATA, data
-19d8 - 19d8 : BSS, bss
-19d8 - 9000 : HEAP, heap
+0880 - 1940 : DATA, code
+1940 - 1961 : DATA, data
+1961 - 1961 : BSS, bss
+1968 - 9000 : HEAP, heap
 9000 - 9f9f : STACK, stack
 00f7 - 00f7 : ZEROPAGE, zeropage
 0801 - 0853 : DATA, startup
@@ -12,102 +12,101 @@ sections
 9fea - 9ffa : SSTACK, nforml@stack
 9ff1 - 9ffa : SSTACK, nformf@stack
 9fa3 - 9fea : SSTACK, printf@stack
+9ffa - 9ffa : SSTACK, RN__asm@stack
 9f9f - 9fa3 : SSTACK, main@stack
 
 regions
 00f7 - 00ff : 0000, 0000, zeropage
 0801 - 0880 : 0853, 0052, startup
-0880 - 9000 : 19d8, 1158, main
+0880 - 9000 : 1961, 10e1, main
 
 objects
-00f7 - 00f7 : ZeroStart, START:zeropage
 00f7 - 00f7 : ZeroEnd, END:zeropage
+00f7 - 00f7 : ZeroStart, START:zeropage
 0801 - 0853 : startup, NATIVE_CODE:startup
-0880 - 092f : main, NATIVE_CODE:code
-092f - 0c8e : printf, NATIVE_CODE:code
-0c8e - 0c96 : puts@proxy, NATIVE_CODE:code
-0c96 - 0ccb : puts, NATIVE_CODE:code
-0ccb - 0de0 : nformi, NATIVE_CODE:code
-0de0 - 0f2b : nforml, NATIVE_CODE:code
-0f2b - 1377 : nformf, NATIVE_CODE:code
-1377 - 137f : *, DATA:code
-137f - 13b5 : mul32by8, NATIVE_CODE:code
-13b5 - 13fa : freg, NATIVE_CODE:code
-13fa - 14e7 : faddsub, NATIVE_CODE:code
-14e7 - 1581 : crt_fmul, NATIVE_CODE:code
-1581 - 15af : crt_fmul8, NATIVE_CODE:code
-15af - 165d : crt_fdiv, NATIVE_CODE:code
-165d - 1678 : divs16, NATIVE_CODE:code
-1678 - 1686 : negaccu, NATIVE_CODE:code
-1686 - 1694 : negtmp, NATIVE_CODE:code
-1694 - 171f : divmod, NATIVE_CODE:code
-171f - 173e : mods16, NATIVE_CODE:code
-1768 - 1776 : negtmpb, NATIVE_CODE:code
-1776 - 17c2 : f32_to_i16, NATIVE_CODE:code
-17c2 - 17e0 : sint16_to_float, NATIVE_CODE:code
-17e0 - 1809 : uint16_to_float, NATIVE_CODE:code
-1809 - 1871 : mul32, NATIVE_CODE:code
-188f - 1976 : divmod32, NATIVE_CODE:code
-1976 - 1989 : freg@proxy, NATIVE_CODE:code
-1989 - 19a4 : freg@proxy, NATIVE_CODE:code
-19a4 - 19b7 : freg@proxy, NATIVE_CODE:code
-19b7 - 19b8 : spentry, DATA:data
-19b8 - 19d4 : fround5, DATA:data
-19d4 - 19d8 : seed, DATA:data
-19d8 - 19d8 : BSSStart, START:bss
-19d8 - 19d8 : BSSEnd, END:bss
-9f9f - 9f9f : StackEnd, END:stack
+0880 - 08ee : main, NATIVE_CODE:code
+08ee - 0c4d : printf, NATIVE_CODE:code
+0c4d - 0c55 : puts@proxy, NATIVE_CODE:code
+0c55 - 0c8a : puts, NATIVE_CODE:code
+0c8a - 0d9f : nformi, NATIVE_CODE:code
+0d9f - 0eea : nforml, NATIVE_CODE:code
+0eea - 1336 : nformf, NATIVE_CODE:code
+1336 - 133e : *, DATA:code
+133e - 13a6 : RN__asm, NATIVE_CODE:code
+13a6 - 13eb : freg, NATIVE_CODE:code
+13eb - 14d8 : faddsub, NATIVE_CODE:code
+14d8 - 1572 : crt_fmul, NATIVE_CODE:code
+1572 - 15a0 : crt_fmul8, NATIVE_CODE:code
+15a0 - 164e : crt_fdiv, NATIVE_CODE:code
+164e - 1669 : divs16, NATIVE_CODE:code
+1669 - 1677 : negaccu, NATIVE_CODE:code
+1677 - 1685 : negtmp, NATIVE_CODE:code
+1685 - 1710 : divmod, NATIVE_CODE:code
+1710 - 172f : mods16, NATIVE_CODE:code
+1759 - 1767 : negtmpb, NATIVE_CODE:code
+1767 - 17b3 : f32_to_i16, NATIVE_CODE:code
+17b3 - 17d1 : sint16_to_float, NATIVE_CODE:code
+17d1 - 17fa : uint16_to_float, NATIVE_CODE:code
+1818 - 18ff : divmod32, NATIVE_CODE:code
+18ff - 1912 : freg@proxy, NATIVE_CODE:code
+1912 - 192d : freg@proxy, NATIVE_CODE:code
+192d - 1940 : freg@proxy, NATIVE_CODE:code
+1940 - 1941 : spentry, DATA:data
+1941 - 195d : fround5, DATA:data
+195d - 1961 : seed, DATA:data
+1961 - 1961 : BSSEnd, END:bss
+1961 - 1961 : BSSStart, START:bss
 9f9f - 9fa3 : main@stack, BSS:main@stack
+9f9f - 9f9f : StackEnd, END:stack
 9fa3 - 9fb0 : printf@stack, BSS:printf@stack
 9fb0 - 9fb8 : si, BSS:printf@stack
 9fb8 - 9fea : buff, BSS:printf@stack
-9fea - 9ffa : buffer, BSS:nformi@stack
 9fea - 9ffa : buffer, BSS:nforml@stack
+9fea - 9ffa : buffer, BSS:nformi@stack
 9ff1 - 9ffa : nformf@stack, BSS:nformf@stack
 9ffa - a000 : sstack, STACK:sstack
 
 objects by size
-0f2b (044c) : nformf, NATIVE_CODE:code
-092f (035f) : printf, NATIVE_CODE:code
-0de0 (014b) : nforml, NATIVE_CODE:code
-0ccb (0115) : nformi, NATIVE_CODE:code
-13fa (00ed) : faddsub, NATIVE_CODE:code
-188f (00e7) : divmod32, NATIVE_CODE:code
-0880 (00af) : main, NATIVE_CODE:code
-15af (00ae) : crt_fdiv, NATIVE_CODE:code
-14e7 (009a) : crt_fmul, NATIVE_CODE:code
-1694 (008b) : divmod, NATIVE_CODE:code
-1809 (0068) : mul32, NATIVE_CODE:code
+0eea (044c) : nformf, NATIVE_CODE:code
+08ee (035f) : printf, NATIVE_CODE:code
+0d9f (014b) : nforml, NATIVE_CODE:code
+0c8a (0115) : nformi, NATIVE_CODE:code
+13eb (00ed) : faddsub, NATIVE_CODE:code
+1818 (00e7) : divmod32, NATIVE_CODE:code
+15a0 (00ae) : crt_fdiv, NATIVE_CODE:code
+14d8 (009a) : crt_fmul, NATIVE_CODE:code
+1685 (008b) : divmod, NATIVE_CODE:code
+0880 (006e) : main, NATIVE_CODE:code
+133e (0068) : RN__asm, NATIVE_CODE:code
 0801 (0052) : startup, NATIVE_CODE:startup
-1776 (004c) : f32_to_i16, NATIVE_CODE:code
-13b5 (0045) : freg, NATIVE_CODE:code
-137f (0036) : mul32by8, NATIVE_CODE:code
-0c96 (0035) : puts, NATIVE_CODE:code
+1767 (004c) : f32_to_i16, NATIVE_CODE:code
+13a6 (0045) : freg, NATIVE_CODE:code
+0c55 (0035) : puts, NATIVE_CODE:code
 9fb8 (0032) : buff, BSS:printf@stack
-1581 (002e) : crt_fmul8, NATIVE_CODE:code
-17e0 (0029) : uint16_to_float, NATIVE_CODE:code
-171f (001f) : mods16, NATIVE_CODE:code
-17c2 (001e) : sint16_to_float, NATIVE_CODE:code
-19b8 (001c) : fround5, DATA:data
-165d (001b) : divs16, NATIVE_CODE:code
-1989 (001b) : freg@proxy, NATIVE_CODE:code
-1976 (0013) : freg@proxy, NATIVE_CODE:code
-19a4 (0013) : freg@proxy, NATIVE_CODE:code
-9fea (0010) : buffer, BSS:nformi@stack
+1572 (002e) : crt_fmul8, NATIVE_CODE:code
+17d1 (0029) : uint16_to_float, NATIVE_CODE:code
+1710 (001f) : mods16, NATIVE_CODE:code
+17b3 (001e) : sint16_to_float, NATIVE_CODE:code
+1941 (001c) : fround5, DATA:data
+164e (001b) : divs16, NATIVE_CODE:code
+1912 (001b) : freg@proxy, NATIVE_CODE:code
+18ff (0013) : freg@proxy, NATIVE_CODE:code
+192d (0013) : freg@proxy, NATIVE_CODE:code
 9fea (0010) : buffer, BSS:nforml@stack
-1678 (000e) : negaccu, NATIVE_CODE:code
-1686 (000e) : negtmp, NATIVE_CODE:code
-1768 (000e) : negtmpb, NATIVE_CODE:code
+9fea (0010) : buffer, BSS:nformi@stack
+1669 (000e) : negaccu, NATIVE_CODE:code
+1677 (000e) : negtmp, NATIVE_CODE:code
+1759 (000e) : negtmpb, NATIVE_CODE:code
 9fa3 (000d) : printf@stack, BSS:printf@stack
 9ff1 (0009) : nformf@stack, BSS:nformf@stack
-0c8e (0008) : puts@proxy, NATIVE_CODE:code
+0c4d (0008) : puts@proxy, NATIVE_CODE:code
 9fb0 (0008) : si, BSS:printf@stack
 9ffa (0006) : sstack, STACK:sstack
-19d4 (0004) : seed, DATA:data
+195d (0004) : seed, DATA:data
 9f9f (0004) : main@stack, BSS:main@stack
-19b7 (0001) : spentry, DATA:data
-00f7 (0000) : ZeroStart, START:zeropage
+1940 (0001) : spentry, DATA:data
 00f7 (0000) : ZeroEnd, END:zeropage
-19d8 (0000) : BSSStart, START:bss
-19d8 (0000) : BSSEnd, END:bss
+00f7 (0000) : ZeroStart, START:zeropage
+1961 (0000) : BSSEnd, END:bss
+1961 (0000) : BSSStart, START:bss
 9f9f (0000) : StackEnd, END:stack
