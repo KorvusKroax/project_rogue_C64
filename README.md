@@ -6,7 +6,25 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának újraírása *
 
 ## Build
 
-<!-- TODO: a játék fordítási és futtatási lépései (M00-02) -->
+### A játék fordítása és indítása
+
+Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`). Ha máshol vannak, a `build.bat` (`OSCAR64`) és a `run.bat` (`VICE`) elején kell átírni az utat.
+
+| parancs | mit csinál |
+|---|---|
+| `build.bat` | lefordítja a játékot: `build\rogue.prg` és `build\rogue.d64` (a lemezen `rogue` néven) |
+| `run.bat` | lefordítja, majd elindítja VICE-ban a lemezképről (autostart) |
+
+Mindkettő bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
+
+Projektszerkezet:
+```
+src/          a játék forrása
+src/demo/     az M00-01 próbaprogramja (mindkét fordítóval)
+build/        a fordítás kimenete (nincs a repóban)
+build.bat     fordítás
+run.bat       fordítás + indítás VICE-ban
+```
 
 ### Eszközlánc
 
@@ -20,7 +38,7 @@ A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal ([src/demo](
 
 A tartalék az **llvm-mos**. A választás visszafordítható marad, mert a játéklogika szabványos C, fordítóspecifikus dolog csak a platformfájlokba kerül. A kódméret és a sebesség ellenőrzése az M03 végén, a valódi szintgenerálón történik ([M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16)).
 
-### Fordítás
+### A demó fordítása
 
 A demó mindkét fordítóval: `src\demo\build.bat` (bárhonnan indítható).
 
