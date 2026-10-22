@@ -1,0 +1,113 @@
+sections
+0880 - 198f : DATA, code
+198f - 19b0 : DATA, data
+19b0 - 19b0 : BSS, bss
+19b0 - 9000 : HEAP, heap
+9000 - 9f9f : STACK, stack
+00f7 - 00f7 : ZEROPAGE, zeropage
+0801 - 0853 : DATA, startup
+9ffa - a000 : SSTACK, sstack
+9ffa - 9ffa : SSTACK, puts@stack
+9fea - 9ffa : SSTACK, nformi@stack
+9fea - 9ffa : SSTACK, nforml@stack
+9ff1 - 9ffa : SSTACK, nformf@stack
+9fa3 - 9fea : SSTACK, printf@stack
+9f9f - 9fa3 : SSTACK, main@stack
+
+regions
+00f7 - 00ff : 0000, 0000, zeropage
+0801 - 0880 : 0853, 0052, startup
+0880 - 9000 : 19b0, 1130, main
+
+objects
+00f7 - 00f7 : ZeroStart, START:zeropage
+00f7 - 00f7 : ZeroEnd, END:zeropage
+0801 - 0853 : startup, NATIVE_CODE:startup
+0880 - 0907 : main, NATIVE_CODE:code
+0907 - 0c66 : printf, NATIVE_CODE:code
+0c66 - 0c6e : puts@proxy, NATIVE_CODE:code
+0c6e - 0ca3 : puts, NATIVE_CODE:code
+0ca3 - 0db8 : nformi, NATIVE_CODE:code
+0db8 - 0f03 : nforml, NATIVE_CODE:code
+0f03 - 134f : nformf, NATIVE_CODE:code
+134f - 1357 : *, DATA:code
+1357 - 138d : mul32by8, NATIVE_CODE:code
+138d - 13d2 : freg, NATIVE_CODE:code
+13d2 - 14bf : faddsub, NATIVE_CODE:code
+14bf - 1559 : crt_fmul, NATIVE_CODE:code
+1559 - 1587 : crt_fmul8, NATIVE_CODE:code
+1587 - 1635 : crt_fdiv, NATIVE_CODE:code
+1635 - 1650 : divs16, NATIVE_CODE:code
+1650 - 165e : negaccu, NATIVE_CODE:code
+165e - 166c : negtmp, NATIVE_CODE:code
+166c - 16f7 : divmod, NATIVE_CODE:code
+16f7 - 1716 : mods16, NATIVE_CODE:code
+1740 - 174e : negtmpb, NATIVE_CODE:code
+174e - 179a : f32_to_i16, NATIVE_CODE:code
+179a - 17b8 : sint16_to_float, NATIVE_CODE:code
+17b8 - 17e1 : uint16_to_float, NATIVE_CODE:code
+17e1 - 1849 : mul32, NATIVE_CODE:code
+1867 - 194e : divmod32, NATIVE_CODE:code
+194e - 1961 : freg@proxy, NATIVE_CODE:code
+1961 - 197c : freg@proxy, NATIVE_CODE:code
+197c - 198f : freg@proxy, NATIVE_CODE:code
+198f - 1990 : spentry, DATA:data
+1990 - 19ac : fround5, DATA:data
+19ac - 19b0 : seed, DATA:data
+19b0 - 19b0 : BSSEnd, END:bss
+19b0 - 19b0 : BSSStart, START:bss
+9f9f - 9fa3 : main@stack, BSS:main@stack
+9f9f - 9f9f : StackEnd, END:stack
+9fa3 - 9fb0 : printf@stack, BSS:printf@stack
+9fb0 - 9fb8 : si, BSS:printf@stack
+9fb8 - 9fea : buff, BSS:printf@stack
+9fea - 9ffa : buffer, BSS:nformi@stack
+9fea - 9ffa : buffer, BSS:nforml@stack
+9ff1 - 9ffa : nformf@stack, BSS:nformf@stack
+9ffa - a000 : sstack, STACK:sstack
+
+objects by size
+0f03 (044c) : nformf, NATIVE_CODE:code
+0907 (035f) : printf, NATIVE_CODE:code
+0db8 (014b) : nforml, NATIVE_CODE:code
+0ca3 (0115) : nformi, NATIVE_CODE:code
+13d2 (00ed) : faddsub, NATIVE_CODE:code
+1867 (00e7) : divmod32, NATIVE_CODE:code
+1587 (00ae) : crt_fdiv, NATIVE_CODE:code
+14bf (009a) : crt_fmul, NATIVE_CODE:code
+166c (008b) : divmod, NATIVE_CODE:code
+0880 (0087) : main, NATIVE_CODE:code
+17e1 (0068) : mul32, NATIVE_CODE:code
+0801 (0052) : startup, NATIVE_CODE:startup
+174e (004c) : f32_to_i16, NATIVE_CODE:code
+138d (0045) : freg, NATIVE_CODE:code
+1357 (0036) : mul32by8, NATIVE_CODE:code
+0c6e (0035) : puts, NATIVE_CODE:code
+9fb8 (0032) : buff, BSS:printf@stack
+1559 (002e) : crt_fmul8, NATIVE_CODE:code
+17b8 (0029) : uint16_to_float, NATIVE_CODE:code
+16f7 (001f) : mods16, NATIVE_CODE:code
+179a (001e) : sint16_to_float, NATIVE_CODE:code
+1990 (001c) : fround5, DATA:data
+1635 (001b) : divs16, NATIVE_CODE:code
+1961 (001b) : freg@proxy, NATIVE_CODE:code
+194e (0013) : freg@proxy, NATIVE_CODE:code
+197c (0013) : freg@proxy, NATIVE_CODE:code
+9fea (0010) : buffer, BSS:nformi@stack
+9fea (0010) : buffer, BSS:nforml@stack
+1650 (000e) : negaccu, NATIVE_CODE:code
+165e (000e) : negtmp, NATIVE_CODE:code
+1740 (000e) : negtmpb, NATIVE_CODE:code
+9fa3 (000d) : printf@stack, BSS:printf@stack
+9ff1 (0009) : nformf@stack, BSS:nformf@stack
+0c66 (0008) : puts@proxy, NATIVE_CODE:code
+9fb0 (0008) : si, BSS:printf@stack
+9ffa (0006) : sstack, STACK:sstack
+19ac (0004) : seed, DATA:data
+9f9f (0004) : main@stack, BSS:main@stack
+198f (0001) : spentry, DATA:data
+00f7 (0000) : ZeroStart, START:zeropage
+00f7 (0000) : ZeroEnd, END:zeropage
+19b0 (0000) : BSSEnd, END:bss
+19b0 (0000) : BSSStart, START:bss
+9f9f (0000) : StackEnd, END:stack
