@@ -50,7 +50,7 @@ startup: ; startup
 0852 : 60 __ __ RTS
 --------------------------------------------------------------------
 main: ; main()->i16
-; 169, "C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo.c"
+;   6, "C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/main.c"
 .s1:
 0880 : a5 53 __ LDA T1 + 0 
 0882 : 8d 9f 9f STA $9f9f ; (main@stack + 0)
@@ -68,7 +68,7 @@ main: ; main()->i16
 089a : 8d fc 9f STA $9ffc ; (sstack + 2)
 089d : a9 00 __ LDA #$00
 089f : 8d fd 9f STA $9ffd ; (sstack + 3)
-08a2 : 20 3e 13 JSR $133e ; (RN__asm.s4 + 0)
+08a2 : 20 3e 13 JSR $133e ; (RN_asm.s4 + 0)
 08a5 : a9 64 __ LDA #$64
 08a7 : 20 ba 16 JSR $16ba ; (divmod + 53)
 08aa : a5 05 __ LDA WORK + 2 
@@ -1747,8 +1747,8 @@ nformf: ; nformf(const struct sinfo*,u8*,float,u8)->u8
 --------------------------------------------------------------------
 1336 : __ __ __ BYT 25 64 3a 20 25 64 0a 00                         : %d: %d..
 --------------------------------------------------------------------
-RN__asm: ; RN__asm()->u16
-;  33, "C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo.c"
+RN_asm: ; RN_asm()->u16
+;  11, "C:/Users/korvus/Projects/C64/project_rogue_C64/src/demo/platform.h"
 .s4:
 133e : a9 00 __ LDA #$00
 1340 : 85 03 __ STA WORK + 0 
@@ -1762,7 +1762,7 @@ RN__asm: ; RN__asm()->u16
 1350 : a0 0e __ LDY #$0e
 1352 : 46 08 __ LSR WORK + 5 
 1354 : 66 07 __ ROR WORK + 4 
-1356 : 90 1d __ BCC $1375 ; (RN__asm.s4 + 55)
+1356 : 90 1d __ BCC $1375 ; (RN_asm.s4 + 55)
 1358 : 18 __ __ CLC
 1359 : a5 03 __ LDA WORK + 0 
 135b : 6d 5d 19 ADC $195d ; (seed + 0)
@@ -1781,7 +1781,7 @@ RN__asm: ; RN__asm()->u16
 137b : 2e 5f 19 ROL $195f ; (seed + 2)
 137e : 2e 60 19 ROL $1960 ; (seed + 3)
 1381 : 88 __ __ DEY
-1382 : d0 ce __ BNE $1352 ; (RN__asm.s4 + 20)
+1382 : d0 ce __ BNE $1352 ; (RN_asm.s4 + 20)
 1384 : 18 __ __ CLC
 1385 : a5 03 __ LDA WORK + 0 
 1387 : 69 19 __ ADC #$19

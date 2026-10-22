@@ -8,7 +8,7 @@ al 0c55 .puts
 al 0c8a .nformi
 al 0d9f .nforml
 al 0eea .nformf
-al 133e .RN__asm
+al 133e .RN_asm
 al 13a6 .freg
 al 13eb .faddsub
 al 14d8 .crt_fmul

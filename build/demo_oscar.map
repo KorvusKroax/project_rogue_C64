@@ -12,7 +12,7 @@ sections
 9fea - 9ffa : SSTACK, nforml@stack
 9ff1 - 9ffa : SSTACK, nformf@stack
 9fa3 - 9fea : SSTACK, printf@stack
-9ffa - 9ffa : SSTACK, RN__asm@stack
+9ffa - 9ffa : SSTACK, RN_asm@stack
 9f9f - 9fa3 : SSTACK, main@stack
 
 regions
@@ -32,7 +32,7 @@ objects
 0d9f - 0eea : nforml, NATIVE_CODE:code
 0eea - 1336 : nformf, NATIVE_CODE:code
 1336 - 133e : *, DATA:code
-133e - 13a6 : RN__asm, NATIVE_CODE:code
+133e - 13a6 : RN_asm, NATIVE_CODE:code
 13a6 - 13eb : freg, NATIVE_CODE:code
 13eb - 14d8 : faddsub, NATIVE_CODE:code
 14d8 - 1572 : crt_fmul, NATIVE_CODE:code
@@ -77,7 +77,7 @@ objects by size
 14d8 (009a) : crt_fmul, NATIVE_CODE:code
 1685 (008b) : divmod, NATIVE_CODE:code
 0880 (006e) : main, NATIVE_CODE:code
-133e (0068) : RN__asm, NATIVE_CODE:code
+133e (0068) : RN_asm, NATIVE_CODE:code
 0801 (0052) : startup, NATIVE_CODE:startup
 1767 (004c) : f32_to_i16, NATIVE_CODE:code
 13a6 (0045) : freg, NATIVE_CODE:code
