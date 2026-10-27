@@ -7,7 +7,7 @@ rem --- az eszkozok helye: masik gepen eleg itt atirni ---
 set OSCAR64=C:\oscar64\bin\oscar64.exe
 
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\state.c
+set SOURCES=src\main.c src\state.c src\c64\platform.c
 
 pushd "%~dp0"
 

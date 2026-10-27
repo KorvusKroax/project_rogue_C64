@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <c64/memmap.h>
 
 #include "c64/platform.h"
 #include "c64/memory.h"
@@ -7,14 +6,18 @@
 
 int main(void)
 {
-    mmap_set(MMAP_NO_BASIC); // BASIC ROM off
+    platform_init();
 
     printf("ROGUE FOR C64\n");
     printf("(BASED ON ROGUE 5.4.4)\n");
 
-    game.seed = 123;
-    printf("SEED: %i", game.seed);
+    for (uint8_t i = 0; i < 16; i++) {
+        for (uint8_t j = 0; j < 50; j++) {
+            wait_frame();
+        }
+        (*(volatile uint8_t *)0xd020)++;    // keretszín
+    }
 
-    mmap_set(MMAP_ROM); // BASIC ROM on
+    platform_exit();
     return 0;
 }
