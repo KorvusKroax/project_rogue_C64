@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <c64/memmap.h>
 
+#include "c64/platform.h"
+#include "c64/memory.h"
 #include "state.h"
-
-#pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
-#pragma heapsize(0)
 
 int main(void)
 {
