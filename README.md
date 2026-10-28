@@ -14,8 +14,20 @@ Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`).
 |---|---|
 | `build.bat` | lefordítja a játékot: `build\rogue.prg` és `build\rogue.d64` (a lemezen `rogue` néven) |
 | `run.bat` | lefordítja, majd elindítja VICE-ban a lemezképről (autostart) |
+| `build.bat dev` | a fejlesztői build: `build\rogue_dev.prg` és `build\rogue_dev.d64` |
+| `build.bat dev 12345` | a fejlesztői build rögzített seeddel (itt 12345) |
+| `run.bat dev`, `run.bat dev 12345` | ugyanez, és elindítja VICE-ban |
 
-Mindkettő bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
+Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
+
+### Fejlesztői build
+
+A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A kiadási buildbe ezekből semmi nem kerül:
+- **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd visszatér a BASIC-be. A feltételnek nem lehet mellékhatása, mert a kiadási buildben ki sem értékelődik.
+- **Öntesztek** (`src/dev.c`, a `dev_tests` lista): induláskor lefutnak, az eredményük a képernyőre kerül (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`).
+- **Seed:** induláskor kiíródik; a második paraméterrel (`build.bat dev 12345`) rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
+
+A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított módban futtathatók: **Alt+W** ki-be kapcsolja a warp módot (vagy indításkor a `-warp` kapcsoló).
 
 Projektszerkezet:
 ```
