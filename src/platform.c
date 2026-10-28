@@ -85,8 +85,7 @@ void platform_exit(void)
 
 void screen_clear(void)
 {
-    for (uint8_t i = 0; i < 250; i++)
-    {
+    for (uint8_t i = 0; i < 250; i++) {
         SCREEN_TMP[i]       = ' ';
         SCREEN_TMP[i + 250] = ' ';
         SCREEN_TMP[i + 500] = ' ';

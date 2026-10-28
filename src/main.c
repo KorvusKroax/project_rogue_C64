@@ -8,23 +8,23 @@ int main(void)
 {
     platform_init();
 
-#if defined(DEVMODE) && defined(DEV_SEED)
-    game.seed = DEV_SEED;
-#else
     game.seed = platform_seed();
-#endif
 
-#ifdef DEVMODE
-    printf("\nSEED: %lu\n", game.seed);
+    #ifdef DEVMODE
+        #ifdef DEV_SEED
+            game.seed = DEV_SEED;
+        #endif
 
-    printf("\nDEVMODE TESTS:\n");
-    if (!dev_run_tests()) {
-        printf("\nSELFTEST FAILED\n");
-    }
+        printf("\nSEED: %lu\n", game.seed);
 
-    printf("\nPRESS A KEY\n");
-    while (!key_get()) {}
-#endif
+        printf("\nDEVMODE TESTS:\n");
+        if (!dev_run_tests()) {
+            printf("\nSELFTEST FAILED\n");
+        }
+
+        printf("\nPRESS A KEY\n");
+        while (!key_get()) {}
+    #endif
 
     screen_clear();
 

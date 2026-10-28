@@ -54,7 +54,7 @@ static const struct DevTest dev_tests[] = {
     { "SAMPLE",      test_sample,      1000 },
 };
 
-#define DEV_TEST_COUNT  (sizeof(dev_tests) / sizeof(dev_tests[0]))
+#define DEV_TEST_COUNT (sizeof(dev_tests) / sizeof(dev_tests[0]))
 
 bool dev_run_tests(void)
 {
