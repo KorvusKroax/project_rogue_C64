@@ -1,14 +1,25 @@
-#include "../platform.h"
+#include "platform.h"
 
 #include <conio.h>
 #include <c64/memmap.h>
-#include "memory.h"
 
-// ideiglenes: a gyári képernyő ($0400) és karakterkészlet (az M01-ben $C000 lesz, saját ASCII karakterkészlettel)
-#define SCREEN_TMP  ((volatile uint8_t *)0x0400)
+// memóriatérkép
+// $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
+//              – a main régió, lásd a #pragma region sort
+// $C000-$C3FF  képernyőmemória (VIC 3. bank)
+// $C400-$C7FF  szabad
+// $C800-$CFFF  saját karakterkészlet
+// $D000-$DFFF  I/O
+// $E000-$FFFF  KERNAL ROM (mindig bent)
 
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
+
+#define SCREEN_RAM   ((volatile uint8_t *)0xC000)
+#define CHARSET_RAM  ((volatile uint8_t *)0xC800)
+
+// ideiglenes: a gyári képernyő ($0400) és karakterkészlet (az M01-ben $C000 lesz, saját ASCII karakterkészlettel)
+#define SCREEN_TMP  ((volatile uint8_t *)0x0400)
 
 volatile uint8_t frame_count;
 

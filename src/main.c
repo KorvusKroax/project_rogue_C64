@@ -9,6 +9,12 @@ int main(void)
 
     screen_clear();
 
+#ifdef DEVMODE
+
+    printf(" !!! DEVMODE !!!\n\n");
+
+#endif
+
     printf("ROGUE FOR C64\n");
     printf("(BASED ON ROGUE 5.4.4)\n");
 
