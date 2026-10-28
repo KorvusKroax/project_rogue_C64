@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "platform.h"
+#include "dev.h"
 #include "state.h"
 
 int main(void)
@@ -12,6 +13,7 @@ int main(void)
 #ifdef DEVMODE
 
     printf(" !!! DEVMODE !!!\n\n");
+    DEV_CHECK(1 == 2, "TESZT: 1 != 2");
 
 #endif
 

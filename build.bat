@@ -8,7 +8,7 @@ rem --- az eszkozok helye: masik gepen eleg itt atirni ---
 set OSCAR64=C:\oscar64\bin\oscar64.exe
 
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\state.c src\platform.c
+set SOURCES=src\main.c src\state.c src\platform.c src\dev.c
 
 rem --- kiadasi vagy fejlesztoi build ---
 set NAME=rogue
