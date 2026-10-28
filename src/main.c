@@ -11,10 +11,13 @@ int main(void)
     screen_clear();
 
 #ifdef DEVMODE
+    printf("\nDEVMODE TESTS:\n");
 
-    printf(" !!! DEVMODE !!!\n\n");
-    DEV_CHECK(1 == 2, "TESZT: 1 != 2");
-
+    if (!dev_run_tests()) {
+        printf("\nSELFTEST FAILED\n");
+    }
+    printf("\nPRESS A KEY\n");
+    while (!key_get()) {}
 #endif
 
     printf("ROGUE FOR C64\n");

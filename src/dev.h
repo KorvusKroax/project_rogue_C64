@@ -5,6 +5,12 @@
 
 #ifdef DEVMODE
 
+#include <stdbool.h>
+
+// öntesztek: mindegyik lefut, az eredmény a képernyőre kerül;
+// igazat ad, ha mind sikerült
+bool dev_run_tests(void);
+
 // hamis feltételnél: üzenet + forrásbeli hely, majd vissza a BASIC-be
 void dev_fail(const char *msg, const char *file, int line);
 
