@@ -1,6 +1,6 @@
 # 10. Platform: Commodore 64
 
-Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, karakterkészlet, billentyűzet, időzítés, lemezkezelés. A játékszabályok (0–9. fejezet) ezektől függetlenek; a program a kettő között egy vékony **platformréteget** használ (képernyő írása, billentyű olvasása, lemezművelet, időzítés), hogy a játéklogika PC-n vagy szimulátorban is futtatható legyen ([10.9](#109-tesztbuild-és-determinizmus)). Ahol egy megoldás csak ajánlás (pl. pontos memóriacímek), ott ez jelölve van; az eszközlánc választása (assembler, C fordító) ezeket módosíthatja.
+Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, karakterkészlet, billentyűzet, időzítés, lemezkezelés. A játékszabályok (0–9. fejezet) ezektől függetlenek; a program a kettő között egy vékony **platformréteget** használ (képernyő írása, billentyű olvasása, lemezművelet, időzítés), így a hardverközeli kód egy helyen van ([10.9](#109-fejlesztői-build-és-determinizmus)). Ahol egy megoldás csak ajánlás (pl. pontos memóriacímek), ott ez jelölve van; az eszközlánc választása (assembler, C fordító) ezeket módosíthatja.
 
 ## 10.1 Célgép
 - Commodore 64 vagy 64C, PAL és NTSC; bővítés (REU, gyorstöltő, SuperCPU) nem szükséges, de nem is zavarhat.
@@ -109,7 +109,8 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 
 A fejlesztői mód mutatja a szabad memóriát és a táblák foglaltságát ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
-## 10.9 Tesztbuild és determinizmus
-- A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert. Így ugyanaz a logika lefordítható egy **fej nélküli tesztbuildbe** (PC-re vagy 6502-szimulátorba), amely billentyű helyett parancssorozatot olvas, és a képernyő helyett a SCREEN réteget és az üzeneteket adja vissza.
-- **Determinizmus:** ugyanazzal a seeddel és ugyanazzal a parancssorozattal a játék bájtra azonos állapotot ad, a C64-en és a tesztbuildben is. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
-- A tesztbuildben a seed kívülről megadható, és a játékállapot-blokk bármikor kiírható összehasonlításhoz.
+## 10.9 Fejlesztői build és determinizmus
+- A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert, így a hardverközeli kód egy helyen van.
+- **Fejlesztői build:** külön fordítási beállítással készül. Benne vannak a fejlesztői mód eszközei (lásd az M03-04 issue-t), a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és az öntesztek (pl. sok szint generálása és ellenőrzése). A kiadott változatban egyik sincs benne. A hosszú öntesztek VICE-ben, gyorsított (warp) módban futnak.
+- **Determinizmus:** ugyanazzal a programváltozattal és ugyanazzal a seeddel ugyanaz a szint és ugyanaz a dobássorozat jön létre, és mentés, majd betöltés után a játék ugyanúgy folytatódik. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
+- A cél az eredeti játékszabályok követése, nem az eredeti program dobássorozatának bájtra pontos utánzása: kódváltozás után ugyanaz a seed más játékot adhat.

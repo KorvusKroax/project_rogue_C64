@@ -56,11 +56,11 @@ PowerShellben az `-o=…` kapcsolót idézőjelbe kell tenni (`"-o=build\demo_os
 
 ## Mérföldkövek és issue-k
 
-Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec” (a vonatkozó fejezetek), „Tartalom” és „Kész, ha” (elfogadási feltételek). Az M4-től kezdve minden mérföldkő végén a program elindul, és az addig kész rész kipróbálható. Az automatikus tesztek a fej nélküli tesztbuildben futnak (M00-04).
+Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec” (a vonatkozó fejezetek), „Tartalom” és „Kész, ha” (elfogadási feltételek). Az M4-től kezdve minden mérföldkő végén a program elindul, és az addig kész rész kipróbálható. A belső ellenőrzések és az öntesztek a fejlesztői buildben futnak (M00-04).
 
 | mérföldkő | issue-k |
 |---|---|
-| **M0 – Eszközlánc és platformalap** | [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1) eszközlánc kiválasztása · [M00-02](https://github.com/KorvusKroax/project_rogue_C64/issues/2) build és indítás · [M00-03](https://github.com/KorvusKroax/project_rogue_C64/issues/3) memóriatérkép, platformréteg · [M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4) tesztbuild |
+| **M0 – Eszközlánc és platformalap** | [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1) eszközlánc kiválasztása · [M00-02](https://github.com/KorvusKroax/project_rogue_C64/issues/2) build és indítás · [M00-03](https://github.com/KorvusKroax/project_rogue_C64/issues/3) memóriatérkép, platformréteg · [M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4) fejlesztői build |
 | **M1 – Alapok és adatmodell** | [M01-01](https://github.com/KorvusKroax/project_rogue_C64/issues/5) RNG, aritmetika · [M01-02](https://github.com/KorvusKroax/project_rogue_C64/issues/6) táblák · [M01-03](https://github.com/KorvusKroax/project_rogue_C64/issues/7) adatmodell, listák · [M01-04](https://github.com/KorvusKroax/project_rogue_C64/issues/8) szövegek |
 | **M2 – Képernyő és bevitel** | [M02-01](https://github.com/KorvusKroax/project_rogue_C64/issues/9) karakterkészlet · [M02-02](https://github.com/KorvusKroax/project_rogue_C64/issues/10) billentyűzet · [M02-03](https://github.com/KorvusKroax/project_rogue_C64/issues/11) nézőablak · [M02-04](https://github.com/KorvusKroax/project_rogue_C64/issues/12) üzenetsáv · [M02-05](https://github.com/KorvusKroax/project_rogue_C64/issues/13) státuszsor |
 | **M3 – Szintgenerálás** | [M03-01](https://github.com/KorvusKroax/project_rogue_C64/issues/14) szobák, labirintus · [M03-02](https://github.com/KorvusKroax/project_rogue_C64/issues/15) folyosók · [M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16) elhelyezés · [M03-04](https://github.com/KorvusKroax/project_rogue_C64/issues/17) fejlesztői mód |
