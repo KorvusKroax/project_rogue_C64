@@ -26,4 +26,7 @@ bool disk_load(const char *name, void *data, uint16_t size);
 // időzítés
 void wait_frame(void);
 
+// seed a hardveres időzítőkből (E13)
+uint32_t platform_seed(void);
+
 #endif

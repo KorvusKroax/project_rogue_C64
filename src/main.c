@@ -8,17 +8,25 @@ int main(void)
 {
     platform_init();
 
-    screen_clear();
+#if defined(DEVMODE) && defined(DEV_SEED)
+    game.seed = DEV_SEED;
+#else
+    game.seed = platform_seed();
+#endif
 
 #ifdef DEVMODE
-    printf("\nDEVMODE TESTS:\n");
+    printf("\nSEED: %lu\n", game.seed);
 
+    printf("\nDEVMODE TESTS:\n");
     if (!dev_run_tests()) {
         printf("\nSELFTEST FAILED\n");
     }
+
     printf("\nPRESS A KEY\n");
     while (!key_get()) {}
 #endif
+
+    screen_clear();
 
     printf("ROGUE FOR C64\n");
     printf("(BASED ON ROGUE 5.4.4)\n");

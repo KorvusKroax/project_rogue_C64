@@ -1,6 +1,7 @@
 @echo off
 rem A jatek forditasa: build\rogue.prg es build\rogue.d64
 rem "build.bat dev": fejlesztoi build (DEVMODE), build\rogue_dev.prg es build\rogue_dev.d64
+rem "build.bat dev 12345": ugyanez rogzitett seeddel (DEV_SEED)
 rem Barhonnan indithato, mert a sajat mappajaba (a projekt gyokerebe) lep.
 rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreolvassa)
 
@@ -17,6 +18,8 @@ if /i "%~1"=="dev" (
     set NAME=rogue_dev
     set DEFS=-dDEVMODE
 )
+rem "build.bat dev 12345": fejlesztoi build rogzitett seeddel
+if /i "%~1"=="dev" if not "%~2"=="" set DEFS=%DEFS% -dDEV_SEED=%~2UL
 
 pushd "%~dp0"
 

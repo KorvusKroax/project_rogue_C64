@@ -131,3 +131,15 @@ void wait_frame(void)
     uint8_t f = frame_count;
     while (frame_count == f) {}
 }
+
+// ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön
+uint32_t platform_seed(void)
+{
+    volatile uint8_t *jiffy = (volatile uint8_t *)0x00a0; // KERNAL jiffy óra, 3 bájt
+
+    uint32_t s = ((uint32_t)jiffy[0] << 16) | ((uint32_t)jiffy[1] << 8) | jiffy[2];
+    s |= (uint32_t)*(volatile uint8_t *)0xd012 << 24;    // raszter-sor
+    s ^= *(volatile uint8_t *)0xdc04;                    // CIA1 A időzítő, alsó bájt
+    s ^= (uint32_t)*(volatile uint8_t *)0xdc05 << 8;     // CIA1 A időzítő, felső bájt
+    return s;
+}

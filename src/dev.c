@@ -66,7 +66,7 @@ bool dev_run_tests(void)
         const struct DevTest *dt = &dev_tests[t];
         uint16_t fails = 0, first_fail = 0;
 
-        printf("%s: ", dt->name);
+        printf("  %s: ", dt->name);
 
         for (uint16_t i = 0; i < dt->count; i++) {
             if (!dt->fn(i)) {
