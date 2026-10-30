@@ -256,7 +256,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | mező | ábrázolás |
 |---|---|
 | `seed` | 32 bit előjel nélküli |
-| `exp` (játékos és szörny), `gold`, pontszám, tárgyérték | 24 bit előjel nélküli; telítődik 16 777 215-nél |
+| `exp` (játékos és szörny), `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
 | `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, Item `arm`, `group`, `gold_val`, `dist2` | 16 bit (a `food_left`, a `hpt`, a `maxhp` és az Item `arm` előjeles) |
 | `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
 | Creature `arm`, Item `hplus`, `dplus` | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |

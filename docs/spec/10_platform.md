@@ -51,8 +51,8 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 ## 10.5 Aritmetika
 - **RN:** `seed = seed × 11109 + 13849` (mod 2³²): 32×16 bites szorzás + 32 bites összeadás; az eredmény felső 16 bitje az RN ([0.2](00_attekintes.md#02-alapprimitívek)).
 - **rnd(n):** 16 bites előjel nélküli maradékos osztás.
-- **24 bites** összeadás/kivonás telítéssel (exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 8×8 és 16×8 bites szorzás (`dist2`, értékszámítás).
-- **Szám kiírása:** előjeles 16 és előjel nélküli 24 bites érték decimálisan, a státuszsor (3.3) és az üzenetek formázásához (`%d`, `%-Nd`, `%Nd`, `%*d`).
+- **32 bites előjel nélküli** összeadás/kivonás telítéssel (felül 16 777 215-nél, alul 0-nál: exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 8×8 és 16×8 bites szorzás (`dist2`, értékszámítás).
+- **Szám kiírása:** előjeles 16 és előjel nélküli 32 bites érték decimálisan, a státuszsor (3.3) és az üzenetek formázásához (`%d`, `%-Nd`, `%Nd`, `%*d`).
 - Lebegőpontos számítás nincs.
 
 ## 10.6 Időzítés

@@ -53,11 +53,9 @@ A forrásban lévő „varázsló” (wizard) mód egy külön fordítási vált
 ```
 RN              -> seed = seed * 11109 + 13849;  return (seed >> 16) & 0xFFFF  // 32 bites aritmetika, túlcsordulás eldobva
 rnd(n)          -> n == 0 ? 0 : RN % |n|  // 0..|n|-1; n == 0-nál az RN nem fut le
-chance(p%)      -> rnd(100) < p
 ROLL(count, sides) -> count darab sides oldalú kocka összege: sum(i<count) (rnd(sides) + 1)
 spread(n)       -> n - n/20 + rnd(n/10)      // kb. n * 0.95..1.05
 dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16 biten elfér
-sign(v)         -> -1, 0, 1
 ```
 - Az `RN` a `seed` 16..31. bitjét adja, ezért mindig 0..65535, és az eredeti `abs()` elhagyható. A szorzó (11109 = $2B65) 16 bites, így a lépés egy 32×16 bites szorzás és egy összeadás (6502-n gyors rutinnal, [10.5](10_platform.md#105-aritmetika)).
 - Az `rnd` maradékos osztása 16 bites előjel nélküli osztás.

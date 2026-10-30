@@ -44,6 +44,8 @@ __asm nmi_stub
     rti
 }
 
+
+
 void platform_init(void)
 {
     mmap_set(MMAP_NO_BASIC);

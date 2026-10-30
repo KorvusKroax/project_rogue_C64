@@ -6,6 +6,7 @@
 
 #include "dev.h"
 #include "platform.h"
+#include "rng.h"
 
 void dev_fail(const char *msg, const char *file, int line)
 {
@@ -36,29 +37,54 @@ struct DevTest {
     uint16_t    count; // hány próba (1 = egyszeri teszt)
 };
 
-static int test_uint16_wrap(uint16_t i)
+
+
+static int test_RN(uint16_t i)
 {
-    uint16_t a = 65535;
-    a++;
-    return a == 0;
+    game.seed = 111;
+
+    return
+        RN() == 19 &&
+        RN() == 14762 &&
+        RN() == 22505 &&
+        RN() == 57049 &&
+        RN() == 24524;
 }
 
-static int test_sample(uint16_t i)
+static int test_rnd(uint16_t i)
 {
-    return (i & 1) == (i % 2);
+    game.seed = 111;
+
+    if (rnd(0) != 0 || game.seed != 111) return false;
+
+    bool v[10] = {false, false, false, false, false, false, false, false, false, false};
+    for (uint16_t j = 0; j < 200; j++) {
+        uint16_t r = rnd(10);
+        if (r >= 10) return false;
+        v[r] = true;
+    }
+    for (uint8_t j = 0; j < 10; j++) {
+        if (!v[j]) return false;
+    }
+
+    return true;
 }
 
-// az öntesztek listája: újat ide kell felvenni
+
+
 static const struct DevTest dev_tests[] = {
-    { "UINT16 WRAP", test_uint16_wrap, 1    },
-    { "SAMPLE",      test_sample,      1000 },
+    { "RNG NEXT", test_RN, 1 },
+    { "RNG RANDOM", test_rnd, 1 },
 };
+
+
 
 #define DEV_TEST_COUNT (sizeof(dev_tests) / sizeof(dev_tests[0]))
 
 bool dev_run_tests(void)
 {
     bool all_ok = true;
+    uint32_t saved_seed = game.seed;
 
     iocharmap(IOCHM_PETSCII_1);
 
@@ -89,6 +115,7 @@ bool dev_run_tests(void)
         }
     }
 
+    game.seed = saved_seed;
     return all_ok;
 }
 
