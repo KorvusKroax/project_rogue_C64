@@ -12,6 +12,7 @@ void platform_init(void);
 void platform_exit(void);
 
 // képernyő
+void screen_color(uint8_t br, uint8_t bg, uint8_t tx);
 void screen_clear(void);
 void screen_put(uint8_t x, uint8_t y, uint8_t ch); // ch: ASCII (inverz: +128)
 void screen_at(uint8_t x, uint8_t y);              // innen ír a put_text és a put_uint

@@ -1,3 +1,6 @@
+#include <c64/vic.h>
+
+
 #include "platform.h"
 #include "dev.h"
 #include "state.h"
@@ -12,6 +15,8 @@ int main(void)
         #ifdef DEV_SEED
             game.seed = DEV_SEED;
         #endif
+
+        screen_clear();
 
         screen_at(0, 0);
         put_text("Seed: ");
@@ -37,6 +42,7 @@ int main(void)
     #endif
 
     screen_clear();
+    screen_color(VCOL_BLACK, VCOL_BLACK, VCOL_LT_GREY);
 
     screen_at(0, 0);
     put_text("Rogue for C64");

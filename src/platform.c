@@ -64,13 +64,15 @@ __interrupt void irq_body(void)
     keyboard_scan();
 }
 
-// ide mutat a $0314: lefuttatja a C részt, nyugtázza a VIC-et, majd a KERNAL-ra ugrik ($EA31: billentyűzet, jiffy óra, kurzor; az M02-02-ig ez olvassa a billentyűket)
+// ide mutat a $0314: lefuttatja a C részt, nyugtázza a VIC-et, lépteti a jiffy órát, majd a KERNAL-on át visszatér
 __asm irq_stub
 {
     jsr irq_body
     lda #$ff
     sta $d019
-    jmp $ea31
+    jsr $ffea   // UDTIM: jiffy óra
+    jsr $ff9f   // SCNKEY, ideiglenes: amíg a key_get a KERNAL pufferéből olvas
+    jmp $ea81   // a verem visszaállítása, RTI
 }
 
 // ide mutat a $0318: a RESTORE (NMI) nem csinál semmit
@@ -87,17 +89,20 @@ static void screen_init(void)
         CHARSET_RAM[i + 1024] = ~CHARSET_RAM[i];
     }
 
-    screen_clear();
+    vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
+}
+
+void screen_color(uint8_t br, uint8_t bg, uint8_t tx)
+{
     for (uint8_t i = 0; i < 250; i++) {
-        COLOR_RAM[i]       = VCOL_LT_GREY;
-        COLOR_RAM[i + 250] = VCOL_LT_GREY;
-        COLOR_RAM[i + 500] = VCOL_LT_GREY;
-        COLOR_RAM[i + 750] = VCOL_LT_GREY;
+        COLOR_RAM[i]       = tx;
+        COLOR_RAM[i + 250] = tx;
+        COLOR_RAM[i + 500] = tx;
+        COLOR_RAM[i + 750] = tx;
     }
 
-    vic.color_border = VCOL_BLACK;
-    vic.color_back   = VCOL_BLACK;
-    vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
+    vic.color_border = br;
+    vic.color_back   = bg;
 }
 
 void screen_clear(void)
