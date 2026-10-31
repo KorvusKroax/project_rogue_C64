@@ -2,6 +2,7 @@
 
 #include <conio.h>
 #include <c64/memmap.h>
+#include <c64/vic.h>
 
 // memóriatérkép
 // $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
@@ -17,9 +18,7 @@
 
 #define SCREEN_RAM   ((volatile uint8_t *)0xC000)
 #define CHARSET_RAM  ((volatile uint8_t *)0xC800)
-
-// ideiglenes: a gyári képernyő ($0400) és karakterkészlet (az M01-ben $C000 lesz, saját ASCII karakterkészlettel)
-#define SCREEN_TMP  ((volatile uint8_t *)0x0400)
+#define COLOR_RAM    ((volatile uint8_t *)0xD800)
 
 volatile uint8_t frame_count;
 
@@ -46,6 +45,50 @@ __asm nmi_stub
 
 
 
+static void screen_init(void)
+{
+    // ideiglenes: a gyári karakterkészlet másolata, amíg nincs saját
+    mmap_set(MMAP_CHAR_ROM);
+    for (uint16_t i = 0; i < 2048; i++) {
+        CHARSET_RAM[i] = ((volatile uint8_t *)0xD000)[i];
+    }
+    mmap_set(MMAP_NO_BASIC);
+
+    screen_clear();
+    for (uint8_t i = 0; i < 250; i++) {
+        COLOR_RAM[i]       = VCOL_LT_GREY;
+        COLOR_RAM[i + 250] = VCOL_LT_GREY;
+        COLOR_RAM[i + 500] = VCOL_LT_GREY;
+        COLOR_RAM[i + 750] = VCOL_LT_GREY;
+    }
+
+    vic.color_border = VCOL_BLACK;
+    vic.color_back   = VCOL_BLACK;
+    vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
+
+    // ideiglenes: a KERNAL képernyője is ide kerül, hogy a printf látsszon, amíg nincs saját szövegkiírás
+    *(volatile uint8_t *)0x0286 = VCOL_LT_GREY;     // kurzorszín
+    *(volatile uint8_t *)0x0288 = 0xC0;             // a képernyő lapja
+    __asm { jsr $e544 }                             // törlés, sortábla újraépítése
+}
+
+void screen_clear(void)
+{
+    for (uint8_t i = 0; i < 250; i++) {
+        SCREEN_RAM[i]       = ' ';
+        SCREEN_RAM[i + 250] = ' ';
+        SCREEN_RAM[i + 500] = ' ';
+        SCREEN_RAM[i + 750] = ' ';
+    }
+}
+
+void screen_put(uint8_t x, uint8_t y, uint8_t ch)
+{
+    SCREEN_RAM[x + y * SCREEN_W] = ch;
+}
+
+
+
 void platform_init(void)
 {
     mmap_set(MMAP_NO_BASIC);
@@ -63,6 +106,8 @@ void platform_init(void)
     *(volatile uint8_t *)0xd01a = 0x01;     // raszter-IRQ be
     *(volatile uint8_t *)0xd019 = 0xff;     // a függő VIC-IRQ törlése
 
+    screen_init();
+
     __asm { cli }
 }
 
@@ -76,28 +121,13 @@ void platform_exit(void)
     *(void **)0x0314 = (void *)0xea31;      // gyári IRQ-vektor
     *(void **)0x0318 = (void *)0xfe47;      // gyári NMI-vektor
 
-    *(volatile uint8_t *)0xdc0d = 0x81;     // CIA1 időzítő-IRQ vissza
+    vic_setbank(0);
+    *(volatile uint8_t *)0x0288 = 0x04;     // a KERNAL képernyője újra $0400
+    __asm { jsr $ff81 }                     // CINT: VIC, színek, képernyőtörlés, CIA1 időzítő-IRQ
 
     __asm { cli }
 
     mmap_set(MMAP_ROM);                     // BASIC ROM be
-}
-
-
-
-void screen_clear(void)
-{
-    for (uint8_t i = 0; i < 250; i++) {
-        SCREEN_TMP[i]       = ' ';
-        SCREEN_TMP[i + 250] = ' ';
-        SCREEN_TMP[i + 500] = ' ';
-        SCREEN_TMP[i + 750] = ' ';
-    }
-}
-
-void screen_put(uint8_t x, uint8_t y, uint8_t ch)
-{
-    SCREEN_TMP[x + y * SCREEN_W] = ch;
 }
 
 

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h>
 
 #include "dev.h"
 #include "platform.h"
@@ -20,9 +19,9 @@ void dev_fail(const char *msg, const char *file, int line)
         }
     }
 
-    iocharmap(IOCHM_PETSCII_1);
-
     printf("\nDEV\244CHECK: %s\n%s:%d\n", msg, name, line);
+
+    while (!key_get()) {}
 
     platform_exit();
     exit(1);
@@ -165,8 +164,6 @@ bool dev_run_tests(void)
 {
     bool all_ok = true;
     uint32_t saved_seed = game.seed;
-
-    iocharmap(IOCHM_PETSCII_1);
 
     for (uint8_t t = 0; t < DEV_TEST_COUNT; t++) {
         const struct DevTest *dt = &dev_tests[t];
