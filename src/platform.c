@@ -2,6 +2,7 @@
 
 #include <conio.h>
 #include <c64/memmap.h>
+#include <c64/vic.h>
 
 #include "charset.h"
 #include "num.h"

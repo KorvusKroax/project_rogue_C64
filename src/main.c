@@ -39,7 +39,7 @@ int main(void)
     #endif
 
     screen_clear();
-    screen_color(VCOL_BLACK, VCOL_BLACK, VCOL_LT_GREY);
+    screen_color(0, 0, 15);
 
     screen_at(0, 0);
     put_text("Rogue for C64");
