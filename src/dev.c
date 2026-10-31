@@ -7,6 +7,7 @@
 #include "dev.h"
 #include "platform.h"
 #include "rng.h"
+#include "num.h"
 
 void dev_fail(const char *msg, const char *file, int line)
 {
@@ -110,13 +111,21 @@ static int test_spread(uint16_t i)
         spread_in_range(850, 808, 892);
 }
 
+static int test_saturating_arithmetic(uint16_t i)
+{
+    return
+        capped_add(16777200, 100) == 16777215 &&
+        capped_sub(10, 30) == 0;
+}
+
 
 
 static const struct DevTest dev_tests[] = {
-    { "RNG::RN", test_RN, 1 },
-    { "RNG::RND", test_rnd, 1 },
-    { "RNG::ROLL", test_ROLL, 1 },
-    { "RNG::SPREAD", test_spread, 1 },
+    { "RNG-RN", test_RN, 1 },
+    { "RNG-RND", test_rnd, 1 },
+    { "RNG-ROLL", test_ROLL, 1 },
+    { "RNG-SPREAD", test_spread, 1 },
+    { "NUM-SAT ARITHMETIC", test_saturating_arithmetic, 1 },
 };
 
 
@@ -134,7 +143,7 @@ bool dev_run_tests(void)
         const struct DevTest *dt = &dev_tests[t];
         uint16_t fails = 0, first_fail = 0;
 
-        printf(" %-12s", dt->name);
+        printf(" %-20s", dt->name);
 
         for (uint16_t i = 0; i < dt->count; i++) {
             if (!dt->fn(i)) {

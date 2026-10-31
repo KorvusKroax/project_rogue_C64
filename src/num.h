@@ -8,5 +8,7 @@ struct Pos {
 };
 
 uint16_t dist2(struct Pos a, struct Pos b);
+uint32_t capped_add(uint32_t a, uint32_t b);
+uint32_t capped_sub(uint32_t a, uint32_t b);
 
 #endif
