@@ -17,7 +17,7 @@ int main(void)
 
         printf("\nSEED: %lu\n", game.seed);
 
-        printf("\nDEVMODE TESTS:\n");
+        printf("\nTESTS:\n");
         if (!dev_run_tests()) {
             printf("\nSELFTEST FAILED\n");
         }
