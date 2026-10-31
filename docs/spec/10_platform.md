@@ -40,11 +40,11 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 - A görgetéshez ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) a térképterület (22 × 40 = 880 bájt) újrarajzolása a SCREEN rétegből egy képkockán belül elvégezhető; hardveres finom görgetés nem kell.
 
 ## 10.4 Billentyűzet
-- **Mátrixolvasás:** a raszter-IRQ minden képkockában végigolvassa a 8×8-as billentyűmátrixot (CIA1 `$DC00` oszlopkiválasztás, `$DC01` sorolvasás). A KERNAL billentyűrutinja (SCNKEY/GETIN) nem használatos.
-- **Módosítók:** bal SHIFT, jobb SHIFT, SHIFT LOCK (a bal SHIFT-tel azonos mátrixpont), CTRL, C=. A logikai billentyű a lenyomott nem-módosító billentyűből és a módosítókból áll elő a [4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet) táblázata szerint: egy-egy táblázat adja a billentyű ASCII-kódját módosító nélkül és SHIFT-tel; CTRL + betű = a betű kódja `& $1F`.
-- **Leütés:** egy billentyű akkor számít leütésnek, ha az előző olvasáskor nem volt lenyomva. Több egyszerre lenyomott nem-módosító billentyű közül a mátrix-sorrendben első számít; a ghosting (szellemleütés) kezelése nem szükséges.
-- **Ismétlés:** a parancsra váró állapotban 16 képkocka nyomva tartás után ismétlődik, utána 4 képkockánként ([4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet)).
-- **Puffer:** 8 elemű körpuffer; az IRQ ír bele, a játék olvas belőle. Ürítés: „billentyűpuffer ürítése” és a `flush` opció.
+- **Mátrixolvasás:** a raszter-IRQ minden képkockában végigolvassa a 8×8-as billentyűmátrixot (CIA1 `$DC00` oszlopkiválasztás, `$DC01` sorolvasás). A KERNAL billentyűrutinja (SCNKEY/GETIN) nem használatos, ezért az IRQ nem a `$EA31`-re ugrik: a jiffy órát az UDTIM (`$FFEA`) lépteti, a visszatérés a `$EA81`-en át történik.
+- **Módosítók:** bal SHIFT, jobb SHIFT, SHIFT LOCK (a bal SHIFT-tel azonos mátrixpont), CTRL, C=. A logikai billentyű a lenyomott nem-módosító billentyűből és a módosítókból áll elő a [4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet) táblázata szerint: egy-egy táblázat adja a billentyű ASCII-kódját módosító nélkül és SHIFT-tel; CTRL vagy C= + betű = a betű kódja `& $1F`.
+- **Leütés:** egy billentyű akkor számít leütésnek, ha az előző olvasáskor nem volt lenyomva; a még nyomva tartott billentyűk nem takarják el. Egy képkockában legfeljebb egy leütés számít: az új billentyűk közül a mátrix-sorrendben első, a többi a következő képkockákban, így egyik sem vész el. A módosítók és a kód nélküli billentyűk (kurzor, F, CLR/HOME) nem számítanak. A ghosting (szellemleütés) kezelése nem szükséges.
+- **Ismétlés:** a parancsra váró állapotban 16 képkocka nyomva tartás után ismétlődik, utána 4 képkockánként ([4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet)). A játék csak a parancsra várakozás idejére kapcsolja be, és az ismételt kód csak üres pufferbe kerül.
+- **Puffer:** 8 elemű körpuffer, mind a 8 hely használható; az IRQ ír bele, a játék olvas belőle. Tele pufferbe érkező leütés eldobódik. Ürítés: „billentyűpuffer ürítése” és a `flush` opció.
 - **RUN/STOP:** ESC-ként viselkedik, nem szakítja meg a programot.
 - **Botkormány:** az 1. porti botkormány a billentyűmátrix vonalait zavarja; ha opcionálisan támogatott, a 2. portot kell használni.
 
@@ -56,7 +56,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 - Lebegőpontos számítás nincs.
 
 ## 10.6 Időzítés
-- **Raszter-IRQ** képkockánként egyszer (PAL 50 Hz, NTSC 60 Hz): billentyűolvasás, képkocka-számláló.
+- **Raszter-IRQ** képkockánként egyszer (PAL 50 Hz, NTSC 60 Hz): billentyűolvasás, képkocka-számláló, jiffy óra.
 - **Animációs késleltetés:** a dobott tárgy és a lövedék lépésenként 2 képkockát vár, a sugár (7.6) lépésenként 2-t, és a teljes sugár a visszarajzolás előtt még 10 képkockáig látszik. A nézőablakon kívüli lépések nem várnak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)). `terse` módban a dobás nem animálódik (4.2.5).
 - **Seed:** a címképernyőn az `N` lenyomásakor a 32 bites seed bájtjai: CIA1 A időzítő alsó bájtja, felső bájtja, a raszter-sor (`$D012`) és a jiffy-számláló alsó bájtja, mindegyik XOR-olva a jiffy-számláló többi bájtjával ([0.2](00_attekintes.md#02-alapprimitívek)). Ha az eredmény 0, a seed 1.
 - A játéklogika soha nem függ az időtől: az időzítés csak a megjelenítést és a seed kezdőértékét érinti.
@@ -111,6 +111,6 @@ A fejlesztői mód mutatja a szabad memóriát és a táblák foglaltságát ([1
 
 ## 10.9 Fejlesztői build és determinizmus
 - A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert, így a hardverközeli kód egy helyen van.
-- **Fejlesztői build:** külön fordítási beállítással készül. Benne vannak a fejlesztői mód eszközei (lásd az M03-04 issue-t), a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és az öntesztek (pl. sok szint generálása és ellenőrzése). A kiadott változatban egyik sincs benne. A hosszú öntesztek VICE-ben, gyorsított (warp) módban futnak.
+- **Fejlesztői build:** külön fordítási beállítással készül. Benne vannak a fejlesztői mód eszközei (lásd az M03-04 issue-t), a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és az öntesztek (pl. sok szint generálása és ellenőrzése). A kiadott változatban egyik sincs benne. A hosszú öntesztek VICE-ben, gyorsított (warp) módban futnak. A fejlesztői buildben az IRQ a KERNAL billentyűpufferéből (`$0277`, `$C6`) is átveszi a kódokat a saját pufferbe, így a VICE `keybuf` parancsával szkriptből is lehet billentyűt küldeni.
 - **Determinizmus:** ugyanazzal a programváltozattal és ugyanazzal a seeddel ugyanaz a szint és ugyanaz a dobássorozat jön létre, és mentés, majd betöltés után a játék ugyanúgy folytatódik. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
 - A cél az eredeti játékszabályok követése, nem az eredeti program dobássorozatának bájtra pontos utánzása: kódváltozás után ugyanaz a seed más játékot adhat.

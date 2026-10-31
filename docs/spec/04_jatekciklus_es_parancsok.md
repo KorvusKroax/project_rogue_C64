@@ -72,21 +72,24 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 |---|---|
 | `a`–`z` | betűbillentyű |
 | `A`–`Z` | SHIFT (vagy SHIFT LOCK) + betű |
-| `CTRL-a`–`CTRL-z` | CTRL + betű |
+| `CTRL-a`–`CTRL-z` | CTRL + betű vagy C= + betű |
 | `0`–`9` | számbillentyű (számprefix) |
 | `.` `,` `/` `:` `;` `=` `*` `@` `+` `-` | a saját billentyűjük |
 | `>` `<` `?` | SHIFT + `.` / `,` / `/` |
-| `)` | SHIFT + `9` |
-| `]` | SHIFT + `;` |
+| `!` `"` `#` `$` `%` `&` `'` `(` `)` | SHIFT + `1`–`9` |
+| `[` `]` | SHIFT + `:` / `;` |
+| `\` `\|` | `£` / SHIFT + `£` |
 | `^` | `↑` |
 | ESC | RUN/STOP vagy `←` |
 | RETURN, szóköz | RETURN, SPACE |
 | törlés (bevitelben) | INST/DEL |
 
-- A C= billentyű, a kurzorbillentyűk, az F-billentyűk, a CLR/HOME és a RESTORE nem csinál semmit (a RESTORE által kiváltott NMI nem szakítja meg a programot).
-- **Ismétlés:** a parancsra váró állapotban egy nyomva tartott billentyű 16 képkocka után ismétel, utána 4 képkockánként. A kérdéseknél (`--More--`, igen/nem, irány, tárgybetű, menük) csak új leütés számít.
+- **Kódok:** a betűk és az írásjelek ASCII-kódot adnak, az ESC 27, a RETURN 13, a törlés 127, a CTRL + betű 1..26. A RETURN nem 10 és a törlés nem 8, mert ezek a `CTRL-j` és a `CTRL-h` kódjai (óvatos futás). A `CTRL-m` kódja a RETURN-nel azonos, ilyen parancs nincs.
+- **Módosítók:** az ESC, a RETURN, a szóköz és a törlés SHIFT-tel (SHIFT LOCK mellett is) ugyanazt adja. A C= minden tekintetben azonos a CTRL-lel: CTRL + SHIFT + betű a CTRL-kódot adja, CTRL + nem betű nem ad kódot. A táblázatban nem szereplő SHIFT-kombináció nem ad kódot.
+- A kurzorbillentyűk, az F-billentyűk, a CLR/HOME és a RESTORE nem csinál semmit (a RESTORE által kiváltott NMI nem szakítja meg a programot).
+- **Ismétlés:** a parancsra váró állapotban egy nyomva tartott billentyű 16 képkocka után ismétel, utána 4 képkockánként. Az ismételt kód csak üres pufferbe kerül, így felengedés után nem fut tovább a parancs. A kérdéseknél (`--More--`, igen/nem, irány, tárgybetű, menük) csak új leütés számít.
 - **Előre leütött billentyűk:** legfeljebb 8 várakozik egy pufferben. A „billentyűpuffer ürítése” (teleport, csapda) és a `flush` opció ([4.2.5](#425-rendszer)) ezt üríti.
-- A beviteli mezőkben a fenti táblázat billentyűi és a SHIFT-tel előállított írásjelek (pl. `!` = SHIFT + `1`, `'` = SHIFT + `7`) gépelhetők.
+- A beviteli mezőkben a fenti táblázat billentyűi gépelhetők.
 
 ### 4.2.1 Mozgás
 | parancs | leírás |
