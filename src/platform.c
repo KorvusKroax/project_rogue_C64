@@ -164,6 +164,11 @@ void platform_exit(void)
     __asm { cli }
 
     mmap_set(MMAP_ROM);                     // BASIC ROM be
+
+    // a BASIC szövegverem-mutatói: a fordító zero page-e felülírja őket
+    *(volatile uint8_t *)0x16 = 0x19;
+    *(volatile uint8_t *)0x17 = 0x16;
+    *(volatile uint8_t *)0x18 = 0x00;
 }
 
 // ideiglenes: a KERNAL GETIN-je (a conio ASCII-ra alakítja);
