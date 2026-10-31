@@ -1,6 +1,3 @@
-#include <c64/vic.h>
-
-
 #include "platform.h"
 #include "dev.h"
 #include "state.h"

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <c64/vic.h>
 
 #define SCREEN_W  40
 #define SCREEN_H  25
