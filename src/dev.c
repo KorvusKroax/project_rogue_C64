@@ -1,11 +1,11 @@
 #ifdef DEVMODE
+#include "dev.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "dev.h"
 #include "platform.h"
+#include "charset.h"
 #include "rng.h"
 #include "num.h"
 
@@ -19,7 +19,14 @@ void dev_fail(const char *msg, const char *file, int line)
         }
     }
 
-    printf("\nDEV\244CHECK: %s\n%s:%d\n", msg, name, line);
+    screen_clear();
+    screen_at(0, 0);
+    put_text("DEV_CHECK: ");
+    put_text(msg);
+    screen_at(0, 1);
+    put_text(name);
+    put_text(":");
+    put_uint(line, 0);
 
     while (!key_get()) {}
 
@@ -88,7 +95,6 @@ static int test_ROLL(uint16_t i)
     return min_seen && max_seen;
 }
 
-// a spread(n) értékei lo..hi közé esnek, és mindkét határ előfordul
 static bool spread_in_range(uint16_t n, uint16_t lo, uint16_t hi)
 {
     bool min_seen = false, max_seen = false;
@@ -169,7 +175,9 @@ bool dev_run_tests(void)
         const struct DevTest *dt = &dev_tests[t];
         uint16_t fails = 0, first_fail = 0;
 
-        printf(" %-20s", dt->name);
+        screen_column(1);
+        put_text(dt->name);
+        screen_column(21);
 
         for (uint16_t i = 0; i < dt->count; i++) {
             if (!dt->fn(i)) {
@@ -182,18 +190,90 @@ bool dev_run_tests(void)
 
         if (fails == 0) {
             if (dt->count == 1) {
-                printf("OK\n");
+                put_text("OK");
             } else {
-                printf("%u/%u\n", dt->count, dt->count);
+                put_uint(dt->count, 0);
+                put_text("/");
+                put_uint(dt->count, 0);
             }
         } else {
-            printf("%u/%u FAIL AT %u\n", dt->count - fails, dt->count, first_fail);
+            put_uint(dt->count - fails, 0);
+            put_text("/");
+            put_uint(dt->count, 0);
+            put_text(" FAIL AT ");
+            put_uint(first_fail, 0);
             all_ok = false;
         }
+
+        screen_newline();
     }
 
     game.seed = saved_seed;
     return all_ok;
+}
+
+// a 95 jel három sorban
+static void put_all_glyphs(uint8_t first_row, uint8_t offset)
+{
+    for (uint8_t ch = GLYPH_FIRST; ch <= GLYPH_LAST; ch++) {
+        uint8_t i = ch - GLYPH_FIRST;
+        screen_put(i % SCREEN_W, first_row + i / SCREEN_W, ch + offset);
+    }
+}
+
+void dev_charset_screen(void)
+{
+    screen_clear();
+
+    screen_at(2, 0);
+    put_text("Normal:");
+    put_all_glyphs(1, 0);
+
+    screen_at(2, 5);
+    put_text("Inverse:");
+    put_all_glyphs(6, 128);
+
+    static const uint8_t map_signs[] = {
+        PASSAGE, DOOR, FLOOR, PLAYER, TRAP, STAIRS, GOLD, POTION, SCROLL, WALL_H, WALL_V,
+        FOOD, WEAPON, ARMOR, AMULET, RING, STICK, MAGIC, SOLID_ROCK, 'A', 'Z',
+    };
+    for (uint8_t i = 0; i < sizeof(map_signs); i++) {
+        screen_put(i, 10, map_signs[i]);
+    }
+
+    static const char *const map_sample[] = {
+        "-------+--------    #####",
+        "|..*...:...!...|    #",
+        "|.@.K..?..)..].+#####",
+        "|..^..=../..,..|",
+        "|......%.......|",
+        "----------------",
+    };
+    for (uint8_t i = 0; i < 6; i++) {
+        screen_at(0, 12 + i);
+        put_text(map_sample[i]);
+    }
+
+    // a sor vége után nem szabad semminek átcsúsznia a következő sorba
+    screen_at(30, 18);
+    put_text("Cut at the edge: X");
+
+    // clear_to_line_end teszt
+    for (uint8_t x = 0; x < SCREEN_W; x++) {
+        screen_put(x, 20, 'x');
+        screen_put(x, 21, 'y');
+    }
+    screen_at(20, 20);
+    clear_to_line_end();
+
+    screen_at(2, 24);
+    put_text("Press a key");
+
+    // a négy sarok: a KERNAL a jobb alsónál görgetne
+    screen_put(0, 0, '1');
+    screen_put(SCREEN_W - 1, 0, '2');
+    screen_put(0, SCREEN_H - 1, '3');
+    screen_put(SCREEN_W - 1, SCREEN_H - 1, '4');
 }
 
 #endif

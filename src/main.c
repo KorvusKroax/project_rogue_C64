@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "platform.h"
 #include "dev.h"
 #include "state.h"
@@ -15,35 +13,36 @@ int main(void)
             game.seed = DEV_SEED;
         #endif
 
-        printf("\nSEED: %lu\n", game.seed);
+        screen_at(0, 0);
+        put_text("Seed: ");
+        put_uint(game.seed, 0);
+        screen_newline();
+        screen_newline();
 
-        printf("\nTESTS:\n");
+        put_text("Tests:");
+        screen_newline();
         if (!dev_run_tests()) {
-            printf("\nSELFTEST FAILED\n");
+            put_text("Selftest failed");
+            screen_newline();
         }
+        screen_newline();
 
-        printf("\nPRESS A KEY\n");
+        put_text("Press a key");
+        while (!key_get()) {}
+
+        dev_charset_screen();
         while (!key_get()) {}
     #endif
 
     screen_clear();
 
-    printf("ROGUE FOR C64\n");
-    printf("(BASED ON ROGUE 5.4.4)\n");
+    screen_at(0, 0);
+    put_text("Rogue for C64");
+    screen_newline();
+    put_text("(based on Rogue 5.4.4)");
 
-    screen_put(10, 5, 0);
-
-    for (uint8_t i = 0; i < 16; i++) {
-        for (uint8_t j = 0; j < 50; j++) {
-
-            uint8_t keyCode = key_get();
-            if (keyCode) {
-                printf("KEYCODE: %i\n", keyCode);
-            }
-
-            wait_frame();
-        }
-        (*(volatile uint8_t *)0xd020)++; // keretszín
+    while (!key_get()) {
+        wait_frame();
     }
 
     platform_exit();

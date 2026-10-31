@@ -4,6 +4,9 @@
 #include <c64/memmap.h>
 #include <c64/vic.h>
 
+#include "charset.h"
+#include "num.h"
+
 // memóriatérkép
 // $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
 //              – a main régió, lásd a #pragma region sort
@@ -21,6 +24,8 @@
 #define COLOR_RAM    ((volatile uint8_t *)0xD800)
 
 volatile uint8_t frame_count;
+
+static uint8_t cursor_x, cursor_y;
 
 // a raszter-IRQ C-ben írt része; az __interrupt menti a fordító zero page regisztereit
 __interrupt void irq_body(void)
@@ -43,16 +48,13 @@ __asm nmi_stub
     rti
 }
 
-
-
 static void screen_init(void)
 {
-    // ideiglenes: a gyári karakterkészlet másolata, amíg nincs saját
-    mmap_set(MMAP_CHAR_ROM);
-    for (uint16_t i = 0; i < 2048; i++) {
-        CHARSET_RAM[i] = ((volatile uint8_t *)0xD000)[i];
+    // a felső fél az alsó negáltja
+    charset_load(CHARSET_RAM);
+    for (uint16_t i = 0; i < 1024; i++) {
+        CHARSET_RAM[i + 1024] = ~CHARSET_RAM[i];
     }
-    mmap_set(MMAP_NO_BASIC);
 
     screen_clear();
     for (uint8_t i = 0; i < 250; i++) {
@@ -65,11 +67,6 @@ static void screen_init(void)
     vic.color_border = VCOL_BLACK;
     vic.color_back   = VCOL_BLACK;
     vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
-
-    // ideiglenes: a KERNAL képernyője is ide kerül, hogy a printf látsszon, amíg nincs saját szövegkiírás
-    *(volatile uint8_t *)0x0286 = VCOL_LT_GREY;     // kurzorszín
-    *(volatile uint8_t *)0x0288 = 0xC0;             // a képernyő lapja
-    __asm { jsr $e544 }                             // törlés, sortábla újraépítése
 }
 
 void screen_clear(void)
@@ -87,7 +84,47 @@ void screen_put(uint8_t x, uint8_t y, uint8_t ch)
     SCREEN_RAM[x + y * SCREEN_W] = ch;
 }
 
+void screen_at(uint8_t x, uint8_t y)
+{
+    cursor_x = x;
+    cursor_y = y;
+}
 
+void screen_column(uint8_t x)
+{
+    cursor_x = x;
+}
+
+// az utolsó sorban marad: nem görget
+void screen_newline(void)
+{
+    cursor_x = 0;
+    if (cursor_y < SCREEN_H - 1) {
+        cursor_y++;
+    }
+}
+
+// a sor végén levág, nem tör és nem görget
+void put_text(const char *text)
+{
+    while (*text && cursor_x < SCREEN_W) {
+        screen_put(cursor_x++, cursor_y, *text++);
+    }
+}
+
+void put_uint(uint32_t value, int8_t width)
+{
+    char text[12];
+    format_uint(text, value, width);
+    put_text(text);
+}
+
+void clear_to_line_end(void)
+{
+    for (uint8_t x = cursor_x; x < SCREEN_W; x++) {
+        screen_put(x, cursor_y, ' ');
+    }
+}
 
 void platform_init(void)
 {
@@ -122,23 +159,18 @@ void platform_exit(void)
     *(void **)0x0318 = (void *)0xfe47;      // gyári NMI-vektor
 
     vic_setbank(0);
-    *(volatile uint8_t *)0x0288 = 0x04;     // a KERNAL képernyője újra $0400
-    __asm { jsr $ff81 }                     // CINT: VIC, színek, képernyőtörlés, CIA1 időzítő-IRQ
+    __asm { jsr $ff81 }                   // CINT: VIC, színek, képernyőtörlés, CIA1 időzítő-IRQ
 
     __asm { cli }
 
     mmap_set(MMAP_ROM);                     // BASIC ROM be
 }
 
-
-
 // ideiglenes: a KERNAL GETIN-je (a conio ASCII-ra alakítja);
 uint8_t key_get(void)
 {
     return getchx();
 }
-
-
 
 bool disk_exists(const char *name)
 {
@@ -154,8 +186,6 @@ bool disk_load(const char *name, void *data, uint16_t size)
 {
     return false;
 }
-
-
 
 void wait_frame(void)
 {

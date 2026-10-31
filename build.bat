@@ -8,8 +8,11 @@ rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreo
 rem --- az eszkozok helye: masik gepen eleg itt atirni ---
 set OSCAR64=C:\oscar64\bin\oscar64.exe
 
+rem --- a karakterkeszlet: src\charset_custom.c (sajat) vagy src\charset_rom.c (gyari, a ROM-bol) ---
+set CHARSET=src\charset_rom.c
+
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\state.c src\platform.c src\dev.c src\rng.c src\num.c
+set SOURCES=src\main.c src\state.c src\platform.c %CHARSET% src\dev.c src\rng.c src\num.c
 
 rem --- kiadasi vagy fejlesztoi build ---
 set NAME=rogue

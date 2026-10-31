@@ -14,6 +14,12 @@ void platform_exit(void);
 // képernyő
 void screen_clear(void);
 void screen_put(uint8_t x, uint8_t y, uint8_t ch); // ch: ASCII (inverz: +128)
+void screen_at(uint8_t x, uint8_t y);              // innen ír a put_text és a put_uint
+void screen_column(uint8_t x);                     // ugyanebben a sorban az x. oszlopba
+void screen_newline(void);                         // a következő sor elejére
+void put_text(const char *text);
+void put_uint(uint32_t value, int8_t width);       // width: mint a format_uint-nél
+void clear_to_line_end(void);                      // a screen_at helyétől a sor végéig
 
 // billentyűzet
 uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
