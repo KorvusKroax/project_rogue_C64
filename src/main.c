@@ -32,6 +32,8 @@ int main(void)
 
         dev_charset_screen();
         while (!key_get()) {}
+
+        dev_keyboard_screen();
     #endif
 
     screen_clear();

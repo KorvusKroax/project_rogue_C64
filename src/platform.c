@@ -23,14 +23,45 @@
 #define CHARSET_RAM  ((volatile uint8_t *)0xC800)
 #define COLOR_RAM    ((volatile uint8_t *)0xD800)
 
+#define CIA1_PORT_A  (*(volatile uint8_t *)0xdc00)  // mátrix: oszlopkiválasztás (0 = kiválasztva)
+#define CIA1_PORT_B  (*(volatile uint8_t *)0xdc01)  // mátrix: sorolvasás (0 = lenyomva)
+
 volatile uint8_t frame_count;
 
+volatile uint8_t key_matrix[KEY_COLUMNS];
+volatile uint8_t key_modifiers;
+
 static uint8_t cursor_x, cursor_y;
+
+// a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
+static __forceinline void keyboard_scan(void)
+{
+    uint8_t select = 0xfe;
+    for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
+        CIA1_PORT_A = select;
+        key_matrix[column] = ~CIA1_PORT_B;
+        select = (select << 1) | 1;
+    }
+    CIA1_PORT_A = 0xff;
+
+    uint8_t modifiers = 0;
+    if ((key_matrix[1] & 0x80) || (key_matrix[6] & 0x10)) {  // bal és jobb SHIFT
+        modifiers |= KEY_MOD_SHIFT;
+    }
+    if (key_matrix[7] & 0x24) {                              // CTRL és C=
+        modifiers |= KEY_MOD_CTRL;
+    }
+    key_matrix[1] &= 0x7f;
+    key_matrix[6] &= 0xef;
+    key_matrix[7] &= 0xdb;
+    key_modifiers = modifiers;
+}
 
 // a raszter-IRQ C-ben írt része; az __interrupt menti a fordító zero page regisztereit
 __interrupt void irq_body(void)
 {
     frame_count++;
+    keyboard_scan();
 }
 
 // ide mutat a $0314: lefuttatja a C részt, nyugtázza a VIC-et, majd a KERNAL-ra ugrik ($EA31: billentyűzet, jiffy óra, kurzor; az M02-02-ig ez olvassa a billentyűket)

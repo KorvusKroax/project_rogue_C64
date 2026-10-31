@@ -16,6 +16,9 @@
 
     // minden jel normálisan és inverzen, térképminta, a képernyő széleinek próbája
     void dev_charset_screen(void);
+
+    // a billentyűmátrix és a módosítók élőben; RETURN-re kilép
+    void dev_keyboard_screen(void);
 #else
     #define DEV_CHECK(cond, msg) ((void)0)
 #endif

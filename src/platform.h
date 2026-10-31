@@ -24,6 +24,14 @@ void clear_to_line_end(void);                      // a screen_at helyétől a s
 // billentyűzet
 uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
 
+#define KEY_COLUMNS    8
+#define KEY_MOD_SHIFT  0x01 // bal vagy jobb SHIFT, SHIFT LOCK
+#define KEY_MOD_CTRL   0x02 // CTRL vagy C=
+
+// a raszter-IRQ tölti: a key_matrix[oszlop] bitjei a sorok (1 = lenyomva), a módosítók nélkül
+extern volatile uint8_t key_matrix[KEY_COLUMNS];
+extern volatile uint8_t key_modifiers;
+
 // lemez
 bool disk_exists(const char *name);
 bool disk_save(const char *name, const void *data, uint16_t size);

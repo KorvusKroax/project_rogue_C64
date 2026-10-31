@@ -276,4 +276,43 @@ void dev_charset_screen(void)
     screen_put(SCREEN_W - 1, SCREEN_H - 1, '4');
 }
 
+static void wait_return_released(void)
+{
+    while (key_matrix[0] & 0x02) {} // RETURN: 0. oszlop, 1. sor (a 0x02 az 1. sor bitje)
+}
+
+void dev_keyboard_screen(void)
+{
+    wait_return_released();
+
+    screen_clear();
+    screen_at(2, 0);
+    put_text("Keyboard matrix");
+    screen_at(2, 1);
+    put_text("0..7 column, row bits down");
+    screen_at(2, 13);
+    put_text("Modifiers:");
+    screen_at(2, 24);
+    put_text("RETURN to leave");
+
+    while (!(key_matrix[0] & 0x02)) { // RETURN: 0. oszlop, 1. sor (a 0x02 az 1. sor bitje)
+        wait_frame();
+
+        for (uint8_t row = 0; row < 8; row++) {
+            for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
+                screen_put(2 + column, 3 + row, (key_matrix[column] >> row) & 1 ? '#' : '.');
+            }
+        }
+
+        screen_at(13, 13);
+        put_text(key_modifiers & KEY_MOD_SHIFT ? "SHIFT " : "      ");
+        put_text(key_modifiers & KEY_MOD_CTRL ? "CTRL" : "    ");
+    }
+
+    wait_return_released();
+
+    // ideiglenes: a KERNAL a saját pufferébe is olvas, az ottani leütések ne jussanak tovább
+    while (key_get()) {}
+}
+
 #endif
