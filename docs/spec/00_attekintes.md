@@ -19,7 +19,7 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának specifikáció
 
 ## 0.1 Indítás
 
-> **C64-eltérés (E5):** parancssor, környezeti változó és felhasználónév nincs. Az eredeti `rogue`, `rogue <fájl>`, `rogue -r`, `rogue -s` kapcsolók helyett címképernyő-menü van; a `rogue -d` teszt-halál a fejlesztői mód része (lásd az M03-04 issue-t). A terminálméret-ellenőrzés („Sorry, the screen must be at least 24x80”) kimarad.
+> **C64-eltérés (E5):** parancssor, környezeti változó és felhasználónév nincs. Az eredeti `rogue`, `rogue <fájl>`, `rogue -r`, `rogue -s` kapcsolók helyett címképernyő-menü van; a `rogue -d` teszt-halál a fejlesztői mód része (lásd az M10-03 issue-t). A terminálméret-ellenőrzés („Sorry, the screen must be at least 24x80”) kimarad.
 
 ```
 bekapcsolás / betöltés után:
