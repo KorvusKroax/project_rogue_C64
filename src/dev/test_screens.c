@@ -140,13 +140,32 @@ static uint8_t view_step(uint8_t x, int8_t step)
     return target;
 }
 
+#define VIEW_MEASURE_LIMIT  100     // görgetésenként legfeljebb 2 képkocka
+
+// 50 teljes újrarajzolás két távoli nézet között, a képkockák száma
+static uint8_t view_measure(void)
+{
+    uint8_t saved_view_x = game.view_x;
+    uint8_t start = frame_count;
+
+    for (uint8_t i = 0; i < 50; i++) {
+        game.view_x = i & 1 ? 0 : 40;
+        redraw_map();
+    }
+
+    uint8_t frames = frame_count - start;
+    game.view_x = saved_view_x;
+    redraw_map();
+    return frames;
+}
+
 void dev_view_screen(void)
 {
-    uint8_t code = 0, x = 20;
+    uint8_t code = 0, x = 20, frames = 0;
 
     screen_clear();
     screen_at(0, 23);
-    put_text("A,D: step  Q,E: 8 steps");
+    put_text("A,D: step  Q,E: 8 steps  F: time");
     screen_at(0, 24);
     put_text("1,2,3: view 0,20,40  RETURN: end");
 
@@ -165,6 +184,11 @@ void dev_view_screen(void)
         put_uint(game.view_x, 3);
         put_text("  x:");
         put_uint(x, 3);
+        put_text("  50 redraws:");
+        put_uint(frames, 4);
+        if (frames) {
+            put_text(frames <= VIEW_MEASURE_LIMIT ? " OK  " : " FAIL");
+        }
 
         do {
             code = key_get();
@@ -175,6 +199,7 @@ void dev_view_screen(void)
             case 'd': x = view_step(x, 1); break;
             case 'q': x = view_step(x, -8); break;
             case 'e': x = view_step(x, 8); break;
+            case 'f': frames = view_measure(); break;
             case '1': center_view(20); break;
             case '2': center_view(40); break;
             case '3': center_view(60); break;
