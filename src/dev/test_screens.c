@@ -124,32 +124,57 @@ static uint8_t view_pattern(uint8_t x, uint8_t y)
     return x % 10 == 0 ? '|' : 'a' + x / 10;
 }
 
+#define VIEW_TEST_ROW  12
+
+// a jel a mintát visszaállítva lép, a széleken megáll
+static uint8_t view_step(uint8_t x, int8_t step)
+{
+    int8_t target = x + step;
+    if (target < 0) target = 0;
+    if (target > NUMCOLS - 1) target = NUMCOLS - 1;
+
+    draw_tile(x, VIEW_TEST_ROW, view_pattern(x, VIEW_TEST_ROW));
+    draw_tile(target, VIEW_TEST_ROW, PLAYER);
+    follow_view(target);
+
+    return target;
+}
+
 void dev_view_screen(void)
 {
-    uint8_t code = 0;
+    uint8_t code = 0, x = 20;
 
     screen_clear();
+    screen_at(0, 23);
+    put_text("A,D: step  Q,E: 8 steps");
     screen_at(0, 24);
     put_text("1,2,3: view 0,20,40  RETURN: end");
 
     view_clear();
     game.view_x = 0;
     for (uint8_t y = 1; y <= MAP_ROWS; y++) {
-        for (uint8_t x = 0; x < NUMCOLS; x++) {
-            draw_tile(x, y, view_pattern(x, y));
+        for (uint8_t column = 0; column < NUMCOLS; column++) {
+            draw_tile(column, y, view_pattern(column, y));
         }
     }
+    draw_tile(x, VIEW_TEST_ROW, PLAYER);
 
     while (code != KEY_RETURN) {
         screen_at(0, 0);
         put_text("view_x:");
         put_uint(game.view_x, 3);
+        put_text("  x:");
+        put_uint(x, 3);
 
         do {
             code = key_get();
         } while (!code);
 
         switch (code) {
+            case 'a': x = view_step(x, -1); break;
+            case 'd': x = view_step(x, 1); break;
+            case 'q': x = view_step(x, -8); break;
+            case 'e': x = view_step(x, 8); break;
             case '1': center_view(20); break;
             case '2': center_view(40); break;
             case '3': center_view(60); break;
