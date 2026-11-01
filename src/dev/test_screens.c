@@ -5,6 +5,8 @@
 #include "../platform/key.h"
 #include "../platform/charset.h"
 #include "../map_signs.h"
+#include "../state.h"
+#include "../view.h"
 
 // a 95 jel három sorban
 static void put_all_glyphs(uint8_t first_row, uint8_t offset)
@@ -111,5 +113,46 @@ void dev_keyboard_screen(void)
         put_uint(last_code, 3);
         screen_at(14, 16);
         put_uint(presses, 3);
+    }
+}
+
+// az 1-2. sor az oszlop száma, a többi betűje tízesenként vált
+static uint8_t view_pattern(uint8_t x, uint8_t y)
+{
+    if (y == 1) return '0' + x / 10;
+    if (y == 2) return '0' + x % 10;
+    return x % 10 == 0 ? '|' : 'a' + x / 10;
+}
+
+void dev_view_screen(void)
+{
+    uint8_t code = 0;
+
+    screen_clear();
+    screen_at(0, 24);
+    put_text("1,2,3: view 0,20,40  RETURN: end");
+
+    view_clear();
+    game.view_x = 0;
+    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < NUMCOLS; x++) {
+            draw_tile(x, y, view_pattern(x, y));
+        }
+    }
+
+    while (code != KEY_RETURN) {
+        screen_at(0, 0);
+        put_text("view_x:");
+        put_uint(game.view_x, 3);
+
+        do {
+            code = key_get();
+        } while (!code);
+
+        switch (code) {
+            case '1': center_view(20); break;
+            case '2': center_view(40); break;
+            case '3': center_view(60); break;
+        }
     }
 }

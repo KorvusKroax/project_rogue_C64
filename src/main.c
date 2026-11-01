@@ -39,6 +39,8 @@ int main(void)
         while (!key_get()) {}
 
         dev_keyboard_screen();
+
+        dev_view_screen();
     #endif
 
     screen_clear();
