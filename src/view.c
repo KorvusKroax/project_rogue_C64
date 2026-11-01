@@ -8,22 +8,38 @@
 #define VIEW_X_MAX     (NUMCOLS - VIEW_W)
 #define SCROLL_MARGIN  8
 
+static bool top_row_hidden;
+
 void draw_tile(uint8_t x, uint8_t y, uint8_t ch)
 {
     game.screen[y - 1][x] = ch;
 
     uint8_t column = x - game.view_x;
-    if (column < VIEW_W) {
+    if (column < VIEW_W && !(y == 1 && top_row_hidden)) {
         screen_put(column, y, ch);
     }
+}
+
+static void redraw_row(uint8_t y)
+{
+    screen_copy_row(y, game.screen[y - 1] + game.view_x);
 }
 
 void redraw_map(void)
 {
     wait_frame();
 
-    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
-        screen_copy_row(y, game.screen[y - 1] + game.view_x);
+    for (uint8_t y = top_row_hidden ? 2 : 1; y <= MAP_ROWS; y++) {
+        redraw_row(y);
+    }
+}
+
+void view_hide_top_row(bool hidden)
+{
+    top_row_hidden = hidden;
+
+    if (!hidden) {
+        redraw_row(1);
     }
 }
 
