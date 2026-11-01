@@ -1,7 +1,10 @@
 #include "view.h"
 
+#include <string.h>
+
 #include "platform/platform.h"
 #include "platform/screen.h"
+#include "map_signs.h"
 #include "state.h"
 
 #define VIEW_W         SCREEN_W
@@ -9,6 +12,11 @@
 #define SCROLL_MARGIN  8
 
 static bool top_row_hidden;
+
+void view_clear(void)
+{
+    memset(game.screen, SOLID_ROCK, sizeof(game.screen));
+}
 
 void draw_tile(uint8_t x, uint8_t y, uint8_t ch)
 {
