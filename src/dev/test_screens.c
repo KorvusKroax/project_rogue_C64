@@ -159,15 +159,28 @@ static uint8_t view_measure(void)
     return frames;
 }
 
+// az üzenetsáv 2. sorát utánozza
+static void view_toggle_top_row(bool hidden)
+{
+    view_hide_top_row(hidden);
+
+    if (hidden) {
+        screen_at(0, 1);
+        put_text("message text on row 1");
+        clear_to_line_end();
+    }
+}
+
 void dev_view_screen(void)
 {
     uint8_t code = 0, x = 20, frames = 0;
+    bool top_row_hidden = false;
 
     screen_clear();
     screen_at(0, 23);
     put_text("A,D: step  Q,E: 8 steps  F: time");
     screen_at(0, 24);
-    put_text("1,2,3: view 0,20,40  RETURN: end");
+    put_text("1,2,3: view 0,20,40  H: row 1  RET: end");
 
     view_clear();
     game.view_x = 0;
@@ -200,9 +213,15 @@ void dev_view_screen(void)
             case 'q': x = view_step(x, -8); break;
             case 'e': x = view_step(x, 8); break;
             case 'f': frames = view_measure(); break;
+            case 'h':
+                top_row_hidden = !top_row_hidden;
+                view_toggle_top_row(top_row_hidden);
+                break;
             case '1': center_view(20); break;
             case '2': center_view(40); break;
             case '3': center_view(60); break;
         }
     }
+
+    view_hide_top_row(false);
 }
