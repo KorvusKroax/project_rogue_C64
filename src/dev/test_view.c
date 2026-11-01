@@ -9,10 +9,14 @@ struct ViewCase {
 };
 
 static const struct ViewCase view_cases[] = {
-    { 0, 31, 0 }, { 20, 28, 20 }, { 20, 51, 20 }, { 40, 48, 40 },   // a holt zónán belül marad
-    { 0, 32, 12 }, { 20, 52, 32 }, { 20, 27, 7 }, { 40, 47, 27 },   // görget
-    { 12, 19, 0 }, { 32, 72, 40 }, { 0, 0, 0 }, { 40, 79, 40 },     // a széleken nem lóg ki
-    { 40, 30, 10 }, { 40, 0, 0 }, { 0, 70, 40 }, { 0, 79, 40 },     // teleport a nézőablakon kívülre
+    // a holt zónán belül marad
+    { 0, 31, 0 }, { 20, 28, 20 }, { 20, 51, 20 }, { 40, 48, 40 },
+    // oszloponként görget
+    { 0, 32, 1 }, { 20, 52, 21 }, { 20, 27, 19 }, { 40, 47, 39 },
+    // a széleken nem lóg ki
+    { 1, 8, 0 }, { 39, 71, 40 }, { 0, 0, 0 }, { 40, 79, 40 },
+    // teleport a nézőablakon kívülre
+    { 40, 30, 22 }, { 40, 0, 0 }, { 0, 70, 39 }, { 0, 79, 40 },
 };
 
 int test_view_follow(uint16_t i)

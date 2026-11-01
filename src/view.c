@@ -65,9 +65,13 @@ uint8_t view_x_after_step(uint8_t x, uint8_t view_x)
 {
     int8_t column = x - view_x;
 
-    if ((column < SCROLL_MARGIN && view_x > 0) ||
-        (column > VIEW_W - 1 - SCROLL_MARGIN && view_x < VIEW_X_MAX)) {
-        return centered_view_x(x);
+    if (column < SCROLL_MARGIN) {
+        return x < SCROLL_MARGIN ? 0 : x - SCROLL_MARGIN;
+    }
+
+    if (column > VIEW_W - 1 - SCROLL_MARGIN) {
+        uint8_t new_view_x = x - (VIEW_W - 1 - SCROLL_MARGIN);
+        return new_view_x > VIEW_X_MAX ? VIEW_X_MAX : new_view_x;
     }
 
     return view_x;
