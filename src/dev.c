@@ -332,14 +332,9 @@ void dev_charset_screen(void)
     screen_put(SCREEN_W - 1, SCREEN_H - 1, '4');
 }
 
-static void wait_return_released(void)
-{
-    while (key_matrix[0] & 0x02) {} // RETURN: 0. oszlop, 1. sor (a 0x02 az 1. sor bitje)
-}
-
 void dev_keyboard_screen(void)
 {
-    wait_return_released();
+    uint8_t last_code = 0, presses = 0;
 
     screen_clear();
     screen_at(2, 0);
@@ -353,10 +348,19 @@ void dev_keyboard_screen(void)
     screen_at(2, 16);
     put_text("Presses:");
     screen_at(2, 24);
-    put_text("RETURN to leave");
+    put_text("RETURN to leave, SHIFT: stop reading");
 
-    while (!(key_matrix[0] & 0x02)) { // RETURN: 0. oszlop, 1. sor (a 0x02 az 1. sor bitje)
+    while (last_code != KEY_RETURN) {
         wait_frame();
+
+        // a SHIFT nyomva tartása alatt a puffer megtelhet
+        if (!(key_modifiers & KEY_MOD_SHIFT)) {
+            uint8_t code = key_get();
+            if (code) {
+                last_code = code;
+                presses++;
+            }
+        }
 
         for (uint8_t row = 0; row < 8; row++) {
             for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
@@ -369,15 +373,10 @@ void dev_keyboard_screen(void)
         put_text(key_modifiers & KEY_MOD_CTRL ? "CTRL" : "    ");
 
         screen_at(14, 15);
-        put_uint(key_press_code, 3);
+        put_uint(last_code, 3);
         screen_at(14, 16);
-        put_uint(key_press_count, 3);
+        put_uint(presses, 3);
     }
-
-    wait_return_released();
-
-    // ideiglenes: a KERNAL a saját pufferébe is olvas, az ottani leütések ne jussanak tovább
-    while (key_get()) {}
 }
 
 #endif

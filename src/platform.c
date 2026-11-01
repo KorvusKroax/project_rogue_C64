@@ -1,6 +1,5 @@
 #include "platform.h"
 
-#include <conio.h>
 #include <c64/memmap.h>
 #include <c64/vic.h>
 
@@ -30,10 +29,14 @@ volatile uint8_t frame_count;
 
 volatile uint8_t key_matrix[KEY_COLUMNS];
 volatile uint8_t key_modifiers;
-volatile uint8_t key_press_code;
-volatile uint8_t key_press_count;
 
 static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még lenyomott billentyűk
+
+// körpuffer: az indexek körbefutó számlálók, a különbségük a várakozó leütések száma, így mind a 8 hely használható
+// az IRQ csak a write-ot, a játék csak a read-et írja
+#define KEY_BUFFER_SIZE  8
+static uint8_t key_buffer[KEY_BUFFER_SIZE];
+static volatile uint8_t key_buffer_write, key_buffer_read;
 
 // a billentyűk kódja mátrixhely szerint (oszlop * 8 + sor), oszloponként egy sor; 0 = nincs kódja
 static const uint8_t key_codes_plain[KEY_COLUMNS * 8] = {
@@ -124,9 +127,10 @@ static __forceinline void keypress_detect(void)
         }
     }
 
-    if (code) {
-        key_press_code = code;
-        key_press_count++;
+    // tele pufferbe érkező leütés eldobódik
+    if (code && (uint8_t)(key_buffer_write - key_buffer_read) < KEY_BUFFER_SIZE) {
+        key_buffer[key_buffer_write & (KEY_BUFFER_SIZE - 1)] = code;
+        key_buffer_write++;
     }
 }
 
@@ -145,8 +149,7 @@ __asm irq_stub
     lda #$ff
     sta $d019
     jsr $ffea   // UDTIM: jiffy óra
-    jsr $ff9f   // SCNKEY, ideiglenes: amíg a key_get a KERNAL pufferéből olvas
-    jmp $ea81   // a verem visszaállítása, RTI
+    jmp $ea81  // a verem visszaállítása, RTI
 }
 
 // ide mutat a $0318: a RESTORE (NMI) nem csinál semmit
@@ -263,8 +266,24 @@ void platform_init(void)
     __asm { cli }
 }
 
+// a még lenyomott billentyűt a KERNAL kilépés után a BASIC-be írná
+static void wait_keys_released(void)
+{
+    bool any_down;
+    do {
+        any_down = false;
+        for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
+            if (key_matrix[column]) {
+                any_down = true;
+            }
+        }
+    } while (any_down);
+}
+
 void platform_exit(void)
 {
+    wait_keys_released();
+
     __asm { sei }
 
     *(volatile uint8_t *)0xd01a = 0x00;     // raszter-IRQ ki
@@ -286,10 +305,15 @@ void platform_exit(void)
     *(volatile uint8_t *)0x18 = 0x00;
 }
 
-// ideiglenes: a KERNAL GETIN-je (a conio ASCII-ra alakítja);
 uint8_t key_get(void)
 {
-    return getchx();
+    if (key_buffer_read == key_buffer_write) {
+        return 0;
+    }
+
+    uint8_t code = key_buffer[key_buffer_read & (KEY_BUFFER_SIZE - 1)];
+    key_buffer_read++;
+    return code;
 }
 
 bool disk_exists(const char *name)

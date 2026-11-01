@@ -38,10 +38,6 @@ uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
 extern volatile uint8_t key_matrix[KEY_COLUMNS];
 extern volatile uint8_t key_modifiers;
 
-// ideiglenes, amíg nincs puffer: az utolsó leütés kódja és a leütések számlálója
-extern volatile uint8_t key_press_code;
-extern volatile uint8_t key_press_count;
-
 #ifdef DEVMODE
     // a mátrixhely (oszlop * 8 + sor) kódja a módosítókkal, 0 ha nincs; az önteszthez
     uint8_t key_decode(uint8_t position, uint8_t modifiers);
