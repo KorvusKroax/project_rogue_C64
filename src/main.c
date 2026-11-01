@@ -1,5 +1,7 @@
-#include "platform.h"
-#include "dev.h"
+#include "platform/platform.h"
+#include "platform/screen.h"
+#include "platform/key.h"
+#include "dev/dev.h"
 #include "state.h"
 
 int main(void)
@@ -28,11 +30,12 @@ int main(void)
             screen_newline();
         }
         screen_newline();
-
         put_text("Press a key");
         while (!key_get()) {}
 
         dev_charset_screen();
+        screen_at(2, 24);
+        put_text("Press a key");
         while (!key_get()) {}
 
         dev_keyboard_screen();

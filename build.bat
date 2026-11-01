@@ -8,11 +8,11 @@ rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreo
 rem --- az eszkozok helye: masik gepen eleg itt atirni ---
 set OSCAR64=C:\oscar64\bin\oscar64.exe
 
-rem --- a karakterkeszlet: src\charset_custom.c (sajat) vagy src\charset_rom.c (gyari, a ROM-bol) ---
-set CHARSET=src\charset_rom.c
+rem --- a karakterkeszlet: src\platform\charset_custom.c (sajat) vagy src\platform\charset_rom.c (gyari, a ROM-bol) ---
+set CHARSET=src\platform\charset_rom.c
 
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\state.c src\platform.c %CHARSET% src\dev.c src\rng.c src\num.c
+set SOURCES=src\main.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c src\platform\disk.c %CHARSET% src\rng.c src\num.c
 
 rem --- kiadasi vagy fejlesztoi build ---
 set NAME=rogue
@@ -21,6 +21,8 @@ if /i "%~1"=="dev" (
     set NAME=rogue_dev
     set DEFS=-dDEVMODE
 )
+rem a fejlesztoi fajlok csak a fejlesztoi buildbe kerulnek
+if /i "%~1"=="dev" set SOURCES=%SOURCES% src\dev\dev.c src\dev\tests.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_screens.c
 rem "build.bat dev 12345": fejlesztoi build rogzitett seeddel
 if /i "%~1"=="dev" if not "%~2"=="" set DEFS=%DEFS% -dDEV_SEED=%~2UL
 

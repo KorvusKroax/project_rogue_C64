@@ -1,10 +1,5 @@
-#ifndef CHARSET_H
-#define CHARSET_H
-
-#include <stdint.h>
-
-#define GLYPH_FIRST  32
-#define GLYPH_LAST   126
+#ifndef MAP_SIGNS_H
+#define MAP_SIGNS_H
 
 // a térkép jelei
 #define PASSAGE     '#'
@@ -26,8 +21,5 @@
 #define STICK       '/'
 #define MAGIC       '$'
 #define SOLID_ROCK  ' '
-
-// a 0..127. jel képét a target címre írja (csak tiltott megszakítással hívható)
-void charset_load(volatile uint8_t *target);
 
 #endif
