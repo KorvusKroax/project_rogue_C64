@@ -25,6 +25,11 @@ void clear_to_line_end(void);                      // a screen_at helyétől a s
 // billentyűzet
 uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
 
+// a nem nyomtatható logikai billentyűk kódja; a CTRL + betű 1..26
+#define KEY_RETURN  13
+#define KEY_ESCAPE  27
+#define KEY_DELETE  127
+
 #define KEY_COLUMNS    8
 #define KEY_MOD_SHIFT  0x01 // bal vagy jobb SHIFT, SHIFT LOCK
 #define KEY_MOD_CTRL   0x02 // CTRL vagy C=
@@ -33,9 +38,14 @@ uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
 extern volatile uint8_t key_matrix[KEY_COLUMNS];
 extern volatile uint8_t key_modifiers;
 
-// ideiglenes, amíg nincs puffer: az utolsó leütés helye (oszlop * 8 + sor) és a leütések számlálója
-extern volatile uint8_t key_press_position;
+// ideiglenes, amíg nincs puffer: az utolsó leütés kódja és a leütések számlálója
+extern volatile uint8_t key_press_code;
 extern volatile uint8_t key_press_count;
+
+#ifdef DEVMODE
+    // a mátrixhely (oszlop * 8 + sor) kódja a módosítókkal, 0 ha nincs; az önteszthez
+    uint8_t key_decode(uint8_t position, uint8_t modifiers);
+#endif
 
 // lemez
 bool disk_exists(const char *name);

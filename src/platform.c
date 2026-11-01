@@ -30,12 +30,52 @@ volatile uint8_t frame_count;
 
 volatile uint8_t key_matrix[KEY_COLUMNS];
 volatile uint8_t key_modifiers;
-volatile uint8_t key_press_position;
+volatile uint8_t key_press_code;
 volatile uint8_t key_press_count;
 
 static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még lenyomott billentyűk
 
+// a billentyűk kódja mátrixhely szerint (oszlop * 8 + sor), oszloponként egy sor; 0 = nincs kódja
+static const uint8_t key_codes_plain[KEY_COLUMNS * 8] = {
+    KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,          // törlés, RETURN, kurzor, F-billentyűk
+    '3', 'w', 'a', '4', 'z', 's', 'e', 0,
+    '5', 'r', 'd', '6', 'c', 'f', 't', 'x',
+    '7', 'y', 'g', '8', 'b', 'h', 'u', 'v',
+    '9', 'i', 'j', '0', 'm', 'k', 'o', 'n',
+    '+', 'p', 'l', '-', '.', ':', '@', ',',
+    '\\', '*', ';', 0, 0, '=', '^', '/',               // £, *, ;, CLR/HOME, -, =, felfelé nyíl, /
+    '1', KEY_ESCAPE, 0, '2', ' ', 0, 'q', KEY_ESCAPE,  // 1, balra nyíl, -, 2, SPACE, -, Q, RUN/STOP
+};
+
+static const uint8_t key_codes_shifted[KEY_COLUMNS * 8] = {
+    KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,
+    '#', 'W', 'A', '$', 'Z', 'S', 'E', 0,
+    '%', 'R', 'D', '&', 'C', 'F', 'T', 'X',
+    '\'', 'Y', 'G', '(', 'B', 'H', 'U', 'V',
+    ')', 'I', 'J', 0, 'M', 'K', 'O', 'N',
+    0, 'P', 'L', 0, '>', '[', 0, '<',
+    '|', 0, ']', 0, 0, 0, 0, '?',
+    '!', KEY_ESCAPE, 0, '"', ' ', 0, 'Q', KEY_ESCAPE,
+};
+
 static uint8_t cursor_x, cursor_y;
+
+static __forceinline uint8_t key_code_at(uint8_t position, uint8_t modifiers)
+{
+    if (modifiers & KEY_MOD_CTRL) {
+        uint8_t code = key_codes_plain[position];
+        return code >= 'a' && code <= 'z' ? code & 0x1f : 0;
+    }
+
+    return modifiers & KEY_MOD_SHIFT ? key_codes_shifted[position] : key_codes_plain[position];
+}
+
+#ifdef DEVMODE
+uint8_t key_decode(uint8_t position, uint8_t modifiers)
+{
+    return key_code_at(position, modifiers);
+}
+#endif
 
 // a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
 static __forceinline void keyboard_scan(void)
@@ -62,27 +102,31 @@ static __forceinline void keyboard_scan(void)
 }
 
 // képkockánként legfeljebb egy leütés; az egyidejű többi új marad, így a következő képkockákban jön
+// a kód nélküli billentyű nem leütés, és nem takarja el a mögötte lévőt
 static __forceinline void keypress_detect(void)
 {
-    bool found = false;
+    uint8_t code = 0;
 
     for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
         uint8_t down = key_matrix[column];
         uint8_t fresh = down & ~key_counted[column];
         key_counted[column] &= down;
 
-        if (fresh && !found) {
-            uint8_t row = 0, row_bit = 1;
-            while (!(fresh & row_bit)) {
-                row_bit <<= 1;
-                row++;
+        uint8_t position = column * KEY_COLUMNS, row_bit = 1;
+        while (fresh && !code) {
+            if (fresh & row_bit) {
+                fresh ^= row_bit;
+                key_counted[column] |= row_bit;
+                code = key_code_at(position, key_modifiers);
             }
-            key_counted[column] |= row_bit;
-
-            key_press_position = column * KEY_COLUMNS + row;
-            key_press_count++;
-            found = true;
+            row_bit <<= 1;
+            position++;
         }
+    }
+
+    if (code) {
+        key_press_code = code;
+        key_press_count++;
     }
 }
 
