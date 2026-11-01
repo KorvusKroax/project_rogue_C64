@@ -66,7 +66,7 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 
 ### 4.2.0 Billentyűzet
 
-> **C64-eltérés (E4):** a parancsok ugyanazok a karakterek, mint az eredetiben, de a C64 billentyűzetén előállítva. A billentyűzetet a program maga olvassa a mátrixból ([10.4](10_platform.md#104-billentyűzet)), nem a KERNAL, mert csak így kezelhető minden SHIFT- és CTRL-kombináció.
+> **C64-eltérés (E4):** a parancsok ugyanazok a karakterek, mint az eredetiben, de a C64 billentyűzetén előállítva. A billentyűzetet a program maga olvassa a mátrixból ([10.4](10_platform.md#104-billentyűzet)), nem a KERNAL, mert a KERNAL egyszerre csak egy billentyűt követ: gyors gépelésnél leütések vesznek el, és a nyomva tartott billentyű másodszor is leütésnek számíthat. A C= + betű a KERNAL-lal grafikus karaktert adna, nem CTRL-kódot, a SHIFT + C= pedig karakterkészletet váltana.
 
 | logikai billentyű | C64 |
 |---|---|
