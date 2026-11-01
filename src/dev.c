@@ -169,9 +169,16 @@ static const struct KeyCase key_cases[] = {
     { 5, 5, 0, ':' },  { 5, 5, KEY_MOD_SHIFT, '[' },
     { 6, 2, 0, ';' },  { 6, 2, KEY_MOD_SHIFT, ']' },
     { 6, 0, 0, '\\' }, { 6, 0, KEY_MOD_SHIFT, '|' },
-    { 4, 0, 0, '9' },  { 4, 0, KEY_MOD_SHIFT, ')' },
     { 7, 0, 0, '1' },  { 7, 0, KEY_MOD_SHIFT, '!' },
+    { 7, 3, 0, '2' },  { 7, 3, KEY_MOD_SHIFT, '"' },
+    { 1, 0, 0, '3' },  { 1, 0, KEY_MOD_SHIFT, '#' },
+    { 1, 3, 0, '4' },  { 1, 3, KEY_MOD_SHIFT, '$' },
+    { 2, 0, 0, '5' },  { 2, 0, KEY_MOD_SHIFT, '%' },
+    { 2, 3, 0, '6' },  { 2, 3, KEY_MOD_SHIFT, '&' },
     { 3, 0, 0, '7' },  { 3, 0, KEY_MOD_SHIFT, '\'' },
+    { 3, 3, 0, '8' },  { 3, 3, KEY_MOD_SHIFT, '(' },
+    { 4, 0, 0, '9' },  { 4, 0, KEY_MOD_SHIFT, ')' },
+    { 4, 3, 0, '0' },
     { 6, 6, 0, '^' },  { 5, 6, 0, '@' }, { 6, 1, 0, '*' },
     { 5, 0, 0, '+' },  { 5, 3, 0, '-' }, { 6, 5, 0, '=' },
     // CTRL
@@ -192,7 +199,7 @@ static int test_key_decode(uint16_t i)
         if (key_decode(k->column * KEY_COLUMNS + k->row, k->modifiers) != k->code) return false;
     }
 
-    // mind a 26 betű megvan egyszer, a SHIFT-es és a CTRL-os változatával
+    // mind a 26 betű megvan, a SHIFT-es és a CTRL-os változatával
     uint32_t letters_seen = 0;
     for (uint8_t position = 0; position < KEY_COLUMNS * 8; position++) {
         uint8_t code = key_decode(position, 0);
