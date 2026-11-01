@@ -85,6 +85,14 @@ void put_uint(uint32_t value, int8_t width)
     put_text(text);
 }
 
+void screen_copy_row(uint8_t y, const uint8_t *source)
+{
+    volatile uint8_t *target = SCREEN_RAM + y * SCREEN_W;
+    for (uint8_t x = 0; x < SCREEN_W; x++) {
+        target[x] = source[x];
+    }
+}
+
 void clear_to_line_end(void)
 {
     for (uint8_t x = cursor_x; x < SCREEN_W; x++) {

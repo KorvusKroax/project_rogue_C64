@@ -1,5 +1,6 @@
 #include "view.h"
 
+#include "platform/platform.h"
 #include "platform/screen.h"
 #include "state.h"
 
@@ -19,6 +20,11 @@ void draw_tile(uint8_t x, uint8_t y, uint8_t ch)
 
 void redraw_map(void)
 {
+    wait_frame();
+
+    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
+        screen_copy_row(y, game.screen[y - 1] + game.view_x);
+    }
 }
 
 static uint8_t centered_view_x(uint8_t x)

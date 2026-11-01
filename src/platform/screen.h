@@ -17,6 +17,7 @@ void screen_column(uint8_t x);                          // ugyanebben a sorban a
 void screen_newline(void);                              // a következő sor elejére
 void put_text(const char *text);
 void put_uint(uint32_t value, int8_t width);            // width: mint a format_uint-nél
+void screen_copy_row(uint8_t y, const uint8_t *source); // SCREEN_W jel az y. sorba
 void clear_to_line_end(void);                           // a screen_at helyétől a sor végéig
 
 #endif
