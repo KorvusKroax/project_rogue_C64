@@ -30,6 +30,10 @@ volatile uint8_t frame_count;
 
 volatile uint8_t key_matrix[KEY_COLUMNS];
 volatile uint8_t key_modifiers;
+volatile uint8_t key_press_position;
+volatile uint8_t key_press_count;
+
+static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még lenyomott billentyűk
 
 static uint8_t cursor_x, cursor_y;
 
@@ -57,11 +61,37 @@ static __forceinline void keyboard_scan(void)
     key_modifiers = modifiers;
 }
 
+// képkockánként legfeljebb egy leütés; az egyidejű többi új marad, így a következő képkockákban jön
+static __forceinline void keypress_detect(void)
+{
+    bool found = false;
+
+    for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
+        uint8_t down = key_matrix[column];
+        uint8_t fresh = down & ~key_counted[column];
+        key_counted[column] &= down;
+
+        if (fresh && !found) {
+            uint8_t row = 0, row_bit = 1;
+            while (!(fresh & row_bit)) {
+                row_bit <<= 1;
+                row++;
+            }
+            key_counted[column] |= row_bit;
+
+            key_press_position = column * KEY_COLUMNS + row;
+            key_press_count++;
+            found = true;
+        }
+    }
+}
+
 // a raszter-IRQ C-ben írt része; az __interrupt menti a fordító zero page regisztereit
 __interrupt void irq_body(void)
 {
     frame_count++;
     keyboard_scan();
+    keypress_detect();
 }
 
 // ide mutat a $0314: lefuttatja a C részt, nyugtázza a VIC-et, lépteti a jiffy órát, majd a KERNAL-on át visszatér
@@ -167,6 +197,11 @@ void platform_init(void)
     mmap_set(MMAP_NO_BASIC);
 
     __asm { sei }
+
+    // az induláskor lenyomva tartott billentyű (pl. a RUN RETURN-je) nem leütés
+    for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
+        key_counted[column] = 0xff;
+    }
 
     *(volatile uint8_t *)0xdc0d = 0x7f;     // CIA1 időzítő-IRQ ki
     (void)*(volatile uint8_t *)0xdc0d;      // a függő CIA-IRQ törlése

@@ -292,6 +292,10 @@ void dev_keyboard_screen(void)
     put_text("0..7 column, row bits down");
     screen_at(2, 13);
     put_text("Modifiers:");
+    screen_at(2, 15);
+    put_text("Last press:");
+    screen_at(2, 16);
+    put_text("Presses:");
     screen_at(2, 24);
     put_text("RETURN to leave");
 
@@ -307,6 +311,11 @@ void dev_keyboard_screen(void)
         screen_at(13, 13);
         put_text(key_modifiers & KEY_MOD_SHIFT ? "SHIFT " : "      ");
         put_text(key_modifiers & KEY_MOD_CTRL ? "CTRL" : "    ");
+
+        screen_at(14, 15);
+        put_uint(key_press_position, 3);
+        screen_at(14, 16);
+        put_uint(key_press_count, 3);
     }
 
     wait_return_released();

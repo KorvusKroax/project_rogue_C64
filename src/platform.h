@@ -33,6 +33,10 @@ uint8_t key_get(void); // ASCII kód, 0 ha nincs leütés
 extern volatile uint8_t key_matrix[KEY_COLUMNS];
 extern volatile uint8_t key_modifiers;
 
+// ideiglenes, amíg nincs puffer: az utolsó leütés helye (oszlop * 8 + sor) és a leütések számlálója
+extern volatile uint8_t key_press_position;
+extern volatile uint8_t key_press_count;
+
 // lemez
 bool disk_exists(const char *name);
 bool disk_save(const char *name, const void *data, uint16_t size);
