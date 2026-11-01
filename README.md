@@ -38,6 +38,43 @@ build.bat     fordítás
 run.bat       fordítás + indítás VICE-ban
 ```
 
+### Magyar billentyűzet a VICE-ban
+
+A játék a C64 billentyűzetét olvassa, ezért azt kapja, amit a VICE billentyűkiosztása a C64-re küld. Magyar PC-billentyűzeten a VICE gyári kiosztása három jelet rosszul fordít:
+
+| jel | a PC-n | a gyári kiosztással | következmény |
+|---|---|---|---|
+| `/` | Shift+6 | SHIFT + `/` megy át, vagyis `?` | a `/` parancs helyett a súgó (`?`) jön |
+| `=` | Shift+7 | SHIFT + `=` megy át, ennek nincs kódja | az `=` parancs nem érhető el |
+| `\|` | AltGr+W | a `£` megy át SHIFT nélkül, vagyis `\` | a `\|` nem gépelhető be |
+
+Ez a VICE beállításán múlik, nem a játékon, ezért a repó nem ad saját kiosztást: így mindenki megtarthatja a saját VICE-beállításait. A pozicionális kiosztásra váltás nem segít, mert a VICE ott is a jel nevét nézi, és a `/` ugyanúgy `?` marad.
+
+**A javítás** három sor a kiosztásfájlban:
+
+1. Másold a `C:\GTK3VICE-3.10-win64\C64\gtk3_sym.vkm` fájlt egy saját helyre, és írd át benne ezt a három sort:
+
+   | eredeti | új |
+   |---|---|
+   | `slash 6 7 0` | `slash 6 7 16` |
+   | `equal 6 5 0` | `equal 6 5 16` |
+   | `bar 6 0 8` | `bar 6 0 1` |
+
+   Egy sor felépítése: `jel oszlop sor jelző`. A `16` azt jelenti, hogy a PC-s SHIFT nem jut át a C64-re, ezért a `/` és az `=` SHIFT nélkül érkezik. Az `1` azt jelenti, hogy a VICE hozzáad egy C64-es SHIFT-et, így a `|` a SHIFT + `£` lesz.
+
+2. Zárd be a VICE-t, és a `%APPDATA%\vice\vice.ini` fájl `[C64SC]` szakaszába írd be vagy írd át ezt a két sort:
+
+   ```
+   KeymapIndex=2
+   KeymapUserSymFile="C:\saját\út\sajat.vkm"
+   ```
+
+   Az útnak teljesnek kell lennie, visszaperrel: perjellel a VICE nem találja meg a fájlt. A többi beállításod érintetlen marad.
+
+Egyszerűbb, de kevésbé tartós megoldás a három sort közvetlenül a `gtk3_sym.vkm`-ben átírni: ekkor a `vice.ini`-hez nem kell nyúlni, viszont a VICE újratelepítése visszaállítja a fájlt.
+
+**Ellenőrzés:** `run.bat dev`, két billentyű a `Keyboard matrix` képernyőig. A `Last press` sorban a Shift+6 47-et, a Shift+7 61-et, az AltGr+W 124-et, a Shift+, (`?`) 63-at kell mutasson. SHIFT alatt ez a képernyő szándékosan nem olvas, ezért a szám a SHIFT felengedése után frissül.
+
 ### Eszközlánc
 
 **Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1).
