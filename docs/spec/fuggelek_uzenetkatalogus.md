@@ -2,7 +2,7 @@
 
 A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)):
 - Az üzenetek a kétsoros, 40 oszlopos üzenetsávba kerülnek, szótördeléssel; a szövegek maguk nem rövidülnek.
-- Az üzenetsávba írt szöveg első betűje **nagybetűre** változik (kivéve, ha csomagbetűvel kezdődik, pl. „a) …”, vagy a súgósort). Az alábbi táblákban a forrásbeli kisbetűs alak szerepel.
+- Az üzenetsávba írt szöveg első betűje **nagybetűre** változik (kivéve a tárgylista-sorokat, pl. „a) …”, és a súgósort). Az alábbi táblákban a forrásbeli kisbetűs alak szerepel.
 - A szövegek a záró pont nélkül szerepelnek: az üzenet lezárásakor kerül a végükre, ha nem írásjelre végződnek ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)). A mondatok közötti egy szóköz (pl. „you can't. It appears…”) a szöveg része.
 - `<…>` = behelyettesített érték; `<szín>` hallucináció alatt véletlen bájitalszín ([8.8](08_targyak.md#88-azonosítás-és-nevek)), egyébként a megadott szín (`pick_color`).
 - **hallucinálva** oszlop: ha üres, nincs külön változat.

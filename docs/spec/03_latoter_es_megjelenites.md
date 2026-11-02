@@ -75,10 +75,11 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 > **C64-eltérés (E2):** az üzenetsáv a 0. sor, és ha a szöveg nem fér el benne, az 1. sorra is átnyúlik (kétsoros sáv). Az 1. sor ilyenkor ideiglenesen eltakarja a térkép legfelső sorát.
 
 - Az üzenetsáv két, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). A két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
-- Minden üzenet nagybetűvel kezdődik (kivéve a csomagbetűvel kezdődőket, pl. „a) …”).
-- **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a csomagbetűvel kezdődő üzenet, a `@` státuszkiírása és a kérdés.
+- Minden üzenet nagybetűvel kezdődik (kivéve a tárgylista-sorokat, pl. „a) …”).
+- **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a tárgylista-sor, a `@` státuszkiírása és a kérdés.
 - Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az új üzenettel együtt a szöveg a tördelés után a `--More--`-val már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
 - Ha egyetlen üzenet a `--More--`-val együtt nem fér el a két sorban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
+- **Hosszkorlát:** egy üzenet egy 128 bájtos pufferben készül el (`MESSAGE_TEXT_SIZE`), ebből a záró pontnak és a lezáró nullának 2 bájt jár, így legfeljebb 126 karakteres lehet; a hosszabb szöveg vége levágódik. A méret a leghosszabb valódi üzenet ismeretében csökkenthető.
 - A következő billentyűleütéskor az üzenetsáv törlődik. `CTRL-P` az utolsó üzenetet ismétli.
 - Amíg az 1. sort üzenet foglalja, a térkép 1. sorába rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; a sáv törlésekor az 1. sor a SCREEN-ből visszarajzolódik.
 - **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a 0. sor végére ér, az 1. sorban). Ha a bevitel a 2. sor végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít.
