@@ -172,6 +172,17 @@ static void view_toggle_top_row(bool hidden)
     }
 }
 
+static void view_draw_pattern(void)
+{
+    view_clear();
+    game.view_x = 0;
+    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
+        for (uint8_t column = 0; column < NUMCOLS; column++) {
+            draw_tile(column, y, view_pattern(column, y));
+        }
+    }
+}
+
 void dev_view_screen(void)
 {
     uint8_t code = 0, x = 20, frames = 0;
@@ -183,13 +194,7 @@ void dev_view_screen(void)
     screen_at(0, 24);
     put_text("1,2,3: view 0,20,40  H: row 1  RET: end");
 
-    view_clear();
-    game.view_x = 0;
-    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
-        for (uint8_t column = 0; column < NUMCOLS; column++) {
-            draw_tile(column, y, view_pattern(column, y));
-        }
-    }
+    view_draw_pattern();
     draw_tile(x, VIEW_TEST_ROW, PLAYER);
 
     while (code != KEY_RETURN) {
@@ -225,4 +230,35 @@ void dev_view_screen(void)
     }
 
     view_hide_top_row(false);
+}
+
+void dev_message_screen(void)
+{
+    uint8_t code = 0;
+
+    screen_clear();
+    screen_at(0, 23);
+    put_text("1,2,3,4: messages  C: clear");
+    screen_at(0, 24);
+    put_text("Q,E: view 0,40  RET: end");
+
+    view_draw_pattern();
+
+    while (code != KEY_RETURN) {
+        do {
+            code = key_get();
+        } while (!code);
+
+        switch (code) {
+            case '1': message_show("You feel a wrenching sensation in your gut"); break;
+            case '2': message_show("You are now wearing a very long piece of armor and it fits you"); break;
+            case '3': message_show("This message fills the row exactly, ok.."); break;
+            case '4': message_show("Hard break: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"); break;
+            case 'c': message_clear(); break;
+            case 'q': center_view(0); break;
+            case 'e': center_view(NUMCOLS - 1); break;
+        }
+    }
+
+    message_clear();
 }

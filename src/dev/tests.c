@@ -19,6 +19,7 @@ static const struct DevTest dev_tests[] = {
     { "NUM-FORMAT", test_format, 1 },
     { "KEY-DECODE", test_key_decode, 1 },
     { "VIEW-FOLLOW", test_view_follow, 1 },
+    { "MESS-LINE LENGTH", test_message_line_length, 1 },
 };
 
 bool dev_run_tests(void)

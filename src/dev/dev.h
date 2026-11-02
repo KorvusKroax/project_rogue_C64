@@ -12,6 +12,7 @@
     void dev_charset_screen(void);      // minden jel normálisan és inverzen, térképminta, a képernyő széleinek próbája
     void dev_keyboard_screen(void);     // a billentyűmátrix és a módosítók élőben; RETURN-re kilép
     void dev_view_screen(void);         // 80 oszlopos minta a nézőablakban, léptethető jellel és három nézettel; RETURN-re kilép
+    void dev_message_screen(void);      // üzenetek a minta fölött, görgethető nézőablakkal; RETURN-re kilép
 #else
     #define DEV_CHECK(cond, msg) ((void)0)
 #endif

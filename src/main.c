@@ -41,6 +41,8 @@ int main(void)
         dev_keyboard_screen();
 
         dev_view_screen();
+
+        dev_message_screen();
     #endif
 
     screen_clear();

@@ -13,5 +13,6 @@ int test_saturating_arithmetic(uint16_t i);
 int test_format(uint16_t i);
 int test_key_decode(uint16_t i);
 int test_view_follow(uint16_t i);
+int test_message_line_length(uint16_t i);
 
 #endif
