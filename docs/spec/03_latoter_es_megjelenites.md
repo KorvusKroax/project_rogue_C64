@@ -39,7 +39,7 @@ erase_lamp(pos, room):  // csak sötét, nem fantom szobában, seefloor be, nem 
 - A láthatóság logikai fogalom: egy szörny akkor is „látható”, ha a mezője éppen kívül esik a nézőablakon ([3.5](#35-nézőablak-görgetés)). A nézőablak csak a kirajzolást vágja, a játékszabályokat nem befolyásolja.
 
 ## 3.2 Állapotok hatása a kijelzésre
-- **ISBLIND:** a `look` csak a játékos saját mezőjét frissíti, szoba nem világosodik ki, szörny nem látszik (`see_monst` hamis). Visszanyeréskor (`sight`): ha a játékos szobában van, `enter_room`; „the veil of darkness lifts” (hallucinálva: „far out!  Everything is all cosmic again”).
+- **ISBLIND:** a `look` csak a játékos saját mezőjét frissíti, szoba nem világosodik ki, szörny nem látszik (`see_monst` hamis). Visszanyeréskor (`sight`): ha a játékos szobában van, `enter_room`; „the veil of darkness lifts” (hallucinálva: „far out! Everything is all cosmic again”).
 - **ISHALU** – két része van:
   - `look` közben (`trip_ch`): minden látott mező, ami nem padló, üres, folyosó, fal, ajtó vagy csapda – és nem a már látott lépcső –, véletlen tárgyjelként (`rnd_thing`, [6.2](06_szornyek.md#62-generálás)) rajzolódik; a látható szörnyek véletlen nagybetűként.
   - minden kör elején (`visuals` démon, BEFORE fázis; futás közben `jump` mellett kimarad): a látható tárgyak, a még nem látott lépcső és a látható szörnyek újrasorsolódnak (az álcázott Xeroc tárgyjelet kap); SEEMONST mellett a falon túli szörnyek is véletlen betűt kapnak. Ez a teljes szintre vonatkozik, nem csak a nézőablakra (a dobások száma így nem függ a nézőablak helyzetétől).
@@ -76,7 +76,9 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 
 - Az üzenetsáv két, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). A két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
 - Minden üzenet nagybetűvel kezdődik (kivéve a csomagbetűvel kezdődőket, pl. „a) …”).
-- Az egy körben keletkező üzenetek összefűződnek. Ha az eddigi szöveg és az új rész együttes hossza eléri a 71 karaktert (`MAXMSG = 80 − sizeof("--More--")`, a sizeof a záró nullát is számolja), **vagy** a tördelés miatt a `--More--` már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új rész a 0. sor elején kezdődik.
+- **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a csomagbetűvel kezdődő üzenet, a `@` státuszkiírása és a kérdés.
+- Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az eddigi szöveg és az új üzenet együttes hossza eléri a 71 karaktert (`MAXMSG = 80 − sizeof("--More--")`, a sizeof a záró nullát is számolja), **vagy** a tördelés miatt a `--More--` már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
+- Ha egyetlen üzenet a `--More--`-val együtt nem fér el a két sorban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
 - A következő billentyűleütéskor az üzenetsáv törlődik. `CTRL-P` az utolsó üzenetet ismétli.
 - Amíg az 1. sort üzenet foglalja, a térkép 1. sorába rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; a sáv törlésekor az 1. sor a SCREEN-ből visszarajzolódik.
 - **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a 0. sor végére ér, az 1. sorban). Ha a bevitel a 2. sor végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít.

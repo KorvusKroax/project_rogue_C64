@@ -54,7 +54,7 @@ hunger():  // minden körben, alvás/ájulás alatt is
      if no_command == 0 and rnd(5) == 0:         // 20% ájulás, ha épp nem ájult
         no_command += rnd(8) + 4; hungry_state = 3 (FAINT)
         player.ISRUN = false                     // ájult: a szörnyek +4-gyel találnak (J1)
-        "you feel too weak from lack of food.  You faint"
+        "you feel too weak from lack of food. You faint"
   else:
      food_before = food_left
      food_left -= ring_eat(LEFT) + ring_eat(RIGHT) + 1 - (has_amulet ? 1 : 0)

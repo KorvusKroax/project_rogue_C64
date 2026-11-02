@@ -223,7 +223,7 @@ A feliratok a játékállapot részei (a mentésbe kerülnek); generált szöveg
 | elnevezett (`c`) | `A potion called <név>(blue)` | `A scroll called <név>` |
 | ismeretlen | `A blue potion`, `2 blue potions` | `A scroll titled 'zok bie'` |
 
-Fegyver: `A mace`, azonosítva `A +1,+1 mace`, köteg: `25 +0,+0 arrows`. Páncél: `ring mail`, azonosítva `+1 ring mail [protection 4]` (terse módban `[4]`; a szám `10 − arm`, az előjeles szám `alap − arm`). Étel: `Some food` / `3 rations of food`, gyümölcs `A slime-mold` / `2 slime-molds`. Arany: `25 Gold pieces`. Amulett: `The Amulet of Yendor`. A csomaglistában a használt tárgyak után: `(weapon in hand)`, `(being worn)`, `(on left hand)` / `(on right hand)`.
+Fegyver: `A mace`, azonosítva `A +1,+1 mace`, köteg: `25 +0,+0 arrows`. Páncél: `ring mail`, azonosítva `+1 ring mail [protection 4]` (a szám `10 − arm`, az előjeles szám `alap − arm`). Étel: `Some food` / `3 rations of food`, gyümölcs `A slime-mold` / `2 slime-molds`. Arany: `25 Gold pieces`. Amulett: `The Amulet of Yendor`. A csomaglistában a használt tárgyak után: `(weapon in hand)`, `(being worn)`, `(on left hand)` / `(on right hand)`.
 
 - Fegyver/páncél bónusza, pálca töltése, gyűrű modja csak ISKNOW esetén látszik.
 

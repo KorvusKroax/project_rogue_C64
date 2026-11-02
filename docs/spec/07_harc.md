@@ -50,7 +50,7 @@ throw():
   loop:
     next = pos + dir
     if not walkable(next) or next is DOOR or monster at next: break  // "monster at": a MAP szörnyrétege (J12)
-    pos = next; animate(pos) ha látható, a nézőablakban van és nem terse (3.5, 10.6)
+    pos = next; animate(pos) ha látható és a nézőablakban van (3.5, 10.6)
   landing = (monster at next) ? next : (next is wall/door ? next : pos)  // a drop_near innen keres helyet
   if monster at next:
      if xeroc álcázott: "wait! That's a xeroc!" (de a dobás lefut)
@@ -78,7 +78,7 @@ drop_near(item, center):
   //        ("potion", "scroll", "food", "armor", "ring", "wand"/"staff", "amulet") (J8)
 ```
 
-> **C64-javítás (J12):** a repülés a MAP szörnyrétegét nézi, ezért az álcázott Xeroc megállítja a dobott tárgyat, és a dobás eltalálhatja („wait!  That's a xeroc!”, utána a normál dobott támadás). Ugyanez igaz a varázslövedékre és az „első szörnyig” haladó pálcákra ([8.7](08_targyak.md#87-pálcákbotok-z)). *Eredetileg* a repülés a képernyőjelet nézte: a tárgynak álcázott Xeroc jele járható volt, ezért a dobott tárgy, a lövedék és a pálca hatása áthaladt rajta.
+> **C64-javítás (J12):** a repülés a MAP szörnyrétegét nézi, ezért az álcázott Xeroc megállítja a dobott tárgyat, és a dobás eltalálhatja („wait! That's a xeroc!”, utána a normál dobott támadás). Ugyanez igaz a varázslövedékre és az „első szörnyig” haladó pálcákra ([8.7](08_targyak.md#87-pálcákbotok-z)). *Eredetileg* a repülés a képernyőjelet nézte: a tárgynak álcázott Xeroc jele járható volt, ezért a dobott tárgy, a lövedék és a pálca hatása áthaladt rajta.
 
 > **C64-javítás (J8):** *eredetileg* a „vanishes” üzenet nevét mindig a fegyvertáblából vette (`weap_info[item.which]`), így pl. egy eldobott bájital (which = 3) „the arrow vanishes …” üzenetet adott.
 
@@ -136,26 +136,25 @@ A sugár egy körben legfeljebb egyszer hat valakire, utána a „cél” felvá
 ## 7.7 Harci üzenetek
 ```
 név(monster):  // set_mname
-  if !see_monst(monster) and !SEEMONST: return terse ? "it" : "something"
+  if !see_monst(monster) and !SEEMONST: return "something"
   if ISHALU: a képernyőn látott (véletlen) betűhöz tartozó szörnynév
   return "the " + monster.name
 
 hit(támadó, célpont):  // támadó/célpont: null = "you"
   if to_death: nincs üzenet  // 'f'-harc közben csend
-  verb = terse ? (" hit") : h_names[rnd(4) + (támadó == null ? 0 : 4)]
-  üzenet: Támadó(nagybetűvel) + verb + (terse ? "" : célpont)
-miss(...): ugyanígy m_names-szel; terse alak: " miss" / " misses"
+  verb = h_names[rnd(4) + (támadó == null ? 0 : 4)]
+  üzenet: Támadó(nagybetűvel) + verb + célpont
+miss(...): ugyanígy m_names-szel
 
 h_names = [" scored an excellent hit on ", " hit ", " have injured ", " swing and hit ",  // you …
            " scored an excellent hit on ", " hit ", " has injured ", " swings and hits "]  // a szörny …
 m_names = [" miss", " swing and miss", " barely miss", " don't hit",  // you …
            " misses", " swings and misses", " barely misses", " doesn't hit"]  // a szörny …
 ```
-Példák: „You swing and hit the orc”, „The orc barely misses you”, terse: „You hit”.
+Példák: „You swing and hit the orc”, „The orc barely misses you”.
 
 - **Dobott tárgy:** találat: „the <fegyver> hits <szörny>” (nem fegyvernél „you hit <szörny>”); mellé: „the <fegyver> misses <szörny>” / „you missed <szörny>”.
-- **Xeroc leleplezése:** „wait!  That's a xeroc!” (hallucinálva: „heavy!  That's a nasty critter!”).
+- **Xeroc leleplezése:** „wait! That's a xeroc!” (hallucinálva: „heavy! That's a nasty critter!”).
 - **Monster confusion:** sikeres ütés után „your hands stop glowing red”, majd „<szörny> appears confused” (vakon nem).
-- **Halál:** „you have defeated <szörny>” (terse: „defeated <szörny>”); ha egy „hit” üzenet után jön: „.  Defeated <szörny>”.
-- Az Ice monster találata nem ír „hits you”-t, csak „you are frozen” + (nem terse) „ by ” + név(m), pl. „you are frozen by the ice monster” (J17; az eredetiben „by the the ice monster” volt, [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)).
-- A terse módban és nem `f`-harcban az egymást követő találati üzenetek egy sorba fűződnek (`has_hit`).
+- **Halál:** „you have defeated <szörny>”.
+- Az Ice monster találata nem ír „hits you”-t, csak „you are frozen by ” + név(m), pl. „you are frozen by the ice monster” (J17; az eredetiben „by the the ice monster” volt, [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)).

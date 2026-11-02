@@ -184,7 +184,7 @@ waste_time():
 | `@` | a státuszsor kiírása az üzenetsávba |
 | SHIFT-d | felfedezett típusok listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `/` | jel magyarázata ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
-| `^` + irány | csapda azonosítása a szomszéd mezőn („You have found <csapda>”), rejtettnél vagy ha nincs: „You have found no trap there” (terse: csak „no trap there”). ISHUH-nál 20% eséllyel más irány (mint minden irányos parancsnál, `get_dir`); ISHALU alatt véletlen csapdanév |
+| `^` + irány | csapda azonosítása a szomszéd mezőn („You have found <csapda>”), rejtettnél vagy ha nincs: „You have found no trap there”. ISHUH-nál 20% eséllyel más irány (mint minden irányos parancsnál, `get_dir`); ISHALU alatt véletlen csapdanév |
 | CTRL-p | utolsó üzenet |
 | `?` | súgó ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | v | verzió („version 5.4.4. (mctesq was here)”) |
@@ -211,7 +211,6 @@ waste_time():
 
 | opció | alapérték | sor a menüben | jelentés |
 |---|---|---|---|
-| terse | ki | Terse output ("terse") | rövidebb üzenetek; a dobott tárgy repülése nem animálódik |
 | flush | ki | Flush typeahead ("flush") | harcban eldobja az előre leütött billentyűket |
 | jump | ki | Jump to end of run ("jump") | futás közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
 | seefloor | be | Show lamp floor ("seefloor") | sötét szobában a 3×3 környezet padlója látszik ([3.1](03_latoter_es_megjelenites.md#31-felderítés)) |
@@ -235,7 +234,7 @@ waste_time():
 save_game():   // SHIFT-s
   "save file (<file>)? "                // y: a file opció neve; n: "file name: " bekérése; más: "please answer Y or N"
      ESC a fájlnév bekérésekor: a mentés elmarad, a játék folytatódik
-  ha a fájl már létezik a lemezen: "File exists.  Do you wish to overwrite it?"
+  ha a fájl már létezik a lemezen: "File exists. Do you wish to overwrite it?"
      y: a régi fájl törlése; n vagy ESC: vissza a "file name: " kérdéshez; más: "Please answer Y or N"
   kiírás: fejléc + a teljes állapotblokk (10.7)
   lemezhiba: "disk error: <kód>,<szöveg>"; a játék folytatódik (a félig írt fájl törlődik)
@@ -261,7 +260,7 @@ restore_game():   // címképernyő, R
 if pack üres: "you aren't carrying anything"; return null
 if 'a' ismétlés: az előző kiválasztott tárgy (ha elfogyott: "you ran out")
 loop:
-  "which object do you want to <cél>? (* for list): "     (terse: "<cél> what? (* for list): ")
+  "which object do you want to <cél>? (* for list): "
   ESC → "" (törlés), return null, nem visz időt
   '*' → a csomag szűrt listája (inventory, a típusnak megfelelők), utána újra kérdez;
         ha nincs megfelelő: "you don't have anything appropriate", return null (nem visz időt)
@@ -282,13 +281,13 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 **Egy tárgy (`I`):** üres csomag: „you aren't carrying anything”; egyetlen tárgy: azonnal „a) <név>”; különben „which item do you wish to inventory: ” → „<x>) <név>” vagy „'<x>' not in pack”.
 
-**Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't.  It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
+**Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't. It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 
 **Páncél fel (`W`) / le (`T`):** [4.2.3](#423-tárgyak). Siker: „you are now wearing <név>” (a páncél azonosítódik), illetve „you used to be wearing <betű>) <név>”. Nem páncélra: „you can't wear that”.
 
 **Gyűrű fel (`P`):** nem gyűrűre: „it would be difficult to wrap that around a finger” (időbe kerül); használt tárgyra: „That's already in use”; ha mindkét kéz szabad: „left hand or right hand? ” (`l`/`r`; ESC kilép, de a kör elmegy), különben a szabad kézre; két gyűrűnél: „you already have a ring on each hand”. Felhúzáskor: add strength → `chg_str(+mod)`; see invisible → CANSEE (a láthatatlan szörnyek kirajzolódnak); aggravate monster → aggravate ([6.4](06_szornyek.md#64-ébresztés)). Üzenet: „you are now wearing <név> (<betű>)”.
 
-**Gyűrű le (`R`):** nincs gyűrű: „you aren't wearing any rings”; két gyűrűnél kérdezi a kezet. Átkozott: „you can't.  It appears to be cursed”. Levételkor: add strength → `chg_str(−mod)`; see invisible → a gyűrű-forrás megszűnik, a CANSEE csak akkor kapcsol ki, ha a see invisible bájital időzítője sem fut (J5). Üzenet: „was wearing <név>(<betű>)”.
+**Gyűrű le (`R`):** nincs gyűrű: „you aren't wearing any rings”; két gyűrűnél kérdezi a kezet. Átkozott: „you can't. It appears to be cursed”. Levételkor: add strength → `chg_str(−mod)`; see invisible → a gyűrű-forrás megszűnik, a CANSEE csak akkor kapcsol ki, ha a see invisible bájital időzítője sem fut (J5). Üzenet: „was wearing <név>(<betű>)”.
 
 **Elnevezés (`c`):** választható bármi, kivéve ételt („you can't call that anything”). Bájital/tekercs/gyűrű/pálca: a *típus* kap nevet (ha már azonosított: „that has already been identified”); minden más (fegyver, páncél, amulett): az adott tárgy saját címkét kap (ha nincs szabad címkehely: „you can't call that anything”, [1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)). Ha már volt név: „Was called "<név>"”; majd „what do you want to call it? ”. A beviteli mező a régi névvel, ha az nincs, az azonosítatlan névvel (szín, felirat, kő, anyag) van előtöltve, legfeljebb 20 karakterig.
 
@@ -355,7 +354,7 @@ v       print version number
 ```
 Az egyes irányok nagybetűs és CTRL-os változatainak („run left”, „run left until adjacent”, …) saját súgósora is van az egy billentyűs súgóban, de a `*` listában nem szerepelnek.
 
-**Felvétel részletei:** lebegve semmi nem vehető fel (rálépéskor csendben nem történik semmi, a `,` parancsra „You can't.  You're floating off the ground!”). Arany: „you found <n> gold pieces”, és a szoba aranya 0 lesz (a kapzsi szörnyek ettől a játékos felé fordulnak). `m` irány: „you moved onto <név>”. `,` üres mezőn: „there is nothing here to pick up”.
+**Felvétel részletei:** lebegve semmi nem vehető fel (rálépéskor csendben nem történik semmi, a `,` parancsra „You can't. You're floating off the ground!”). Arany: „you found <n> gold pieces”, és a szoba aranya 0 lesz (a kapzsi szörnyek ettől a játékos felé fordulnak). `m` irány: „you moved onto <név>”. `,` üres mezőn: „there is nothing here to pick up”.
 
 ---
 
