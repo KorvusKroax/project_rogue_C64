@@ -236,22 +236,31 @@ static void dev_message_screen(void)
 
     screen_clear();
     set_screen_cursor(0, 23);
-    put_text("1..5: messages  C: clear  SPACE: more");
+    put_text("1..6: messages  SPACE: more");
     set_screen_cursor(0, 24);
-    put_text("Q,E: view 0,40  RET: end");
+    put_text("Q,E: view 0,40  RET: end  other: clear");
 
     view_draw_pattern();
 
     while (code != KEY_RETURN) {
-        code = wait_for_key();
+        code = wait_for_key_and_clear_message();
 
         switch (code) {
-            case '1': message("You miss the bat."); break;
-            case '2': message("You are now wearing a very long piece of armor and it fits you."); break;
-            case '3': message("This message fills the row exactly, ok.."); break;
-            case '4': message("This very long message does not fit in the two rows of the bar, so it goes on to the next page after the word that still fits, and it even needs a third page for its very last words."); break;
-            case '5': message("You feel a wrenching sensation now"); break;
-            case 'c': message_clear(); break;
+            case '1':
+                message("you miss the bat");
+                message("the bat bites you");
+                break;
+            case '2':
+                message("you miss the bat");
+                message("you are now wearing a very long piece of armor and it fits you");
+                break;
+            case '3': message("this message fills the row exactly, ok."); break;
+            case '4': message("this very long message does not fit in the two rows of the bar, so it goes on to the next page after the last word"); break;
+            case '5':
+                message("you feel a wrenching sensation");
+                message("you are now wearing a very long piece of armor and it fits you");
+                break;
+            case '6': message("a) a mace"); break;
             case 'q': center_view_window(0); break;
             case 'e': center_view_window(MAP_COLUMNS - 1); break;
         }

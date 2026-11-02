@@ -1,6 +1,7 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "../message.h"
 
@@ -41,6 +42,36 @@ static const struct LengthCase bar_cases[] = {
     // ami két sornál több, a következő oldalra marad
     { FORTY_CHAR " " FORTY_CHAR " " FORTY_CHAR, 73 },
 };
+
+struct TextCase {
+    const char *text, *expected;
+};
+
+static const struct TextCase text_cases[] = {
+    { "", "" },
+    { "you miss the bat", "You miss the bat." },
+
+    // már van a végén írásjel
+    { "wait! That's a xeroc!", "Wait! That's a xeroc!" },
+    { "really quit?", "Really quit?" },
+    { "the end.", "The end." },
+
+    // nem betűvel kezdődik
+    { "'x' is not a valid item", "'x' is not a valid item." },
+
+    // tárgylista-sor
+    { "a) a mace", "a) a mace" },
+};
+
+int test_prepare_message_text(uint16_t i)
+{
+    for (uint8_t c = 0; c < sizeof(text_cases) / sizeof(text_cases[0]); c++) {
+        const struct TextCase *text_case = &text_cases[c];
+        if (strcmp(prepare_message_text(text_case->text), text_case->expected) != 0) return false;
+    }
+
+    return true;
+}
 
 int test_message_chars_fitting_row(uint16_t i)
 {

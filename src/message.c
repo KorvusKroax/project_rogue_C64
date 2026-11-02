@@ -7,13 +7,41 @@
 #include "platform/screen.h"
 #include "view.h"
 
-#define MORE_TEXT           "--More--"
-#define MORE_TEXT_LENGTH    (sizeof(MORE_TEXT) - 1)
+#define MORE_TEXT               "--More--"
+#define MORE_TEXT_LENGTH        (sizeof(MORE_TEXT) - 1)
+#define MESSAGE_TEXT_SIZE       128
+#define MESSAGE_END_CHARACTER   '.'
 
+static char message_text[MESSAGE_TEXT_SIZE];
 static char message_bar_text[SCREEN_WIDTH * 2 + 1];
 static uint8_t message_bar_length;
 static uint8_t message_bar_end_column;
 static bool second_row_reserved;
+
+const char *prepare_message_text(const char *text)
+{
+    uint8_t length = 0;
+
+    while (text[length] && length < MESSAGE_TEXT_SIZE - 2) {    // a záró pontnak és nullának hely kell
+        message_text[length] = text[length];
+        length++;
+    }
+
+    // a tárgylista-sor (pl. "a) a mace") változatlan marad
+    if (length && text[1] != ')') {
+        if (message_text[0] >= 'a' && message_text[0] <= 'z') {
+            message_text[0] -= 'a' - 'A';
+        }
+
+        char last = message_text[length - 1];
+        if (last != '.' && last != '!' && last != '?') {
+            message_text[length++] = MESSAGE_END_CHARACTER;
+        }
+    }
+
+    message_text[length] = 0;
+    return message_text;
+}
 
 uint8_t calculate_message_chars_fitting_row(const char *text, uint8_t width)
 {
@@ -116,6 +144,8 @@ static bool append_to_message_bar(const char *text)
 
 void message(const char *text)
 {
+    text = prepare_message_text(text);
+
     if (message_bar_length) {
         if (append_to_message_bar(text)) {
             return;
@@ -148,4 +178,11 @@ void message_clear(void)
         second_row_reserved = false;
         set_map_top_row_visibility(true);
     }
+}
+
+uint8_t wait_for_key_and_clear_message(void)
+{
+    uint8_t code = wait_for_key();
+    message_clear();
+    return code;
 }
