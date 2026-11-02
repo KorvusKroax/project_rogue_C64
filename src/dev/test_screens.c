@@ -5,6 +5,7 @@
 #include "../platform/key.h"
 #include "../platform/charset.h"
 #include "../map_signs.h"
+#include "../message.h"
 #include "../state.h"
 #include "../view.h"
 
@@ -165,8 +166,8 @@ static void view_toggle_top_row(bool hidden)
     view_hide_top_row(hidden);
 
     if (hidden) {
-        screen_at(0, 1);
-        put_text("message text on row 1");
+        screen_at(0, MESSAGE_ROW + 1);
+        put_text("second message row");
         clear_to_line_end();
     }
 }
