@@ -112,7 +112,7 @@ GameState {
   count_prefix           // a parancs előtti számprefix (pl. "5s") (4.2.5)
   can_huh                // CANHUH: a következő sikeres ütés összezavarja a szörnyet (8.3)
   max_hit_this_fight     // az aktuális harc legnagyobb egyszeri sebzése, az 'f' leállásához (7.2)
-  view_x                 // a nézőablak bal szélének logikai oszlopa, 0..40 (3.5)
+  view_window_x                 // a nézőablak bal szélének logikai oszlopa, 0..40 (3.5)
   options                // a beállítások (4.2.5)
   seed                   // az RN állapota (0.2)
 }
@@ -194,8 +194,8 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 ### 1.3.1 Logikai térkép
 | név | érték |
 |---|---|
-| NUMCOLS × NUMLINES | 80 × 24 – **logikai** méret; a szintgenerálás képletei ezzel számolnak (2.1) |
-| Térkép-mezők | x = 0..79, y = 1..22 (a 0. és a 23. logikai sorra semmi nem léphet) |
+| MAP_COLUMNS × MAP_ROWS | 80 × 22 – **logikai** méret |
+| Térkép-mezők | x = 0..79, y = 1..22 (a 0. sor az üzenetsáv, a 23. a státuszsor) |
 
 A térkép két rétegű: a **MAP** a valódi szint (karakter + flagek + szörny mezőnként), a **SCREEN** az, amit a játékos lát és amire emlékszik. Megjelenítéskor a MAP-ből másolunk a SCREEN-re. A SCREEN teljes, 80×22-es réteg a memóriában; a képernyőre ebből csak a nézőablak kerül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 
@@ -206,7 +206,7 @@ A térkép két rétegű: a **MAP** a valódi szint (karakter + flagek + szörny
 | képernyősor | tartalom |
 |---|---|
 | 0. | üzenetsor ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)) |
-| 1..22. | a térkép nézőablaka: a logikai `y` sor a képernyő `y`. sorában, a logikai `x` oszlop a képernyő `x − view_x` oszlopában ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)); az 1. sort egy hosszú üzenet ideiglenesen eltakarhatja ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)) |
+| 1..22. | a térkép nézőablaka: a logikai `y` sor a képernyő `y`. sorában, a logikai `x` oszlop a képernyő `x − view_window_x` oszlopában ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)); az 1. sort egy hosszú üzenet ideiglenesen eltakarhatja ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)) |
 | 23..24. | státuszsor, két sorban ([3.3](03_latoter_es_megjelenites.md#33-státuszsor)) |
 
 A teljes képernyős megjelenítések (csomaglista *clear* módban, súgó, sírkő, ranglista, győzelem) a 0..24. sort használják.
@@ -223,7 +223,7 @@ A teljes képernyős megjelenítések (csomaglista *clear* módban, súgó, sír
 | GOLD | `*` | | MAGIC | `$` (csak mágia-észlelés) |
 | POTION | `!` | | SOLID_ROCK | ` ` |
 | SCROLL | `?` | | MONSTER | `A`..`Z` |
-| WALL_H | `-` | | WALL_V | `\|` |
+| WALL_HORIZONTAL | `-` | | WALL_VERTICAL | `\|` |
 
 Nincs külön sarok-karakter: a felső és alsó fal a sarkokkal együtt `-`, az oldalfalak `|`.
 
@@ -283,7 +283,7 @@ A beviteli mezőkben a korlát elérésekor további karakter nem írható be. A
 | MAP karakter | 80 × 22 bájt | a valódi mező jele |
 | MAP flagek | 80 × 22 bájt | 1.2.4 |
 | MAP szörny | 80 × 22 bájt | a mezőn álló szörny indexe (0 = nincs) – a „szörny a mezőn?” kérdés gyors megválaszolásához; **nem perzisztens** (lent) |
-| SCREEN | 80 × 22 bájt | a játékos által látott jel, 7. bit = inverz |
+| SCREEN (a kódban `game.seen_map`) | 80 × 22 bájt | a játékos által látott jel, 7. bit = inverz |
 
 A rétegek indexe `(y − 1) × 80 + x`. A **teljes perzisztens játékállapot** (GameState, táblák, a MAP karakter-, a MAP flag- és a SCREEN réteg, beállítások, seed) egyetlen összefüggő memóriaterületen van, mert a mentés ezt egy darabban írja ki ([10.7](10_platform.md#107-lemezkezelés)). Becsült mérete kb. 11,5 KB.
 

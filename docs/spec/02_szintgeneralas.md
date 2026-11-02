@@ -14,19 +14,23 @@ new_level():
   place_stairs()                // 2.10; seenstairs = false
   minden szörny: monster.room = room(monster.pos)
   place_player()                // 2.11 + enter_room
-  center_view()                 // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás
+  center_view_window()                 // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás
   if SEEMONST: turn_see(false)  // a szörnyek az új szinten is azonnal kirajzolódnak
   if ISHALU: visuals()          // a hallucinált jelek azonnal
 ```
 
 ## 2.1 Szektorok
 9 szektor 3×3 rácsban. Az `i`-edik szektor (`i = row*3 + col`, 0..8):
-- `sector_size = (NUMCOLS/3, NUMLINES/3) = (26, 8)` – egy szektor mérete;
-- `sector_corner = ((i%3)*26 + 1, (i/3)*8)` – a szektor bal felső sarka ([1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő)).
+- egy szektor mérete `sector_size = (SECTOR_WIDTH, SECTOR_HEIGHT)`:
+  ```
+  SECTOR_WIDTH  = 26   // a térkép 80 oszlopa 3 szektorra osztva, lefelé kerekítve
+  SECTOR_HEIGHT = 8    // a térkép 22 sora, plusz a fölötte és az alatta lévő 1-1 sor, 3 szektorra osztva: 24 / 3
+  ```
+- `sector_corner = ((i%3)*SECTOR_WIDTH + 1, (i/3)*SECTOR_HEIGHT)` – a szektor bal felső sarka ([1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő)).
 
 Minden szektorba pontosan egy szoba kerül; a szoba indexe a szektor indexe.
 
-A `NUMCOLS` és `NUMLINES` itt a **logikai** 80×24-es méret ([1.3.1](01_adatmodell_es_flagek.md#131-logikai-térkép)), nem a C64 képernyője: a szint ugyanolyan, mint az eredetiben, a 40 oszlopos képernyőn a nézőablak mutatja ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
+A szektorok a **logikai** térképre vonatkoznak ([1.3.1](01_adatmodell_es_flagek.md#131-logikai-térkép)), nem a C64 képernyőjére: a szint ugyanolyan, mint az eredetiben, a 40 oszlopos képernyőn a nézőablak mutatja ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 
 ## 2.2 Szobaflagek
 ```
@@ -52,8 +56,8 @@ PHANTOM:  // a fantom szoba nem igazi szoba, csak egyetlen folyosó-csomópont
   repeat:
     room.pos.x = sector_corner.x + rnd(sector_size.x - 2) + 1  // véletlen pont a szektor belsejében,
     room.pos.y = sector_corner.y + rnd(sector_size.y - 2) + 1  //   a szektor szélétől legalább 1 mezőre
-  until 0 < room.pos.y < NUMLINES - 1                          // nem az üzenetsorban, nem a státuszsorban
-  room.size = (-NUMCOLS, -NUMLINES)                            // "nincs mérete"
+  until 1 <= room.pos.y <= MAP_ROWS                            // nem az üzenetsorban, nem a státuszsorban
+  room.size = (0, 0)                                           // nincs mérete: minden használat előtt a PHANTOM jelzőt nézzük
 
 MAZE:  // a labirintus kitölti a szektort
   room.size = (sector_size.x - 1, sector_size.y - 1)
@@ -116,7 +120,7 @@ A `rnd(++candidates) == 0` minta egyenletesen választ a jelöltek közül anél
 ```
 PHANTOM: nincs rajzolás (a folyosó a room.pos mezőn halad át)
 MAZE:    do_maze(room)
-normál:  felső és alsó sor (sarkokkal): WALL_H '-'; bal és jobb oszlop (sarkok nélkül): WALL_V '|'
+normál:  felső és alsó sor (sarkokkal): WALL_HORIZONTAL '-'; bal és jobb oszlop (sarkok nélkül): WALL_VERTICAL '|'
          belső: FLOOR
 ```
 **Labirintus:** rekurzív visszalépéses (DFS) labirintus, 2 mezős lépésekkel; csak folyosó-mezőkből áll, falkarakter nincs. A cellák koordinátái a labirintus bal felső sarkához (`room.pos`) képest értendők, 0..`room.size`.

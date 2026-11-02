@@ -22,17 +22,17 @@ void screen_init(void)
     vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
 }
 
-void screen_color(uint8_t br, uint8_t bg, uint8_t tx)
+void set_screen_colors(uint8_t border, uint8_t background, uint8_t text)
 {
     for (uint8_t i = 0; i < 250; i++) {
-        COLOR_RAM[i]       = tx;
-        COLOR_RAM[i + 250] = tx;
-        COLOR_RAM[i + 500] = tx;
-        COLOR_RAM[i + 750] = tx;
+        COLOR_RAM[i]       = text;
+        COLOR_RAM[i + 250] = text;
+        COLOR_RAM[i + 500] = text;
+        COLOR_RAM[i + 750] = text;
     }
 
-    vic.color_border = br;
-    vic.color_back   = bg;
+    vic.color_border = border;
+    vic.color_back   = background;
 }
 
 void screen_clear(void)
@@ -45,27 +45,27 @@ void screen_clear(void)
     }
 }
 
-void screen_put(uint8_t x, uint8_t y, uint8_t ch)
+void put_screen_character(uint8_t x, uint8_t y, uint8_t character)
 {
-    SCREEN_RAM[x + y * SCREEN_W] = ch;
+    SCREEN_RAM[x + y * SCREEN_WIDTH] = character;
 }
 
-void screen_at(uint8_t x, uint8_t y)
+void set_screen_cursor(uint8_t x, uint8_t y)
 {
     cursor_x = x;
     cursor_y = y;
 }
 
-void screen_column(uint8_t x)
+void set_screen_cursor_column(uint8_t x)
 {
     cursor_x = x;
 }
 
 // az utolsó sorban marad: nem görget
-void screen_newline(void)
+void move_screen_cursor_to_next_row(void)
 {
     cursor_x = 0;
-    if (cursor_y < SCREEN_H - 1) {
+    if (cursor_y < SCREEN_HEIGHT - 1) {
         cursor_y++;
     }
 }
@@ -73,29 +73,29 @@ void screen_newline(void)
 // a sor végén levág, nem tör és nem görget
 void put_text(const char *text)
 {
-    while (*text && cursor_x < SCREEN_W) {
-        screen_put(cursor_x++, cursor_y, *text++);
+    while (*text && cursor_x < SCREEN_WIDTH) {
+        put_screen_character(cursor_x++, cursor_y, *text++);
     }
 }
 
 void put_uint(uint32_t value, int8_t width)
 {
-    char text[12];
+    char text[FORMAT_BUFFER_SIZE];
     format_uint(text, value, width);
     put_text(text);
 }
 
 void screen_copy_row(uint8_t y, const uint8_t *source)
 {
-    volatile uint8_t *target = SCREEN_RAM + y * SCREEN_W;
-    for (uint8_t x = 0; x < SCREEN_W; x++) {
+    volatile uint8_t *target = SCREEN_RAM + y * SCREEN_WIDTH;
+    for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
         target[x] = source[x];
     }
 }
 
-void clear_to_line_end(void)
+void clear_to_row_end(void)
 {
-    for (uint8_t x = cursor_x; x < SCREEN_W; x++) {
-        screen_put(x, cursor_y, ' ');
+    for (uint8_t x = cursor_x; x < SCREEN_WIDTH; x++) {
+        put_screen_character(x, cursor_y, ' ');
     }
 }

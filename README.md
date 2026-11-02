@@ -32,7 +32,6 @@ A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított mód
 Projektszerkezet:
 ```
 src/          a játék forrása
-src/demo/     az M00-01 próbaprogramja (mindkét fordítóval)
 build/        a fordítás kimenete (nincs a repóban)
 build.bat     fordítás
 run.bat       fordítás + indítás VICE-ban
@@ -79,24 +78,13 @@ Egyszerűbb, de kevésbé tartós megoldás a három sort közvetlenül a `gtk3_
 
 **Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1).
 
-A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal ([src/demo](src/demo/)) lett kipróbálva: RN/rnd, szobarajzolás a videomemóriába, assemblyben írt RN-rutin C-ből hívva, több forrásfájlos fordítás, a BASIC ROM kilapozása és az `$A000–$BFFF` RAM használata. Mindkettő ugyanazt az RN-sorozatot adta. Az Oscar64 mellett szólt:
+A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal lett kipróbálva: RN/rnd, szobarajzolás a videomemóriába, assemblyben írt RN-rutin C-ből hívva, több forrásfájlos fordítás, a BASIC ROM kilapozása és az `$A000–$BFFF` RAM használata. Mindkettő ugyanazt az RN-sorozatot adta. Az Oscar64 mellett szólt:
 - kifejezetten C64-re készült, a C64-es teendőkre saját könyvtára van (pl. `conio.h`, `c64/memmap.h`);
 - az assembly közvetlenül a C-fájlban, egyszerű szintaxissal írható (`__asm { … }`);
 - egyetlen futtatható fájl, a beépített emulátorával (`-e`) VICE nélkül is gyorsan kipróbálható a program;
 - várhatóan kisebb kódot ad, ami a játék méreténél a legfontosabb szempont.
 
 A tartalék az **llvm-mos**. A választás visszafordítható marad, mert a játéklogika szabványos C, fordítóspecifikus dolog csak a platformfájlokba kerül. A kódméret és a sebesség ellenőrzése az M03 végén, a valódi szintgenerálón történik ([M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16)).
-
-### A demó fordítása
-
-A demó mindkét fordítóval: `src\demo\build.bat` (bárhonnan indítható).
-
-Kézzel, a projekt gyökeréből:
-
-- oscar64: `C:\oscar64\bin\oscar64.exe -O2 "-o=build\demo_oscar.prg" src\demo\main.c src\demo\rng.c src\demo\room.c src\demo\oscar64\platform.c`
-- llvm-mos: `C:\llvm-mos\bin\mos-c64-clang.bat -Os -o build\demo_llvm.prg src\demo\main.c src\demo\rng.c src\demo\room.c src\demo\llvm-mos\platform.c src\demo\llvm-mos\rn.s`
-
-PowerShellben az `-o=…` kapcsolót idézőjelbe kell tenni (`"-o=build\demo_oscar.prg"`), különben a PowerShell a pontnál kettévágja.
 
 ## Dokumentáció
 

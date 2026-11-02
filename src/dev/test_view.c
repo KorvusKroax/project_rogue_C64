@@ -5,7 +5,7 @@
 #include "../view.h"
 
 struct ViewCase {
-    uint8_t view_x, x, expected;
+    uint8_t view_window_x, x, expected;
 };
 
 static const struct ViewCase view_cases[] = {
@@ -22,8 +22,8 @@ static const struct ViewCase view_cases[] = {
 int test_view_follow(uint16_t i)
 {
     for (uint8_t c = 0; c < sizeof(view_cases) / sizeof(view_cases[0]); c++) {
-        const struct ViewCase *v = &view_cases[c];
-        if (view_x_after_step(v->x, v->view_x) != v->expected) return false;
+        const struct ViewCase *view_case = &view_cases[c];
+        if (calculate_view_window_x_after_step(view_case->x, view_case->view_window_x) != view_case->expected) return false;
     }
 
     return true;

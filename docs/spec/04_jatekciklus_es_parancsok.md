@@ -115,7 +115,7 @@ move(dir):
   else if ISHELD and target-en nem a flytrap jele áll: "you are being held"; uses turn
   if monster at target: attack(target)
   else if target walkable (FLOOR, DOOR, PASSAGE, STAIRS, TRAP, tárgy):
-     player.pos = target; check room enter/leave (3.1, 6.4); follow_view() (3.5)
+     player.pos = target; check room enter/leave (3.1, 6.4); follow_view_window() (3.5)
      if TRAP: trigger (9)
      if item and not 'm' and not ISLEVIT: pick_up
   else: no time
@@ -200,7 +200,7 @@ waste_time():
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
 | SHIFT-q * | kilépés: „really quit?” – `y`-ra „You quit with <n> gold pieces”, pontszám = arany (levonás nélkül) |
-| CTRL-r * | újrarajzolás (`center_view`, státuszsor) |
+| CTRL-r * | újrarajzolás (`center_view_window`, státuszsor) |
 | szóköz * | nem csinál semmit |
 
 > **C64-eltérés (E9):** az eredeti `!` (alshell indítása) nincs; a `!` billentyű „illegal command”.
@@ -247,7 +247,7 @@ restore_game():   // címképernyő, R
   az állapotblokk beolvasása; a MAP szörnyréteg újraépítése a szörnylistából (1.4.5)
   a fájl törlése a lemezről                     // a "halott"-ellenőrzés ELŐTT, mint az eredetiben
   ha hpt <= 0: "\"He's dead, Jim\"", vissza a címképernyőre
-  center_view(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik
+  center_view_window(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik
 ```
 - Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek (a MAP szörnyréteg kivételével, amely betöltéskor újraépül), a szobák és folyosórendszerek, a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
 - A bájtok XOR-ral el vannak rejtve (egyszerű elrejtés, nem biztonsági titkosítás), [10.7](10_platform.md#107-lemezkezelés).

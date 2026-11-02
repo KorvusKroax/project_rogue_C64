@@ -8,54 +8,25 @@ int main(void)
 {
     platform_init();
 
-    game.seed = platform_seed();
+    game.seed = calculate_seed();
 
     #ifdef DEVMODE
         #ifdef DEV_SEED
             game.seed = DEV_SEED;
         #endif
 
-        screen_clear();
-
-        screen_at(0, 0);
-        put_text("Seed: ");
-        put_uint(game.seed, 0);
-        screen_newline();
-        screen_newline();
-
-        put_text("Tests:");
-        screen_newline();
-        if (!dev_run_tests()) {
-            put_text("Selftest failed");
-            screen_newline();
-        }
-        screen_newline();
-        put_text("Press a key");
-        while (!key_get()) {}
-
-        dev_charset_screen();
-        screen_at(2, 24);
-        put_text("Press a key");
-        while (!key_get()) {}
-
-        dev_keyboard_screen();
-
-        dev_view_screen();
-
-        dev_message_screen();
+        dev_run_screens();
     #endif
 
     screen_clear();
-    screen_color(0, 0, 15);
+    set_screen_colors(0, 0, 15);
 
-    screen_at(0, 0);
+    set_screen_cursor(0, 0);
     put_text("Rogue for C64");
-    screen_newline();
+    move_screen_cursor_to_next_row();
     put_text("(based on Rogue 5.4.4)");
 
-    while (!key_get()) {
-        wait_frame();
-    }
+    wait_for_key();
 
     platform_exit();
     return 0;

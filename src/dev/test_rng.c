@@ -23,14 +23,14 @@ int test_rnd(uint16_t i)
 
     if (rnd(0) != 0 || game.seed != 111) return false;
 
-    bool v[10] = {false, false, false, false, false, false, false, false, false, false};
+    bool seen[10] = {false, false, false, false, false, false, false, false, false, false};
     for (uint16_t j = 0; j < 200; j++) {
-        uint16_t r = rnd(10);
-        if (r >= 10) return false;
-        v[r] = true;
+        uint16_t result = rnd(10);
+        if (result >= 10) return false;
+        seen[result] = true;
     }
     for (uint8_t j = 0; j < 10; j++) {
-        if (!v[j]) return false;
+        if (!seen[j]) return false;
     }
 
     return true;
@@ -44,10 +44,10 @@ int test_ROLL(uint16_t i)
 
     bool min_seen = false, max_seen = false;
     for (uint16_t j = 0; j < 200; j++) {
-        uint16_t r = ROLL(2, 6);
-        if (r < 2 || r > 12) return false;
-        if (r == 2) min_seen = true;
-        if (r == 12) max_seen = true;
+        uint16_t result = ROLL(2, 6);
+        if (result < 2 || result > 12) return false;
+        if (result == 2) min_seen = true;
+        if (result == 12) max_seen = true;
     }
 
     return min_seen && max_seen;
@@ -57,10 +57,10 @@ static bool spread_in_range(uint16_t n, uint16_t lo, uint16_t hi)
 {
     bool min_seen = false, max_seen = false;
     for (uint16_t j = 0; j < 500; j++) {
-        uint16_t r = spread(n);
-        if (r < lo || r > hi) return false;
-        if (r == lo) min_seen = true;
-        if (r == hi) max_seen = true;
+        uint16_t result = spread(n);
+        if (result < lo || result > hi) return false;
+        if (result == lo) min_seen = true;
+        if (result == hi) max_seen = true;
     }
 
     return min_seen && max_seen;

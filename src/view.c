@@ -7,88 +7,88 @@
 #include "map_signs.h"
 #include "state.h"
 
-#define VIEW_W         SCREEN_W
-#define VIEW_X_MAX     (NUMCOLS - VIEW_W)
-#define SCROLL_MARGIN  8
+#define VIEW_WINDOW_WIDTH          SCREEN_WIDTH
+#define VIEW_WINDOW_X_MAX          (MAP_COLUMNS - VIEW_WINDOW_WIDTH)
+#define VIEW_WINDOW_EDGE_DISTANCE  8
 
-static bool top_row_hidden;
+static bool map_top_row_hidden;
 
-void view_clear(void)
+void clear_seen_map(void)
 {
-    memset(game.screen, SOLID_ROCK, sizeof(game.screen));
+    memset(game.seen_map, SOLID_ROCK, sizeof(game.seen_map));
 }
 
-void draw_tile(uint8_t x, uint8_t y, uint8_t ch)
+void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch)
 {
-    game.screen[y - 1][x] = ch;
+    game.seen_map[y - 1][map_x] = ch;
 
-    uint8_t column = x - game.view_x;
-    if (column < VIEW_W && !(y == 1 && top_row_hidden)) {
-        screen_put(column, y, ch);
+    uint8_t column = map_x - game.view_window_x;
+    if (column < VIEW_WINDOW_WIDTH && !(y == 1 && map_top_row_hidden)) {
+        put_screen_character(column, y, ch);
     }
 }
 
-static void redraw_row(uint8_t y)
+static void redraw_map_row(uint8_t y)
 {
-    screen_copy_row(y, game.screen[y - 1] + game.view_x);
+    screen_copy_row(y, game.seen_map[y - 1] + game.view_window_x);
 }
 
 void redraw_map(void)
 {
-    wait_frame();
+    wait_for_next_frame();
 
-    for (uint8_t y = top_row_hidden ? 2 : 1; y <= MAP_ROWS; y++) {
-        redraw_row(y);
+    for (uint8_t y = map_top_row_hidden ? 2 : 1; y <= MAP_ROWS; y++) {
+        redraw_map_row(y);
     }
 }
 
-void view_hide_top_row(bool hidden)
+void set_map_top_row_visibility(bool visible)
 {
-    top_row_hidden = hidden;
+    map_top_row_hidden = !visible;
 
-    if (!hidden) {
-        redraw_row(1);
+    if (visible) {
+        redraw_map_row(1);
     }
 }
 
-static uint8_t centered_view_x(uint8_t x)
+static uint8_t calculate_centered_view_window_x(uint8_t map_x)
 {
-    if (x < VIEW_W / 2) {
+    if (map_x < VIEW_WINDOW_WIDTH / 2) {
         return 0;
     }
 
-    uint8_t view_x = x - VIEW_W / 2;
-    return view_x > VIEW_X_MAX ? VIEW_X_MAX : view_x;
+    uint8_t view_window_x = map_x - VIEW_WINDOW_WIDTH / 2;
+    return view_window_x > VIEW_WINDOW_X_MAX ? VIEW_WINDOW_X_MAX : view_window_x;
 }
 
-uint8_t view_x_after_step(uint8_t x, uint8_t view_x)
+uint8_t calculate_view_window_x_after_step(uint8_t map_x, uint8_t view_window_x)
 {
-    int8_t column = x - view_x;
+    int8_t column = map_x - view_window_x;
 
-    if (column < SCROLL_MARGIN) {
-        return x < SCROLL_MARGIN ? 0 : x - SCROLL_MARGIN;
+    if (column < VIEW_WINDOW_EDGE_DISTANCE) {
+        return map_x < VIEW_WINDOW_EDGE_DISTANCE ? 0 : map_x - VIEW_WINDOW_EDGE_DISTANCE;
     }
 
-    if (column > VIEW_W - 1 - SCROLL_MARGIN) {
-        uint8_t new_view_x = x - (VIEW_W - 1 - SCROLL_MARGIN);
-        return new_view_x > VIEW_X_MAX ? VIEW_X_MAX : new_view_x;
+    if (column > VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE) {
+        uint8_t new_view_window_x = map_x - (VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE);
+        return new_view_window_x > VIEW_WINDOW_X_MAX ? VIEW_WINDOW_X_MAX : new_view_window_x;
     }
 
-    return view_x;
+    return view_window_x;
 }
 
-void center_view(uint8_t x)
+void center_view_window(uint8_t map_x)
 {
-    game.view_x = centered_view_x(x);
+    game.view_window_x = calculate_centered_view_window_x(map_x);
     redraw_map();
 }
 
-void follow_view(uint8_t x)
+void follow_view_window(uint8_t map_x)
 {
-    uint8_t view_x = view_x_after_step(x, game.view_x);
+    uint8_t view_window_x = calculate_view_window_x_after_step(map_x, game.view_window_x);
 
-    if (view_x != game.view_x) {
-        game.view_x = view_x;
+    if (view_window_x != game.view_window_x) {
+        game.view_window_x = view_window_x;
         redraw_map();
     }
 }

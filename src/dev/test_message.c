@@ -4,14 +4,16 @@
 
 #include "../message.h"
 
-#define FORTY_CHAR "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+#define TWENTY_CHAR     "aaaaaaaaaaaaaaaaaaaa"
+#define THIRTY_TWO_CHAR "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+#define FORTY_CHAR      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
-struct LineCase {
+struct LengthCase {
     const char *text;
     uint8_t expected;
 };
 
-static const struct LineCase line_cases[] = {
+static const struct LengthCase row_cases[] = {
     { "", 0 },
     { "short text", 10 },
 
@@ -27,11 +29,34 @@ static const struct LineCase line_cases[] = {
     { FORTY_CHAR "a", 40 },
 };
 
-int test_message_line_length(uint16_t i)
+static const struct LengthCase bar_cases[] = {
+    { "short text", 10 },
+    { FORTY_CHAR, 40 },
+
+    // a második sorban a --More-- helye is megvan
+    { FORTY_CHAR " " THIRTY_TWO_CHAR, 73 },
+    { FORTY_CHAR " " THIRTY_TWO_CHAR "a", 73 },
+    { FORTY_CHAR " " TWENTY_CHAR " " TWENTY_CHAR, 61 },
+
+    // ami két sornál több, a következő oldalra marad
+    { FORTY_CHAR " " FORTY_CHAR " " FORTY_CHAR, 73 },
+};
+
+int test_message_chars_fitting_row(uint16_t i)
 {
-    for (uint8_t c = 0; c < sizeof(line_cases) / sizeof(line_cases[0]); c++) {
-        const struct LineCase *l = &line_cases[c];
-        if (message_line_length(l->text) != l->expected) return false;
+    for (uint8_t c = 0; c < sizeof(row_cases) / sizeof(row_cases[0]); c++) {
+        const struct LengthCase *row_case = &row_cases[c];
+        if (calculate_message_chars_fitting_row(row_case->text, 40) != row_case->expected) return false;
+    }
+
+    return true;
+}
+
+int test_message_chars_fitting_bar(uint16_t i)
+{
+    for (uint8_t c = 0; c < sizeof(bar_cases) / sizeof(bar_cases[0]); c++) {
+        const struct LengthCase *bar_case = &bar_cases[c];
+        if (calculate_message_chars_fitting_bar(bar_case->text) != bar_case->expected) return false;
     }
 
     return true;

@@ -40,12 +40,12 @@ static const uint8_t key_codes_shifted[KEY_COLUMNS * 8] = {
 
 static __forceinline uint8_t key_code_at(uint8_t position, uint8_t modifiers)
 {
-    if (modifiers & KEY_MOD_CTRL) {
+    if (modifiers & KEY_MODIFIER_CTRL) {
         uint8_t code = key_codes_plain[position];
         return code >= 'a' && code <= 'z' ? code & 0x1f : 0;
     }
 
-    return modifiers & KEY_MOD_SHIFT ? key_codes_shifted[position] : key_codes_plain[position];
+    return modifiers & KEY_MODIFIER_SHIFT ? key_codes_shifted[position] : key_codes_plain[position];
 }
 
 #ifdef DEVMODE
@@ -56,7 +56,7 @@ uint8_t key_decode(uint8_t position, uint8_t modifiers)
 #endif
 
 // a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
-static __forceinline void keyboard_scan(void)
+static __forceinline void scan_keyboard(void)
 {
     uint8_t select = 0xfe;
     for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
@@ -68,10 +68,10 @@ static __forceinline void keyboard_scan(void)
 
     uint8_t modifiers = 0;
     if ((key_matrix[1] & 0x80) || (key_matrix[6] & 0x10)) {  // bal és jobb SHIFT
-        modifiers |= KEY_MOD_SHIFT;
+        modifiers |= KEY_MODIFIER_SHIFT;
     }
     if (key_matrix[7] & 0x24) {                              // CTRL és C=
-        modifiers |= KEY_MOD_CTRL;
+        modifiers |= KEY_MODIFIER_CTRL;
     }
     key_matrix[1] &= 0x7f;
     key_matrix[6] &= 0xef;
@@ -81,7 +81,7 @@ static __forceinline void keyboard_scan(void)
 
 // képkockánként legfeljebb egy leütés; az egyidejű többi új marad, így a következő képkockákban jön
 // a kód nélküli billentyű nem leütés, és nem takarja el a mögötte lévőt
-static __forceinline void keypress_detect(void)
+static __forceinline void detect_keypress(void)
 {
     uint8_t code = 0;
 
@@ -112,8 +112,8 @@ static __forceinline void keypress_detect(void)
 // a raszter-IRQ része; az __interrupt menti a fordító zero page regisztereit
 __interrupt void key_irq(void)
 {
-    keyboard_scan();
-    keypress_detect();
+    scan_keyboard();
+    detect_keypress();
 }
 
 void key_init(void)
@@ -124,7 +124,7 @@ void key_init(void)
     }
 }
 
-void key_wait_released(void)
+void wait_for_keys_released(void)
 {
     bool any_down;
     do {
@@ -137,7 +137,7 @@ void key_wait_released(void)
     } while (any_down);
 }
 
-uint8_t key_get(void)
+uint8_t read_key(void)
 {
     if (key_buffer_read == key_buffer_write) {
         return 0;
@@ -145,5 +145,15 @@ uint8_t key_get(void)
 
     uint8_t code = key_buffer[key_buffer_read & (KEY_BUFFER_SIZE - 1)];
     key_buffer_read++;
+    return code;
+}
+
+uint8_t wait_for_key(void)
+{
+    uint8_t code;
+    do {
+        code = read_key();
+    } while (!code);
+
     return code;
 }

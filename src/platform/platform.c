@@ -1,5 +1,6 @@
 #include "platform.h"
 
+#include <c64/cia.h>
 #include <c64/memmap.h>
 #include <c64/vic.h>
 
@@ -18,10 +19,19 @@
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
 
+#define IRQ_VECTOR            (*(void **)0x0314)
+#define NMI_VECTOR            (*(void **)0x0318)
+#define KERNAL_IRQ_HANDLER    ((void *)0xea31)
+#define KERNAL_NMI_HANDLER    ((void *)0xfe47)
+#define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt
+#define BASIC_STRING_STACK    ((volatile uint8_t *)0x0016)  // 3 bájt
+#define RASTER_INTERRUPT_ROW  250                           // a látható rész alatt
+#define VIC_RASTER_INTERRUPT  0x01
+
 volatile uint8_t frame_count;
 
 // ide mutat a $0314: lépteti a képkocka-számlálót, lefuttatja a billentyűkezelést, nyugtázza a VIC-et, lépteti a jiffy órát, majd a KERNAL-on át visszatér
-__asm irq_stub
+__asm raster_interrupt_handler
 {
     inc frame_count
     jsr key_irq
@@ -32,7 +42,7 @@ __asm irq_stub
 }
 
 // ide mutat a $0318: a RESTORE (NMI) nem csinál semmit
-__asm nmi_stub
+__asm restore_key_handler
 {
     rti
 }
@@ -45,16 +55,16 @@ void platform_init(void)
 
     key_init();
 
-    *(volatile uint8_t *)0xdc0d = 0x7f;     // CIA1 időzítő-IRQ ki
-    (void)*(volatile uint8_t *)0xdc0d;      // a függő CIA-IRQ törlése
+    cia1.icr = 0x7f;                        // CIA1 időzítő-IRQ ki
+    (void)(cia1.icr);                       // a függő CIA-IRQ törlése
 
-    *(void **)0x0314 = irq_stub;            // IRQ-vektor
-    *(void **)0x0318 = nmi_stub;            // NMI-vektor
+    IRQ_VECTOR = raster_interrupt_handler;
+    NMI_VECTOR = restore_key_handler;
 
-    *(volatile uint8_t *)0xd012 = 250;      // a raszter-IRQ sora (a látható rész alatt)
-    *(volatile uint8_t *)0xd011 &= 0x7f;    // a sorszám 9. bitje 0
-    *(volatile uint8_t *)0xd01a = 0x01;     // raszter-IRQ be
-    *(volatile uint8_t *)0xd019 = 0xff;     // a függő VIC-IRQ törlése
+    vic.raster = RASTER_INTERRUPT_ROW;
+    vic.ctrl1 &= 0x7f;                      // a sorszám 9. bitje 0
+    vic.intr_enable = VIC_RASTER_INTERRUPT;
+    vic.intr_ctrl = 0xff;                   // a függő VIC-IRQ törlése
 
     screen_init();
 
@@ -63,15 +73,15 @@ void platform_init(void)
 
 void platform_exit(void)
 {
-    key_wait_released();
+    wait_for_keys_released();
 
     __asm { sei }
 
-    *(volatile uint8_t *)0xd01a = 0x00;     // raszter-IRQ ki
-    *(volatile uint8_t *)0xd019 = 0xff;     // a függő VIC-IRQ törlése
+    vic.intr_enable = 0;                    // raszter-IRQ ki
+    vic.intr_ctrl = 0xff;                   // a függő VIC-IRQ törlése
 
-    *(void **)0x0314 = (void *)0xea31;      // gyári IRQ-vektor
-    *(void **)0x0318 = (void *)0xfe47;      // gyári NMI-vektor
+    IRQ_VECTOR = KERNAL_IRQ_HANDLER;
+    NMI_VECTOR = KERNAL_NMI_HANDLER;
 
     vic_setbank(0);
     __asm { jsr $ff81 }                   // CINT: VIC, színek, képernyőtörlés, CIA1 időzítő-IRQ
@@ -81,25 +91,22 @@ void platform_exit(void)
     mmap_set(MMAP_ROM);                     // BASIC ROM be
 
     // a BASIC szövegverem-mutatói: a fordító zero page-e felülírja őket
-    *(volatile uint8_t *)0x16 = 0x19;
-    *(volatile uint8_t *)0x17 = 0x16;
-    *(volatile uint8_t *)0x18 = 0x00;
+    BASIC_STRING_STACK[0] = 0x19;
+    BASIC_STRING_STACK[1] = 0x16;
+    BASIC_STRING_STACK[2] = 0x00;
 }
 
 // ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön
-uint32_t platform_seed(void)
+uint32_t calculate_seed(void)
 {
-    volatile uint8_t *jiffy = (volatile uint8_t *)0x00a0; // KERNAL jiffy óra, 3 bájt
-
-    uint32_t s = ((uint32_t)jiffy[0] << 16) | ((uint32_t)jiffy[1] << 8) | jiffy[2];
-    s |= (uint32_t)*(volatile uint8_t *)0xd012 << 24;    // raszter-sor
-    s ^= *(volatile uint8_t *)0xdc04;                    // CIA1 A időzítő, alsó bájt
-    s ^= (uint32_t)*(volatile uint8_t *)0xdc05 << 8;     // CIA1 A időzítő, felső bájt
-    return s;
+    uint32_t seed = ((uint32_t)(JIFFY_CLOCK[0]) << 16) | ((uint32_t)(JIFFY_CLOCK[1]) << 8) | JIFFY_CLOCK[2];
+    seed |= (uint32_t)(vic.raster) << 24;
+    seed ^= cia1.ta;
+    return seed;
 }
 
-void wait_frame(void)
+void wait_for_next_frame(void)
 {
-    uint8_t f = frame_count;
-    while (frame_count == f) {}
+    uint8_t start_frame = frame_count;
+    while (frame_count == start_frame) {}
 }

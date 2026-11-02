@@ -5,7 +5,7 @@
 #define CAPPED_MAX 16777215UL
 #define POWER_COUNT 10
 
-uint16_t dist2(struct Pos a, struct Pos b)
+uint16_t dist2(struct Position a, struct Position b)
 {
     int8_t dx = a.x - b.x;
     int8_t dy = a.y - b.y;
@@ -31,46 +31,50 @@ static const uint32_t powers_of_ten[POWER_COUNT] = {
 static uint8_t format_number(char *out, uint32_t value, bool negative, int8_t width)
 {
     char text[11];
-    uint8_t len = 0;
+    uint8_t length = 0;
     bool started = false;
 
     if (negative) {
-        text[len++] = '-';
+        text[length++] = '-';
     }
 
-    for (uint8_t p = 0; p < POWER_COUNT; p++) {
+    for (uint8_t power_index = 0; power_index < POWER_COUNT; power_index++) {
         char digit = '0';
-        while (value >= powers_of_ten[p]) {
-            value -= powers_of_ten[p];
+        while (value >= powers_of_ten[power_index]) {
+            value -= powers_of_ten[power_index];
             digit++;
         }
 
-        if (digit != '0' || p == POWER_COUNT - 1) {
+        if (digit != '0' || power_index == POWER_COUNT - 1) {
             started = true;
         }
         if (started) {
-            text[len++] = digit;
+            text[length++] = digit;
         }
     }
 
-    uint8_t field = width < 0 ? -width : width;
-    uint8_t padding = field > len ? field - len : 0;
-    uint8_t pos = 0;
+    uint8_t field_width = width < 0 ? -width : width;
+    if (field_width > FORMAT_WIDTH_MAX) {
+        field_width = FORMAT_WIDTH_MAX;
+    }
+
+    uint8_t padding = field_width > length ? field_width - length : 0;
+    uint8_t out_index = 0;
 
     if (width > 0) {
         for (; padding > 0; padding--) {
-            out[pos++] = ' ';
+            out[out_index++] = ' ';
         }
     }
-    for (uint8_t i = 0; i < len; i++) {
-        out[pos++] = text[i];
+    for (uint8_t i = 0; i < length; i++) {
+        out[out_index++] = text[i];
     }
     for (; padding > 0; padding--) {
-        out[pos++] = ' ';
+        out[out_index++] = ' ';
     }
-    out[pos] = 0;
+    out[out_index] = 0;
 
-    return pos;
+    return out_index;
 }
 
 uint8_t format_int(char *out, int16_t value, int8_t width)

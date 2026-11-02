@@ -19,7 +19,8 @@ static const struct DevTest dev_tests[] = {
     { "NUM-FORMAT", test_format, 1 },
     { "KEY-DECODE", test_key_decode, 1 },
     { "VIEW-FOLLOW", test_view_follow, 1 },
-    { "MESS-LINE LENGTH", test_message_line_length, 1 },
+    { "MESS-LINE LENGTH", test_message_chars_fitting_row, 1 },
+    { "MESS-PAGE LENGTH", test_message_chars_fitting_bar, 1 },
 };
 
 bool dev_run_tests(void)
@@ -31,9 +32,9 @@ bool dev_run_tests(void)
         const struct DevTest *dt = &dev_tests[t];
         uint16_t fails = 0, first_fail = 0;
 
-        screen_column(1);
+        set_screen_cursor_column(1);
         put_text(dt->name);
-        screen_column(21);
+        set_screen_cursor_column(21);
 
         for (uint16_t i = 0; i < dt->count; i++) {
             if (!dt->fn(i)) {
@@ -61,7 +62,7 @@ bool dev_run_tests(void)
             all_ok = false;
         }
 
-        screen_newline();
+        move_screen_cursor_to_next_row();
     }
 
     game.seed = saved_seed;

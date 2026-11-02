@@ -88,24 +88,24 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 > **C64-eltérés (E1):** a 80 oszlopos logikai térképből a képernyőn egyszerre 40 oszlop látszik. Az ablak a játékost követi, holt zónával.
 
 ```
-VIEW_W        = 40      // a nézőablak szélessége
-SCROLL_MARGIN = 8       // ennyi oszlopnál közelebb a széléhez görget
-view_x ∈ 0..40          // a képernyő 0. oszlopában látszó logikai oszlop
+VIEW_WINDOW_WIDTH         = 40    // a nézőablak szélessége
+VIEW_WINDOW_EDGE_DISTANCE = 8     // ennyi oszlopnál közelebb a széléhez görget
+view_window_x ∈ 0..40             // a képernyő 0. oszlopában látszó logikai oszlop
 
-center_view():
-  view_x = clamp(player.x - 20, 0, 40)
+center_view_window():
+  view_window_x = clamp(player.x - 20, 0, 40)
   redraw_map()                                  // az 1..22. sor újrarajzolása a SCREEN-ből
 
-follow_view():  // minden olyan lépés után, amely a játékos pozícióját megváltoztatta (mozgás, teleport)
-  sx = player.x - view_x
-  if sx < SCROLL_MARGIN:                        // a játékos a holt zóna bal szélére kerül
-     view_x = max(player.x - SCROLL_MARGIN, 0)
-  else if sx > VIEW_W - 1 - SCROLL_MARGIN:      // a játékos a holt zóna jobb szélére kerül
-     view_x = min(player.x - (VIEW_W - 1 - SCROLL_MARGIN), 40)
-  ha a view_x változott: redraw_map()
+follow_view_window():  // minden olyan lépés után, amely a játékos pozícióját megváltoztatta (mozgás, teleport)
+  sx = player.x - view_window_x
+  if sx < VIEW_WINDOW_EDGE_DISTANCE:                        // a játékos a holt zóna bal szélére kerül
+     view_window_x = max(player.x - VIEW_WINDOW_EDGE_DISTANCE, 0)
+  else if sx > VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE:      // a játékos a holt zóna jobb szélére kerül
+     view_window_x = min(player.x - (VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE), 40)
+  ha a view_window_x változott: redraw_map()
 ```
-- `center_view` hívódik új szinten ([2](02_szintgeneralas.md)), betöltés után és `CTRL-R`-re; `follow_view` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
-- **Futás `jump` mellett:** amíg a futás tart, nincs rajzolás; a futás végén `follow_view`, majd a térkép frissítése. `jump` nélkül minden lépés után `follow_view` fut.
-- **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) a SCREEN rétegbe kerül, és ha `view_x ≤ x < view_x + 40`, egyúttal a videomemória `y`. sorának `x − view_x`. oszlopába is (kivéve az üzenet által foglalt 1. sort, [3.4](#34-üzenetsor)). A `redraw_map` a foglalt 1. sort szintén kihagyja, így görgetés sem írja felül az üzenetet.
+- `center_view_window` hívódik új szinten ([2](02_szintgeneralas.md)), betöltés után és `CTRL-R`-re; `follow_view_window` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
+- **Futás `jump` mellett:** amíg a futás tart, nincs rajzolás; a futás végén `follow_view_window`, majd a térkép frissítése. `jump` nélkül minden lépés után `follow_view_window` fut.
+- **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) a SCREEN rétegbe kerül, és ha `view_window_x ≤ x < view_window_x + 40`, egyúttal a videomemória `y`. sorának `x − view_window_x`. oszlopába is (kivéve az üzenet által foglalt 1. sort, [3.4](#34-üzenetsor)). A `redraw_map` a foglalt 1. sort szintén kihagyja, így görgetés sem írja felül az üzenetet.
 - **Animációk** (dobott tárgy, sugár, [7.4](07_harc.md#74-hajítás-t), [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)): a nézőablakon kívül eső lépések nem rajzolódnak, és nincs utánuk várakozás sem.
 - **Ideiglenes ablakok** (csomaglista *overwrite* módban, észlelés-képernyők, súgó, beállítások): csak a videomemóriába rajzolnak; bezáráskor a képernyő a SCREEN-ből és a státuszsorból visszaáll. Közben a játék nem halad.

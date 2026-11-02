@@ -71,7 +71,7 @@ Nem megfelelő tárgyra a `q`, `r` és `e` is időbe kerül („yuk! Why would y
 teleport():
   new_pos = find_floor(null, monster)  // bármely nem fantom szoba; lehet ugyanaz a szoba, akár ugyanaz a mező is
   ha más szobába került: leave_room + enter_room, különben look()
-  player.pos = new_pos; follow_view() (3.5)
+  player.pos = new_pos; follow_view_window() (3.5)
   if ISHELD: ISHELD le; vf_hit = 0
   bear_trap (no_move) = 0; futás/ismétlés megszakad; billentyűpuffer ürítése
 ```
