@@ -77,7 +77,7 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 - Az üzenetsáv két, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). A két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
 - Minden üzenet nagybetűvel kezdődik (kivéve a csomagbetűvel kezdődőket, pl. „a) …”).
 - **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a csomagbetűvel kezdődő üzenet, a `@` státuszkiírása és a kérdés.
-- Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az eddigi szöveg és az új üzenet együttes hossza eléri a 71 karaktert (`MAXMSG = 80 − sizeof("--More--")`, a sizeof a záró nullát is számolja), **vagy** a tördelés miatt a `--More--` már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
+- Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az új üzenettel együtt a szöveg a tördelés után a `--More--`-val már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
 - Ha egyetlen üzenet a `--More--`-val együtt nem fér el a két sorban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
 - A következő billentyűleütéskor az üzenetsáv törlődik. `CTRL-P` az utolsó üzenetet ismétli.
 - Amíg az 1. sort üzenet foglalja, a térkép 1. sorába rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; a sáv törlésekor az 1. sor a SCREEN-ből visszarajzolódik.

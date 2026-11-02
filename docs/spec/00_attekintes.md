@@ -81,7 +81,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | # | röviden | hol |
 |---|---|---|
 | E1 | 40×25 képernyő; a 80×22-es szint görgetett nézőablakban | [1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő), [3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés) |
-| E2 | kétsoros üzenetsáv szótördeléssel (a 2. sor ideiglenesen a térkép fölé); a MAXMSG = 71 marad; az üzenetek ponttal zárulnak és egy szóközzel fűződnek össze; a túl hosszú üzenet `--More--`-val lapozódik | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
+| E2 | kétsoros üzenetsáv szótördeléssel (a 2. sor ideiglenesen a térkép fölé); az üzenetek ponttal zárulnak és egy szóközzel fűződnek össze; a túl hosszú üzenet `--More--`-val lapozódik | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
 | E3 | kétsoros státuszsor (23–24. sor) | [3.3](03_latoter_es_megjelenites.md#33-státuszsor) |
 | E4 | C64 billentyűzet: mátrixolvasás, ESC = RUN/STOP vagy `←`, ismétlés | [4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet) |
 | E5 | címképernyő-menü a parancssor helyett; nincs terminálméret-ellenőrzés | [0.1](#01-indítás) |
