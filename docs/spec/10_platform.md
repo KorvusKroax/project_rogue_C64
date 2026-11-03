@@ -98,7 +98,7 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 | tétel | becslés / cél |
 |---|---|
 | kód | 28–34 KB |
-| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 9 KB; ha nem fér el, egyszerű szótáras tömörítés |
+| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 12 KB tömörítés nélkül, a specifikációból mérve (M02-04): üzenetek 6,7 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,7 KB, győzelmi képernyő és sírkő 1,1 KB; egy 128 szavas szótár kb. 2,2 KB-ot nyerne (a kicsomagoló nélkül), a tömörítésről az M3 előtti átnézés dönt |
 | állandó táblák (szörnyek, tárgyak, erő, xp) | kb. 1,5 KB |
 | játékállapot (perzisztens blokk) | kb. 11,5 KB |
 | MAP szörnyréteg (nem perzisztens) | 1760 bájt |
