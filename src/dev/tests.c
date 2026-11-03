@@ -33,9 +33,9 @@ bool dev_run_tests(void)
         const struct DevTest *dt = &dev_tests[t];
         uint16_t fails = 0, first_fail = 0;
 
-        set_screen_cursor_column(1);
+        set_screen_cursor_x(1);
         put_text(dt->name);
-        set_screen_cursor_column(21);
+        set_screen_cursor_x(21);
 
         for (uint16_t i = 0; i < dt->count; i++) {
             if (!dt->fn(i)) {

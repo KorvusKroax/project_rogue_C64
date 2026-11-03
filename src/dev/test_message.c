@@ -67,10 +67,11 @@ int test_prepare_message_text(uint16_t i)
 {
     for (uint8_t c = 0; c < sizeof(text_cases) / sizeof(text_cases[0]); c++) {
         const struct TextCase *text_case = &text_cases[c];
-        if (strcmp(prepare_message_text(text_case->text), text_case->expected) != 0) return false;
+        if (strcmp(prepare_message_text(text_case->text, true), text_case->expected) != 0) return false;
     }
 
-    return true;
+    // a kérdés nem kap záró pontot
+    return strcmp(prepare_message_text("file name: ", false), "File name: ") == 0;
 }
 
 int test_message_chars_fitting_row(uint16_t i)

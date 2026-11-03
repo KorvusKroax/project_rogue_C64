@@ -4,6 +4,7 @@
 #include "../platform/screen.h"
 #include "../platform/key.h"
 #include "../platform/charset.h"
+#include "../input.h"
 #include "../map_signs.h"
 #include "../message.h"
 #include "../state.h"
@@ -86,9 +87,9 @@ static void dev_keyboard_screen(void)
     set_screen_cursor(2, 16);
     put_text("Presses:");
     set_screen_cursor(2, 24);
-    put_text("RETURN to leave, SHIFT: stop reading");
+    put_text("ESC to leave, SHIFT: stop reading");
 
-    while (last_code != KEY_RETURN) {
+    while (last_code != KEY_ESCAPE) {
         wait_for_next_frame();
 
         // a SHIFT nyomva tartása alatt a puffer megtelhet
@@ -192,12 +193,12 @@ static void dev_view_screen(void)
     set_screen_cursor(0, 23);
     put_text("A,D: step  Q,E: 8 steps  F: time");
     set_screen_cursor(0, 24);
-    put_text("1,2,3: view 0,20,40  H: row 1  RET: end");
+    put_text("1,2,3: view 0,20,40  H: row 1  ESC: end");
 
     view_draw_pattern();
     draw_tile(x, VIEW_TEST_ROW, PLAYER);
 
-    while (code != KEY_RETURN) {
+    while (code != KEY_ESCAPE) {
         set_screen_cursor(0, 0);
         put_text("view_x:");
         put_uint(game.view_window_x, 3);
@@ -230,19 +231,31 @@ static void dev_view_screen(void)
     set_map_top_row_visibility(true);
 }
 
+#define TEST_FIELD_LENGTH  20
+
+// a beírt szöveg üzenetként jelenik meg; ESC után nincs mit kiírni
+static void ask_test_field(const char *prompt)
+{
+    char answer[TEST_FIELD_LENGTH + 1];
+
+    if (ask_text(prompt, answer, TEST_FIELD_LENGTH)) {
+        message(answer);
+    }
+}
+
 static void dev_message_screen(void)
 {
     uint8_t code = 0;
 
     screen_clear();
     set_screen_cursor(0, 23);
-    put_text("1..6: messages  SPACE: more");
+    put_text("1..6: messages  7,8,9: prompts");
     set_screen_cursor(0, 24);
-    put_text("Q,E: view 0,40  RET: end  other: clear");
+    put_text("Q,E: view 0,40  ESC: end  other: clear");
 
     view_draw_pattern();
 
-    while (code != KEY_RETURN) {
+    while (code != KEY_ESCAPE) {
         code = wait_for_key_and_clear_message();
 
         switch (code) {
@@ -261,6 +274,9 @@ static void dev_message_screen(void)
                 message("you are now wearing a very long piece of armor and it fits you");
                 break;
             case '6': message("a) a mace"); break;
+            case '7': ask_key("which object do you want to quaff? (* for list): "); break;
+            case '8': ask_test_field("call it: "); break;   // a mező elfér a 0. sorban
+            case '9': ask_test_field("this question is long enough to go on to the second row, name it: "); break; // a mező az 1. sor végéig tart
             case 'q': center_view_window(0); break;
             case 'e': center_view_window(MAP_COLUMNS - 1); break;
         }

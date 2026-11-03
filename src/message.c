@@ -18,7 +18,7 @@ static uint8_t message_bar_length;
 static uint8_t message_bar_end_column;
 static bool second_row_reserved;
 
-const char *prepare_message_text(const char *text)
+const char *prepare_message_text(const char *text, bool add_end_character)
 {
     uint8_t length = 0;
 
@@ -34,7 +34,7 @@ const char *prepare_message_text(const char *text)
         }
 
         char last = message_text[length - 1];
-        if (last != '.' && last != '!' && last != '?') {
+        if (add_end_character && last != '.' && last != '!' && last != '?') {
             message_text[length++] = MESSAGE_END_CHARACTER;
         }
     }
@@ -83,6 +83,14 @@ static void reserve_second_row(void)
     set_map_top_row_visibility(false);
 }
 
+static void release_second_row(void)
+{
+    if (second_row_reserved) {
+        second_row_reserved = false;
+        set_map_top_row_visibility(true);
+    }
+}
+
 static void show_row(uint8_t row, const char *text, uint8_t length)
 {
     for (uint8_t x = 0; x < length; x++) {
@@ -103,6 +111,8 @@ static void show_message_bar(void)
     if (*second_row_text) {
         reserve_second_row();
         show_row(MESSAGE_ROW + 1, second_row_text, strlen(second_row_text));
+    } else {
+        release_second_row();
     }
 }
 
@@ -142,10 +152,8 @@ static bool append_to_message_bar(const char *text)
     return true;
 }
 
-void message(const char *text)
+static void add_to_message_bar(const char *text)
 {
-    text = prepare_message_text(text);
-
     if (message_bar_length) {
         if (append_to_message_bar(text)) {
             return;
@@ -167,17 +175,40 @@ void message(const char *text)
     }
 }
 
+void message(const char *text)
+{
+    add_to_message_bar(prepare_message_text(text, true));
+}
+
+void message_prompt(const char *text)
+{
+    add_to_message_bar(prepare_message_text(text, false));
+}
+
+void message_reserve_input_space(uint8_t length)
+{
+    uint8_t x = get_screen_cursor_x();
+
+    if (!second_row_reserved && x + length > SCREEN_WIDTH) {
+        reserve_second_row();
+        set_screen_cursor(0, MESSAGE_ROW + 1);
+        clear_to_row_end();
+        set_screen_cursor(x, MESSAGE_ROW);
+    }
+}
+
+void message_finish_prompt(void)
+{
+    message_bar_length = 0;
+}
+
 void message_clear(void)
 {
     message_bar_length = 0;
 
     set_screen_cursor(0, MESSAGE_ROW);
     clear_to_row_end();
-
-    if (second_row_reserved) {
-        second_row_reserved = false;
-        set_map_top_row_visibility(true);
-    }
+    release_second_row();
 }
 
 uint8_t wait_for_key_and_clear_message(void)

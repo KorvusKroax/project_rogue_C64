@@ -56,9 +56,19 @@ void set_screen_cursor(uint8_t x, uint8_t y)
     cursor_y = y;
 }
 
-void set_screen_cursor_column(uint8_t x)
+void set_screen_cursor_x(uint8_t x)
 {
     cursor_x = x;
+}
+
+uint8_t get_screen_cursor_x(void)
+{
+    return cursor_x;
+}
+
+uint8_t get_screen_cursor_y(void)
+{
+    return cursor_y;
 }
 
 // az utolsó sorban marad: nem görget

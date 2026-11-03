@@ -82,7 +82,7 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 - **Hosszkorlát:** egy üzenet egy 128 bájtos pufferben készül el (`MESSAGE_TEXT_SIZE`), ebből a záró pontnak és a lezáró nullának 2 bájt jár, így legfeljebb 126 karakteres lehet; a hosszabb szöveg vége levágódik. A méret a leghosszabb valódi üzenet ismeretében csökkenthető.
 - A következő billentyűleütéskor az üzenetsáv törlődik. `CTRL-P` az utolsó üzenetet ismétli.
 - Amíg az 1. sort üzenet foglalja, a térkép 1. sorába rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; a sáv törlésekor az 1. sor a SCREEN-ből visszarajzolódik.
-- **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a 0. sor végére ér, az 1. sorban). Ha a bevitel a 2. sor végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít.
+- **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a 0. sor végére ér, az 1. sorban). Ha a bevitel a 2. sor végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít. A beírás helyét inverz szóköz jelöli. A kérdés a válasszal együtt látszik, amíg a következő üzenet vagy a következő leütés le nem váltja; az új üzenet nem fűződik hozzá. ESC-re a sáv azonnal törlődik.
 
 ## 3.5 Nézőablak (görgetés)
 
