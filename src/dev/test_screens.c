@@ -10,6 +10,7 @@
 #include "../map_signs.h"
 #include "../message.h"
 #include "../state.h"
+#include "../status.h"
 #include "../view.h"
 
 // a 95 jel három sorban
@@ -192,9 +193,9 @@ static void dev_view_screen(void)
     bool top_row_hidden = false;
 
     screen_clear();
-    set_screen_cursor(0, 23);
+    set_screen_cursor(0, STATUS_ROW);
     put_text("A,D: step  Q,E: 8 steps  F: time");
-    set_screen_cursor(0, 24);
+    set_screen_cursor(0, STATUS_ROW + 1);
     put_text("1,2,3: view 0,20,40  H: row 1  ESC: end");
 
     view_draw_pattern();
@@ -250,9 +251,9 @@ static void dev_message_screen(void)
     uint8_t code = 0;
 
     screen_clear();
-    set_screen_cursor(0, 23);
+    set_screen_cursor(0, STATUS_ROW);
     put_text("1..6: messages  7,8,9: prompts");
-    set_screen_cursor(0, 24);
+    set_screen_cursor(0, STATUS_ROW + 1);
     put_text("Q,E: view 0,40  ESC: end  other: clear");
 
     view_draw_pattern();
