@@ -181,7 +181,6 @@ waste_time():
 | i | teljes csomag listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | SHIFT-i | egy tárgy betű alapján az üzenetsávba; üres csomag: „you aren't carrying anything”; 1 tárgy → azonnal; rossz betű: „'x' not in pack” |
 | `)` `]` `=` | kézben lévő fegyver / viselt páncél / gyűrűk; „you are wielding nothing” / „wearing nothing” |
-| `@` | a státuszsor kiírása az üzenetsávba |
 | SHIFT-d | felfedezett típusok listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `/` | jel magyarázata ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `^` + irány | csapda azonosítása a szomszéd mezőn („You have found <csapda>”), rejtettnél vagy ha nincs: „You have found no trap there”. ISHUH-nál 20% eséllyel más irány (mint minden irányos parancsnál, `get_dir`); ISHALU alatt véletlen csapdanév |
@@ -200,10 +199,9 @@ waste_time():
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
 | SHIFT-q * | kilépés: „really quit?” – `y`-ra „You quit with <n> gold pieces”, pontszám = arany (levonás nélkül) |
-| CTRL-r * | újrarajzolás (`center_view_window`, státuszsor) |
 | szóköz * | nem csinál semmit |
 
-> **C64-eltérés (E9):** az eredeti `!` (alshell indítása) nincs; a `!` billentyű „illegal command”.
+> **C64-eltérés (E9):** az eredeti `!` (alshell indítása) és `CTRL-r` (a terminál képernyőjének újrarajzolása) nincs; mindkét billentyű „illegal command”.
 
 **Beállítások (`o`):**
 
@@ -297,9 +295,9 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 **Súgó (`?`):** „character you want help for (* for all): ” – egy billentyűre az ahhoz tartozó sor („<jel>	<leírás>”, ismeretlenre „unknown character '<x>'”); `*`-ra a teljes lista egy oszlopban, oldalanként.
 
-> **C64-eltérés (E11):** a súgó egy oszlopban, oldalanként 23 sorral jelenik meg (0..22. sor), a 24. sorban „--Press space to continue--” (ESC: kilépés). Így mind a 48 sor látható (az eredeti 80×24-es kétoszlopos elrendezésben az utolsó három nem fért ki). A `!` sora (alshell) kimarad, az ESC sora `STOP` jellel szerepel.
+> **C64-eltérés (E11):** a súgó egy oszlopban, oldalanként 23 sorral jelenik meg (0..22. sor), a 24. sorban „--Press space to continue--” (ESC: kilépés). Így mind a 46 sor látható, két oldalon (az eredeti 80×24-es kétoszlopos elrendezésben az utolsó három nem fért ki). A `!` (alshell), a `@` (státusz) és a `^R` (újrarajzolás) sora kimarad, az ESC sora `STOP` jellel szerepel.
 
-Sorformátum: a jel (CTRL-es billentyűnél `^` + betű), utána a leírás tabulátorral kezdve (8-as tabpozíciók; irányos parancsnál a jel után `<dir>` áll a tab előtt; a két „run” sornak nincs jele). A `*` lista 48 sora:
+Sorformátum: a jel (CTRL-es billentyűnél `^` + betű), utána a leírás tabulátorral kezdve (8-as tabpozíciók; irányos parancsnál a jel után `<dir>` áll a tab előtt; a két „run” sornak nincs jele). A `*` lista 46 sora:
 ```
 ?       prints help
 /       identify object
@@ -340,15 +338,12 @@ a       repeat last command
 )       print current weapon
 ]       print current armor
 =       print current rings
-@       print current stats
 D       recall what's been discovered
 o       examine/set options
-^R      redraw screen
 ^P      repeat last message
 STOP    cancel command
 S       save game
 Q       quit
---- 3. oldal ---
 F<dir>  fight till either of you dies
 v       print version number
 ```

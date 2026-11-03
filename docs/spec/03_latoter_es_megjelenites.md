@@ -55,18 +55,18 @@ erase_lamp(pos, room):  // csak sötét, nem fantom szobában, seefloor be, nem 
 
 ## 3.3 Státuszsor
 
-> **C64-eltérés (E3):** az eredeti egysoros, kb. 75 karakteres státuszsor két 40 karakteres sorra oszlik, és a mezők közti szóközök elmaradnak.
+> **C64-eltérés (E3):** az eredeti egysoros, kb. 75 karakteres státuszsor két 40 karakteres sorra oszlik; az értékek igazítás nélkül, egymás után, egy szóközzel elválasztva következnek. A `@` parancs (a státuszsor kiírása az üzenetsávba) elmarad, mert a státuszsor mindig látszik.
 
 A 23. és 24. sorban:
 ```
-23. sor: printf("Level:%-3d Gold:%-6d Hp:%*d(%*d) %s", level, gold, hpw, hpt, hpw, maxhp, hunger_word)
-24. sor: printf("Str:%2d(%d) Arm:%-2d Exp:%d/%d", str, str_max, 10 - player_armor(), lvl, exp)
-// hpw = a maxhp számjegyeinek száma (igazítás); hunger_word: "", "Hungry", "Weak", "Faint"
-// player_armor(): 5.5 – a viselt páncél (vagy az alap 10) a védelem-gyűrűkkel együtt (J11)
-pl.  "Level:3   Gold:25     Hp:14(20) Hungry"
-     "Str:16(16) Arm:5  Exp:2/38"
+23. sor: printf("Level:%d Gold:%d Hp:%d(%d) %s", level, gold, hpt, maxhp, hunger_word)
+24. sor: printf("Str:%d(%d) Arm:%d Exp:%d/%d", str, str_max, 10 - player_armor(), lvl, exp)
+// hunger_word: "", "Hungry", "Weak", "Faint"
+// player_armor(): 5.5 – a viselt páncél (vagy az alap 10) a védelem-gyűrűkkel együtt (J11); páncél nélkül "Arm:0"
+pl.  "Level:3 Gold:25 Hp:14(20) Hungry"
+     "Str:16(16) Arm:5 Exp:2/38"
 ```
-Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű arany) miatt 40 karakternél hosszabb lenne, a vége levágódik. Csak akkor rajzolódik újra, ha valamelyik érték változott. A `@` parancs a két sort az üzenetsávba írja (egymás után, egy üzenetként).
+Mindkét sor a végéig törlődik. A legszélesebb reális értékekkel (255. szint, 6 jegyű arany, 3 jegyű HP, „Hungry”) a 23. sor pontosan 40 karakter; ha egy szélsőséges érték (pl. 7 jegyű arany) miatt hosszabb lenne, a vége levágódik. Minden kör végén kirajzolódik, összehasonlítás nélkül: a sor a régi fölé íródik, és csak a vége törlődik, így nem villog.
 
 > **C64-javítás (J11):** a kijelzett Arm a védelem-gyűrűket is tartalmazza, vagyis azt az értéket mutatja, amellyel a harc számol ([5.5](05_jatekos.md#55-effektív-páncél-védekezéskor)). *Eredetileg* a státuszsor csak a viselt páncélt (vagy az alap 10-et) mutatta, a gyűrűk nélkül.
 
@@ -76,7 +76,7 @@ Mindkét sor a végéig törlődik; ha egy szélsőséges érték (pl. 7 jegyű 
 
 - Az üzenetsáv két, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). A két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
 - Minden üzenet nagybetűvel kezdődik (kivéve a tárgylista-sorokat, pl. „a) …”).
-- **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a tárgylista-sor, a `@` státuszkiírása és a kérdés.
+- **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a tárgylista-sor és a kérdés.
 - Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az új üzenettel együtt a szöveg a tördelés után a `--More--`-val már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
 - Ha egyetlen üzenet a `--More--`-val együtt nem fér el a két sorban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
 - **Hosszkorlát:** egy üzenet egy 128 bájtos pufferben készül el (`MESSAGE_TEXT_SIZE`), ebből a záró pontnak és a lezáró nullának 2 bájt jár, így legfeljebb 126 karakteres lehet; a hosszabb szöveg vége levágódik. A méret a leghosszabb valódi üzenet ismeretében csökkenthető.
@@ -105,7 +105,7 @@ follow_view_window():  // minden olyan lépés után, amely a játékos pozíci�
      view_window_x = min(player.x - (VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE), 40)
   ha a view_window_x változott: redraw_map()
 ```
-- `center_view_window` hívódik új szinten ([2](02_szintgeneralas.md)), betöltés után és `CTRL-R`-re; `follow_view_window` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
+- `center_view_window` hívódik új szinten ([2](02_szintgeneralas.md)), és betöltés után; `follow_view_window` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
 - **Futás `jump` mellett:** amíg a futás tart, nincs rajzolás; a futás végén `follow_view_window`, majd a térkép frissítése. `jump` nélkül minden lépés után `follow_view_window` fut.
 - **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) a SCREEN rétegbe kerül, és ha `view_window_x ≤ x < view_window_x + 40`, egyúttal a videomemória `y`. sorának `x − view_window_x`. oszlopába is (kivéve az üzenet által foglalt 1. sort, [3.4](#34-üzenetsor)). A `redraw_map` a foglalt 1. sort szintén kihagyja, így görgetés sem írja felül az üzenetet.
 - **Animációk** (dobott tárgy, sugár, [7.4](07_harc.md#74-hajítás-t), [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)): a nézőablakon kívül eső lépések nem rajzolódnak, és nincs utánuk várakozás sem.

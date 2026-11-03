@@ -82,13 +82,13 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 |---|---|---|
 | E1 | 40×25 képernyő; a 80×22-es szint görgetett nézőablakban | [1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő), [3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés) |
 | E2 | kétsoros üzenetsáv szótördeléssel (a 2. sor ideiglenesen a térkép fölé); az üzenetek ponttal zárulnak és egy szóközzel fűződnek össze; a túl hosszú üzenet `--More--`-val lapozódik | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
-| E3 | kétsoros státuszsor (23–24. sor) | [3.3](03_latoter_es_megjelenites.md#33-státuszsor) |
+| E3 | kétsoros státuszsor (23–24. sor), igazítás nélkül; nincs `@` parancs | [3.3](03_latoter_es_megjelenites.md#33-státuszsor) |
 | E4 | C64 billentyűzet: mátrixolvasás, ESC = RUN/STOP vagy `←`, ismétlés | [4.2.0](04_jatekciklus_es_parancsok.md#420-billentyűzet) |
 | E5 | címképernyő-menü a parancssor helyett; nincs terminálméret-ellenőrzés | [0.1](#01-indítás) |
 | E6 | beállítások: menü + `rogue.cfg` a `ROGUEOPTS` helyett; új `device` opció; `inven` alapértéke clear; nincs baud-függés | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
 | E7 | mentés lemezre; nincs link-/jogosultság-ellenőrzés és szignálos mentés | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer), [10.7](10_platform.md#107-lemezkezelés) |
 | E8 | ranglista lemezen, név szerinti egyediséggel, zárolás nélkül | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
-| E9 | nincs alshell (`!`) | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
+| E9 | nincs alshell (`!`) és képernyő-újrarajzolás (`CTRL-r`) | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
 | E10 | fix méretű táblák (szörny, tárgy, címke), betelt táblánál meghatározott viselkedés | [1.4](01_adatmodell_es_flagek.md#14-ábrázolás-c64-en) |
 | E11 | 40 oszlopra tervezett képernyők: csomaglista, súgó (lapozva), sírkő, győzelem, ranglista, észlelés-képernyők | [3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre), [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok), [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E12 | szöveghosszak: név, gyümölcs ≤ 15, elnevezés ≤ 20, fájlnév ≤ 16 karakter | [1.4](01_adatmodell_es_flagek.md#14-ábrázolás-c64-en) |

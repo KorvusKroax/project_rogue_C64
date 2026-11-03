@@ -34,7 +34,6 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | `)` | you are wielding (<b>) <név> / you are wielding nothing | |
 | `]` | you are wearing (<b>) <név> / you are wearing nothing | |
 | `=` (kezenként külön üzenet) | you are wearing (<b>) <név> on left hand / you are wearing nothing on right hand | |
-| `@` | a státuszsor szövege ([3.3](03_latoter_es_megjelenites.md#33-státuszsor)) | |
 
 ## Mozgás, lépcső
 | helyzet | normál | hallucinálva |
