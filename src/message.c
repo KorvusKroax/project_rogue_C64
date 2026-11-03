@@ -1,10 +1,12 @@
 #include "message.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 #include "platform/key.h"
 #include "platform/screen.h"
+#include "num.h"
 #include "view.h"
 
 #define MORE_TEXT               "--More--"
@@ -12,23 +14,67 @@
 #define MESSAGE_TEXT_SIZE       128
 #define MESSAGE_END_CHARACTER   '.'
 
+#define PLACEHOLDER_FIRST_TEXT  '\1'
+#define PLACEHOLDER_SECOND_TEXT '\2'
+#define PLACEHOLDER_NUMBER      '\3'
+
 static char message_text[MESSAGE_TEXT_SIZE];
+static uint8_t message_text_length;
 static char message_bar_text[SCREEN_WIDTH * 2 + 1];
 static uint8_t message_bar_length;
 static uint8_t message_bar_end_column;
 static bool second_row_reserved;
 
-const char *prepare_message_text(const char *text, bool add_end_character)
+static void add_character_to_message_text(char character)
 {
-    uint8_t length = 0;
+    if (message_text_length < MESSAGE_TEXT_SIZE - 2) {  // a záró pontnak és nullának hely kell
+        message_text[message_text_length++] = character;
+    }
+}
 
-    while (text[length] && length < MESSAGE_TEXT_SIZE - 2) {    // a záró pontnak és nullának hely kell
-        message_text[length] = text[length];
-        length++;
+static void add_text_to_message_text(const char *text)
+{
+    while (*text) {
+        add_character_to_message_text(*text++);
+    }
+}
+
+static void fill_message_text(const char *text, const char *first_text, const char *second_text, int16_t number)
+{
+    char number_text[FORMAT_BUFFER_SIZE];
+
+    message_text_length = 0;
+
+    while (*text) {
+        switch (*text) {
+            case PLACEHOLDER_FIRST_TEXT:
+                add_text_to_message_text(first_text);
+                break;
+            case PLACEHOLDER_SECOND_TEXT:
+                add_text_to_message_text(second_text);
+                break;
+            case PLACEHOLDER_NUMBER:
+                format_int(number_text, number, 0);
+                add_text_to_message_text(number_text);
+                break;
+            default:
+                add_character_to_message_text(*text);
+                break;
+        }
+        text++;
     }
 
+    message_text[message_text_length] = 0;
+}
+
+const char *prepare_message_text(const char *text, const char *first_text, const char *second_text, int16_t number, bool add_end_character)
+{
+    fill_message_text(text, first_text, second_text, number);
+
+    uint8_t length = message_text_length;
+
     // a tárgylista-sor (pl. "a) a mace") változatlan marad
-    if (length && text[1] != ')') {
+    if (length && message_text[1] != ')') {
         if (message_text[0] >= 'a' && message_text[0] <= 'z') {
             message_text[0] -= 'a' - 'A';
         }
@@ -177,12 +223,18 @@ static void add_to_message_bar(const char *text)
 
 void message(const char *text)
 {
-    add_to_message_bar(prepare_message_text(text, true));
+    message_format(text, NULL, NULL, 0);
+}
+
+void message_format(const char *text, const char *first_text, const char *second_text, int16_t number)
+{
+    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true));
 }
 
 void message_prompt(const char *text)
 {
-    add_to_message_bar(prepare_message_text(text, false));
+    add_to_message_bar(prepare_message_text(text, NULL, NULL, 0, false));
+    message_bar_length = 0;     // a kérdés mögé nem fűződik semmi, a következő üzenet lecseréli
 }
 
 void message_reserve_input_space(uint8_t length)
@@ -195,11 +247,6 @@ void message_reserve_input_space(uint8_t length)
         clear_to_row_end();
         set_screen_cursor(x, MESSAGE_ROW);
     }
-}
-
-void message_finish_prompt(void)
-{
-    message_bar_length = 0;
 }
 
 void message_clear(void)

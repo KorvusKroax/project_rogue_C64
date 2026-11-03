@@ -1,5 +1,7 @@
 #include "dev.h"
 
+#include <stddef.h>
+
 #include "../platform/platform.h"
 #include "../platform/screen.h"
 #include "../platform/key.h"
@@ -261,7 +263,7 @@ static void dev_message_screen(void)
         switch (code) {
             case '1':
                 message("you miss the bat");
-                message("the bat bites you");
+                message_format("\1 bites you for \3 points", "the bat", NULL, 3);
                 break;
             case '2':
                 message("you miss the bat");

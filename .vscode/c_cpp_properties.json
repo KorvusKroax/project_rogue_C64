@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Oscar64",
+            "compilerPath": "",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "C:/oscar64/include"
+            ],
+            "defines": [
+                "DEVMODE",
+                "__interrupt=",
+                "__forceinline=inline"
+            ],
+            "cStandard": "c23",
+            "intelliSenseMode": "windows-msvc-x86"
+        }
+    ],
+    "version": 4
+}

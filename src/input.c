@@ -79,9 +79,7 @@ bool ask_text(const char *prompt, char *buffer, uint8_t max_length)
 
     bool answered = input_text(buffer, max_length, MESSAGE_ROW + 1);
 
-    if (answered) {
-        message_finish_prompt();
-    } else {
+    if (!answered) {
         message_clear();
     }
 
@@ -105,6 +103,5 @@ uint8_t ask_key(const char *prompt)
         put_field_character(0, code);
     }
 
-    message_finish_prompt();
     return code;
 }

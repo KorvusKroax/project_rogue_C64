@@ -62,15 +62,17 @@ static uint8_t format_number(char *out, uint32_t value, bool negative, int8_t wi
     uint8_t out_index = 0;
 
     if (width > 0) {
-        for (; padding > 0; padding--) {
+        while (padding > 0) {
             out[out_index++] = ' ';
+            padding--;
         }
     }
     for (uint8_t i = 0; i < length; i++) {
         out[out_index++] = text[i];
     }
-    for (; padding > 0; padding--) {
+    while (padding > 0) {
         out[out_index++] = ' ';
+        padding--;
     }
     out[out_index] = 0;
 

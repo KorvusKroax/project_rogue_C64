@@ -1,6 +1,7 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 #include "../message.h"
@@ -63,15 +64,45 @@ static const struct TextCase text_cases[] = {
     { "a) a mace", "a) a mace" },
 };
 
+struct FormatCase {
+    const char *text, *first_text, *second_text;
+    int16_t number;
+    const char *expected;
+};
+
+static const struct FormatCase format_cases[] = {
+    { "\1 hits you", "the bat", NULL, 0, "The bat hits you." },
+    { "you find \3 gold pieces", NULL, NULL, 25, "You find 25 gold pieces." },
+    { "\1 \2 \3", "a", "b", -3, "A b -3." },
+
+    // a helyőrzőből lett tárgylista-sor
+    { "\1) \2", "c", "a mace", 0, "c) a mace" },
+};
+
+// a fordító a literálokat ASCII-ban hagyja, nem alakítja PETSCII-re
+static bool are_literals_ascii(void)
+{
+    static const char sample[] = "aA";
+    return sample[0] == 0x61 && sample[1] == 0x41;
+}
+
 int test_prepare_message_text(uint16_t i)
 {
+    if (!are_literals_ascii()) return false;
+
     for (uint8_t c = 0; c < sizeof(text_cases) / sizeof(text_cases[0]); c++) {
         const struct TextCase *text_case = &text_cases[c];
-        if (strcmp(prepare_message_text(text_case->text, true), text_case->expected) != 0) return false;
+        if (strcmp(prepare_message_text(text_case->text, NULL, NULL, 0, true), text_case->expected) != 0) return false;
+    }
+
+    for (uint8_t c = 0; c < sizeof(format_cases) / sizeof(format_cases[0]); c++) {
+        const struct FormatCase *format_case = &format_cases[c];
+        const char *prepared = prepare_message_text(format_case->text, format_case->first_text, format_case->second_text, format_case->number, true);
+        if (strcmp(prepared, format_case->expected) != 0) return false;
     }
 
     // a kérdés nem kap záró pontot
-    return strcmp(prepare_message_text("file name: ", false), "File name: ") == 0;
+    return strcmp(prepare_message_text("file name: ", NULL, NULL, 0, false), "File name: ") == 0;
 }
 
 int test_message_chars_fitting_row(uint16_t i)

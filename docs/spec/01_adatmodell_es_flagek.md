@@ -273,7 +273,7 @@ Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. 
 | mentésfájl neve (`file`) | 16 karakter (CBM DOS) |
 | tekercsfelirat | 40 karakter (mint az eredetiben; a megjelenítés tördel) |
 
-**Tárolás:** minden játékszöveg egy helyen van, névvel ellátott, nullával lezárt ASCII-bájtsorként, számozott táblázat nélkül. A változó részek helyén egybájtos helyőrző áll (`\1`, `\2`: szöveg; `\3`: szám), a 128–255 bájtértékek szabadok. A külön szövegváltozatot (hallucinálva) a hívás helye választja ki.
+**Tárolás:** minden játékszöveg egy helyen van, névvel ellátott, nullával lezárt ASCII-bájtsorként, számozott táblázat nélkül. A változó részek helyén egybájtos helyőrző áll (`\1`, `\2`: szöveg; `\3`: szám), a 128–255 bájtértékek szabadok. A `message_format(szöveg, első, második, szám)` a `\1` helyére az első, a `\2` helyére a második szöveget, a `\3` helyére a számot (16 bites, előjeles) írja; egy helyőrző többször is előfordulhat. A nagybetűs kezdés és a záró pont a kitöltött szövegre vonatkozik (3.4). A fordító a literálokat ASCII-ban hagyja (nincs PETSCII-átalakítás), ezt az önteszt ellenőrzi. A külön szövegváltozatot (hallucinálva) a hívás helye választja ki.
 
 A beviteli mezőkben a korlát elérésekor további karakter nem írható be. Az azonosítatlan nevek (`names`) a színek, kövek és anyagok esetében táblaindexek; a tekercsfeliratok a generált szövegként (vagy szótagindex-listaként) tárolódnak.
 
