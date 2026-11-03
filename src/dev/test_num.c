@@ -27,10 +27,10 @@ int test_format(uint16_t i)
         text_is(buffer, format_int(buffer, -1, 0), "-1") &&
         text_is(buffer, format_int(buffer, 32767, 0), "32767") &&
         text_is(buffer, format_int(buffer, -32768, 0), "-32768") &&
-        text_is(buffer, format_uint(buffer, 0, 0), "0") &&
-        text_is(buffer, format_uint(buffer, 1000, 0), "1000") &&
-        text_is(buffer, format_uint(buffer, 16777215, 0), "16777215") &&
-        text_is(buffer, format_uint(buffer, 4294967295UL, 0), "4294967295") &&
+        text_is(buffer, format_int(buffer, 1000, 0), "1000") &&
+        text_is(buffer, format_int(buffer, 16777215, 0), "16777215") &&
+        text_is(buffer, format_int(buffer, 2147483647L, 0), "2147483647") &&
+        text_is(buffer, format_int(buffer, -2147483647L - 1, 0), "-2147483648") &&
         text_is(buffer, format_int(buffer, 42, 5), "   42") &&
         text_is(buffer, format_int(buffer, 42, -5), "42   ") &&
         text_is(buffer, format_int(buffer, -42, 5), "  -42") &&

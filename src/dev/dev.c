@@ -23,7 +23,7 @@ void dev_fail(const char *message, const char *file, int line)
     set_screen_cursor(0, 1);
     put_text(name);
     put_text(":");
-    put_uint(line, 0);
+    put_int(line, 0);
 
     wait_for_key();
 

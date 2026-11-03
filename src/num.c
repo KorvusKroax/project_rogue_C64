@@ -28,14 +28,17 @@ static const uint32_t powers_of_ten[POWER_COUNT] = {
     1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1
 };
 
-static uint8_t format_number(char *out, uint32_t value, bool negative, int8_t width)
+uint8_t format_int(char *out, int32_t number, int8_t width)
 {
     char text[11];
     uint8_t length = 0;
     bool started = false;
 
-    if (negative) {
+    // a -2147483648 ellentettje előjelesen nem ábrázolható, előjel nélkül igen
+    uint32_t value = number;
+    if (number < 0) {
         text[length++] = '-';
+        value = 0 - value;
     }
 
     for (uint8_t power_index = 0; power_index < POWER_COUNT; power_index++) {
@@ -77,18 +80,4 @@ static uint8_t format_number(char *out, uint32_t value, bool negative, int8_t wi
     out[out_index] = 0;
 
     return out_index;
-}
-
-uint8_t format_int(char *out, int16_t value, int8_t width)
-{
-    if (value < 0) {
-        return format_number(out, -(int32_t)value, true, width);
-    }
-
-    return format_number(out, value, false, width);
-}
-
-uint8_t format_uint(char *out, uint32_t value, int8_t width)
-{
-    return format_number(out, value, false, width);
 }

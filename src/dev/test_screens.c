@@ -115,9 +115,9 @@ static void dev_keyboard_screen(void)
         put_text(key_modifiers & KEY_MODIFIER_CTRL ? "CTRL" : "    ");
 
         set_screen_cursor(14, 15);
-        put_uint(last_code, 3);
+        put_int(last_code, 3);
         set_screen_cursor(14, 16);
-        put_uint(presses, 3);
+        put_int(presses, 3);
     }
 }
 
@@ -204,11 +204,11 @@ static void dev_view_screen(void)
     while (code != KEY_ESCAPE) {
         set_screen_cursor(0, 0);
         put_text("view_x:");
-        put_uint(game.view_window_x, 3);
+        put_int(game.view_window_x, 3);
         put_text("  x:");
-        put_uint(x, 3);
+        put_int(x, 3);
         put_text("  50 redraws:");
-        put_uint(frames, 4);
+        put_int(frames, 4);
         if (frames) {
             put_text(frames <= VIEW_MEASURE_LIMIT ? " OK  " : " FAIL");
         }
@@ -288,13 +288,77 @@ static void dev_message_screen(void)
     message_clear();
 }
 
+static void set_status_test_values(uint8_t dungeon_level, uint32_t gold, int16_t hit_points, int16_t max_hit_points, uint8_t strength, uint8_t max_strength, uint8_t experience_level, uint32_t experience)
+{
+    game.dungeon_level = dungeon_level;
+    game.gold = gold;
+    game.player.hit_points = hit_points;
+    game.player.max_hit_points = max_hit_points;
+    game.player.strength = strength;
+    game.max_strength = max_strength;
+    game.player.experience_level = experience_level;
+    game.player.experience = experience;
+}
+
+// 50 kirajzolás változatlan értékekkel, a képkockák száma
+static uint8_t status_measure(void)
+{
+    uint8_t start = frame_count;
+
+    for (uint8_t i = 0; i < 50; i++) {
+        draw_status();
+    }
+
+    return frame_count - start;
+}
+
+static void dev_status_screen(void)
+{
+    uint8_t code = 0, frames = 0;
+
+    screen_clear();
+    set_screen_cursor(0, 0);
+    put_text("1: start  2: typical  3: widest real");
+    set_screen_cursor(0, 1);
+    put_text("4: extreme  H: hunger  F: time  ESC: end");
+
+    // oszlopvonalzó a státuszsor fölött
+    for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+        put_screen_character(x, STATUS_ROW - 2, '0' + (x + 1) / 10 % 10);
+        put_screen_character(x, STATUS_ROW - 1, '0' + (x + 1) % 10);
+    }
+
+    set_status_test_values(1, 0, 12, 12, 16, 16, 1, 0);
+    game.hunger_state = 0;
+
+    while (code != KEY_ESCAPE) {
+        draw_status();
+
+        set_screen_cursor(0, 3);
+        put_text("50 draws: ");
+        put_int(frames, 3);
+        put_text(" frames");
+
+        code = wait_for_key();
+
+        switch (code) {
+            case '1': set_status_test_values(1, 0, 12, 12, 16, 16, 1, 0); break;
+            case '2': set_status_test_values(3, 25, 14, 20, 16, 16, 2, 38); break;
+            case '3': set_status_test_values(255, 999999, 999, 999, 31, 31, 21, 16777215); break;
+            case '4': set_status_test_values(255, 16777215, -12, 999, 3, 31, 21, 16777215); break;  // 8 jegyű arany: a sor vége levágódik
+            case 'h': game.hunger_state = (game.hunger_state + 1) & 3; break;
+            case 'f': frames = status_measure(); break;
+        }
+    }
+}
+
 void dev_run_screens(void)
 {
     screen_clear();
 
     set_screen_cursor(0, 0);
     put_text("Seed: ");
-    put_uint(game.seed, 0);
+    put_int(game.seed, 0);
     move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
 
@@ -318,4 +382,6 @@ void dev_run_screens(void)
     dev_view_screen();
 
     dev_message_screen();
+
+    dev_status_screen();
 }

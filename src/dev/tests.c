@@ -50,16 +50,16 @@ bool dev_run_tests(void)
             if (dt->count == 1) {
                 put_text("OK");
             } else {
-                put_uint(dt->count, 0);
+                put_int(dt->count, 0);
                 put_text("/");
-                put_uint(dt->count, 0);
+                put_int(dt->count, 0);
             }
         } else {
-            put_uint(dt->count - fails, 0);
+            put_int(dt->count - fails, 0);
             put_text("/");
-            put_uint(dt->count, 0);
+            put_int(dt->count, 0);
             put_text(" FAIL AT ");
-            put_uint(first_fail, 0);
+            put_int(first_fail, 0);
             all_ok = false;
         }
 

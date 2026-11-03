@@ -88,10 +88,10 @@ void put_text(const char *text)
     }
 }
 
-void put_uint(uint32_t value, int8_t width)
+void put_int(int32_t value, int8_t width)
 {
     char text[FORMAT_BUFFER_SIZE];
-    format_uint(text, value, width);
+    format_int(text, value, width);
     put_text(text);
 }
 
