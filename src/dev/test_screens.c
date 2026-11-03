@@ -263,7 +263,7 @@ static void dev_message_screen(void)
         switch (code) {
             case '1':
                 message("you miss the bat");
-                message_format("\1 bites you for \3 points", "the bat", NULL, 3);
+                message_format("\1 bites you", "the bat", NULL, 0);
                 break;
             case '2':
                 message("you miss the bat");
