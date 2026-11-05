@@ -228,6 +228,7 @@ Csapdanevek (hallucinálva véletlen): a trapdoor, an arrow trap, a sleeping gas
 | betöltés – más verzió vagy hibás fájl | Sorry, saved game is out of date. |
 | betöltés – halott játékos | "He's dead, Jim" |
 | lemezhiba (mentés, betöltés, ranglista, beállítások) | disk error: <kód>,<szöveg> (a lemezegység hibacsatornájából, pl. disk error: 62,FILE NOT FOUND) |
+| hiányzó játéklemez (a képernyőmodul nem tölthető be) | insert the game disk and press space ([10.7](10_platform.md#107-lemezkezelés)) |
 | beállítások mentése | save options to disk? |
 | kilépés kérdése | really quit? |
 | kilépés | You quit with <n> gold pieces |

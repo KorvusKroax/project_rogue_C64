@@ -97,7 +97,8 @@ init_weapon(weapon):
   if roll < 10:  weapon.ISCURSED; weapon.hplus -= rnd(3)+1  // 10%: átkozott, negatív bónusz
   else if roll < 15: weapon.hplus += rnd(3)+1               // 5%: pozitív bónusz
   // dplus = 0
-  ISMANY tárgyaknál és a daggernél group = új egyedi azonosító (a dagger nem ISMANY, mégis kötegel)
+  ISMANY tárgyaknál és a daggernél group = új azonosító (a dagger nem ISMANY, mégis kötegel)
+     // 1 bájt: olyan 1..255 közötti érték, amely egyetlen meglévő tárgynál sincs használatban, így két köteg sosem ütközik
 ```
 
 ## 8.5 Páncélok
@@ -170,8 +171,7 @@ Két kéz (bal/jobb). Átkozott nem vehető le.
 ```
 init_stick(stick):
   stick.arm (charges) = (stick.which == light) ? rnd(10)+10 : rnd(5)+3
-  if stick_is_staff[stick.which]: stick.damage = "2x3" else stick.damage = "1x1"  // bottal közelharcban is lehet ütni
-  stick.hurldmg = "1x1"
+  // sebzés (nem tárolt, a stick_is_staff-ból): bot közelharcban 2x3, pálca 1x1; dobva mindkettő 1x1
 
 zap():
   stick = ask_item(STICK); dir = ask_direction (ha kell)

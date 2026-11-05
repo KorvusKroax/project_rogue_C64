@@ -23,8 +23,9 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának specifikáció
 
 ```
 bekapcsolás / betöltés után:
-  hardver előkészítése (10.2): memória-konfiguráció, képernyő, karakterkészlet, megszakítás, billentyűzet
+  hardver előkészítése (10.2): memória-konfiguráció, a szövegek a helyükre másolása, képernyő, karakterkészlet, megszakítás, billentyűzet
   rogue.cfg beolvasása a lemezről, ha van (4.2.5); hiba esetén csendben az alapértékek
+  a képernyőmodul betöltése (10.10); a címképernyőt, a névbekérést és a seedet a modul kezeli
   címképernyő:
      Rogue: Exploring the Dungeons of Doom
      (c64 version of rogue 5.4.4)
@@ -41,8 +42,8 @@ bekapcsolás / betöltés után:
      főciklus (4.1)
   R: mentett játék betöltése (4.2.5), utána főciklus
   S: ranglista (4.3), szóközre vissza a címképernyőre
-  O: beállítások (4.2.5), utána vissza a címképernyőre
-játék vége (halál, kilépés, győzelem, mentés) után: vissza a címképernyőre
+  O: beállítások (4.2.5), utána vissza a címképernyőre (a modul még a memóriában van)
+játék vége (halál, kilépés, győzelem, mentés) után: a képernyőmodul betöltése, a végkimenetel szerinti képernyő és a ranglista (4.3), majd a címképernyő
 ```
 A forrásban lévő „varázsló” (wizard) mód egy külön fordítási változat hibakereső eszköze, a játék része nem; helyette a fejlesztői mód szolgál (lásd az M03-04 issue-t), amely csak külön fordítási beállítással kerül a programba.
 

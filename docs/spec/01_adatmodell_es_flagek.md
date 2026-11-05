@@ -54,20 +54,21 @@ Item {
   which    // altípus index a kategórián belül (a 8.2–8.7 táblák # oszlopa); ételnél 0 = ration, 1 = gyümölcs
   pos      // pozíció, ha a padlón van
   packch   // csomagbetű ('a'..'z'), ha a csomagban van (8.9)
-  launch   // a kilövő fegyver típusa, amellyel lőni kell (nyílnál: short bow); nincs: üres (7.4)
-  damage   // sebzés-string közelharcban, kézben tartva ("NxM")
-  hurldmg  // sebzés-string dobva vagy kilőve (7.4)
+  launch   // a kilövő fegyver típusa, amellyel lőni kell (nyílnál: short bow); nincs: üres (7.4) – nem tárolt, a típusból jön
+  damage   // sebzés-string közelharcban, kézben tartva ("NxM") – nem tárolt: fegyvernél a típusból (8.4), pálcánál a stick_is_staff-ból (8.7)
+  hurldmg  // sebzés-string dobva vagy kilőve (7.4) – nem tárolt, mint a damage
   count    // darabszám kötegelt tárgynál (nyíl, dart, shuriken, dagger, bájital, tekercs, étel)
   hplus    // találati bónusz (fegyvernél; átkozott fegyvernél negatív) (7.1, 8.4)
   dplus    // sebzésbónusz (fegyvernél) (7.1, 8.4)
   arm      // jelentése típusonként: páncélnál védelem (kisebb = jobb); pálcánál töltés; aranynál az összeg; gyűrűnél a mod (pl. protection +1)
-  flags    // ISCURSED, ISKNOW, ISMISL, ISMANY, ISFOUND, ISPROT (1.2.3)
+  flags    // ISCURSED, ISKNOW, ISMISL, ISMANY, ISFOUND, ISPROT (1.2.3); az ISMISL és az ISMANY nem tárolt, a típusból jön
   group    // kötegazonosító: azonos which + group → egy csomaghelyen összevonódik (8.4, 8.9)
   label    // a játékos által adott egyedi név ('c'), fegyvernél, páncélnál, amulettnél (4.2.6)
 }
 // az azonosítatlan név (bájitalszín, tekercsfelirat, gyűrűkő, pálcaanyag) a típushoz tartozik
 // (GameState.names), nem a tárgyhoz – nem kell tárgyanként tárolni
 ```
+A tárolt rekordot az [1.4.6](#146-tárgyrekord) írja le.
 
 ### 1.1.4 GameState
 ```
@@ -113,7 +114,7 @@ GameState {
   can_huh                // CANHUH: a következő sikeres ütés összezavarja a szörnyet (8.3)
   max_hit_this_fight     // az aktuális harc legnagyobb egyszeri sebzése, az 'f' leállásához (7.2)
   view_window_x                 // a nézőablak bal szélének logikai oszlopa, 0..40 (3.5)
-  options                // a beállítások (4.2.5)
+  options                // a beállítások (4.2.5); a GameState-en kívül, külön blokkban, mert a képernyőmodul is használja, de a mentésbe bekerül (10.10)
   seed                   // az RN állapota (0.2)
 }
 ```
@@ -241,7 +242,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | tábla | méret | megjegyzés |
 |---|---|---|
 | szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek |
-| tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy |
+| tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető |
 | címkék (`label`) | MAX_LABELS = 24 | egy-egy ≤ 20 karakteres szöveg; a tárgy `label` mezője ide mutat |
 | szobák | 9 + MAX_PASSAGES (13) | |
 | kijáratok | MAX_EXITS = 12 szobánként | |
@@ -257,13 +258,13 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 |---|---|
 | `seed` | 32 bit előjel nélküli; a fejlesztői képernyőn előjelesen jelenik meg ([10.5](10_platform.md#105-aritmetika)) |
 | `exp` (játékos és szörny), `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
-| `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, Item `arm`, `group`, `gold_val`, `dist2` | 16 bit (a `food_left`, a `hpt`, a `maxhp` és az Item `arm` előjeles) |
-| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
-| Creature `arm`, Item `hplus`, `dplus` | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
+| `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
+| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
+| Creature `arm`, Item `hplus`, `dplus`, a páncél védelme és a gyűrű modja (Item `arm`) | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
 | koordináták | 8 bit (x 0..79, y 0..23) |
 
 ### 1.4.3 Sebzés-stringek
-Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. A típustáblákban (6.1, 8.4) így tárolódik; az Item `damage` és `hurldmg` mezője egy-egy (N, M) pár, mert a tárgyaknak egyszegmensű sebzésük van.
+Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. A típustáblákban (6.1, 8.4) így tárolódik; a tárgyak sebzése egyszegmensű, egy-egy (N, M) pár a fegyvertáblában, illetve a botnál és a pálcánál rögzítve (8.7); a tárgyrekordban nem tárolódik ([1.4.6](#146-tárgyrekord)).
 
 ### 1.4.4 Szövegek
 | szöveg | legfeljebb |
@@ -275,6 +276,8 @@ Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. 
 
 **Tárolás:** minden játékszöveg egy helyen van, névvel ellátott, nullával lezárt ASCII-bájtsorként, számozott táblázat nélkül. A változó részek helyén egybájtos helyőrző áll (`\1`, `\2`: szöveg; `\3`: szám), a 128–255 bájtértékek szabadok. A `message_format(szöveg, első, második, szám)` a `\1` helyére az első, a `\2` helyére a második szöveget, a `\3` helyére a számot (16 bites, előjeles) írja; egy helyőrző többször is előfordulhat. A nagybetűs kezdés és a záró pont a kitöltött szövegre vonatkozik (3.4). A fordító a literálokat ASCII-ban hagyja (nincs PETSCII-átalakítás), ezt az önteszt ellenőrzi. A külön szövegváltozatot (hallucinálva) a hívás helye választja ki.
 
+**Elhelyezés:** a szövegek a fő régión kívül, a `$D000–$FFF9` és a `$C400–$C7FF` alatti RAM-ban vannak, és kiíráskor egy pufferbe másolódnak ([10.2](10_platform.md#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei a képernyőmodulban vannak ([10.10](10_platform.md#1010-képernyőmodul)).
+
 A beviteli mezőkben a korlát elérésekor további karakter nem írható be. Az azonosítatlan nevek (`names`) a színek, kövek és anyagok esetében táblaindexek; a tekercsfeliratok a generált szövegként (vagy szótagindex-listaként) tárolódnak.
 
 ### 1.4.5 Térképrétegek
@@ -285,6 +288,23 @@ A beviteli mezőkben a korlát elérésekor további karakter nem írható be. A
 | MAP szörny | 80 × 22 bájt | a mezőn álló szörny indexe (0 = nincs) – a „szörny a mezőn?” kérdés gyors megválaszolásához; **nem perzisztens** (lent) |
 | SCREEN (a kódban `game.seen_map`) | 80 × 22 bájt | a játékos által látott jel, 7. bit = inverz |
 
-A rétegek indexe `(y − 1) × 80 + x`. A **teljes perzisztens játékállapot** (GameState, táblák, a MAP karakter-, a MAP flag- és a SCREEN réteg, beállítások, seed) egyetlen összefüggő memóriaterületen van, mert a mentés ezt egy darabban írja ki ([10.7](10_platform.md#107-lemezkezelés)). Becsült mérete kb. 11,5 KB.
+A rétegek indexe `(y − 1) × 80 + x`. A **teljes perzisztens játékállapot** (GameState, táblák, a MAP karakter-, a MAP flag- és a SCREEN réteg, seed) egyetlen összefüggő memóriaterületen van, mert a mentés ezt egy darabban írja ki ([10.7](10_platform.md#107-lemezkezelés)). Becsült mérete kb. 10,6 KB. A beállítások külön blokkban vannak, a mentés azt is kiírja ([10.10](10_platform.md#1010-képernyőmodul)).
 
 A **MAP szörnyréteg** a szörnylistából levezethető, ezért a perzisztens blokkon kívül van, és nem kerül a mentésbe. Betöltés után újraépül: a réteg törlése, majd a szörnylista minden elemére `MAP_szörny[pos] = index`. A játék közben minden szörny-létrehozás, -mozgás (`relocate`, teleport), -törlés és polymorph karbantartja; a rétegnek mindig egyeznie kell a szörnylistával (invariáns, M11-02).
+
+### 1.4.6 Tárgyrekord
+A logikai Item ([1.1.3](#113-item)) mezői közül csak az tárolódik, ami tárgyanként eltérhet; ami a típusból jön, azt a kód a típustáblából veszi. Egy rekord 11 bájt:
+
+| mező | bájt | tartalom |
+|---|---|---|
+| `type` | 1 | kategória |
+| `which` | 1 | altípus |
+| `location` | 2 | a `pos` és a `packch` közös helye: padlón a `floor_position` (`x`, `y`); csomagban a `pack_letter` (`'a'..'z'`); szörnynél nincs jelentése. Hogy melyik érvényes, azt az dönti el, melyik listában van a tárgy |
+| `count` | 1 | darabszám |
+| `properties` | 2 | a `hplus`, a `dplus` és az `arm` közös helye, típusonként: fegyvernél a `weapon.hit_bonus` (`hplus`) és a `weapon.damage_bonus` (`dplus`), 1 + 1 bájt, előjeles; páncélnál az `armor_class`, gyűrűnél a `ring_modifier` (1 bájt, előjeles); pálcánál a `charges` (1 bájt); aranynál a `gold_amount` (16 bit). A név azért nem `value`, mert az „érték” a játékban a tárgy eladási ára |
+| `flags` | 1 | ISCURSED, ISKNOW, ISFOUND, ISPROT |
+| `group` | 1 | kötegazonosító ([8.4](08_targyak.md#84-fegyverek)) |
+| `label` | 1 | a címke indexe (0 = nincs) |
+| `next` | 1 | a lista következő rekordja (0 = vége) |
+
+Nem tárolódik: a `launch`, a `damage`, a `hurldmg`, valamint az ISMISL és az ISMANY flag, mert ezek a típusból adódnak.

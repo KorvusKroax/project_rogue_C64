@@ -373,6 +373,8 @@ ascend():  // '<'
 
 **Halál:** a játékos elveszíti az aranya 10%-át (`gold -= gold/10`), pontszám = a maradék arany.
 
+A sírkövet, a sírkő nélküli sort, a győzelmi képernyőt és a ranglistát a képernyőmodul jeleníti meg ([10.10](10_platform.md#1010-képernyőmodul)).
+
 > **C64-eltérés (E11, E17):** a sírkő a 40 oszlopos képernyőre 9 oszloppal balra tolva jelenik meg, és nincs rajta évszám, mert a C64-nek nincs valós idejű órája.
 
 - *Sírkő* (`tombstone` opció be), a képernyő 8. sorától; a szövegsorok a 19. oszlop körül középre igazítva (kezdőoszlop = `19 − (hossz + 1) / 2`):
@@ -396,7 +398,7 @@ ________)/\\_//(\/(/\)/\//\/|_)_______
 
 **Kilépés** (`Q`): pontszám = arany, levonás nélkül.
 
-**Győzelem:** a győzelmi képernyő ([függelék](fuggelek_uzenetkatalogus.md#mentés-kilépés-indítás-vége)), utána a csomag minden tárgya azonosítódik és eladásra kerül; pontszám = arany + a tárgyak értéke. Az eladási lista a „Worth  Item” fejléc után soronként `<betű>) <érték, 5 jegyre igazítva>  <név>`, végül „<n>  Gold Pieces”; tördelés és lapozás a 40 oszlopos listák szerint ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)).
+**Győzelem:** a csomag minden tárgya azonosítódik és eladásra kerül; pontszám = arany + a tárgyak értéke. Utána a képernyőmodul a győzelmi képernyőt mutatja ([függelék](fuggelek_uzenetkatalogus.md#mentés-kilépés-indítás-vége)). Az eredetiben a győzelmi képernyő az eladás előtt jön. A sorrend azért fordult meg, mert az eladási listához a játék tárgynevei kellenek, a győzelmi képernyő pedig a modulban van. Az eladási lista a „Worth  Item” fejléc után soronként `<betű>) <érték, 5 jegyre igazítva>  <név>`, végül „<n>  Gold Pieces”; tördelés és lapozás a 40 oszlopos listák szerint ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)).
 
 | tárgy | érték |
 |---|---|
@@ -414,7 +416,7 @@ A negatív érték 0-nak számít.
 
 > **C64-eltérés (E8):** a ranglista a `rogue.scr` fájlban van a `device` egységen. Felhasználóazonosító nincs, a „felhasználónként egy bejegyzés” szabály a **név** (pontos egyezés) szerint működik. Fájlzárolás nincs („The score file is very busy…” üzenet sincs).
 
-Halál, kilépés és győzelem után „[Press return to continue]”, majd a ranglista beolvasása, frissítése, kiírása és visszaírása; utána szóközre vissza a címképernyőre.
+Halál, kilépés és győzelem után a képernyőmodulban „[Press return to continue]”, majd a ranglista beolvasása, frissítése, kiírása és visszaírása; utána szóközre vissza a címképernyőre.
 ```
 Top Ten Rogueists:
    Score Name
