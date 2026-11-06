@@ -13,8 +13,9 @@
 // $C000-$C3FF  képernyőmemória (VIC 3. bank)
 // $C400-$C7FF  szabad
 // $C800-$CFFF  saját karakterkészlet
-// $D000-$DFFF  I/O
-// $E000-$FFFF  KERNAL ROM (mindig bent)
+// $D000-$DFFF  I/O, alatta szövegek
+// $E000-$FFF9  KERNAL ROM, alatta szövegek
+// $FFFA-$FFFF  KERNAL ROM, alatta NMI-, RESET- és IRQ vektorok
 
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
