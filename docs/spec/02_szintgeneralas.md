@@ -35,7 +35,7 @@ A szektorok a **logikai** térképre vonatkoznak ([1.3.1](01_adatmodell_es_flage
 ## 2.2 Szobaflagek
 ```
 for i in 0..8: rooms[i].flags = 0
-repeat rnd(4) times: rooms[rnd_room()].flags |= PHANTOM  // 0..3 fantom szoba (ugyanaz a szoba többször is kijöhet)
+repeat rnd(4) times: rooms[rnd_room()].flags |= PHANTOM  // 0..3 különböző fantom szoba (a rnd_room csak nem fantom szobát ad)
 for each room i (sorrendben):
   if PHANTOM: elhelyezés (2.3), continue
   if rnd(10) < level - 1:
@@ -53,11 +53,9 @@ A labirintus mezői folyosó-mezők (`F_PASS`), ezért a látótér szempontjáb
 A szoba `room.pos` (bal felső sarok, fallal együtt) és `room.size` (méret, fallal együtt) mezője a szektorán belül ([2.1](#21-szektorok)):
 ```
 PHANTOM:  // a fantom szoba nem igazi szoba, csak egyetlen folyosó-csomópont
-  repeat:
-    room.pos.x = sector_corner.x + rnd(sector_size.x - 2) + 1  // véletlen pont a szektor belsejében,
-    room.pos.y = sector_corner.y + rnd(sector_size.y - 2) + 1  //   a szektor szélétől legalább 1 mezőre
-  until 1 <= room.pos.y <= MAP_ROWS                            // nem az üzenetsorban, nem a státuszsorban
-  room.size = (0, 0)                                           // nincs mérete: minden használat előtt a PHANTOM jelzőt nézzük
+  room.pos.x = sector_corner.x + rnd(sector_size.x - 2) + 1  // véletlen pont a szektor belsejében,
+  room.pos.y = sector_corner.y + rnd(sector_size.y - 2) + 1  //   a szektor szélétől legalább 1 mezőre
+  room.size = (0, 0)                                         // nincs mérete: minden használat előtt a PHANTOM jelzőt nézzük
 
 MAZE:  // a labirintus kitölti a szektort
   room.size = (sector_size.x - 1, sector_size.y - 1)
@@ -73,6 +71,7 @@ normál:
     room.pos.y  = sector_corner.y + rnd(sector_size.y - room.size.y)
   until room.pos.y != 0                                               // a 0. sor az üzenetsor
 ```
+A fantom szoba pontjának `y`-ja mindig 1..22 (a legalsó szektorban legfeljebb 16 + 6), így újrasorsolás nélkül sem kerülhet az üzenet- vagy a státuszsorba; a fejlesztői build ezt `DEV_CHECK`-kel ellenőrzi.
 
 ## 2.4 Összekötés
 Szomszédság: csak ortogonális szomszéd szektorok (`adjacent` tábla: 0–1, 0–3, 1–2, 1–4, 2–5, 3–4, 3–6, 4–5, 4–7, 5–8, 6–7, 7–8). A fantom szobák is részt vesznek (folyosó-csomópontként).
