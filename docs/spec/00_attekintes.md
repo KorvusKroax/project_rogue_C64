@@ -99,7 +99,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E16 | a mélység legfeljebb 255 | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E17 | a sírkövön nincs évszám (nincs valós idejű óra) | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E18 | nincs `terse` opció: csak a normál üzenetek vannak, a dobás mindig animálódik | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
-| E19 | tekercsfeliratok: 86 olvasható szótag, legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
+| E19 | tekercsfeliratok: legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |

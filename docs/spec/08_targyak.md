@@ -197,9 +197,9 @@ Játék indulásakor minden típus kap egy véletlen, a játék végéig rögzí
 | **Bot – fa** (33) | avocado wood, balsa, bamboo, banyan, birch, cedar, cherry, cinnibar, cypress, dogwood, driftwood, ebony, elm, eucalyptus, fall, hemlock, holly, ironwood, kukui wood, mahogany, manzanita, maple, oaken, persimmon wood, pecan, pine, poplar, redwood, rosewood, spruce, teak, walnut, zebrawood |
 | **Pálca – fém** (22) | aluminum, beryllium, bone, brass, bronze, copper, electrum, gold, iron, lead, magnesium, mercury, nickel, pewter, platinum, steel, silver, silicon, tin, titanium, tungsten, zinc |
 
-**Tekercsfelirat-szótagok** (86):
+**Tekercsfelirat-szótagok** (146):
 ```
-a e i o u y ab ag an bek bit bot bu byt con cos dan den do el er fa fid fu gan gar gop ha hyd ip it iv jo la mar me mi mic mik mon mur nej nep ner nes nih nin od ox po pot re ri ro rog rok rol sa san sat sef seh so sol sun ta tab tem ti tox um un ur val viv vom wah wed wex wun xo zeb zim zok zon zum
+a ab ag aks ala an app arg arze ash bek bie bit bjor blu bot bu byt comp con cos cre dalf dan den do e eep el eng er ere erk esh evs fa fid fri fu gan gar glen gop gre ha hyd i ing ip ish it ite iv jo kho kli klis la lech mar me mi mic mik mon mung mur nej nelg nep ner nes nih nin o od ood org orn ox oxy pay ple plu po pot prok re rea rhov ri ro rog rok rol sa san sat sef seh shu ski sna sne snik sno so sol sri sta sun ta tab tem ther ti tox trol tue turs u ulk um un uni ur val viv vly vom wah wed werg wex whon wun xo y yot yu zant zeb zim zok zon zum
 ```
 
 ```
@@ -221,7 +221,7 @@ get_scroll_title(which):  // minden kiíráskor; saját álvéletlen-generátor,
 ```
 A feliratok nem tárolódnak, csak a `scroll_title_seed`; ugyanabból az értékből mindig ugyanaz a 18 felirat jön ki, így a mentés után is. A feliratgenerátor saját állapottal fut, ezért a kiírás nem hívja az RN-t ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)). A színek, kövek és anyagok a táblájukba mutató indexek.
 
-> **C64-eltérés (E19):** az eredeti 147 szótagjából 86 maradt: a hat egybetűs magánhangzó és a könnyen kiolvasható, 2–3 betűs szótagok. A felirat legfeljebb 30 karakter (az eredetiben 40); ha egy szótag nem fér el, az egész felirat véget ér, nem csak az adott szó, így üres szó és dupla szóköz nem keletkezik. A feliratok egy játékon belül mind különbözők (az eredeti ezt nem ellenőrizte), és nem tárolódnak.
+> **C64-eltérés (E19):** a szótagok az eredetiéi (az eredeti listában a „nes” kétszer szerepel, itt egyszer, így 146). A felirat legfeljebb 30 karakter (az eredetiben 40); ha egy szótag nem fér el, az egész felirat véget ér, nem csak az adott szó, így üres szó és dupla szóköz nem keletkezik. A feliratok egy játékon belül mind különbözők (az eredeti ezt nem ellenőrizte), és nem tárolódnak.
 
 **Tárgynevek:**
 | állapot | bájital / gyűrű / pálca | tekercs |
