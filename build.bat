@@ -12,7 +12,7 @@ rem --- a karakterkeszlet: src\platform\charset_custom.c (sajat) vagy src\platfo
 set CHARSET=src\platform\charset_rom.c
 
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c %CHARSET% src\view.c src\message.c src\input.c src\status.c src\player.c src\rng.c src\num.c
+set SOURCES=src\main.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c %CHARSET% src\view.c src\message.c src\input.c src\status.c src\player.c src\rooms.c src\rng.c src\num.c
 
 rem --- kiadasi vagy fejlesztoi build ---
 set NAME=rogue
