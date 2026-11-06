@@ -55,7 +55,7 @@ Nem megfelelő tárgyra a `q`, `r` és `e` is időbe kerül („yuk! Why would y
 | 8 | identify armor | 7 | 100 | lásd lent |
 | 9 | identify ring/stick | 10 | 115 | lásd lent |
 | 10 | scare monster | 3 | 200 | olvasva: „you hear maniacal laughter in the distance”. Padlón: szörny nem lép rá, nem születik rá. Az **első** felvételkor ISFOUND jelet kap; ha valaha letették, a következő felvételkor „the scroll turns to dust as you pick it up” |
-| 11 | food detection | 2 | 60 | ételek helye külön képernyőn („Your nose tingles and you smell food.--More--”); ha nincs: „your nose tingles” |
+| 11 | food detection | 2 | 60 | ételek helye külön képernyőn („Your nose tingles and you smell food”, utána `--More--`); ha nincs: „your nose tingles” |
 | 12 | teleportation | 5 | 165 | teleport(); csak akkor azonosítódik, ha más szobába került |
 | 13 | enchant weapon | 8 | 150 | kézben lévő fegyver: ISCURSED le; 50% hplus++, 50% dplus++; fegyver nélkül „you feel a strange sense of loss” |
 | 14 | create monster | 4 | 75 | new_monster(level, INITIAL) egy véletlen szabad szomszéd mezőre (scare monster tekercsre nem); a szörny alszik és nem kap tárgyat; nincs hely (vagy tele a szörnytábla, [1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)): „you hear a faint cry of anguish in the distance” |

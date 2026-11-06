@@ -117,7 +117,7 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 |---|---|
 | fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak |
 | kód | 28–34 KB; durva becslés, nem mérés, mérföldkövenként mérni kell |
-| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 12,1 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,7 KB, nevek és szótagok 2,5 KB, súgó és jelleírások 1,7 KB, győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$C400–$C7FF` és a `$D000–$FFF9` alatti RAM-ban (kb. 13 KB, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak. |
+| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 11,3 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,5 KB, nevek és szótagok 2,5 KB, súgó és jelleírások 1,0 KB (a súgósorok jel + leírás formában, a futássorok kiíráskor összerakva), győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$C400–$C7FF` és a `$D000–$FFF9` alatti RAM-ban (kb. 13 KB, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak, így a ROM-ok alatt kb. 10 KB foglalt. |
 | képernyőmodul | kb. 3 KB kód és szöveg; a játékállapot-blokk helyére töltődik, így nem foglal külön helyet ([10.10](#1010-képernyőmodul)) |
 | állandó táblák (szörnyek, tárgyak, erő, xp) | kb. 1,5 KB |
 | játékállapot (perzisztens blokk) | kb. 8,5 KB |

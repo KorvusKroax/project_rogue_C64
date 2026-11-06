@@ -26,7 +26,6 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | alvás/ájulás/fagyás vége | you can move again | |
 | ismeretlen billentyű | illegal command '<bill>' | |
 | `a` első parancsként | you haven't typed a command yet | |
-| `v` | version 5.4.4. (mctesq was here) | |
 | irány bekérése | which direction? | |
 | `f` olyan irányba, ahol nincs látott szörny | I see no monster there | |
 | foglalt tárgy újrahasználata | That's already in use | |
@@ -59,8 +58,6 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | `*` lista, nincs megfelelő | you don't have anything appropriate | |
 | `i` üres csomag | you are empty handed | |
 | lista vége | --Press space to continue-- | |
-| `I` kérdés | which item do you wish to inventory: | |
-| `I` rossz betű | '<b>' not in pack | |
 | felvétel | you now have <név> (<b>) | |
 | tele csomag | there's no room in your pack | |
 | arany | you found <n> gold pieces | |
@@ -116,8 +113,8 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | gain strength | you feel stronger, now. What bulging muscles! | |
 | see invisible | this potion tastes like <gyümölcs> juice | |
 | healing | you begin to feel better | |
-| monster detection, ha nincs mit mutatni | you have a strange feeling for a moment, then it passes | you have a normal feeling … |
-| magic detection, ha van | You sense the presence of magic on this level.--More-- (külön képernyőn) | |
+| monster detection, ha nincs mit mutatni | you have a strange feeling for a moment, then it passes (egy szöveg, a szó paraméter: strange / normal) | you have a normal feeling … |
+| magic detection, ha van | You sense the presence of magic on this level (külön képernyőn; a `--More--`-t a képernyő teszi hozzá) | |
 | magic detection, ha nincs | you have a strange feeling for a moment, then it passes | you have a normal feeling … |
 | raise level | you suddenly feel much more skillful (+ welcome to level <n>) | |
 | extra healing | you begin to feel much better | |
@@ -139,7 +136,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | enchant armor | your armor glows <silver> for a moment | |
 | identify … | this scroll is an <identify potion / …> scroll | |
 | scare monster | you hear maniacal laughter in the distance | |
-| food detection – van | Your nose tingles and you smell food.--More-- (külön képernyőn) | |
+| food detection – van | Your nose tingles and you smell food (külön képernyőn; a `--More--`-t a képernyő teszi hozzá) | |
 | food detection – nincs | your nose tingles | |
 | enchant weapon | your <fegyvernév> glows <blue> for a moment | |
 | enchant weapon – nincs fegyver | you feel a strange sense of loss | |
@@ -225,7 +222,7 @@ Csapdanevek (hallucinálva véletlen): a trapdoor, an arrow trap, a sleeping gas
 | mentés – ismert fájlnév | save file (<fájl>)? |
 | mentés – rossz válasz | please answer Y or N |
 | mentés – fájlnév | file name: |
-| mentés – létező fájl | File exists. Do you wish to overwrite it? (rossz válaszra: Please answer Y or N) |
+| mentés – létező fájl | File exists. Do you wish to overwrite it? (rossz válaszra: please answer Y or N, ugyanaz a szöveg, mint fent) |
 | betöltés után | file name: <fájl> |
 | betöltés – más verzió vagy hibás fájl | Sorry, saved game is out of date. |
 | betöltés – halott játékos | "He's dead, Jim" |

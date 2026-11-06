@@ -179,14 +179,12 @@ waste_time():
 | parancs | leírás |
 |---|---|
 | i | teljes csomag listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
-| SHIFT-i | egy tárgy betű alapján az üzenetsávba; üres csomag: „you aren't carrying anything”; 1 tárgy → azonnal; rossz betű: „'x' not in pack” |
 | `)` `]` `=` | kézben lévő fegyver / viselt páncél / gyűrűk; „you are wielding nothing” / „wearing nothing” |
 | SHIFT-d | felfedezett típusok listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `/` | jel magyarázata ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `^` + irány | csapda azonosítása a szomszéd mezőn („You have found <csapda>”), rejtettnél vagy ha nincs: „You have found no trap there”. ISHUH-nál 20% eséllyel más irány (mint minden irányos parancsnál, `get_dir`); ISHALU alatt véletlen csapdanév |
 | CTRL-p | utolsó üzenet |
 | `?` | súgó ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
-| v | verzió („version 5.4.4. (mctesq was here)”) |
 
 ### 4.2.5 Rendszer
 | parancs | leírás |
@@ -194,14 +192,14 @@ waste_time():
 | `.` | pihenés 1 kör |
 | s | keresés ([9.2](09_csapdak.md#92-keresés-s-searching-gyűrű)) |
 | a | utolsó parancs ismétlése; „you haven't typed a command yet” |
-| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL), `C`, `I`; minden másnál a szám elvész. Megszakítja (a futással azonos esetek): szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
+| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL), `C`; minden másnál a szám elvész. Megszakítja (a futással azonos esetek): szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
 | ESC * | megszakít |
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
 | SHIFT-q * | kilépés: „really quit?” – `y`-ra „You quit with <n> gold pieces”, pontszám = arany (levonás nélkül) |
 | szóköz * | nem csinál semmit |
 
-> **C64-eltérés (E9):** az eredeti `!` (alshell indítása) és `CTRL-r` (a terminál képernyőjének újrarajzolása) nincs; mindkét billentyű „illegal command”.
+> **C64-eltérés (E9):** az eredeti `!` (alshell indítása) és `CTRL-r` (a terminál képernyőjének újrarajzolása) nincs. Nincs `I` (egy tárgy kiírása) és `v` (verziószám) sem, mert a csomaglista és a címképernyő ugyanezt megmutatja. Mind a négy billentyű „illegal command”.
 
 **Beállítások (`o`):**
 
@@ -233,7 +231,7 @@ save_game():   // SHIFT-s
   "save file (<file>)? "                // y: a file opció neve; n: "file name: " bekérése; más: "please answer Y or N"
      ESC a fájlnév bekérésekor: a mentés elmarad, a játék folytatódik
   ha a fájl már létezik a lemezen: "File exists. Do you wish to overwrite it?"
-     y: a régi fájl törlése; n vagy ESC: vissza a "file name: " kérdéshez; más: "Please answer Y or N"
+     y: a régi fájl törlése; n vagy ESC: vissza a "file name: " kérdéshez; más: "please answer Y or N"
   kiírás: fejléc + a teljes állapotblokk (10.7)
   lemezhiba: "disk error: <kód>,<szöveg>"; a játék folytatódik (a félig írt fájl törlődik)
   siker: vissza a címképernyőre
@@ -277,8 +275,6 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
   - *slow* – soronként az üzenetsávban, `--More--`-val.
 - A lista végén „--Press space to continue--”; egyetlen sornál üzenetként jelenik meg. Üres csomag: „you are empty handed”.
 
-**Egy tárgy (`I`):** üres csomag: „you aren't carrying anything”; egyetlen tárgy: azonnal „a) <név>”; különben „which item do you wish to inventory: ” → „<x>) <név>” vagy „'<x>' not in pack”.
-
 **Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't. It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 
 **Páncél fel (`W`) / le (`T`):** [4.2.3](#423-tárgyak). Siker: „you are now wearing <név>” (a páncél azonosítódik), illetve „you used to be wearing <betű>) <név>”. Nem páncélra: „you can't wear that”.
@@ -295,9 +291,9 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 **Súgó (`?`):** „character you want help for (* for all): ” – egy billentyűre az ahhoz tartozó sor („<jel>	<leírás>”, ismeretlenre „unknown character '<x>'”); `*`-ra a teljes lista egy oszlopban, oldalanként.
 
-> **C64-eltérés (E11):** a súgó egy oszlopban, oldalanként 23 sorral jelenik meg (0..22. sor), a 24. sorban „--Press space to continue--” (ESC: kilépés). Így mind a 46 sor látható, két oldalon (az eredeti 80×24-es kétoszlopos elrendezésben az utolsó három nem fért ki). A `!` (alshell), a `@` (státusz) és a `^R` (újrarajzolás) sora kimarad, az ESC sora `STOP` jellel szerepel.
+> **C64-eltérés (E11):** a súgó egy oszlopban, oldalanként 23 sorral jelenik meg (0..22. sor), a 24. sorban „--Press space to continue--” (ESC: kilépés). Így mind a 44 sor látható, két oldalon (az eredeti 80×24-es kétoszlopos elrendezésben az utolsó három nem fért ki). A `!` (alshell), a `@` (státusz) és a `^R` (újrarajzolás) sora kimarad, az ESC sora `STOP` jellel szerepel.
 
-Sorformátum: a jel (CTRL-es billentyűnél `^` + betű), utána a leírás tabulátorral kezdve (8-as tabpozíciók; irányos parancsnál a jel után `<dir>` áll a tab előtt; a két „run” sornak nincs jele). A `*` lista 46 sora:
+Sorformátum: a jel (CTRL-es billentyűnél `^` + betű), utána a leírás tabulátorral kezdve (8-as tabpozíciók; irányos parancsnál a jel után `<dir>` áll a tab előtt; a két „run” sornak nincs jele). A sor a kiíráskor áll össze: a jel és a leírás külön szövegként tárolódik, a tabulálást kitöltő szóközöket a kiírás teszi hozzá. A `*` lista 44 sora:
 ```
 ?       prints help
 /       identify object
@@ -323,7 +319,6 @@ s       search for trap/secret door
 ,       pick something up
 i       inventory
 --- 2. oldal ---
-I       inventory single item
 q       quaff potion
 r       read scroll
 e       eat food
@@ -345,9 +340,8 @@ STOP    cancel command
 S       save game
 Q       quit
 F<dir>  fight till either of you dies
-v       print version number
 ```
-Az egyes irányok nagybetűs és CTRL-os változatainak („run left”, „run left until adjacent”, …) saját súgósora is van az egy billentyűs súgóban, de a `*` listában nem szerepelnek.
+Az egyes irányok nagybetűs és CTRL-os változatainak („run left”, „run left until adjacent”, …) saját súgósora is van az egy billentyűs súgóban, de a `*` listában nem szerepelnek. Ezek a sorok nem tárolódnak, kiíráskor állnak össze: „run ” + az irány leírása a `h`…`n` sorából, CTRL-nál még „ until adjacent”.
 
 **Felvétel részletei:** lebegve semmi nem vehető fel (rálépéskor csendben nem történik semmi, a `,` parancsra „You can't. You're floating off the ground!”). Arany: „you found <n> gold pieces”, és a szoba aranya 0 lesz (a kapzsi szörnyek ettől a játékos felé fordulnak). `m` irány: „you moved onto <név>”. `,` üres mezőn: „there is nothing here to pick up”.
 
