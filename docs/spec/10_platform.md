@@ -35,8 +35,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 - **Betöltés:** a `$D000` alá a betöltés nem írhat, mert ott az I/O látszik. Ezért a PRG-ben a szövegek a kód után vannak, és induláskor `$01 = $30` mellett a helyükre másolódnak. Az ideiglenes példány helyét ezután a változók használják.
 - **Tömörítés:** nincs. Ha a szövegek kinőnék a helyet, akkor jöhet szóba, például szótáras tömörítés.
 
-**Játékállapot:** a teljes perzisztens állapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)) egyetlen összefüggő blokk (kb. 10,6 KB), mert a mentés és a betöltés ezt egyben írja és olvassa ([10.7](#107-lemezkezelés)). Ami nem kerül bele:
-- a MAP szörnyréteg, mert betöltéskor újraépül;
+**Játékállapot:** a teljes perzisztens állapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)) egyetlen összefüggő blokk (kb. 8,5 KB), mert a mentés és a betöltés ezt egyben írja és olvassa ([10.7](#107-lemezkezelés)). Ami nem kerül bele:
 - a beállításblokk, mert a képernyőmodul is használja; a mentés ettől még kiírja ([10.10](#1010-képernyőmodul));
 - a videomemória, a pufferek, az állandó táblák és a szövegek.
 
@@ -60,12 +59,17 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 ## 10.5 Aritmetika
 - **RN:** `seed = seed × 11109 + 13849` (mod 2³²): 32×16 bites szorzás + 32 bites összeadás; az eredmény felső 16 bitje az RN ([0.2](00_attekintes.md#02-alapprimitívek)).
 - **rnd(n):** 16 bites előjel nélküli maradékos osztás.
-- **32 bites előjel nélküli** összeadás/kivonás telítéssel (felül 16 777 215-nél, alul 0-nál: exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 8×8 és 16×8 bites szorzás (`dist2`, értékszámítás).
+- **32 bites előjel nélküli** összeadás/kivonás telítéssel (felül 16 777 215-nél, alul 0-nál: exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 16×8 bites szorzás (értékszámítás).
+- **Táblázatok szorzás helyett:**
+  - **négyzettábla:** 0..79 négyzetei (80 × 16 bit = 160 bájt); a `dist2` két kiolvasás és egy összeadás;
+  - **sorcím-tábla:** a térképrétegek soronkénti kezdő eltolása, `(y − 1) × 80` (22 × 16 bit = 44 bájt); a mezőindex egy kiolvasás és egy összeadás.
+- **8 bites számolás, ahol elég:** koordináták, számlálók, kis értékek; a 16 bites művelet a 6502-n két-háromszor lassabb. Ahol egy érték biztosan elfér 8 biten, ott nem használunk 16 bitet.
 - **Szám kiírása:** egyetlen, előjeles 32 bites értéket váró rutin, decimálisan (az arany és a tapasztalat 16 777 215-nél telítődik, így belefér; a 32 bites seed előjelesen, akár negatívként jelenik meg, és így is visszaírható), a státuszsor (3.3) és az üzenetek formázásához (`%d`, `%-Nd`, `%Nd`).
 - Lebegőpontos számítás nincs.
 
 ## 10.6 Időzítés
 - **Raszter-IRQ** képkockánként egyszer (PAL 50 Hz, NTSC 60 Hz): billentyűolvasás, képkocka-számláló, jiffy óra.
+- **Futás üteme:** futás közben (`jump` nélkül) minden lépés után a játék a következő ütem elejéig vár, így minden lépés ugyanannyi képkockáig tart (1 vagy 2, [10.8](#108-erőforrás-keretek)), akár van szörny a közelben, akár nincs. `jump` mellett nincs várakozás, mert a futás közben nincs rajzolás.
 - **Animációs késleltetés:** a dobott tárgy és a lövedék lépésenként 2 képkockát vár, a sugár (7.6) lépésenként 2-t, és a teljes sugár a visszarajzolás előtt még 10 képkockáig látszik. A nézőablakon kívüli lépések nem várnak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 - **Seed:** a címképernyőn az `N` lenyomásakor a 32 bites seed bájtjai: CIA1 A időzítő alsó bájtja, felső bájtja, a raszter-sor (`$D012`) és a jiffy-számláló alsó bájtja, mindegyik XOR-olva a jiffy-számláló többi bájtjával ([0.2](00_attekintes.md#02-alapprimitívek)). Ha az eredmény 0, a seed 1.
 - A játéklogika soha nem függ az időtől: az időzítés csak a megjelenítést és a seed kezdőértékét érinti.
@@ -106,21 +110,21 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 
 **Beállításfájl:** a [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) opciói rögzített sorrendben (logikai opciók bitekként, szövegek nullával lezárva), elején egy formátumverzió-bájttal; ismeretlen verziónál a fájl figyelmen kívül marad.
 
-**Sebesség:** a KERNAL soros átvitele kb. 400 bájt/s, így egy kb. 10,6 KB-os mentés kb. 27 másodperc. Írás közben a képernyőn „saving...”, olvasás közben „restoring...” felirat látszik a 0. sorban (ezek csak állapotjelzések, nem üzenetek).
+**Sebesség:** a KERNAL soros átvitele kb. 400 bájt/s, így egy kb. 8,5 KB-os mentés kb. 21 másodperc. Írás közben a képernyőn „saving...”, olvasás közben „restoring...” felirat látszik a 0. sorban (ezek csak állapotjelzések, nem üzenetek).
 
 ## 10.8 Erőforrás-keretek
 | tétel | becslés / cél |
 |---|---|
-| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak, a játékállapotnak és a MAP szörnyrétegnek |
+| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak |
 | kód | 28–34 KB; durva becslés, nem mérés, mérföldkövenként mérni kell |
-| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 12,2 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,7 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,7 KB, győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$C400–$C7FF` és a `$D000–$FFF9` alatti RAM-ban (kb. 13 KB, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak. |
+| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 12,1 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,7 KB, nevek és szótagok 2,5 KB, súgó és jelleírások 1,7 KB, győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$C400–$C7FF` és a `$D000–$FFF9` alatti RAM-ban (kb. 13 KB, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak. |
 | képernyőmodul | kb. 3 KB kód és szöveg; a játékállapot-blokk helyére töltődik, így nem foglal külön helyet ([10.10](#1010-képernyőmodul)) |
 | állandó táblák (szörnyek, tárgyak, erő, xp) | kb. 1,5 KB |
-| játékállapot (perzisztens blokk) | kb. 10,6 KB |
-| MAP szörnyréteg (nem perzisztens) | 1760 bájt |
+| játékállapot (perzisztens blokk) | kb. 8,5 KB |
 | képernyő + karakterkészlet | 3 KB |
 | **szintgenerálás** | legfeljebb 2 másodperc |
-| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | szokásos esetben 1–2 képkocka |
+| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | legfeljebb a futás lépésideje (lásd lent), a szokásos 3–5 ébren lévő szörnnyel; a szörnymozgás elkészültekor mérni kell. Az alvó szörny nem mozog, nem számít bele |
+| **futás** | lépésenként mindig ugyanannyi képkocka (1 vagy 2, a mérés alapján rögzítve, [10.6](#106-időzítés)) |
 | **görgetés** | legfeljebb 2 képkocka |
 
 A fejlesztői mód mutatja a szabad memóriát és a táblák foglaltságát ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).

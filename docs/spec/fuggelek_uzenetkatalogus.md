@@ -87,6 +87,8 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | `c` azonosítottra | that has already been identified | |
 | `c` régi név | Was called "<név>" | |
 | `c` kérdés (és ismeretlen tárgy használata után) | what do you want to call it? | |
+| `c` üres névvel (a név törlése) | you remove the name | |
+| `c` (és ismeretlen tárgy használata után), betelt névkészlet | you have no room for more names. Remove a name from something first ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)) | |
 | `D` kérdés | for what type of object do you want a list? (* for all) | |
 | `D` rossz válasz | Please type one of !?=/ (ESCAPE to quit) | |
 | `D` semmi | Haven't discovered anything about any <potions/scrolls/rings/sticks> | |

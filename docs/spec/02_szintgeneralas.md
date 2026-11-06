@@ -108,7 +108,7 @@ do_passages():
        corridor(from_room, to_room)
        connected[from_room][to_room] = connected[to_room][from_room] = true
 
-  passnum()  // az összefüggő folyosóhálózatok megszámozása (F_PNUM), kijáratlistával
+  passnum()  // az összefüggő folyosóhálózatok megszámozása (F_PNUM), kijáratlistával – csak az A változatban (1.4.7)
 ```
 A kiinduló szoba addig marad ugyanaz, amíg van fán kívüli szomszédja; csak utána választ a fából újat.
 
@@ -198,7 +198,7 @@ corridor(room_a, room_b):
   pos += step  // most pos == end kell legyen
 
 door(room, pos):
-  room.exits += pos
+  exits += (pos, room)                                                // a közös ajtótáblába (1.4.7)
   if MAZE(room): return                                               // labirintusnál nincs ajtó
   if rnd(10) + 1 < level and rnd(5) == 0:
      MAP[pos] = (pos a felső vagy alsó falon) ? '-' : '|'; F_REAL le  // titkos ajtó: falnak látszik

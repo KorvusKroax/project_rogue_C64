@@ -90,7 +90,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E7 | mentés lemezre; nincs link-/jogosultság-ellenőrzés és szignálos mentés | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer), [10.7](10_platform.md#107-lemezkezelés) |
 | E8 | ranglista lemezen, név szerinti egyediséggel, zárolás nélkül | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E9 | nincs alshell (`!`) és képernyő-újrarajzolás (`CTRL-r`) | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
-| E10 | fix méretű táblák (szörny, tárgy, címke), betelt táblánál meghatározott viselkedés | [1.4](01_adatmodell_es_flagek.md#14-ábrázolás-c64-en) |
+| E10 | fix méretű táblák (szörny, tárgy, név), betelt táblánál meghatározott viselkedés | [1.4](01_adatmodell_es_flagek.md#14-ábrázolás-c64-en) |
 | E11 | 40 oszlopra tervezett képernyők: csomaglista, súgó (lapozva), sírkő, győzelem, ranglista, észlelés-képernyők | [3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre), [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok), [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E12 | szöveghosszak: név, gyümölcs ≤ 15, elnevezés ≤ 20, fájlnév ≤ 16 karakter | [1.4](01_adatmodell_es_flagek.md#14-ábrázolás-c64-en) |
 | E13 | seed a hardveres időzítőkből | [0.2](#02-alapprimitívek) |
@@ -99,6 +99,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E16 | a mélység legfeljebb 255 | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E17 | a sírkövön nincs évszám (nincs valós idejű óra) | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E18 | nincs `terse` opció: csak a normál üzenetek vannak, a dobás mindig animálódik | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
+| E19 | tekercsfeliratok: 86 olvasható szótag, legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |

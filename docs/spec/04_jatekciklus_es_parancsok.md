@@ -242,12 +242,12 @@ restore_game():   // címképernyő, R
   "file name: " (előtöltve a file opcióval); ESC: vissza a címképernyőre
   megnyitás; lemezhiba (pl. 62,FILE NOT FOUND): "disk error: <kód>,<szöveg>", vissza a címképernyőre
   fejléc ellenőrzése; ha nem ennek a verziónak a mentése, vagy rövidebb a vártnál: "Sorry, saved game is out of date.", vissza
-  az állapotblokk beolvasása; a MAP szörnyréteg újraépítése a szörnylistából (1.4.5)
+  az állapotblokk beolvasása; az F_MONST flagek újraépítése a szörnylistából (1.4.5)
   a fájl törlése a lemezről                     // a "halott"-ellenőrzés ELŐTT, mint az eredetiben
   ha hpt <= 0: "\"He's dead, Jim\"", vissza a címképernyőre
   center_view_window(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik
 ```
-- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek (a MAP szörnyréteg kivételével, amely betöltéskor újraépül), a szobák és folyosórendszerek, a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
+- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek, a szobák, a folyosórendszerek (csak az A változatban) és az ajtótábla ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
 - A bájtok XOR-ral el vannak rejtve (egyszerű elrejtés, nem biztonsági titkosítás), [10.7](10_platform.md#107-lemezkezelés).
 - A betöltés után a fájl törlődik, így ugyanonnan nem lehet újrakezdeni (a lemez másolásától ez nem véd).
 
@@ -287,7 +287,7 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 **Gyűrű le (`R`):** nincs gyűrű: „you aren't wearing any rings”; két gyűrűnél kérdezi a kezet. Átkozott: „you can't. It appears to be cursed”. Levételkor: add strength → `chg_str(−mod)`; see invisible → a gyűrű-forrás megszűnik, a CANSEE csak akkor kapcsol ki, ha a see invisible bájital időzítője sem fut (J5). Üzenet: „was wearing <név>(<betű>)”.
 
-**Elnevezés (`c`):** választható bármi, kivéve ételt („you can't call that anything”). Bájital/tekercs/gyűrű/pálca: a *típus* kap nevet (ha már azonosított: „that has already been identified”); minden más (fegyver, páncél, amulett): az adott tárgy saját címkét kap (ha nincs szabad címkehely: „you can't call that anything”, [1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)). Ha már volt név: „Was called "<név>"”; majd „what do you want to call it? ”. A beviteli mező a régi névvel, ha az nincs, az azonosítatlan névvel (szín, felirat, kő, anyag) van előtöltve, legfeljebb 20 karakterig.
+**Elnevezés (`c`):** választható bármi, kivéve ételt („you can't call that anything”). Bájital/tekercs/gyűrű/pálca: a *típus* kap nevet (ha már azonosított: „that has already been identified”); minden más (fegyver, páncél, amulett): az adott tárgy saját címkét kap. Ha már volt név: „Was called "<név>"”; majd „what do you want to call it? ”. A beviteli mező a régi névvel, ha az nincs, az azonosítatlan névvel (szín, felirat, kő, anyag) van előtöltve, legfeljebb 20 karakterig. Üres mezőn RETURN: a név törlődik, a helye felszabadul, és ha volt név, „you remove the name”; ESC-re a régi név marad. A nevek egy közös, 32 helyes készletben vannak ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)): ha a készlet betelt, és a tárgynak vagy a típusnak még nincs neve, a kérdés helyett „you have no room for more names. Remove a name from something first” jelenik meg (nem visz időt).
 
 **Felfedezések (`D`):** „for what type of object do you want a list? (* for all)” – `!` `?` `=` `/` vagy `*` (ESC kilép; más billentyűre: „Please type one of !?=/ (ESCAPE to quit)”). Az ismert vagy elnevezett típusok listája minden hívásnál **véletlen sorrendben**, a tárgynév-formátummal ([8.8](08_targyak.md#88-azonosítás-és-nevek)); `*`-nál a négy lista üres sorral elválasztva. Ha nincs semmi: „Haven't discovered anything about any potions” (scrolls / rings / sticks).
 

@@ -174,8 +174,9 @@ do_chase(monster):
   current_room = monster.room; on_door = (MAP[monster.pos] == DOOR)
   loop:
     if current_room != target_room:                               // más szobában van a cél: a legjobb kijárat felé
-       goal = current_room.exits közül a dest-hez (dist2) legközelebbi
+       goal = current_room kijáratai (ajtótábla, 1.4.7) közül a dest-hez (dist2) legközelebbi
        if on_door: current_room = monster.pos folyosórendszere; on_door = false; ismét a ciklus elejére
+       // a B változatban nincs folyosórendszer: folyosón a szörny előre halad (1.4.7)
     else:
        goal = monster.dest
        if monster.type == 'D' and !ISCANC and egy vonalban (vízszintes/függőleges/átló) a játékossal

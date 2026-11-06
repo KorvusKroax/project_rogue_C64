@@ -14,7 +14,7 @@ leave_room(pos):  // szobából ajtón át folyosóra lépéskor
   floor_char = PHANTOM ? PASSAGE : (!DARK or ISBLIND) ? FLOOR : ' '  // amivé a szörnyek helye válik
   a szoba SCREEN-jén: sötét szobában a FLOOR jelek ' '-re törlődnek;
   a szörnyek jele helyére floor_char (ajtón DOOR) kerül – SEEMONST alatt inverzen maradnak
-  player.room = a folyosórendszer; door_open(régi szoba)
+  player.room = a folyosórendszer (a B változatban: „folyosón”, 1.4.7); door_open(régi szoba)
 
 look(wakeup):  // minden akció előtt
   ha elmozdult: erase_lamp(régi pozíció, régi szoba)

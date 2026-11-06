@@ -49,7 +49,7 @@ throw():
   pos = player.pos                                                       // a tárgy aktuális helye repülés közben
   loop:
     next = pos + dir
-    if not walkable(next) or next is DOOR or monster at next: break  // "monster at": a MAP szörnyrétege (J12)
+    if not walkable(next) or next is DOOR or monster at next: break  // "monster at": a mező F_MONST flagje (J12)
     pos = next; animate(pos) ha látható és a nézőablakban van (3.5, 10.6)
   landing = (monster at next) ? next : (next is wall/door ? next : pos)  // a drop_near innen keres helyet
   if monster at next:
@@ -78,7 +78,7 @@ drop_near(item, center):
   //        ("potion", "scroll", "food", "armor", "ring", "wand"/"staff", "amulet") (J8)
 ```
 
-> **C64-javítás (J12):** a repülés a MAP szörnyrétegét nézi, ezért az álcázott Xeroc megállítja a dobott tárgyat, és a dobás eltalálhatja („wait! That's a xeroc!”, utána a normál dobott támadás). Ugyanez igaz a varázslövedékre és az „első szörnyig” haladó pálcákra ([8.7](08_targyak.md#87-pálcákbotok-z)). *Eredetileg* a repülés a képernyőjelet nézte: a tárgynak álcázott Xeroc jele járható volt, ezért a dobott tárgy, a lövedék és a pálca hatása áthaladt rajta.
+> **C64-javítás (J12):** a repülés a mező F_MONST flagjét nézi ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)), ezért az álcázott Xeroc megállítja a dobott tárgyat, és a dobás eltalálhatja („wait! That's a xeroc!”, utána a normál dobott támadás). Ugyanez igaz a varázslövedékre és az „első szörnyig” haladó pálcákra ([8.7](08_targyak.md#87-pálcákbotok-z)). *Eredetileg* a repülés a képernyőjelet nézte: a tárgynak álcázott Xeroc jele járható volt, ezért a dobott tárgy, a lövedék és a pálca hatása áthaladt rajta.
 
 > **C64-javítás (J8):** *eredetileg* a „vanishes” üzenet nevét mindig a fegyvertáblából vette (`weap_info[item.which]`), így pl. egy eldobott bájital (which = 3) „the arrow vanishes …” üzenetet adott.
 

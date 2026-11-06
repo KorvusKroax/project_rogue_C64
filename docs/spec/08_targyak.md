@@ -33,7 +33,7 @@ A `no_food` minden új szintnél nő (2), és csak étel *generálásakor* null�
 | 12 | blindness | 5 | 5 | ISBLIND spread(850) |
 | 13 | levitation | 6 | 75 | ISLEVIT spread(30) |
 
-**Automatikus azonosítás iváskor:** azonosítódik: poison, gain strength, healing, extra healing, raise level, haste self, hallucination, blindness, levitation; confusion csak ha a játékos nem hallucinál; magic detection csak ha mutatott valamit. **Nem** azonosítódik: see invisible, monster detection, restore strength. Ha a típus ivás után sem ismert és nincs még elnevezve, a játék megkérdezi: „what do you want to call it?” (`call_it`). Ha viszont ismert, a korábbi `c`-név törlődik (azonosító tekercsnél is). Ugyanez a tekercseknél.
+**Automatikus azonosítás iváskor:** azonosítódik: poison, gain strength, healing, extra healing, raise level, haste self, hallucination, blindness, levitation; confusion csak ha a játékos nem hallucinál; magic detection csak ha mutatott valamit. **Nem** azonosítódik: see invisible, monster detection, restore strength. Ha a típus ivás után sem ismert és nincs még elnevezve, a játék megkérdezi: „what do you want to call it?” (`call_it`); betelt névkészletnél a kérdés helyett „you have no room for more names. Remove a name from something first” ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)). Ha viszont ismert, a korábbi `c`-név törlődik (azonosító tekercsnél is). Ugyanez a tekercseknél.
 
 > **C64-javítás (J14):** *eredetileg* a haste self ivása nem vitt el időt (a gyorsítás egy plusz akciót adott még ugyanabban a körben, mert az ivás „visszaadta” a saját akcióját). Most az ivás 1 kör, és a gyorsítás a következő körtől hat.
 
@@ -162,7 +162,7 @@ Két kéz (bal/jobb). Átkozott nem vehető le.
 | 6 | magic missile | 10 | 170 | lövedék, a dobott tárgy mozgásával (falig/szörnyig, J12); ha szörnyet ér és az !save_throw_magic: dobott támadás +100 találattal (gyakorlatilag mindig talál), sebzés 1d4 + 1 + add_dam[str] + kézben lévő fegyver dplus (a fegyver hplus-a is hozzáadódik); kézben tartott fegyver nélkül 1d4 + 1 + add_dam[str] (J9). Egyébként „the missile vanishes with a puff of smoke” (J17) |
 | 7 | haste monster | 10 | 5 | ISRUN; ha ISSLOW: le, különben ISHASTE |
 | 8 | slow monster | 11 | 350 | ISRUN; ha ISHASTE: le, különben ISSLOW |
-| 9 | drain life | 9 | 300 | ha hpt < 2: „you are too weak to use it”, nincs töltésfogyás. Célpontok: szobában a szoba összes szörnye; folyosón az **egész összefüggő folyosórendszer** szörnyei és az ahhoz tartozó ajtókon állók; ajtón állva a szoba és a folyosó is. Ha nincs célpont: „you have a tingling feeling” (a töltés fogy). Ha van: `hpt /= 2`; minden célpont `hpt / n`-t veszít (a *maradék* hp-ból számolva), aki túléli, runto |
+| 9 | drain life | 9 | 300 | ha hpt < 2: „you are too weak to use it”, nincs töltésfogyás. Célpontok: szobában a szoba összes szörnye; folyosón az **egész összefüggő folyosórendszer** szörnyei és az ahhoz tartozó ajtókon állók (a B változatban ezt a varázslás pillanatában egy kitöltés adja, [1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); ajtón állva a szoba és a folyosó is. Ha nincs célpont: „you have a tingling feeling” (a töltés fogy). Ha van: `hpt /= 2`; minden célpont `hpt / n`-t veszít (a *maradék* hp-ból számolva), aki túléli, runto |
 | 10 | nothing | 1 | 5 | – |
 | 11 | teleport away | 6 | 340 | első szörny: find_floor(null, monster), de nem a játékos mezője; ISRUN, dest = játékos |
 | 12 | teleport to | 6 | 50 | első szörny: a játékos melletti mezőre a lövés irányában (ez mindig szabad, mert a sugár azon át haladt, vagy maga a szörny áll ott); ISRUN, dest = játékos |
@@ -178,7 +178,7 @@ zap():
   if stick.arm == 0: "nothing happens"; return TIME  // a pálca nem tűnik el
   hatás; stick.arm--
   "első szörny az útban": a sugár a játékostól indul dir irányba, falig/ajtóig; az első szörnyön megáll
-                          (a MAP szörnyrétege szerint, így az álcázott Xeroc is megállítja, J12)
+                          (a mező F_MONST flagje szerint, így az álcázott Xeroc is megállítja, J12)
   ha a célpont Venus flytrap (invisibility/polymorph/teleport away/to/cancellation): player.ISHELD le
 ```
 - Nem pálcára: „you can't zap with that!” (nem visz időt).
@@ -197,9 +197,9 @@ Játék indulásakor minden típus kap egy véletlen, a játék végéig rögzí
 | **Bot – fa** (33) | avocado wood, balsa, bamboo, banyan, birch, cedar, cherry, cinnibar, cypress, dogwood, driftwood, ebony, elm, eucalyptus, fall, hemlock, holly, ironwood, kukui wood, mahogany, manzanita, maple, oaken, persimmon wood, pecan, pine, poplar, redwood, rosewood, spruce, teak, walnut, zebrawood |
 | **Pálca – fém** (22) | aluminum, beryllium, bone, brass, bronze, copper, electrum, gold, iron, lead, magnesium, mercury, nickel, pewter, platinum, steel, silver, silicon, tin, titanium, tungsten, zinc |
 
-**Tekercsfelirat-szótagok:**
+**Tekercsfelirat-szótagok** (86):
 ```
-a ab ag aks ala an app arg arze ash bek bie bit bjor blu bot bu byt comp con cos cre dalf dan den do e eep el eng er ere erk esh evs fa fid fri fu gan gar glen gop gre ha hyd i ing ip ish it ite iv jo kho kli klis la lech mar me mi mic mik mon mung mur nej nelg nep ner nes nes nih nin o od ood org orn ox oxy pay ple plu po pot prok re rea rhov ri ro rog rok rol sa san sat sef seh shu ski sna sne snik sno so sol sri sta sun ta tab tem ther ti tox trol tue turs u ulk um un uni ur val viv vly vom wah wed werg wex whon wun xo y yot yu zant zeb zim zok zon zum
+a e i o u y ab ag an bek bit bot bu byt con cos dan den do el er fa fid fu gan gar gop ha hyd ip it iv jo la mar me mi mic mik mon mur nej nep ner nes nih nin od ox po pot re ri ro rog rok rol sa san sat sef seh so sol sun ta tab tem ti tox um un ur val viv vom wah wed wex wun xo zeb zim zok zon zum
 ```
 
 ```
@@ -209,12 +209,19 @@ init_materials():  // bot vagy pálca típusonként
       if rnd(2) == 0: index = rnd(len(metal)); if unused: type = "wand", anyag = metal[index]; break
       else:           index = rnd(len(wood));  if unused: type = "staff", anyag = wood[index]; break
 
-init_names():  // tekercs feliratok
-  for each scroll type:
-    rnd(3)+2 szó, mindegyik rnd(3)+1 szótagból a szótag-listából, max. 40 karakter
-    szótagok: a fenti tekercsfelirat-szótagok
+init_names():  // játék elején
+  loop:
+    scroll_title_seed = RN                       // 16 bit, a GameState-ben
+    if a 18 felirat mind különböző: break        // szinte mindig elsőre
+
+get_scroll_title(which):  // minden kiíráskor; saját álvéletlen-generátor, nem az RN
+  állapot = scroll_title_seed és which keveréke
+  rnd(3)+2 szó, mindegyik rnd(3)+1 szótagból a fenti szótagok közül
+  ha a következő szótag (az előtte álló szóközzel) a 30 karaktert túllépné: a felirat itt véget ér
 ```
-A feliratok a játékállapot részei (a mentésbe kerülnek); generált szövegként vagy szótagindex-listaként tárolhatók ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). A színek, kövek és anyagok a táblájukba mutató indexek.
+A feliratok nem tárolódnak, csak a `scroll_title_seed`; ugyanabból az értékből mindig ugyanaz a 18 felirat jön ki, így a mentés után is. A feliratgenerátor saját állapottal fut, ezért a kiírás nem hívja az RN-t ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)). A színek, kövek és anyagok a táblájukba mutató indexek.
+
+> **C64-eltérés (E19):** az eredeti 147 szótagjából 86 maradt: a hat egybetűs magánhangzó és a könnyen kiolvasható, 2–3 betűs szótagok. A felirat legfeljebb 30 karakter (az eredetiben 40); ha egy szótag nem fér el, az egész felirat véget ér, nem csak az adott szó, így üres szó és dupla szóköz nem keletkezik. A feliratok egy játékon belül mind különbözők (az eredeti ezt nem ellenőrizte), és nem tárolódnak.
 
 **Tárgynevek:**
 | állapot | bájital / gyűrű / pálca | tekercs |
