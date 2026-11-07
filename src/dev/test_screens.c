@@ -1,6 +1,7 @@
 #include "dev.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include "../platform/platform.h"
 #include "../platform/screen.h"
@@ -9,6 +10,7 @@
 #include "../input.h"
 #include "../map.h"
 #include "../message.h"
+#include "../rooms.h"
 #include "../state.h"
 #include "../status.h"
 #include "../view.h"
@@ -370,6 +372,75 @@ static void dev_status_screen(void)
     }
 }
 
+// egy új szint szobái a MAP-ba, onnan a képernyőre
+static void rooms_generate_level(void)
+{
+    clear_map();
+    generate_rooms();
+    memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
+    redraw_map();
+}
+
+// a szobák száma, amelyeken a megadott flag be van kapcsolva
+static uint8_t rooms_count_flag(uint8_t flag)
+{
+    uint8_t count = 0;
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        if (game.rooms[room_index].flags & flag) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static void dev_rooms_screen(void)
+{
+    uint8_t code = 0;
+
+    screen_clear();
+    set_screen_cursor(0, STATUS_ROW);
+    put_text("SPACE: new level  +,-: depth  ESC: end");
+    set_screen_cursor(0, STATUS_ROW + 1);
+    put_text("1,2,3: left/mid/right");
+
+    game.dungeon_level = 1;
+    game.view_window_x = 0;
+    rooms_generate_level();
+
+    while (code != KEY_ESCAPE) {
+        // a labirintust még nem rajzolja ki, ezért a száma látszik
+        set_screen_cursor(0, MESSAGE_ROW);
+        put_text("depth:");
+        put_int(game.dungeon_level, 3);
+        put_text("  phantom:");
+        put_int(rooms_count_flag(ROOM_PHANTOM), 0);
+        put_text(" dark:");
+        put_int(rooms_count_flag(ROOM_DARK), 0);
+        put_text(" maze:");
+        put_int(rooms_count_flag(ROOM_MAZE), 0);
+        clear_to_row_end();
+
+        code = wait_for_key();
+
+        switch (code) {
+            case ' ': rooms_generate_level(); break;
+            case '+':
+                if (game.dungeon_level < 255) game.dungeon_level++;
+                rooms_generate_level();
+                break;
+            case '-':
+                if (game.dungeon_level > 1) game.dungeon_level--;
+                rooms_generate_level();
+                break;
+            case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
+            case '2': center_view_window(MAP_COLUMNS / 2); break;
+            case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
+        }
+    }
+}
+
 void dev_run_screens(void)
 {
     screen_clear();
@@ -402,4 +473,6 @@ void dev_run_screens(void)
     dev_message_screen();
 
     dev_status_screen();
+
+    dev_rooms_screen();
 }

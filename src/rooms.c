@@ -1,6 +1,7 @@
 #include "rooms.h"
 
 #include "dev/dev.h"
+#include "map.h"
 #include "rng.h"
 #include "state.h"
 
@@ -78,6 +79,28 @@ static void place_room(uint8_t room_index)
     } while (room->y < MAP_TOP_ROW);
 }
 
+// normál szoba a MAP-ba: a felső és az alsó fal sarkokkal együtt vízszintes, az oldalfalak függőlegesek, belül padló
+static void draw_room(const struct Room *room)
+{
+    uint8_t right_x = room->x + room->width - 1;
+    uint8_t bottom_y = room->y + room->height - 1;
+
+    DEV_CHECK(right_x < MAP_COLUMNS && bottom_y < MAP_TOP_ROW + MAP_ROWS, "room outside the map");
+
+    for (uint8_t x = room->x; x <= right_x; x++) {
+        set_map_character(x, room->y, CHAR_WALL_HORIZONTAL);
+        set_map_character(x, bottom_y, CHAR_WALL_HORIZONTAL);
+    }
+
+    for (uint8_t y = room->y + 1; y < bottom_y; y++) {
+        set_map_character(room->x, y, CHAR_WALL_VERTICAL);
+        for (uint8_t x = room->x + 1; x < right_x; x++) {
+            set_map_character(x, y, CHAR_FLOOR);
+        }
+        set_map_character(right_x, y, CHAR_WALL_VERTICAL);
+    }
+}
+
 uint8_t choose_random_room(void)
 {
     uint8_t room_index = rnd(ROOM_COUNT);
@@ -98,7 +121,8 @@ void generate_rooms(void)
     // a choose_random_room csak olyan szobát választ, amelyik még nem fantom
     uint8_t phantom_room_count = rnd(MAX_PHANTOM_ROOMS + 1);
     for (uint8_t i = 0; i < phantom_room_count; i++) {
-        game.rooms[choose_random_room()].flags |= ROOM_PHANTOM;
+        uint8_t phantom_room_index = choose_random_room();      // külön változóban: tömbindexként a |= -ben az Oscar64 -O2 elszáll
+        game.rooms[phantom_room_index].flags |= ROOM_PHANTOM;
     }
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
@@ -120,5 +144,10 @@ void generate_rooms(void)
         }
 
         place_room(room_index);
+
+        // a labirintus rajzolása a következő lépésben jön
+        if (!(room->flags & ROOM_MAZE)) {
+            draw_room(room);
+        }
     }
 }
