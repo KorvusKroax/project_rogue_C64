@@ -16,5 +16,6 @@ int test_view_follow(uint16_t i);
 int test_prepare_message_text(uint16_t i);
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
+int test_map_flags(uint16_t i);
 
 #endif

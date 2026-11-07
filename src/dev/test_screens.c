@@ -7,7 +7,7 @@
 #include "../platform/key.h"
 #include "../platform/charset.h"
 #include "../input.h"
-#include "../map_signs.h"
+#include "../map.h"
 #include "../message.h"
 #include "../state.h"
 #include "../status.h"
@@ -35,8 +35,8 @@ static void dev_charset_screen(void)
     put_all_glyphs(6, INVERSE_OFFSET);
 
     static const uint8_t map_signs[] = {
-        PASSAGE, DOOR, FLOOR, PLAYER, TRAP, STAIRS, GOLD, POTION, SCROLL, WALL_HORIZONTAL, WALL_VERTICAL,
-        FOOD, WEAPON, ARMOR, AMULET, RING, STICK, MAGIC, SOLID_ROCK, 'A', 'Z',
+        CHAR_PASSAGE, CHAR_DOOR, CHAR_FLOOR, CHAR_PLAYER, CHAR_TRAP, CHAR_STAIRS, CHAR_GOLD, CHAR_POTION, CHAR_SCROLL, CHAR_WALL_HORIZONTAL, CHAR_WALL_VERTICAL,
+        CHAR_FOOD, CHAR_WEAPON, CHAR_ARMOR, CHAR_AMULET, CHAR_RING, CHAR_STICK, CHAR_MAGIC, CHAR_SOLID_ROCK, 'A', 'Z',
     };
     for (uint8_t i = 0; i < sizeof(map_signs); i++) {
         put_screen_character(i, 10, map_signs[i]);
@@ -139,7 +139,7 @@ static uint8_t view_step(uint8_t x, int8_t step)
     if (target > MAP_COLUMNS - 1) target = MAP_COLUMNS - 1;
 
     draw_tile(x, VIEW_TEST_ROW, view_pattern(x, VIEW_TEST_ROW));
-    draw_tile(target, VIEW_TEST_ROW, PLAYER);
+    draw_tile(target, VIEW_TEST_ROW, CHAR_PLAYER);
     follow_view_window(target);
 
     return target;
@@ -212,7 +212,7 @@ static void dev_view_screen(void)
     put_text("1,2,3: left/mid/right H: bar ESC: end");
 
     view_draw_pattern();
-    draw_tile(x, VIEW_TEST_ROW, PLAYER);
+    draw_tile(x, VIEW_TEST_ROW, CHAR_PLAYER);
 
     while (code != KEY_ESCAPE) {
         set_screen_cursor(0, 0);

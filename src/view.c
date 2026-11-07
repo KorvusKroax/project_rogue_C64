@@ -4,7 +4,7 @@
 
 #include "platform/platform.h"
 #include "platform/screen.h"
-#include "map_signs.h"
+#include "map.h"
 #include "message.h"
 #include "state.h"
 #include "status.h"
@@ -23,7 +23,7 @@ static uint8_t map_first_visible_row = MAP_TOP_ROW;    // a fölötte lévő té
 
 void clear_seen_map(void)
 {
-    memset(game.seen_map, SOLID_ROCK, sizeof(game.seen_map));
+    memset(game.seen_map, CHAR_SOLID_ROCK, sizeof(game.seen_map));
 }
 
 void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch)

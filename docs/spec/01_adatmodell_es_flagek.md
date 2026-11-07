@@ -219,18 +219,18 @@ A teljes képernyős megjelenítések (csomaglista *clear* módban, súgó, sír
 ### 1.3.3 Karakterek
 | konstans | jel | | konstans | jel |
 |---|---|---|---|---|
-| PASSAGE | `#` | | FOOD | `:` |
-| DOOR | `+` | | WEAPON | `)` |
-| FLOOR | `.` | | ARMOR | `]` |
-| PLAYER | `@` | | AMULET | `,` |
-| TRAP | `^` | | RING | `=` |
-| STAIRS | `%` | | STICK | `/` |
-| GOLD | `*` | | MAGIC | `$` (csak mágia-észlelés) |
-| POTION | `!` | | SOLID_ROCK | ` ` |
-| SCROLL | `?` | | MONSTER | `A`..`Z` |
-| WALL_HORIZONTAL | `-` | | WALL_VERTICAL | `\|` |
+| CHAR_PASSAGE | `#` | | CHAR_FOOD | `:` |
+| CHAR_DOOR | `+` | | CHAR_WEAPON | `)` |
+| CHAR_FLOOR | `.` | | CHAR_ARMOR | `]` |
+| CHAR_PLAYER | `@` | | CHAR_AMULET | `,` |
+| CHAR_TRAP | `^` | | CHAR_RING | `=` |
+| CHAR_STAIRS | `%` | | CHAR_STICK | `/` |
+| CHAR_GOLD | `*` | | CHAR_MAGIC | `$` (csak mágia-észlelés) |
+| CHAR_POTION | `!` | | CHAR_SOLID_ROCK | ` ` |
+| CHAR_SCROLL | `?` | | CHAR_MONSTER | `A`..`Z` |
+| CHAR_WALL_HORIZONTAL | `-` | | CHAR_WALL_VERTICAL | `\|` |
 
-Nincs külön sarok-karakter: a felső és alsó fal a sarkokkal együtt `-`, az oldalfalak `|`.
+Nincs külön sarok-karakter: a felső és alsó fal a sarkokkal együtt `-`, az oldalfalak `|`. A kódban minden jel `CHAR_` előtagot kap (`map.h`), mert a tárgykategóriák (pl. `POTION`, `ARMOR`, [1.1.3](#113-item)) ugyanezeket a neveket használják; az álkódokban a rövid név (pl. `FLOOR`) térképjelnél a `CHAR_` konstanst jelenti.
 
 A jelek **ASCII-kódok**: a saját karakterkészletben a karakter indexe az ASCII-kód (32..126), és a 128-cal eltolt index ugyanannak az inverz változata ([10.3](10_platform.md#103-képernyő-és-karakterkészlet)). Így a MAP, a SCREEN és a videomemória ugyanazt a kódot tárolja, a szövegek is ASCII-ban vannak (PETSCII-átalakítás csak a lemezes fájlneveknél kell, [10.7](10_platform.md#107-lemezkezelés)). A SCREEN rétegben a 7. bit az inverz megjelenítést jelzi (SEEMONST).
 

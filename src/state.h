@@ -57,6 +57,9 @@ struct GameState {
 
     struct Room rooms[ROOM_COUNT];
 
+    uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
+    uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)
+
     uint8_t  view_window_x;                     // a nézőablak bal szélének logikai oszlopa
     uint8_t  seen_map[MAP_ROWS][MAP_COLUMNS];   // a SCREEN réteg, a logikai y sora a [y - MAP_TOP_ROW]; 7. bit = inverz
 };

@@ -22,6 +22,7 @@ static const struct DevTest dev_tests[] = {
     { "MESS-PREPARE TEXT", test_prepare_message_text, 1 },
     { "MESS-LINE LENGTH", test_message_chars_fitting_row, 1 },
     { "MESS-PAGE LENGTH", test_message_chars_fitting_bar, 1 },
+    { "MAP-FLAGS", test_map_flags, 1 },
 };
 
 bool dev_run_tests(void)
