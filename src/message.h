@@ -4,18 +4,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MESSAGE_ROW        0    // az üzenetsáv első képernyősora; a második a MESSAGE_ROW + 1
-#define MESSAGE_ROW_COUNT  2    // az üzenetsáv sorai
+#define MESSAGE_ROW        0    // az üzenetsáv első képernyősora (default: 0)
+#define MESSAGE_ROW_COUNT  2    // az üzenetsáv sorai; a második sortól a térkép felső sorait takarja (default: 1)
+
+#define MORE_TEXT          "--More--"               // a sáv utolsó sorában mindig elfér
+#define MORE_TEXT_LENGTH   (sizeof(MORE_TEXT) - 1)
 
 void message(const char *text);                 // a sávba, az eddigi szöveg után; ha nem fér el, --More--, és szóközre vár
 void message_format(const char *text, const char *first_text, const char *second_text, int16_t number);    // mint a message, a \1, \2 helyén a két szöveg, a \3 helyén a szám; a nem használt szöveg lehet NULL
 void message_prompt(const char *text);          // kérdés a sávba, záró pont nélkül; a képernyő kurzora a szöveg végén marad; a válasszal látszik, amíg a következő üzenet vagy törlés le nem váltja
-void message_reserve_input_space(uint8_t length);   // ha a kurzortól length karakter nem fér a sorba, lefoglalja és törli a második sort
-void message_clear(void);                       // a sáv törlése; a második sor helyén visszajön a térkép
+void message_reserve_input_space(uint8_t length);   // a kurzortól length karakter helyét lefoglalja a sávban, legfeljebb a sáv utolsó soráig; az újonnan lefoglalt sorok üresek
+void message_clear(void);                       // a sáv törlése; a második sortól visszajön a térkép
 uint8_t wait_for_key_and_clear_message(void);   // vár egy leütésre, törli a sávot, és a leütés kódját adja
 
 const char *prepare_message_text(const char *text, const char *first_text, const char *second_text, int16_t number, bool add_end_character);    // helyőrzők kitöltése, nagybetűs kezdés és igény szerint záró pont; a tárgylista-sor változatlan; az eredmény a következő hívásig él
 uint8_t calculate_message_chars_fitting_row(const char *text, uint8_t width);   // ennyi karakter kerül a szövegből egy width széles sorba; nem rajzol
-uint8_t calculate_message_chars_fitting_bar(const char *text);                  // ennyi karakter fér a sávba úgy, hogy a --More-- is elférjen; nem rajzol
+uint16_t calculate_message_chars_fitting_bar(const char *text);                 // ennyi karakter fér a sávba úgy, hogy a --More-- is elférjen; nem rajzol
 
 #endif

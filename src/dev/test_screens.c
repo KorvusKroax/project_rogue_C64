@@ -171,14 +171,20 @@ static uint8_t view_measure(void)
     return frames;
 }
 
-// az üzenetsáv 2. sorát utánozza
-static void view_toggle_top_row(bool hidden)
+// a teljes üzenetsávot utánozza: az első sora alatti sorai a térkép felső sorait takarják
+static void view_toggle_message_bar_rows(bool covered)
 {
-    set_map_top_row_visibility(!hidden);
+    if (!covered) {
+        set_map_first_visible_row(MAP_TOP_ROW);
+        return;
+    }
 
-    if (hidden) {
-        set_screen_cursor(0, MESSAGE_ROW + 1);
-        put_text("second message row");
+    set_map_first_visible_row(MESSAGE_ROW + MESSAGE_ROW_COUNT);
+
+    for (uint8_t row = 1; row < MESSAGE_ROW_COUNT; row++) {
+        set_screen_cursor(0, MESSAGE_ROW + row);
+        put_text("message row ");
+        put_int(row + 1, 0);
         clear_to_row_end();
     }
 }
@@ -197,13 +203,13 @@ static void view_draw_pattern(void)
 static void dev_view_screen(void)
 {
     uint8_t code = 0, x = VIEW_WINDOW_WIDTH / 2, frames = 0;
-    bool top_row_hidden = false;
+    bool message_bar_rows_covered = false;
 
     screen_clear();
     set_screen_cursor(0, STATUS_ROW);
     put_text("A,D: step  Q,E: 8 steps  F: time");
     set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1,2,3: left/mid/right H: row 1 ESC: end");
+    put_text("1,2,3: left/mid/right H: bar ESC: end");
 
     view_draw_pattern();
     draw_tile(x, VIEW_TEST_ROW, PLAYER);
@@ -231,8 +237,8 @@ static void dev_view_screen(void)
             case 'e': x = view_step(x, 8); break;
             case 'f': frames = view_measure(); break;
             case 'h':
-                top_row_hidden = !top_row_hidden;
-                view_toggle_top_row(top_row_hidden);
+                message_bar_rows_covered = !message_bar_rows_covered;
+                view_toggle_message_bar_rows(message_bar_rows_covered);
                 break;
             case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
             case '2': center_view_window(MAP_COLUMNS / 2); break;
@@ -240,7 +246,7 @@ static void dev_view_screen(void)
         }
     }
 
-    set_map_top_row_visibility(true);
+    set_map_first_visible_row(MAP_TOP_ROW);
 }
 
 #define TEST_FIELD_LENGTH  20

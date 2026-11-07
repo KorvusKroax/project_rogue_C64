@@ -72,41 +72,50 @@ Mindkét sor a végéig törlődik. A legszélesebb reális értékekkel (255. s
 
 ## 3.4 Üzenetsor
 
-> **C64-eltérés (E2):** az üzenetsáv a 0. sor, és ha a szöveg nem fér el benne, az 1. sorra is átnyúlik (kétsoros sáv). Az 1. sor ilyenkor ideiglenesen eltakarja a térkép legfelső sorát.
+> **C64-eltérés (E2):** az üzenetsáv a 0. sortól `MESSAGE_ROW_COUNT` sor (C64-en 2), és ha a szöveg nem fér el az első sorban, a következőkre is átnyúlik. A további sorok ilyenkor ideiglenesen eltakarják a térkép legfelső sorait.
 
-- Az üzenetsáv két, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). A két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `MESSAGE_ROW` | 0: az üzenetsáv első sora | 0 |
+| `MESSAGE_ROW_COUNT` | 2: a sáv sorai; két 40 karakteres sor annyi, mint az eredeti 80 karakteres üzenetsor | 1 |
+| `MORE_TEXT` | `--More--`: a sáv utolsó sorában mindig marad neki hely | `--More--` |
+
+Fordítási feltételek: a sáv legalább egy sor, és nem érhet a státuszsorig. A sáv hossza 16 bites, így a sorainak számát csak a képernyő korlátozza.
+
+- Az üzenetsáv `MESSAGE_ROW_COUNT`, egyenként 40 karakteres sor, **szótördeléssel**: a szöveg az utolsó olyan szóköznél törik, amely után a sor már nem férne el (40 karakternél hosszabb szó keményen törik). Két sor együtt egy 80 karakteres helynek felel meg, mint az eredeti üzenetsor.
 - Minden üzenet nagybetűvel kezdődik (kivéve a tárgylista-sorokat, pl. „a) …”).
 - **Automatikus pont:** az üzenet lezárásakor, ha az utolsó karaktere nem `.`, `!` vagy `?`, pont kerül a végére. Nem kap pontot a tárgylista-sor és a kérdés.
-- Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az új üzenettel együtt a szöveg a tördelés után a `--More--`-val már nem férne el a két sorban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
-- Ha egyetlen üzenet a `--More--`-val együtt nem fér el a két sorban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
+- Az egy körben keletkező üzenetek egy szóközzel összefűződnek. Ha az új üzenettel együtt a szöveg a tördelés után a `--More--`-val már nem férne el a sávban, az eddigi szöveg után `--More--` jelenik meg, és a játék szóközre vár; utána a sáv törlődik, és az új üzenet a 0. sor elején kezdődik.
+- Ha egyetlen üzenet a `--More--`-val együtt nem fér el a sávban, az utolsó kiférő szó után jelenik meg a `--More--`, és szóközre a folytatás a törölt sáv elején kezdődik.
 - **Hosszkorlát:** egy üzenet egy 128 bájtos pufferben készül el (`MESSAGE_TEXT_SIZE`), ebből a záró pontnak és a lezáró nullának 2 bájt jár, így legfeljebb 126 karakteres lehet; a hosszabb szöveg vége levágódik. A méret a leghosszabb valódi üzenet ismeretében csökkenthető.
 - A következő billentyűleütéskor az üzenetsáv törlődik. `CTRL-P` az utolsó üzenetet ismétli.
-- Amíg az 1. sort üzenet foglalja, a térkép 1. sorába rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; a sáv törlésekor az 1. sor a SCREEN-ből visszarajzolódik.
-- **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a 0. sor végére ér, az 1. sorban). Ha a bevitel a 2. sor végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít. A beírás helyét inverz szóköz jelöli. A kérdés a válasszal együtt látszik, amíg a következő üzenet vagy a következő leütés le nem váltja; az új üzenet nem fűződik hozzá. ESC-re a sáv azonnal törlődik.
+- Amíg a sáv a térkép felső sorait foglalja, az ezekbe a sorokba rajzolás csak a SCREEN rétegbe kerül, a képernyőre nem; ha a sáv rövidebb lesz, vagy törlődik, a felszabaduló sorok a SCREEN-ből visszarajzolódnak.
+- **Kérdések és bevitel** (`get_item`, `c`, mentési fájlnév, név): a kérdés szövege ugyanígy a sávba kerül, a beírt szöveg közvetlenül utána, tördelés nélkül folytatódik (ha a sor végére ér, a következő sorban). Ha a bevitel a sáv utolsó sorának végére érne, a beviteli mező nem nő tovább (a hosszkorlátokat lásd [1.4.4](01_adatmodell_es_flagek.md#144-szövegek)). DEL az utolsó karaktert törli, RETURN befejezi, ESC megszakít. A beírás helyét inverz szóköz jelöli. A kérdés a válasszal együtt látszik, amíg a következő üzenet vagy a következő leütés le nem váltja; az új üzenet nem fűződik hozzá. ESC-re a sáv azonnal törlődik.
 
 ## 3.5 Nézőablak (görgetés)
 
 > **C64-eltérés (E1):** a 80 oszlopos logikai térképből a képernyőn egyszerre 40 oszlop látszik. Az ablak a játékost követi, holt zónával.
 
 ```
-VIEW_WINDOW_WIDTH         = 40    // a nézőablak szélessége
-VIEW_WINDOW_EDGE_DISTANCE = 8     // ennyi oszlopnál közelebb a széléhez görget
-view_window_x ∈ 0..40             // a képernyő 0. oszlopában látszó logikai oszlop
+VIEW_WINDOW_WIDTH         = min(SCREEN_WIDTH, MAP_COLUMNS)    // a nézőablak szélessége: 40; keskenyebb térképnél a térképé, és nem görget
+VIEW_WINDOW_X_MAX         = MAP_COLUMNS - VIEW_WINDOW_WIDTH   // 40
+VIEW_WINDOW_EDGE_DISTANCE = 8                                 // ennyi oszlopnál közelebb a széléhez görget
+view_window_x ∈ 0..VIEW_WINDOW_X_MAX                          // a képernyő 0. oszlopában látszó logikai oszlop
 
 center_view_window():
-  view_window_x = clamp(player.x - 20, 0, 40)
-  redraw_map()                                  // az 1..22. sor újrarajzolása a SCREEN-ből
+  view_window_x = clamp(player.x - VIEW_WINDOW_WIDTH / 2, 0, VIEW_WINDOW_X_MAX)
+  redraw_map()                                  // a térkép sorainak újrarajzolása a SCREEN-ből
 
 follow_view_window():  // minden olyan lépés után, amely a játékos pozícióját megváltoztatta (mozgás, teleport)
   sx = player.x - view_window_x
   if sx < VIEW_WINDOW_EDGE_DISTANCE:                        // a játékos a holt zóna bal szélére kerül
      view_window_x = max(player.x - VIEW_WINDOW_EDGE_DISTANCE, 0)
   else if sx > VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE:      // a játékos a holt zóna jobb szélére kerül
-     view_window_x = min(player.x - (VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE), 40)
+     view_window_x = min(player.x - (VIEW_WINDOW_WIDTH - 1 - VIEW_WINDOW_EDGE_DISTANCE), VIEW_WINDOW_X_MAX)
   ha a view_window_x változott: redraw_map()
 ```
 - `center_view_window` hívódik új szinten ([2](02_szintgeneralas.md)), és betöltés után; `follow_view_window` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
 - **Futás `jump` mellett:** amíg a futás tart, nincs rajzolás; a futás végén `follow_view_window`, majd a térkép frissítése. `jump` nélkül minden lépés után `follow_view_window` fut.
-- **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) a SCREEN rétegbe kerül, és ha `view_window_x ≤ x < view_window_x + 40`, egyúttal a videomemória `y`. sorának `x − view_window_x`. oszlopába is (kivéve az üzenet által foglalt 1. sort, [3.4](#34-üzenetsor)). A `redraw_map` a foglalt 1. sort szintén kihagyja, így görgetés sem írja felül az üzenetet.
+- **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) a SCREEN rétegbe kerül, és ha `view_window_x ≤ x < view_window_x + 40`, egyúttal a videomemória `y`. sorának `x − view_window_x`. oszlopába is (kivéve az üzenetsáv által foglalt felső sorokat, [3.4](#34-üzenetsor)). A `redraw_map` a foglalt sorokat szintén kihagyja, így görgetés sem írja felül az üzenetet.
 - **Animációk** (dobott tárgy, sugár, [7.4](07_harc.md#74-hajítás-t), [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)): a nézőablakon kívül eső lépések nem rajzolódnak, és nincs utánuk várakozás sem.
 - **Ideiglenes ablakok** (csomaglista *overwrite* módban, észlelés-képernyők, súgó, beállítások): csak a videomemóriába rajzolnak; bezáráskor a képernyő a SCREEN-ből és a státuszsorból visszaáll. Közben a játék nem halad.

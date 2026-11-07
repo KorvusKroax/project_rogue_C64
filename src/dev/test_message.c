@@ -4,44 +4,80 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "../platform/screen.h"
 #include "../message.h"
 
-#define TWENTY_CHAR     "aaaaaaaaaaaaaaaaaaaa"
-#define THIRTY_TWO_CHAR "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-#define FORTY_CHAR      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+// a próbaszöveg 'a' betűs szavakból áll, egy-egy szóközzel; a szavak hossza a képernyő és a sáv méretéből jön
+#define WIDTH       SCREEN_WIDTH                        // egy teljes sor
+#define LAST_WIDTH  (SCREEN_WIDTH - MORE_TEXT_LENGTH)   // a sáv utolsó sora, a --More-- helye nélkül
+#define HALF_LAST   (LAST_WIDTH / 2 + 1)                // két ekkora szó nem fér egy utolsó sorba
 
+#define MAX_WORDS   3
+
+// full_rows: a szavak elé a sáv első MESSAGE_ROW_COUNT - 1 sorát pontosan kitöltő szavak kerülnek
 struct LengthCase {
-    const char *text;
-    uint8_t expected;
+    bool full_rows;
+    uint8_t words[MAX_WORDS];       // 0: nincs több szó
+    uint8_t expected;               // a full_rows sorai nélkül
 };
 
+#define FULL_ROWS_LENGTH  ((MESSAGE_ROW_COUNT - 1) * (WIDTH + 1))
+
+static char test_text[FULL_ROWS_LENGTH + MAX_WORDS * (WIDTH + 2) + 1];
+
+static void add_test_word(uint16_t *length, uint8_t word_length)
+{
+    if (*length) {
+        test_text[(*length)++] = ' ';
+    }
+    for (uint8_t i = 0; i < word_length; i++) {
+        test_text[(*length)++] = 'a';
+    }
+}
+
+static const char *build_test_text(const struct LengthCase *length_case)
+{
+    uint16_t length = 0;
+
+    if (length_case->full_rows) {
+        for (uint8_t row = 0; row < MESSAGE_ROW_COUNT - 1; row++) {
+            add_test_word(&length, WIDTH);
+        }
+    }
+    for (uint8_t w = 0; w < MAX_WORDS && length_case->words[w]; w++) {
+        add_test_word(&length, length_case->words[w]);
+    }
+
+    test_text[length] = 0;
+    return test_text;
+}
+
 static const struct LengthCase row_cases[] = {
-    { "", 0 },
-    { "short text", 10 },
+    { false, { 0 }, 0 },
+    { false, { 5, 4 }, 10 },
 
     // pontosan kitölti a sort
-    { FORTY_CHAR, 40 },
-    { FORTY_CHAR " x", 40 },
+    { false, { WIDTH }, WIDTH },
+    { false, { WIDTH, 1 }, WIDTH },
 
     // az utolsó kiférő szóköznél törik
-    { "you feel a wrenching sensation in your gut", 38 },
-    { "a " FORTY_CHAR, 1 },
+    { false, { WIDTH - 3, 5 }, WIDTH - 3 },
+    { false, { 1, WIDTH }, 1 },
 
     // a sornál hosszabb szó keményen törik
-    { FORTY_CHAR "a", 40 },
+    { false, { WIDTH + 1 }, WIDTH },
 };
 
 static const struct LengthCase bar_cases[] = {
-    { "short text", 10 },
-    { FORTY_CHAR, 40 },
+    { false, { 5, 4 }, 10 },
 
-    // a második sorban a --More-- helye is megvan
-    { FORTY_CHAR " " THIRTY_TWO_CHAR, 73 },
-    { FORTY_CHAR " " THIRTY_TWO_CHAR "a", 73 },
-    { FORTY_CHAR " " TWENTY_CHAR " " TWENTY_CHAR, 61 },
+    // az utolsó sorban a --More-- helye is megvan
+    { true, { LAST_WIDTH }, LAST_WIDTH },
+    { true, { LAST_WIDTH + 1 }, LAST_WIDTH },
+    { true, { HALF_LAST, HALF_LAST }, HALF_LAST },
 
-    // ami két sornál több, a következő oldalra marad
-    { FORTY_CHAR " " FORTY_CHAR " " FORTY_CHAR, 73 },
+    // ami a sávnál több, a következő oldalra marad
+    { true, { WIDTH, WIDTH }, LAST_WIDTH },
 };
 
 struct TextCase {
@@ -109,7 +145,7 @@ int test_message_chars_fitting_row(uint16_t i)
 {
     for (uint8_t c = 0; c < sizeof(row_cases) / sizeof(row_cases[0]); c++) {
         const struct LengthCase *row_case = &row_cases[c];
-        if (calculate_message_chars_fitting_row(row_case->text, 40) != row_case->expected) return false;
+        if (calculate_message_chars_fitting_row(build_test_text(row_case), WIDTH) != row_case->expected) return false;
     }
 
     return true;
@@ -119,7 +155,8 @@ int test_message_chars_fitting_bar(uint16_t i)
 {
     for (uint8_t c = 0; c < sizeof(bar_cases) / sizeof(bar_cases[0]); c++) {
         const struct LengthCase *bar_case = &bar_cases[c];
-        if (calculate_message_chars_fitting_bar(bar_case->text) != bar_case->expected) return false;
+        uint16_t expected = bar_case->expected + (bar_case->full_rows ? FULL_ROWS_LENGTH : 0);
+        if (calculate_message_chars_fitting_bar(build_test_text(bar_case)) != expected) return false;
     }
 
     return true;

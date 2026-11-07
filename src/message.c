@@ -7,10 +7,14 @@
 #include "platform/key.h"
 #include "platform/screen.h"
 #include "num.h"
+#include "status.h"
 #include "view.h"
 
-#define MORE_TEXT               "--More--"
-#define MORE_TEXT_LENGTH        (sizeof(MORE_TEXT) - 1)
+// a sáv legalább egy sor, és nem érhet a státuszsorig
+#if MESSAGE_ROW_COUNT < 1 || MESSAGE_ROW + MESSAGE_ROW_COUNT > STATUS_ROW
+    #error "az üzenetsáv nem fér el a képernyőn"
+#endif
+
 #define MESSAGE_TEXT_SIZE       128
 #define MESSAGE_END_CHARACTER   '.'
 
@@ -21,9 +25,9 @@
 static char message_text[MESSAGE_TEXT_SIZE];
 static uint8_t message_text_length;
 static char message_bar_text[SCREEN_WIDTH * MESSAGE_ROW_COUNT + 1];
-static uint8_t message_bar_length;
+static uint16_t message_bar_length;
 static uint8_t message_bar_end_column;
-static bool second_row_reserved;
+static uint8_t message_bar_rows_in_use = 1;     // ennyi sort foglal a sáv; a többi a térképé
 
 static void add_character_to_message_text(char character)
 {
@@ -116,25 +120,27 @@ static const char *text_after_break(const char *text)
     return *text == ' ' ? text + 1 : text;  // a törés szóköze nem kerül a következő sor elejére
 }
 
-uint8_t calculate_message_chars_fitting_bar(const char *text)
+// az utolsó sorban a MORE_TEXT helye is megmarad
+uint16_t calculate_message_chars_fitting_bar(const char *text)
 {
-    const char *second_row_text = text_after_break(text + calculate_message_chars_fitting_row(text, SCREEN_WIDTH));
-
-    return (second_row_text - text) + calculate_message_chars_fitting_row(second_row_text, SCREEN_WIDTH - MORE_TEXT_LENGTH);
-}
-
-static void reserve_second_row(void)
-{
-    second_row_reserved = true;
-    set_map_top_row_visibility(false);
-}
-
-static void release_second_row(void)
-{
-    if (second_row_reserved) {
-        second_row_reserved = false;
-        set_map_top_row_visibility(true);
+    const char *row_text = text;
+    for (uint8_t row = 0; row < MESSAGE_ROW_COUNT - 1; row++) {
+        row_text = text_after_break(row_text + calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH));
     }
+
+    return (row_text - text) + calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH - MORE_TEXT_LENGTH);
+}
+
+// a sáv ennyi sort foglal; a felszabaduló sorok törlődnek, és ahol térkép van, oda visszajön
+static void set_message_bar_rows_in_use(uint8_t rows)
+{
+    for (uint8_t row = rows; row < message_bar_rows_in_use; row++) {
+        set_screen_cursor(0, MESSAGE_ROW + row);
+        clear_to_row_end();
+    }
+
+    message_bar_rows_in_use = rows;
+    set_map_first_visible_row(MESSAGE_ROW + rows);
 }
 
 static void show_row(uint8_t row, const char *text, uint8_t length)
@@ -148,25 +154,32 @@ static void show_row(uint8_t row, const char *text, uint8_t length)
     message_bar_end_column = length;
 }
 
+// a calculate_message_chars_fitting_bar szerint elfér: az utolsó sorba a maradék kerül
 static void show_message_bar(void)
 {
-    uint8_t first_row_length = calculate_message_chars_fitting_row(message_bar_text, SCREEN_WIDTH);
-    show_row(MESSAGE_ROW, message_bar_text, first_row_length);
+    const char *row_text = message_bar_text;
+    uint8_t row = 0;
 
-    const char *second_row_text = text_after_break(message_bar_text + first_row_length);
-    if (*second_row_text) {
-        reserve_second_row();
-        show_row(MESSAGE_ROW + 1, second_row_text, strlen(second_row_text));
-    } else {
-        release_second_row();
+    while (true) {
+        uint8_t length = row == MESSAGE_ROW_COUNT - 1 ? strlen(row_text) : calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH);
+        show_row(MESSAGE_ROW + row, row_text, length);
+        row++;
+
+        row_text = text_after_break(row_text + length);
+        if (!*row_text || row == MESSAGE_ROW_COUNT) {
+            break;
+        }
     }
+
+    set_message_bar_rows_in_use(row);
 }
 
 static void show_more_and_wait(void)
 {
+    // ha az utolsó használt sorban nincs helye, a következő sor elejére kerül; a sáv utolsó sorában mindig van helye
     if (message_bar_end_column > SCREEN_WIDTH - MORE_TEXT_LENGTH) {
-        reserve_second_row();
-        set_screen_cursor(0, MESSAGE_ROW + 1);
+        set_screen_cursor(0, MESSAGE_ROW + message_bar_rows_in_use);
+        set_message_bar_rows_in_use(message_bar_rows_in_use + 1);
     }
 
     put_text(MORE_TEXT);
@@ -240,13 +253,25 @@ void message_prompt(const char *text)
 void message_reserve_input_space(uint8_t length)
 {
     uint8_t x = get_screen_cursor_x();
+    uint8_t y = get_screen_cursor_y();
 
-    if (!second_row_reserved && x + length > SCREEN_WIDTH) {
-        reserve_second_row();
-        set_screen_cursor(0, MESSAGE_ROW + 1);
-        clear_to_row_end();
-        set_screen_cursor(x, MESSAGE_ROW);
+    // a kurzor sorától ennyi sor kell a mezőnek, legfeljebb a sáv végéig
+    uint8_t rows = y - MESSAGE_ROW + (x + length + SCREEN_WIDTH - 1) / SCREEN_WIDTH;
+    if (rows > MESSAGE_ROW_COUNT) {
+        rows = MESSAGE_ROW_COUNT;
     }
+
+    // az újonnan lefoglalt sorok üresek
+    for (uint8_t row = message_bar_rows_in_use; row < rows; row++) {
+        set_screen_cursor(0, MESSAGE_ROW + row);
+        clear_to_row_end();
+    }
+
+    if (rows > message_bar_rows_in_use) {
+        set_message_bar_rows_in_use(rows);
+    }
+
+    set_screen_cursor(x, y);
 }
 
 void message_clear(void)
@@ -255,7 +280,7 @@ void message_clear(void)
 
     set_screen_cursor(0, MESSAGE_ROW);
     clear_to_row_end();
-    release_second_row();
+    set_message_bar_rows_in_use(1);
 }
 
 uint8_t wait_for_key_and_clear_message(void)

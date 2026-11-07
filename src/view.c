@@ -19,9 +19,7 @@
     #error "a térkép nem fér el az üzenetsor és a státuszsor között"
 #endif
 
-#define MESSAGE_SECOND_ROW  (MESSAGE_ROW + 1)   // a térkép e sorát az üzenetsáv ideiglenesen eltakarhatja
-
-static bool map_top_row_hidden;
+static uint8_t map_first_visible_row = MAP_TOP_ROW;    // a fölötte lévő térképsorokat az üzenetsáv takarja
 
 void clear_seen_map(void)
 {
@@ -33,7 +31,7 @@ void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch)
     game.seen_map[y - MAP_TOP_ROW][map_x] = ch;
 
     uint8_t column = map_x - game.view_window_x;
-    if (column < VIEW_WINDOW_WIDTH && !(y == MESSAGE_SECOND_ROW && map_top_row_hidden)) {
+    if (column < VIEW_WINDOW_WIDTH && y >= map_first_visible_row) {
         put_screen_character(column, y, ch);
     }
 }
@@ -47,20 +45,23 @@ void redraw_map(void)
 {
     wait_for_next_frame();
 
-    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
-        if (!(y == MESSAGE_SECOND_ROW && map_top_row_hidden)) {
-            redraw_map_row(y);
-        }
+    for (uint8_t y = map_first_visible_row; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        redraw_map_row(y);
     }
 }
 
-void set_map_top_row_visibility(bool visible)
+void set_map_first_visible_row(uint8_t row)
 {
-    map_top_row_hidden = !visible;
-
-    if (visible) {
-        redraw_map_row(MESSAGE_SECOND_ROW);
+    if (row < MAP_TOP_ROW) {
+        row = MAP_TOP_ROW;
     }
+
+    // a felszabaduló sorokba visszajön a térkép
+    for (uint8_t y = row; y < map_first_visible_row; y++) {
+        redraw_map_row(y);
+    }
+
+    map_first_visible_row = row;
 }
 
 static uint8_t calculate_centered_view_window_x(uint8_t map_x)

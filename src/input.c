@@ -32,7 +32,7 @@ bool input_text(char *buffer, uint8_t max_length, uint8_t last_row)
 {
     start_field();
 
-    uint8_t capacity = (last_row - field_y + 1) * SCREEN_WIDTH - field_x;
+    uint16_t capacity = (last_row - field_y + 1) * SCREEN_WIDTH - field_x;
     if (max_length > capacity) {
         max_length = capacity;
     }
@@ -78,7 +78,7 @@ bool ask_text(const char *prompt, char *buffer, uint8_t max_length)
     message_prompt(prompt);
     message_reserve_input_space(max_length);
 
-    bool answered = input_text(buffer, max_length, MESSAGE_ROW + 1);
+    bool answered = input_text(buffer, max_length, MESSAGE_ROW + MESSAGE_ROW_COUNT - 1);
 
     if (!answered) {
         message_clear();

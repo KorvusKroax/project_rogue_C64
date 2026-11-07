@@ -23,7 +23,7 @@ void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch);   // a mező jele a látot
 
 void redraw_map(void);                                  // a térképterület újrarajzolása a látott térképből
 
-void set_map_top_row_visibility(bool visible);          // false: a térkép felső sorát (az üzenetsáv második sorát) az üzenetsáv foglalja, a térkép addig nem rajzol oda; true: visszarajzolja
+void set_map_first_visible_row(uint8_t row);            // a térkép csak a row. képernyősortól rajzol, a fölötte lévőket az üzenetsáv foglalja; a felszabaduló sorokat visszarajzolja; MAP_TOP_ROW vagy kisebb: semmi nincs takarva
 
 void center_view_window(uint8_t map_x);                 // a nézőablak a map_x oszlopra áll, újrarajzolással
 void follow_view_window(uint8_t map_x);                 // görget, ha a map_x oszlop a holt zónán kívül van
