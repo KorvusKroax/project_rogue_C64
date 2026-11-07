@@ -1,5 +1,6 @@
 #include "rooms.h"
 
+#include "dev/dev.h"
 #include "rng.h"
 #include "state.h"
 
@@ -8,6 +9,50 @@
 #define SECTOR_HEIGHT  8                        // a térkép 22 sora az üzenet- és a státuszsorral együtt: 24 / 3
 
 #define MAX_PHANTOM_ROOMS  3
+
+#define MIN_ROOM_SIZE  4                        // falakkal együtt
+
+// a szoba helye és mérete a szektorán belül, a flagjei szerint
+static void place_room(uint8_t room_index)
+{
+    struct Room *room = &game.rooms[room_index];
+    uint8_t corner_x = room_index % 3 * SECTOR_WIDTH + 1;    // a szektor bal felső sarka
+    uint8_t corner_y = room_index / 3 * SECTOR_HEIGHT;
+
+    // fantom szoba: egyetlen folyosó-csomópont, a szektor szélétől legalább 1 mezőre
+    if (room->flags & ROOM_PHANTOM) {
+        room->x = corner_x + rnd(SECTOR_WIDTH - 2) + 1;
+        room->y = corner_y + rnd(SECTOR_HEIGHT - 2) + 1;
+        room->width = 0;
+        room->height = 0;
+
+        DEV_CHECK(room->y >= 1 && room->y <= MAP_ROWS, "phantom room outside the map");
+        return;
+    }
+
+    // labirintus szoba: kitölti a szektort
+    if (room->flags & ROOM_MAZE) {
+        room->x = corner_x == 1 ? 0 : corner_x;
+        room->y = corner_y;
+        room->width = SECTOR_WIDTH - 1;
+        room->height = SECTOR_HEIGHT - 1;
+
+        // a 0. sor az üzenetsor
+        if (room->y == 0) {
+            room->y = 1;
+            room->height--;
+        }
+        return;
+    }
+
+    // normál szoba: véletlen méret, és olyan hely, hogy a szektoron belül maradjon; ha a felső fala a 0. sorba (az üzenetsorba) esne, újrasorsol
+    do {
+        room->width = rnd(SECTOR_WIDTH - MIN_ROOM_SIZE) + MIN_ROOM_SIZE;
+        room->height = rnd(SECTOR_HEIGHT - MIN_ROOM_SIZE) + MIN_ROOM_SIZE;
+        room->x = corner_x + rnd(SECTOR_WIDTH - room->width);
+        room->y = corner_y + rnd(SECTOR_HEIGHT - room->height);
+    } while (room->y == 0);
+}
 
 uint8_t choose_random_room(void)
 {
@@ -36,6 +81,7 @@ void generate_rooms(void)
         struct Room *room = &game.rooms[room_index];
 
         if (room->flags & ROOM_PHANTOM) {
+            place_room(room_index);
             continue;
         }
 
@@ -48,5 +94,7 @@ void generate_rooms(void)
                 room->flags = ROOM_MAZE;
             }
         }
+
+        place_room(room_index);
     }
 }
