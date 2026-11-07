@@ -4,8 +4,6 @@
 #include "player.h"
 #include "state.h"
 
-#define ARMOR_DISPLAY_BASE  10      // a kiírt Arm: ebből vonódik le a páncélérték, így a nagyobb a jobb
-
 // a hunger_state szerint
 static const char *const hunger_words[] = { "", "Hungry", "Weak", "Faint" };
 
@@ -30,7 +28,7 @@ void draw_status(void)
     put_text("(");
     put_int(game.max_strength, 0);
     put_text(") Arm:");
-    put_int(ARMOR_DISPLAY_BASE - calculate_player_armor(), 0);
+    put_int(BASE_ARMOR - calculate_player_armor(), 0);     // a páncél nélküli védelemhez képest, így a nagyobb a jobb
     put_text(" Exp:");
     put_int(game.player.experience_level, 0);
     put_text("/");

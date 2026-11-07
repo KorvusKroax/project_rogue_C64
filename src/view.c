@@ -5,11 +5,21 @@
 #include "platform/platform.h"
 #include "platform/screen.h"
 #include "map_signs.h"
+#include "message.h"
 #include "state.h"
+#include "status.h"
 
-#define VIEW_WINDOW_WIDTH          SCREEN_WIDTH
-#define VIEW_WINDOW_X_MAX          (MAP_COLUMNS - VIEW_WINDOW_WIDTH)
-#define VIEW_WINDOW_EDGE_DISTANCE  8
+// görgethető nézőablakban a két szél holt zónája között maradnia kell helynek, különben a nézőablak minden lépésnél ide-oda ugrana
+#if VIEW_WINDOW_X_MAX > 0 && 2 * VIEW_WINDOW_EDGE_DISTANCE >= VIEW_WINDOW_WIDTH
+    #error "a VIEW_WINDOW_EDGE_DISTANCE túl nagy a nézőablakhoz"
+#endif
+
+// a logikai y sor a képernyő y. sorában van: a térkép az üzenetsor első sora és a státuszsor közé kell férjen
+#if MAP_TOP_ROW <= MESSAGE_ROW || MAP_TOP_ROW + MAP_ROWS > STATUS_ROW
+    #error "a térkép nem fér el az üzenetsor és a státuszsor között"
+#endif
+
+#define MESSAGE_SECOND_ROW  (MESSAGE_ROW + 1)   // a térkép e sorát az üzenetsáv ideiglenesen eltakarhatja
 
 static bool map_top_row_hidden;
 
@@ -20,25 +30,27 @@ void clear_seen_map(void)
 
 void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch)
 {
-    game.seen_map[y - 1][map_x] = ch;
+    game.seen_map[y - MAP_TOP_ROW][map_x] = ch;
 
     uint8_t column = map_x - game.view_window_x;
-    if (column < VIEW_WINDOW_WIDTH && !(y == 1 && map_top_row_hidden)) {
+    if (column < VIEW_WINDOW_WIDTH && !(y == MESSAGE_SECOND_ROW && map_top_row_hidden)) {
         put_screen_character(column, y, ch);
     }
 }
 
 static void redraw_map_row(uint8_t y)
 {
-    screen_copy_row(y, game.seen_map[y - 1] + game.view_window_x);
+    screen_copy_row(y, game.seen_map[y - MAP_TOP_ROW] + game.view_window_x, VIEW_WINDOW_WIDTH);
 }
 
 void redraw_map(void)
 {
     wait_for_next_frame();
 
-    for (uint8_t y = map_top_row_hidden ? 2 : 1; y <= MAP_ROWS; y++) {
-        redraw_map_row(y);
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        if (!(y == MESSAGE_SECOND_ROW && map_top_row_hidden)) {
+            redraw_map_row(y);
+        }
     }
 }
 
@@ -47,7 +59,7 @@ void set_map_top_row_visibility(bool visible)
     map_top_row_hidden = !visible;
 
     if (visible) {
-        redraw_map_row(1);
+        redraw_map_row(MESSAGE_SECOND_ROW);
     }
 }
 

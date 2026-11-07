@@ -1,10 +1,11 @@
 #include "input.h"
 
+#include "platform/charset.h"
 #include "platform/key.h"
 #include "platform/screen.h"
 #include "message.h"
 
-#define INPUT_CURSOR (' ' + 128)    // inverz szóköz
+#define INPUT_CURSOR (' ' + INVERSE_OFFSET)    // inverz szóköz
 
 static uint8_t field_x;
 static uint8_t field_y;
@@ -24,7 +25,7 @@ static void put_field_character(uint8_t index, uint8_t character)
 
 static bool is_printable(uint8_t code)
 {
-    return code >= ' ' && code <= '~';
+    return code >= GLYPH_FIRST && code <= GLYPH_LAST;
 }
 
 bool input_text(char *buffer, uint8_t max_length, uint8_t last_row)

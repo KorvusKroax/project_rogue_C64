@@ -8,7 +8,8 @@
 #define KEY_ESCAPE  27
 #define KEY_DELETE  127
 
-#define KEY_COLUMNS    8
+#define KEY_COLUMNS    8    // a billentyűmátrix oszlopai
+#define KEY_ROWS       8    // és sorai: egy oszlop egy bájt
 #define KEY_MODIFIER_SHIFT  0x01 // bal vagy jobb SHIFT, SHIFT LOCK
 #define KEY_MODIFIER_CTRL   0x02 // CTRL vagy C=
 
@@ -23,7 +24,7 @@ uint8_t wait_for_key(void);       // vár egy leütésre, és annak kódját adj
 void wait_for_keys_released(void);    // a még lenyomott billentyűt a KERNAL kilépés után a BASIC-be írná
 
 #ifdef DEVMODE
-    // a mátrixhely (oszlop * 8 + sor) kódja a módosítókkal, 0 ha nincs; az önteszthez
+    // a mátrixhely (oszlop * KEY_ROWS + sor) kódja a módosítókkal, 0 ha nincs; az önteszthez
     uint8_t key_decode(uint8_t position, uint8_t modifiers);
 #endif
 

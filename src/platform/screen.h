@@ -19,7 +19,7 @@ uint8_t get_screen_cursor_y(void);
 void move_screen_cursor_to_next_row(void);                              // a következő sor elejére
 void put_text(const char *text);
 void put_int(int32_t value, int8_t width);                              // width: mint a format_int-nél
-void screen_copy_row(uint8_t y, const uint8_t *source);                 // SCREEN_WIDTH jel az y. sorba
+void screen_copy_row(uint8_t y, const uint8_t *source, uint8_t length); // length jel az y. sor elejére, a sor többi része törlődik
 void clear_to_row_end(void);                                            // a kurzortól a sor végéig
 
 #endif

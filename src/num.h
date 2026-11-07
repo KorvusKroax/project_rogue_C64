@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-#define FORMAT_WIDTH_MAX    11      // ennél szélesebb mezőt nem ír a format_int
+#define FORMAT_DIGITS_MAX   10                          // a 32 bites szám legfeljebb 10 jegyű
+#define FORMAT_WIDTH_MAX    (FORMAT_DIGITS_MAX + 1)     // a jegyek az előjellel; ennél szélesebb mezőt nem ír a format_int
 #define FORMAT_BUFFER_SIZE  (FORMAT_WIDTH_MAX + 1)
 
 struct Position {

@@ -10,13 +10,18 @@ volatile uint8_t key_modifiers;
 
 static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még lenyomott billentyűk
 
-// körpuffer: az indexek körbefutó számlálók, a különbségük a várakozó leütések száma, így mind a 8 hely használható
+// körpuffer: az indexek körbefutó számlálók, a különbségük a várakozó leütések száma, így mind a KEY_BUFFER_SIZE hely használható
 #define KEY_BUFFER_SIZE  8
+
+// az index a KEY_BUFFER_SIZE - 1 maszkkal fut körbe, és a 8 bites számlálók különbsége nem érheti el a 256-ot
+#if (KEY_BUFFER_SIZE & (KEY_BUFFER_SIZE - 1)) != 0 || KEY_BUFFER_SIZE > 128
+    #error "a KEY_BUFFER_SIZE 2 hatványa kell legyen, legfeljebb 128"
+#endif
 static uint8_t key_buffer[KEY_BUFFER_SIZE];
 static volatile uint8_t key_buffer_write, key_buffer_read;  // az IRQ csak a write-ot, a játék csak a read-et írja
 
-// a billentyűk kódja mátrixhely szerint (oszlop * 8 + sor), oszloponként egy sor; 0 = nincs kódja
-static const uint8_t key_codes_plain[KEY_COLUMNS * 8] = {
+// a billentyűk kódja mátrixhely szerint (oszlop * KEY_ROWS + sor), oszloponként egy sor; 0 = nincs kódja
+static const uint8_t key_codes_plain[KEY_COLUMNS * KEY_ROWS] = {
     KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,          // törlés, RETURN, kurzor, F-billentyűk
     '3', 'w', 'a', '4', 'z', 's', 'e', 0,
     '5', 'r', 'd', '6', 'c', 'f', 't', 'x',
@@ -27,7 +32,7 @@ static const uint8_t key_codes_plain[KEY_COLUMNS * 8] = {
     '1', KEY_ESCAPE, 0, '2', ' ', 0, 'q', KEY_ESCAPE,  // 1, balra nyíl, -, 2, SPACE, -, Q, RUN/STOP
 };
 
-static const uint8_t key_codes_shifted[KEY_COLUMNS * 8] = {
+static const uint8_t key_codes_shifted[KEY_COLUMNS * KEY_ROWS] = {
     KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,
     '#', 'W', 'A', '$', 'Z', 'S', 'E', 0,
     '%', 'R', 'D', '&', 'C', 'F', 'T', 'X',
@@ -90,7 +95,7 @@ static __forceinline void detect_keypress(void)
         uint8_t fresh = down & ~key_counted[column];
         key_counted[column] &= down;
 
-        uint8_t position = column * KEY_COLUMNS, row_bit = 1;
+        uint8_t position = column * KEY_ROWS, row_bit = 1;
         while (fresh && !code) {
             if (fresh & row_bit) {
                 fresh ^= row_bit;

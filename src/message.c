@@ -20,7 +20,7 @@
 
 static char message_text[MESSAGE_TEXT_SIZE];
 static uint8_t message_text_length;
-static char message_bar_text[SCREEN_WIDTH * 2 + 1];
+static char message_bar_text[SCREEN_WIDTH * MESSAGE_ROW_COUNT + 1];
 static uint8_t message_bar_length;
 static uint8_t message_bar_end_column;
 static bool second_row_reserved;

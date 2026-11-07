@@ -3,9 +3,18 @@
 
 #include <stdint.h>
 
-// a logikai térkép mérete; térképmező: x = 0..MAP_COLUMNS-1, y = 1..MAP_ROWS
-#define MAP_COLUMNS  80
-#define MAP_ROWS     22
+// a logikai térkép mérete; térképmező: x = 0..MAP_COLUMNS-1, y = MAP_TOP_ROW..MAP_TOP_ROW+MAP_ROWS-1
+#define MAP_COLUMNS  80                         // default: 80
+#define MAP_ROWS     22                         // default: 22
+#define MAP_TOP_ROW  1                          // a 0. sor az üzenetsor (default: 1)
+
+// a koordináták 8 bitesek, és két oszlop különbsége (dist2, nézőablak) előjelesen 8 biten is elfér
+#if MAP_COLUMNS > 128 || MAP_TOP_ROW + MAP_ROWS > 128
+    #error "a térkép túl nagy a 8 bites koordinátákhoz"
+#endif
+
+// a logikai képernyő, az eredeti 80×24-es terminál: a térkép fölött az üzenetsor, alatta a státuszsor
+#define LOGICAL_SCREEN_ROWS  (MAP_TOP_ROW + MAP_ROWS + 1)     // default: 24
 
 // a játékos és a szörnyek közös rekordja
 struct Creature {
@@ -16,8 +25,11 @@ struct Creature {
     uint32_t experience;
 };
 
+// a logikai képernyő SECTOR_GRID_SIZE × SECTOR_GRID_SIZE szektorra osztva
+#define SECTOR_GRID_SIZE  3                     // default: 3
+
 // a szobák száma: szektoronként egy, a szoba indexe a szektor indexe
-#define ROOM_COUNT  9
+#define ROOM_COUNT  (SECTOR_GRID_SIZE * SECTOR_GRID_SIZE)      // default: 9
 
 // szobaflagek
 #define ROOM_PHANTOM  0x01                      // nem igazi szoba, csak egy folyosó-csomópont
@@ -46,7 +58,7 @@ struct GameState {
     struct Room rooms[ROOM_COUNT];
 
     uint8_t  view_window_x;                     // a nézőablak bal szélének logikai oszlopa
-    uint8_t  seen_map[MAP_ROWS][MAP_COLUMNS];   // a SCREEN réteg, a logikai y sora a [y - 1]; 7. bit = inverz
+    uint8_t  seen_map[MAP_ROWS][MAP_COLUMNS];   // a SCREEN réteg, a logikai y sora a [y - MAP_TOP_ROW]; 7. bit = inverz
 };
 
 extern struct GameState game;

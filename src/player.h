@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
-int8_t calculate_player_armor(void);    // a viselt páncél (vagy az alap 10) a védelem-gyűrűkkel együtt; kisebb = jobb
+#define BASE_ARMOR  10                  // páncél nélkül ennyi a védelem (default: 10)
+
+int8_t calculate_player_armor(void);    // a viselt páncél (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
 
 #endif

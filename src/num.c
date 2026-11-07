@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#define CAPPED_MAX 16777215UL
-#define POWER_COUNT 10
+#define CAPPED_BYTES 3                                  // a telített érték ennyi bájton elfér (pl. a ranglistafájlban)
+#define CAPPED_MAX   ((1UL << (CAPPED_BYTES * 8)) - 1)  // 16777215
 
 uint16_t dist2(struct Position a, struct Position b)
 {
@@ -24,13 +24,13 @@ uint32_t capped_sub(uint32_t a, uint32_t b)
     return b > a ? 0 : a - b;
 }
 
-static const uint32_t powers_of_ten[POWER_COUNT] = {
+static const uint32_t powers_of_ten[FORMAT_DIGITS_MAX] = {
     1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1
 };
 
 uint8_t format_int(char *out, int32_t number, int8_t width)
 {
-    char text[11];
+    char text[FORMAT_WIDTH_MAX];
     uint8_t length = 0;
     bool started = false;
 
@@ -41,14 +41,14 @@ uint8_t format_int(char *out, int32_t number, int8_t width)
         value = 0 - value;
     }
 
-    for (uint8_t power_index = 0; power_index < POWER_COUNT; power_index++) {
+    for (uint8_t power_index = 0; power_index < FORMAT_DIGITS_MAX; power_index++) {
         char digit = '0';
         while (value >= powers_of_ten[power_index]) {
             value -= powers_of_ten[power_index];
             digit++;
         }
 
-        if (digit != '0' || power_index == POWER_COUNT - 1) {
+        if (digit != '0' || power_index == FORMAT_DIGITS_MAX - 1) {
             started = true;
         }
         if (started) {

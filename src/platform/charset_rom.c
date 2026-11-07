@@ -105,12 +105,12 @@ void charset_load(volatile uint8_t *target)
     const uint8_t *own = own_glyphs;
 
     mmap_set(MMAP_CHAR_ROM);
-    for (uint8_t ch = 0; ch < 128; ch++) {
+    for (uint8_t ch = 0; ch < GLYPH_COUNT; ch++) {
         uint8_t index = rom_index(ch);
-        for (uint8_t row = 0; row < 8; row++) {
+        for (uint8_t row = 0; row < GLYPH_BYTES; row++) {
             uint8_t bits = 0;
             if (ch >= GLYPH_FIRST && ch <= GLYPH_LAST) {
-                bits = index == NOT_IN_ROM ? *own++ : CHAR_ROM[index * 8 + row];
+                bits = index == NOT_IN_ROM ? *own++ : CHAR_ROM[index * GLYPH_BYTES + row];
             }
             *target++ = bits;
         }

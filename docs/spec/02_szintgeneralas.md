@@ -20,58 +20,92 @@ new_level():
 ```
 
 ## 2.1 Szektorok
-9 szektor 3×3 rácsban. Az `i`-edik szektor (`i = row*3 + col`, 0..8):
-- egy szektor mérete `sector_size = (SECTOR_WIDTH, SECTOR_HEIGHT)`:
-  ```
-  SECTOR_WIDTH  = 26   // a térkép 80 oszlopa 3 szektorra osztva, lefelé kerekítve
-  SECTOR_HEIGHT = 8    // a térkép 22 sora, plusz a fölötte és az alatta lévő 1-1 sor, 3 szektorra osztva: 24 / 3
-  ```
-- `sector_corner = ((i%3)*SECTOR_WIDTH + 1, (i/3)*SECTOR_HEIGHT)` – a szektor bal felső sarka ([1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő)).
+A térkép `SECTOR_GRID_SIZE × SECTOR_GRID_SIZE` szektorra oszlik, minden szektorba pontosan egy szoba kerül; a szoba indexe a szektor indexe. Az `i`-edik szektor (`i = row * SECTOR_GRID_SIZE + col`, 0..`ROOM_COUNT − 1`):
+- egy szektor mérete `sector_size = (SECTOR_WIDTH, SECTOR_HEIGHT)`;
+- `sector_corner = ((i % SECTOR_GRID_SIZE) * SECTOR_WIDTH + SECTOR_FIRST_COLUMN, (i / SECTOR_GRID_SIZE) * SECTOR_HEIGHT)` – a szektor bal felső sarka ([1.3](01_adatmodell_es_flagek.md#13-térkép-és-képernyő)).
 
-Minden szektorba pontosan egy szoba kerül; a szoba indexe a szektor indexe.
+A méretek képletből jönnek, így egy konstans átírása mindenhol érvényes. Az alapérték az, amivel az eredeti játék (5.4.4) készült; a kódban is kommentként áll a konstans mellett.
+
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `MAP_COLUMNS` | a logikai térkép oszlopai ([1.3.1](01_adatmodell_es_flagek.md#131-logikai-térkép)) | 80 |
+| `MAP_ROWS` | a logikai térkép sorai | 22 |
+| `MAP_TOP_ROW` | a térkép első sora; fölötte az üzenetsor | 1 |
+| `LOGICAL_SCREEN_ROWS` | `MAP_TOP_ROW + MAP_ROWS + 1`: a térkép az üzenet- és a státuszsorral, mint az eredeti terminálon | 24 |
+| `SECTOR_GRID_SIZE` | a rács mérete | 3 |
+| `ROOM_COUNT` | `SECTOR_GRID_SIZE × SECTOR_GRID_SIZE` | 9 |
+| `SECTOR_WIDTH` | `MAP_COLUMNS / SECTOR_GRID_SIZE`, lefelé kerekítve | 26 |
+| `SECTOR_HEIGHT` | `LOGICAL_SCREEN_ROWS / SECTOR_GRID_SIZE` | 8 |
+| `SECTOR_FIRST_COLUMN` | a szektorok első oszlopa | 1 |
 
 A szektorok a **logikai** térképre vonatkoznak ([1.3.1](01_adatmodell_es_flagek.md#131-logikai-térkép)), nem a C64 képernyőjére: a szint ugyanolyan, mint az eredetiben, a 40 oszlopos képernyőn a nézőablak mutatja ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 
 ## 2.2 Szobaflagek
 ```
-for i in 0..8: rooms[i].flags = 0
-repeat rnd(4) times: rooms[rnd_room()].flags |= PHANTOM  // 0..3 különböző fantom szoba (a rnd_room csak nem fantom szobát ad)
+for i in 0..ROOM_COUNT-1: rooms[i].flags = 0
+repeat rnd(MAX_PHANTOM_ROOMS + 1) times: rooms[rnd_room()].flags |= PHANTOM  // 0..MAX_PHANTOM_ROOMS különböző fantom szoba (a rnd_room csak nem fantom szobát ad)
 for each room i (sorrendben):
   if PHANTOM: elhelyezés (2.3), continue
-  if rnd(10) < level - 1:
+  if rnd(DARK_ROOM_CHANCE_DIVISOR) < level - 1:
      rooms[i].flags |= DARK
-     if rnd(15) == 0: rooms[i].flags = MAZE              // értékadás: a DARK törlődik
+     if rnd(MAZE_CHANCE_DIVISOR) == 0: rooms[i].flags = MAZE  // értékadás: a DARK törlődik
   méret (2.3), rajzolás (2.5), arany + kezdő szörny (2.7)
 
 rnd_room():  // véletlen, nem fantom szoba indexe
-  repeat candidate = rnd(9) until !PHANTOM(candidate)
+  repeat candidate = rnd(ROOM_COUNT) until !PHANTOM(candidate)
   return candidate
 ```
+
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `PHANTOM_ROOM_LIMIT` | egy szinten legfeljebb ennyi fantom szoba | 3 |
+| `MAX_PHANTOM_ROOMS` | a kisebbik a `PHANTOM_ROOM_LIMIT` és a `ROOM_COUNT − 1` közül: legalább egy igazi szoba mindig marad, különben a `rnd_room` végtelen ciklusba futna | 3 |
+| `DARK_ROOM_CHANCE_DIVISOR` | a szoba `(level − 1) / DARK_ROOM_CHANCE_DIVISOR` eséllyel sötét | 10 |
+| `MAZE_CHANCE_DIVISOR` | a sötét szobából `1 / MAZE_CHANCE_DIVISOR` eséllyel labirintus lesz | 15 |
+
 A labirintus mezői folyosó-mezők (`F_PASS`), ezért a látótér szempontjából folyosóként viselkedik (3×3 látás); a DARK-nak itt nincs jelentősége.
 
 ## 2.3 Szobaméret és -hely
 A szoba `room.pos` (bal felső sarok, fallal együtt) és `room.size` (méret, fallal együtt) mezője a szektorán belül ([2.1](#21-szektorok)):
 ```
 PHANTOM:  // a fantom szoba nem igazi szoba, csak egyetlen folyosó-csomópont
-  room.pos.x = sector_corner.x + rnd(sector_size.x - 2) + 1  // véletlen pont a szektor belsejében,
-  room.pos.y = sector_corner.y + rnd(sector_size.y - 2) + 1  //   a szektor szélétől legalább 1 mezőre
-  room.size = (0, 0)                                         // nincs mérete: minden használat előtt a PHANTOM jelzőt nézzük
+  // véletlen pont a szektor belsejében, a szektor szélétől legalább PHANTOM_EDGE_DISTANCE mezőre
+  room.pos.x = sector_corner.x + rnd(sector_size.x - 2 * PHANTOM_EDGE_DISTANCE) + PHANTOM_EDGE_DISTANCE
+  room.pos.y = sector_corner.y + rnd(sector_size.y - 2 * PHANTOM_EDGE_DISTANCE) + PHANTOM_EDGE_DISTANCE
+  room.size = (0, 0)  // nincs mérete: minden használat előtt a PHANTOM jelzőt nézzük
 
-MAZE:  // a labirintus kitölti a szektort
+MAZE:  // a labirintus kitölti a szektort, az utolsó oszlopa és sora nélkül
   room.size = (sector_size.x - 1, sector_size.y - 1)
   room.pos  = sector_corner
-  if room.pos.x == 1: room.pos.x = 0
-  if room.pos.y == 0: room.pos.y = 1; room.size.y -= 1  // a 0. sor az üzenetsor
+  if room.pos.x == SECTOR_FIRST_COLUMN: room.pos.x = 0  // a bal szélső a 0. oszloptól kezdődik
+  if room.pos.y < MAP_TOP_ROW:                          // a felső szektorsorban a térkép fölötti sorok kimaradnak
+     room.size.y -= MAP_TOP_ROW - room.pos.y
+     room.pos.y = MAP_TOP_ROW
 
 normál:
   repeat:
-    room.size.x = rnd(sector_size.x - 4) + 4                          // falakkal együtt, min. 4×4
-    room.size.y = rnd(sector_size.y - 4) + 4
+    room.size.x = rnd(sector_size.x - MIN_ROOM_SIZE) + MIN_ROOM_SIZE  // falakkal együtt
+    room.size.y = rnd(sector_size.y - MIN_ROOM_SIZE) + MIN_ROOM_SIZE
     room.pos.x  = sector_corner.x + rnd(sector_size.x - room.size.x)  // úgy, hogy beférjen a szektorba
     room.pos.y  = sector_corner.y + rnd(sector_size.y - room.size.y)
-  until room.pos.y != 0                                               // a 0. sor az üzenetsor
+  until room.pos.y >= MAP_TOP_ROW                                     // a felső fala nem kerülhet a térkép fölé
 ```
-A fantom szoba pontjának `y`-ja mindig 1..22 (a legalsó szektorban legfeljebb 16 + 6), így újrasorsolás nélkül sem kerülhet az üzenet- vagy a státuszsorba; a fejlesztői build ezt `DEV_CHECK`-kel ellenőrzi.
+
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `PHANTOM_EDGE_DISTANCE` | a fantom szoba pontja legalább ennyi mezőre van a szektor szélétől | 1 |
+| `MIN_ROOM_SIZE` | a normál szoba legkisebb mérete falakkal együtt | 4 |
+
+A normál szobánál a szektor utolsó oszlopa és sora mindig üresen marad, ez a szektorok közti rés; az alsó szektorsorban ez a státuszsor.
+
+**Fordítási feltételek** (a fejlesztői és a kiadott buildben is `#error`):
+- `MIN_ROOM_SIZE ≥ 3`: a szobának kell legalább egy belső mező (`find_floor`), és a falain sarok nélküli hely az ajtónak (2.6);
+- `SECTOR_WIDTH ≥ MIN_ROOM_SIZE + 1`: a legkisebb szoba mellett marad a rés;
+- `SECTOR_HEIGHT ≥ MIN_ROOM_SIZE + MAP_TOP_ROW + 1`: a felső szektorsorban is kijöhet a térképen belüli hely, különben az újrasorsolás végtelen.
+
+Az alapértékekkel ez legalább 15 oszlopos térképet jelent (3 × 5).
+
+A fantom szoba pontjának `y`-ja az alapértékekkel mindig 1..22 (a legalsó szektorban legfeljebb 16 + 6), így újrasorsolás nélkül sem kerülhet az üzenet- vagy a státuszsorba; a fejlesztői build ezt `DEV_CHECK`-kel ellenőrzi.
 
 ## 2.4 Összekötés
 Szomszédság: csak ortogonális szomszéd szektorok (`adjacent` tábla: 0–1, 0–3, 1–2, 1–4, 2–5, 3–4, 3–6, 4–5, 4–7, 5–8, 6–7, 7–8). A fantom szobák is részt vesznek (folyosó-csomópontként).

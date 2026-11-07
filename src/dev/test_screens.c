@@ -32,7 +32,7 @@ static void dev_charset_screen(void)
 
     set_screen_cursor(2, 5);
     put_text("Inverse:");
-    put_all_glyphs(6, 128);
+    put_all_glyphs(6, INVERSE_OFFSET);
 
     static const uint8_t map_signs[] = {
         PASSAGE, DOOR, FLOOR, PLAYER, TRAP, STAIRS, GOLD, POTION, SCROLL, WALL_HORIZONTAL, WALL_VERTICAL,
@@ -50,7 +50,7 @@ static void dev_charset_screen(void)
         " |......%.......|",
         " ----------------",
     };
-    for (uint8_t i = 0; i < 6; i++) {
+    for (uint8_t i = 0; i < sizeof(map_sample) / sizeof(map_sample[0]); i++) {
         set_screen_cursor(0, 12 + i);
         put_text(map_sample[i]);
     }
@@ -121,15 +121,15 @@ static void dev_keyboard_screen(void)
     }
 }
 
-// az 1-2. sor az oszlop száma, a többi betűje tízesenként vált
+// a térkép első két sora az oszlop száma, a többi betűje tízesenként vált
 static uint8_t view_pattern(uint8_t x, uint8_t y)
 {
-    if (y == 1) return '0' + x / 10;
-    if (y == 2) return '0' + x % 10;
+    if (y == MAP_TOP_ROW) return '0' + x / 10;
+    if (y == MAP_TOP_ROW + 1) return '0' + x % 10;
     return x % 10 == 0 ? '|' : 'a' + x / 10;
 }
 
-#define VIEW_TEST_ROW  12
+#define VIEW_TEST_ROW  (MAP_TOP_ROW + MAP_ROWS / 2)     // a térkép középső sora
 
 // a jel a mintát visszaállítva lép, a széleken megáll
 static uint8_t view_step(uint8_t x, int8_t step)
@@ -145,16 +145,23 @@ static uint8_t view_step(uint8_t x, int8_t step)
     return target;
 }
 
-#define VIEW_MEASURE_LIMIT  100     // görgetésenként legfeljebb 2 képkocka
+#define VIEW_MEASURE_REDRAW_COUNT       50
+#define VIEW_MEASURE_FRAMES_PER_REDRAW  2
+#define VIEW_MEASURE_LIMIT              (VIEW_MEASURE_REDRAW_COUNT * VIEW_MEASURE_FRAMES_PER_REDRAW)
 
-// 50 teljes újrarajzolás két távoli nézet között, a képkockák száma
+// a képkockaszámláló 8 bites
+#if VIEW_MEASURE_LIMIT > 255
+    #error "a VIEW_MEASURE_LIMIT nem fér el 8 biten"
+#endif
+
+// VIEW_MEASURE_REDRAW_COUNT teljes újrarajzolás két távoli nézet között, a képkockák száma
 static uint8_t view_measure(void)
 {
     uint8_t saved_view_window_x = game.view_window_x;
     uint8_t start = frame_count;
 
-    for (uint8_t i = 0; i < 50; i++) {
-        game.view_window_x = i & 1 ? 0 : 40;
+    for (uint8_t i = 0; i < VIEW_MEASURE_REDRAW_COUNT; i++) {
+        game.view_window_x = i & 1 ? 0 : VIEW_WINDOW_X_MAX;
         redraw_map();
     }
 
@@ -180,7 +187,7 @@ static void view_draw_pattern(void)
 {
     clear_seen_map();
     game.view_window_x = 0;
-    for (uint8_t y = 1; y <= MAP_ROWS; y++) {
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
         for (uint8_t column = 0; column < MAP_COLUMNS; column++) {
             draw_tile(column, y, view_pattern(column, y));
         }
@@ -189,14 +196,14 @@ static void view_draw_pattern(void)
 
 static void dev_view_screen(void)
 {
-    uint8_t code = 0, x = 20, frames = 0;
+    uint8_t code = 0, x = VIEW_WINDOW_WIDTH / 2, frames = 0;
     bool top_row_hidden = false;
 
     screen_clear();
     set_screen_cursor(0, STATUS_ROW);
     put_text("A,D: step  Q,E: 8 steps  F: time");
     set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1,2,3: view 0,20,40  H: row 1  ESC: end");
+    put_text("1,2,3: left/mid/right H: row 1 ESC: end");
 
     view_draw_pattern();
     draw_tile(x, VIEW_TEST_ROW, PLAYER);
@@ -207,7 +214,9 @@ static void dev_view_screen(void)
         put_int(game.view_window_x, 3);
         put_text("  x:");
         put_int(x, 3);
-        put_text("  50 redraws:");
+        put_text("  ");
+        put_int(VIEW_MEASURE_REDRAW_COUNT, 0);
+        put_text(" redraws:");
         put_int(frames, 4);
         if (frames) {
             put_text(frames <= VIEW_MEASURE_LIMIT ? " OK  " : " FAIL");
@@ -225,9 +234,9 @@ static void dev_view_screen(void)
                 top_row_hidden = !top_row_hidden;
                 view_toggle_top_row(top_row_hidden);
                 break;
-            case '1': center_view_window(20); break;
-            case '2': center_view_window(40); break;
-            case '3': center_view_window(60); break;
+            case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
+            case '2': center_view_window(MAP_COLUMNS / 2); break;
+            case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
         }
     }
 
@@ -300,12 +309,14 @@ static void set_status_test_values(uint8_t dungeon_level, uint32_t gold, int16_t
     game.player.experience = experience;
 }
 
-// 50 kirajzolás változatlan értékekkel, a képkockák száma
+#define STATUS_MEASURE_DRAW_COUNT  50
+
+// STATUS_MEASURE_DRAW_COUNT kirajzolás változatlan értékekkel, a képkockák száma
 static uint8_t status_measure(void)
 {
     uint8_t start = frame_count;
 
-    for (uint8_t i = 0; i < 50; i++) {
+    for (uint8_t i = 0; i < STATUS_MEASURE_DRAW_COUNT; i++) {
         draw_status();
     }
 
@@ -335,7 +346,8 @@ static void dev_status_screen(void)
         draw_status();
 
         set_screen_cursor(0, 3);
-        put_text("50 draws: ");
+        put_int(STATUS_MEASURE_DRAW_COUNT, 0);
+        put_text(" draws: ");
         put_int(frames, 3);
         put_text(" frames");
 

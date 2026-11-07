@@ -957,9 +957,9 @@ void charset_load(volatile uint8_t *target)
 {
     const uint8_t *glyph = glyphs;
 
-    for (uint16_t i = 0; i < 1024; i++) {
+    for (uint16_t i = 0; i < GLYPH_COUNT * GLYPH_BYTES; i++) {
         uint8_t bits = 0;
-        if (i >= GLYPH_FIRST * 8 && i < (GLYPH_LAST + 1) * 8) {
+        if (i >= GLYPH_FIRST * GLYPH_BYTES && i < (GLYPH_LAST + 1) * GLYPH_BYTES) {
             bits = *glyph++;
         }
         target[i] = bits;

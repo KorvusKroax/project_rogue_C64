@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MESSAGE_ROW  0      // az üzenetsáv első képernyősora; a második a MESSAGE_ROW + 1
+#define MESSAGE_ROW        0    // az üzenetsáv első képernyősora; a második a MESSAGE_ROW + 1
+#define MESSAGE_ROW_COUNT  2    // az üzenetsáv sorai
 
 void message(const char *text);                 // a sávba, az eddigi szöveg után; ha nem fér el, --More--, és szóközre vár
 void message_format(const char *text, const char *first_text, const char *second_text, int16_t number);    // mint a message, a \1, \2 helyén a két szöveg, a \3 helyén a szám; a nem használt szöveg lehet NULL

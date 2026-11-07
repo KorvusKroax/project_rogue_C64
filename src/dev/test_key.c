@@ -45,23 +45,25 @@ static const struct KeyCase key_cases[] = {
     { 4, 3, KEY_MODIFIER_SHIFT, 0 }, { 5, 6, KEY_MODIFIER_SHIFT, 0 },
 };
 
+#define LETTER_COUNT  ('z' - 'a' + 1)
+
 int test_key_decode(uint16_t i)
 {
     for (uint8_t c = 0; c < sizeof(key_cases) / sizeof(key_cases[0]); c++) {
         const struct KeyCase *k = &key_cases[c];
-        if (key_decode(k->column * KEY_COLUMNS + k->row, k->modifiers) != k->code) return false;
+        if (key_decode(k->column * KEY_ROWS + k->row, k->modifiers) != k->code) return false;
     }
 
-    // mind a 26 betű megvan, a SHIFT-es és a CTRL-os változatával
+    // mind a LETTER_COUNT betű megvan, a SHIFT-es és a CTRL-os változatával
     uint32_t letters_seen = 0;
-    for (uint8_t position = 0; position < KEY_COLUMNS * 8; position++) {
+    for (uint8_t position = 0; position < KEY_COLUMNS * KEY_ROWS; position++) {
         uint8_t code = key_decode(position, 0);
         if (code >= 'a' && code <= 'z') {
             letters_seen |= 1UL << (code - 'a');
-            if (key_decode(position, KEY_MODIFIER_SHIFT) != code - 32) return false;
-            if (key_decode(position, KEY_MODIFIER_CTRL) != code - 96) return false;
+            if (key_decode(position, KEY_MODIFIER_SHIFT) != code - ('a' - 'A')) return false;
+            if (key_decode(position, KEY_MODIFIER_CTRL) != code - ('a' - 1)) return false;
         }
     }
 
-    return letters_seen == 0x03ffffffUL;
+    return letters_seen == (1UL << LETTER_COUNT) - 1;
 }
