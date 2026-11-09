@@ -37,6 +37,41 @@
 #define DARK_ROOM_CHANCE_DIVISOR  10            // a szoba (mélység - 1) / DARK_ROOM_CHANCE_DIVISOR eséllyel sötét (default: 10)
 #define MAZE_CHANCE_DIVISOR       15            // a sötét szobából 1 / MAZE_CHANCE_DIVISOR eséllyel labirintus lesz (default: 15)
 
+#define SECRET_PASSAGE_DEPTH_DIVISOR   10       // a folyosó-mező titkos lehet, ha rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < mélység (default: 10)
+#define SECRET_PASSAGE_CHANCE_DIVISOR  40       // és akkor 1 / SECRET_PASSAGE_CHANCE_DIVISOR eséllyel az (default: 40)
+
+// a két dobás egyben: a mező min(mélység - 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_ROLL_RANGE eséllyel titkos
+#define SECRET_PASSAGE_ROLL_RANGE  (SECRET_PASSAGE_DEPTH_DIVISOR * SECRET_PASSAGE_CHANCE_DIVISOR)   // default: 400
+
+// a labirintus cellái a páros relatív koordinátákon vannak, köztük egy-egy mező; a legnagyobb labirintus a szektor az utolsó oszlopa és sora nélkül
+#define MAZE_MAX_CELLS_X  ((SECTOR_WIDTH - 1) / 2 + 1)                   // default: 13
+#define MAZE_MAX_CELLS_Y  ((SECTOR_HEIGHT - 1) / 2 + 1)                  // default: 4
+#define MAZE_STACK_SIZE   (MAZE_MAX_CELLS_X * MAZE_MAX_CELLS_Y)          // minden cella legfeljebb egyszer kerül a verembe (default: 52)
+
+// csak az utolsó szektoroszlop és -sor labirintusa lóghat ki a térképről: a legtávolabbi cellája a helye + a mérete páros része;
+// páratlan szektorszélességnél (pl. 81 oszlop) vagy 1×1-es rácsnál kell a méretet a térkép széléig csökkenteni, az alapértékekkel soha
+#if SECTOR_GRID_SIZE == 1
+    #define MAZE_LAST_X  0                                                                        // a bal szélső a 0. oszloptól kezdődik
+#else
+    #define MAZE_LAST_X  ((SECTOR_GRID_SIZE - 1) * SECTOR_WIDTH + SECTOR_FIRST_COLUMN)            // default: 53
+#endif
+#define MAZE_NEEDS_WIDTH_LIMIT  (MAZE_LAST_X + (SECTOR_WIDTH - 1) / 2 * 2 > MAP_COLUMNS - 1)      // default: 53 + 24 > 79 hamis
+
+#define MAZE_LAST_CORNER_Y  ((SECTOR_GRID_SIZE - 1) * SECTOR_HEIGHT)                              // default: 16
+#if MAZE_LAST_CORNER_Y < MAP_TOP_ROW
+    #define MAZE_LAST_Y_REACH  (MAP_TOP_ROW + (SECTOR_HEIGHT - 1 - (MAP_TOP_ROW - MAZE_LAST_CORNER_Y)) / 2 * 2)
+#else
+    #define MAZE_LAST_Y_REACH  (MAZE_LAST_CORNER_Y + (SECTOR_HEIGHT - 1) / 2 * 2)                 // default: 16 + 6 = 22
+#endif
+#define MAZE_NEEDS_HEIGHT_LIMIT  (MAZE_LAST_Y_REACH > MAP_TOP_ROW + MAP_ROWS - 1)                 // default: 22 > 22 hamis
+
+// 1×1-es rácsnál a verem 255-nél nagyobb is lehet
+#if MAZE_STACK_SIZE > 255
+    typedef uint16_t maze_stack_index_t;
+#else
+    typedef uint8_t maze_stack_index_t;
+#endif
+
 // a szoba helye és mérete a szektorán belül, a flagjei szerint
 static void place_room(uint8_t room_index)
 {
@@ -67,6 +102,18 @@ static void place_room(uint8_t room_index)
             room->height -= MAP_TOP_ROW - room->y;
             room->y = MAP_TOP_ROW;
         }
+
+        // a legtávolabbi cella a méret páros része: ha a térképen kívül esne, a méret a térkép széléig csökken
+        #if MAZE_NEEDS_WIDTH_LIMIT
+            if (room->x + room->width / 2 * 2 > MAP_COLUMNS - 1) {
+                room->width = MAP_COLUMNS - 1 - room->x;
+            }
+        #endif
+        #if MAZE_NEEDS_HEIGHT_LIMIT
+            if (room->y + room->height / 2 * 2 > MAP_TOP_ROW + MAP_ROWS - 1) {
+                room->height = MAP_TOP_ROW + MAP_ROWS - 1 - room->y;
+            }
+        #endif
         return;
     }
 
@@ -98,6 +145,91 @@ static void draw_room(const struct Room *room)
             set_map_character(x, y, CHAR_FLOOR);
         }
         set_map_character(right_x, y, CHAR_WALL_VERTICAL);
+    }
+}
+
+void put_passage(uint8_t x, uint8_t y)
+{
+    DEV_CHECK(x < MAP_COLUMNS && y >= MAP_TOP_ROW && y < MAP_TOP_ROW + MAP_ROWS, "passage outside the map");
+
+    add_map_flags(x, y, TILE_PASSAGE);
+
+    // az esély a mélységgel nő, SECRET_PASSAGE_DEPTH_DIVISOR szint után már nem; az 1. szinten 0, ott nincs dobás
+    uint8_t secret_limit = game.dungeon_level - 1;
+    if (secret_limit > SECRET_PASSAGE_DEPTH_DIVISOR) {
+        secret_limit = SECRET_PASSAGE_DEPTH_DIVISOR;
+    }
+
+    if (secret_limit > 0 && rnd(SECRET_PASSAGE_ROLL_RANGE) < secret_limit) {
+        // a titkos folyosó-mező üresnek látszik
+        remove_map_flags(x, y, TILE_REAL);
+    } else {
+        set_map_character(x, y, CHAR_PASSAGE);
+    }
+}
+
+struct MazeCell {
+    uint8_t x;                          // a labirintus bal felső sarkához képest
+    uint8_t y;
+};
+
+static struct MazeCell maze_stack[MAZE_STACK_SIZE];
+
+// a lépések sorrendje: x + 2, x - 2, y + 2, y - 2
+static const int8_t maze_step_x[4] = { 2, -2, 0, 0 };
+static const int8_t maze_step_y[4] = { 0, 0, 2, -2 };
+
+// visszalépéses (DFS) labirintus folyosó-mezőkből; a rekurzív változat helyett saját verem, ugyanazokkal az esélyekkel
+static void draw_maze(const struct Room *room)
+{
+    uint8_t start_y = rnd(room->height) / 2 * 2;    // előbb az y, aztán az x
+    uint8_t start_x = rnd(room->width) / 2 * 2;
+    put_passage(room->x + start_x, room->y + start_y);
+
+    maze_stack_index_t stack_count = 1;
+    maze_stack[0].x = start_x;
+    maze_stack[0].y = start_y;
+
+    while (stack_count > 0) {
+        struct MazeCell *cell = &maze_stack[stack_count - 1];
+        uint8_t options = 0;                        // ennyi ásható szomszéd van
+        uint8_t option_x[4];
+        uint8_t option_y[4];
+
+        for (uint8_t step = 0; step < 4; step++) {
+            int8_t next_x = cell->x + maze_step_x[step];
+            int8_t next_y = cell->y + maze_step_y[step];
+
+            if (next_x < 0 || next_x > room->width || next_y < 0 || next_y > room->height) continue;
+            if (get_map_flags(room->x + next_x, room->y + next_y) & TILE_PASSAGE) continue;
+
+            option_x[options] = next_x;
+            option_y[options] = next_y;
+            options++;
+        }
+
+        // zsákutca: vissza az előző cellához
+        if (options == 0) {
+            stack_count--;
+            continue;
+        }
+
+        // egyenletes választás az ásható szomszédok közül, egyetlen dobással; egy szomszédnál nincs mit dobni
+        uint8_t chosen = 0;
+        if (options > 1) {
+            chosen = rnd(options);
+        }
+        uint8_t chosen_x = option_x[chosen];
+        uint8_t chosen_y = option_y[chosen];
+
+        // a két cella közti mező, aztán az új cella
+        put_passage(room->x + (cell->x + chosen_x) / 2, room->y + (cell->y + chosen_y) / 2);
+        put_passage(room->x + chosen_x, room->y + chosen_y);
+
+        DEV_CHECK(stack_count < MAZE_STACK_SIZE, "maze stack overflow");
+        maze_stack[stack_count].x = chosen_x;
+        maze_stack[stack_count].y = chosen_y;
+        stack_count++;
     }
 }
 
@@ -145,8 +277,9 @@ void generate_rooms(void)
 
         place_room(room_index);
 
-        // a labirintus rajzolása a következő lépésben jön
-        if (!(room->flags & ROOM_MAZE)) {
+        if (room->flags & ROOM_MAZE) {
+            draw_maze(room);
+        } else {
             draw_room(room);
         }
     }

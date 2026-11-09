@@ -372,27 +372,57 @@ static void dev_status_screen(void)
     }
 }
 
-// egy új szint szobái a MAP-ba, onnan a képernyőre
+#define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
+
+// egy új szint szobái a MAP-ba, onnan a képernyőre; a titkos mezők és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
     clear_map();
     generate_rooms();
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
-    redraw_map();
-}
 
-// a szobák száma, amelyeken a megadott flag be van kapcsolva
-static uint8_t rooms_count_flag(uint8_t flag)
-{
-    uint8_t count = 0;
-
-    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
-        if (game.rooms[room_index].flags & flag) {
-            count++;
+    // a titkos folyosó-mező a játékban üresnek látszik, itt inverz folyosóként
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            if ((get_map_flags(x, y) & (TILE_PASSAGE | TILE_REAL)) == TILE_PASSAGE) {
+                game.seen_map[y - MAP_TOP_ROW][x] = CHAR_PASSAGE + INVERSE_OFFSET;
+            }
         }
     }
 
-    return count;
+    // a fantom szoba pontja a játékban nem látszik (a folyosó halad át rajta), itt egy a térképen nem használt jellel
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & ROOM_PHANTOM) {
+            game.seen_map[room->y - MAP_TOP_ROW][room->x] = ROOMS_PHANTOM_MARK;
+        }
+    }
+
+    redraw_map();
+}
+
+// a fantom, a sötét és a labirintus szobák száma, egy menetben: ha egy rövid ciklusú függvényt egymás után más-más
+// állandó flaggel hívnánk, az Oscar64 -O2 kis ROOM_COUNT-nál (pl. 2×2-es rácsnál) az előző hívás eredményét adná vissza
+static void put_room_flag_counts(void)
+{
+    uint8_t phantom_count = 0;
+    uint8_t dark_count = 0;
+    uint8_t maze_count = 0;
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        uint8_t flags = game.rooms[room_index].flags;
+
+        if (flags & ROOM_PHANTOM) phantom_count++;
+        if (flags & ROOM_DARK) dark_count++;
+        if (flags & ROOM_MAZE) maze_count++;
+    }
+
+    put_text("  phantom:");
+    put_int(phantom_count, 0);
+    put_text(" dark:");
+    put_int(dark_count, 0);
+    put_text(" maze:");
+    put_int(maze_count, 0);
 }
 
 static void dev_rooms_screen(void)
@@ -410,16 +440,10 @@ static void dev_rooms_screen(void)
     rooms_generate_level();
 
     while (code != KEY_ESCAPE) {
-        // a labirintust még nem rajzolja ki, ezért a száma látszik
         set_screen_cursor(0, MESSAGE_ROW);
         put_text("depth:");
         put_int(game.dungeon_level, 3);
-        put_text("  phantom:");
-        put_int(rooms_count_flag(ROOM_PHANTOM), 0);
-        put_text(" dark:");
-        put_int(rooms_count_flag(ROOM_DARK), 0);
-        put_text(" maze:");
-        put_int(rooms_count_flag(ROOM_MAZE), 0);
+        put_room_flag_counts();
         clear_to_row_end();
 
         code = wait_for_key();

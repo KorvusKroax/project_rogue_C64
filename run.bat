@@ -14,4 +14,7 @@ call "%~dp0build.bat" %1 %2
 if errorlevel 1 exit /b 1
 
 rem a "start" miatt a konzol nem var a VICE bezarasara
+rem start "" "%VICE%" -autostart "%~dp0build\%NAME%.d64"
+
+rem futtatás fullscreen-ben
 start "" "%VICE%" -VICIIfull -autostart "%~dp0build\%NAME%.d64"

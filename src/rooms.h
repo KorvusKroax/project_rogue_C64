@@ -7,4 +7,6 @@ void generate_rooms(void);              // a 9 szoba a 3×3 szektorba, a szint m
 
 uint8_t choose_random_room(void);       // egy véletlen, nem fantom szoba indexe
 
+void put_passage(uint8_t x, uint8_t y); // folyosó-mező a labirintusnak és a folyosóknak; mélyebben titkos is lehet (üresnek látszik)
+
 #endif

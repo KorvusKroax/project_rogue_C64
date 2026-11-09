@@ -81,6 +81,9 @@ MAZE:  // a labirintus kitölti a szektort, az utolsó oszlopa és sora nélkül
   if room.pos.y < MAP_TOP_ROW:                          // a felső szektorsorban a térkép fölötti sorok kimaradnak
      room.size.y -= MAP_TOP_ROW - room.pos.y
      room.pos.y = MAP_TOP_ROW
+  // a legtávolabbi cella a méret páros része (2.5): ha a térképen kívül esne, a méret a térkép széléig csökken
+  if room.pos.x + room.size.x / 2 * 2 > MAP_COLUMNS - 1:            room.size.x = MAP_COLUMNS - 1 - room.pos.x
+  if room.pos.y + room.size.y / 2 * 2 > MAP_TOP_ROW + MAP_ROWS - 1: room.size.y = MAP_TOP_ROW + MAP_ROWS - 1 - room.pos.y
 
 normál:
   repeat:
@@ -95,6 +98,8 @@ normál:
 |---|---|---|
 | `PHANTOM_EDGE_DISTANCE` | a fantom szoba pontja legalább ennyi mezőre van a szektor szélétől | 1 |
 | `MIN_ROOM_SIZE` | a normál szoba legkisebb mérete falakkal együtt | 4 |
+
+**A labirintus határa:** a cellák a páros relatív koordinátákon vannak (2.5), így a labirintus legtávolabbi mezője `room.pos + room.size / 2 * 2`. Az alapértékekkel ez mindig a térképen belül van (jobbra legfeljebb 53 + 24 = 77, lefelé 16 + 6 = 22), a vágás soha nem lép életbe, és a 80×24-es labirintusok ugyanolyanok, mint az eredetiben. Más méreteknél kilóghatna: páratlan szektorszélességnél (pl. 81 oszlop: 55 + 26 = 81) a jobb szélen, 1×1-es rácsnál (1 + 22 = 23) a státuszsorba. A kód a két vágást csak akkor fordítja be, ha a konstansokból kiszámolva szükség van rájuk (`MAZE_NEEDS_WIDTH_LIMIT`, `MAZE_NEEDS_HEIGHT_LIMIT`); a fejlesztői build a `putpass`-ban `DEV_CHECK`-kel ellenőrzi, hogy minden folyosó-mező a térképen van.
 
 A normál szobánál a szektor utolsó oszlopa és sora mindig üresen marad, ez a szektorok közti rés; az alsó szektorsorban ez a státuszsor.
 
@@ -167,7 +172,7 @@ do_maze(room):
 dig(cell):  // cell: relatív koordináta a labirintusban
   loop:
     options = 0                                        // ennyi ásható szomszéd van
-    for step in [(+2, 0), (-2, 0), (0, +2), (0, -2)]:  // (dy, dx), ebben a sorrendben
+    for step in [(+2, 0), (-2, 0), (0, +2), (0, -2)]:  // (dx, dy), ebben a sorrendben: előbb vízszintesen, aztán függőlegesen
       next = cell + step
       if next a labirintuson kívül van (next.y < 0, next.y > room.size.y, next.x < 0, next.x > room.size.x): continue
       if a (room.pos + next) mező már folyosó (F_PASS): continue
@@ -180,17 +185,29 @@ dig(cell):  // cell: relatív koordináta a labirintusban
 ```
 A labirintus is `putpass`-szal készül, így a mezői is lehetnek rejtettek ([2.6](#26-folyosók)).
 
-**C64-en a `dig` nem lehet rekurzív**, mert a 6502 hardveres verme 256 bájtos. Az iteratív változat pontosan ugyanazokat a dobásokat adja, ugyanabban a sorrendben:
+**A felső és a középső labirintus összeérhet**, ahogy az eredetiben is: a felső szektorsorban a labirintus az 1. sorban kezdődik, ezért a cellái a páratlan sorokra esnek, és az utolsó a szektor utolsó sorába (alapértékekkel a 7.-be) kerül, a középső labirintus első cellasora pedig a 8. sor. A középső és az alsó között a szektor utolsó sora üres marad. Később újragondoljuk: egy ötlet, hogy a 2. és a 3. szektorsorban is eggyel lejjebb kezdődjön a labirintus, így a középső eggyel magasabb lenne, a felső és az alsó pedig egyforma.
+
+**C64-en a `dig` nem lehet rekurzív**, mert a 6502 hardveres verme 256 bájtos. Az iteratív változat ugyanazokkal az esélyekkel választ, de kevesebb dobással: előbb összegyűjti az ásható szomszédokat, aztán egyetlen `rnd(options)`-szal választ közülük, egy szomszédnál pedig nem dob. A labirintusok ezért mások, mint az eredetiben, de ugyanolyan eloszlásúak:
 ```
 dig_iterative(start):
-  stack = [start]                      // saját verem: cellánként 2 bájt (relatív y, x)
+  stack = [start]                      // saját verem: cellánként 2 bájt (relatív x, y)
   while stack nem üres:
     cell = stack.top
-    a fenti ciklusmag egy menete a cell-re (options, rnd(options), chosen)
-    if options == 0: stack.pop         // zsákutca: vissza az előző cellához
-    else: putpass(köztes mező); putpass(chosen); stack.push(chosen)
+    candidates = a cell ásható szomszédai, a fenti lépéssorrendben
+    if candidates üres: stack.pop      // zsákutca: vissza az előző cellához
+    else:
+      chosen = candidates[options > 1 ? rnd(options) : 0]
+      putpass(köztes mező); putpass(chosen); stack.push(chosen)
 ```
-A verem legfeljebb annyi elemű, ahány cella a labirintusban van: `(room.size.x/2 + 1) × (room.size.y/2 + 1)`, a legnagyobb labirintusnál 13 × 4 = 52.
+A verem legfeljebb annyi elemű, ahány cella a labirintusban van, mert minden cella legfeljebb egyszer kerül bele: `(room.size.x/2 + 1) × (room.size.y/2 + 1)`. A legnagyobb labirintus a szektor az utolsó oszlopa és sora nélkül, így a verem mérete:
+
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `MAZE_STACK_SIZE` | `((SECTOR_WIDTH − 1) / 2 + 1) × ((SECTOR_HEIGHT − 1) / 2 + 1)` | 13 × 4 = 52 (az eredetiben nincs, ott a C verem dolgozik) |
+
+A fejlesztői build `DEV_CHECK`-kel ellenőrzi, hogy a verem nem telik túl. 255-nél nagyobb veremnél (pl. 1×1-es rácsnál 40 × 12 = 480) a veremindex 16 bites.
+
+A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,28 másodperc, az 1. szinten kevesebb, mert ott a `putpass` nem dob. Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
 
 ## 2.6 Folyosók
 Két szomszédos szoba (`room_a`, `room_b`) közti folyosó. A kisebb indexű szobától indul; ha a másik a jobb oldali szomszédja, jobbra halad, ha az alatta lévő, lefelé.
@@ -239,7 +256,23 @@ door(room, pos):
 
 putpass(pos):
   F_PASS be
-  if rnd(10) + 1 < level and rnd(40) == 0: F_REAL le  // titkos folyosó-mező (üresnek látszik)
+  if rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < level and rnd(SECRET_PASSAGE_CHANCE_DIVISOR) == 0:
+     F_REAL le                                        // titkos folyosó-mező (üresnek látszik)
+  else: MAP[pos] = PASSAGE
+```
+
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `SECRET_PASSAGE_DEPTH_DIVISOR` | a folyosó-mező titkos lehet, ha `rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < level` | 10 |
+| `SECRET_PASSAGE_CHANCE_DIVISOR` | és akkor `1 / SECRET_PASSAGE_CHANCE_DIVISOR` eséllyel az | 40 |
+
+A kódban `put_passage` (`rooms.c`), mert először a labirintus használja. A két dobás helyett egyetlen dobással, ugyanazzal az eséllyel: az első feltétel `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_DEPTH_DIVISOR` eséllyel teljesül, így a mező együtt `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / (SECRET_PASSAGE_DEPTH_DIVISOR × SECRET_PASSAGE_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/400 = 1/40). Az 1. szinten nincs dobás, mert ott az esély 0. A dobások sorrendje ezért eltér az eredetitől.
+```
+put_passage(pos):
+  F_PASS be
+  secret_limit = min(level - 1, SECRET_PASSAGE_DEPTH_DIVISOR)
+  if secret_limit > 0 and rnd(SECRET_PASSAGE_DEPTH_DIVISOR * SECRET_PASSAGE_CHANCE_DIVISOR) < secret_limit:
+     F_REAL le
   else: MAP[pos] = PASSAGE
 ```
 
