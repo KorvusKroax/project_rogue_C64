@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "key_codes.h"
+
 #define CIA1_PORT_A  (*(volatile uint8_t *)0xdc00)  // mátrix: oszlopkiválasztás (0 = kiválasztva)
 #define CIA1_PORT_B  (*(volatile uint8_t *)0xdc01)  // mátrix: sorolvasás (0 = lenyomva)
 
@@ -19,46 +21,6 @@ static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még
 #endif
 static uint8_t key_buffer[KEY_BUFFER_SIZE];
 static volatile uint8_t key_buffer_write, key_buffer_read;  // az IRQ csak a write-ot, a játék csak a read-et írja
-
-// a billentyűk kódja mátrixhely szerint (oszlop * KEY_ROWS + sor), oszloponként egy sor; 0 = nincs kódja
-static const uint8_t key_codes_plain[KEY_COLUMNS * KEY_ROWS] = {
-    KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,          // törlés, RETURN, kurzor, F-billentyűk
-    '3', 'w', 'a', '4', 'z', 's', 'e', 0,
-    '5', 'r', 'd', '6', 'c', 'f', 't', 'x',
-    '7', 'y', 'g', '8', 'b', 'h', 'u', 'v',
-    '9', 'i', 'j', '0', 'm', 'k', 'o', 'n',
-    '+', 'p', 'l', '-', '.', ':', '@', ',',
-    '\\', '*', ';', 0, 0, '=', '^', '/',               // £, *, ;, CLR/HOME, -, =, felfelé nyíl, /
-    '1', KEY_ESCAPE, 0, '2', ' ', 0, 'q', KEY_ESCAPE,  // 1, balra nyíl, -, 2, SPACE, -, Q, RUN/STOP
-};
-
-static const uint8_t key_codes_shifted[KEY_COLUMNS * KEY_ROWS] = {
-    KEY_DELETE, KEY_RETURN, 0, 0, 0, 0, 0, 0,
-    '#', 'W', 'A', '$', 'Z', 'S', 'E', 0,
-    '%', 'R', 'D', '&', 'C', 'F', 'T', 'X',
-    '\'', 'Y', 'G', '(', 'B', 'H', 'U', 'V',
-    ')', 'I', 'J', 0, 'M', 'K', 'O', 'N',
-    0, 'P', 'L', 0, '>', '[', 0, '<',
-    '|', 0, ']', 0, 0, 0, 0, '?',
-    '!', KEY_ESCAPE, 0, '"', ' ', 0, 'Q', KEY_ESCAPE,
-};
-
-static __forceinline uint8_t key_code_at(uint8_t position, uint8_t modifiers)
-{
-    if (modifiers & KEY_MODIFIER_CTRL) {
-        uint8_t code = key_codes_plain[position];
-        return code >= 'a' && code <= 'z' ? code & 0x1f : 0;
-    }
-
-    return modifiers & KEY_MODIFIER_SHIFT ? key_codes_shifted[position] : key_codes_plain[position];
-}
-
-#ifdef DEVMODE
-uint8_t key_decode(uint8_t position, uint8_t modifiers)
-{
-    return key_code_at(position, modifiers);
-}
-#endif
 
 // a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
 static __forceinline void scan_keyboard(void)
@@ -100,7 +62,7 @@ static __forceinline void detect_keypress(void)
             if (fresh & row_bit) {
                 fresh ^= row_bit;
                 key_counted[column] |= row_bit;
-                code = key_code_at(position, key_modifiers);
+                code = get_key_code(position, key_modifiers);
             }
             row_bit <<= 1;
             position++;

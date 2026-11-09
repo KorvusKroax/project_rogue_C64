@@ -5,11 +5,6 @@
 #include "rng.h"
 #include "state.h"
 
-// az i. szektor sora i / SECTOR_GRID_SIZE, oszlopa i % SECTOR_GRID_SIZE
-#define SECTOR_WIDTH         (MAP_COLUMNS / SECTOR_GRID_SIZE)            // az egész osztás lefelé kerekít (default: 80 / 3 = 26)
-#define SECTOR_HEIGHT        (LOGICAL_SCREEN_ROWS / SECTOR_GRID_SIZE)    // default: 24 / 3 = 8
-#define SECTOR_FIRST_COLUMN  1                                           // a szektorok az 1. oszloptól kezdődnek (default: 1)
-
 #define PHANTOM_EDGE_DISTANCE  1                // a fantom szoba pontja ennyi mezőre van legalább a szektor szélétől (default: 1)
 
 #define PHANTOM_ROOM_LIMIT  3                   // egy szinten legfeljebb ennyi fantom szoba lehet (default: 3)
@@ -33,9 +28,6 @@
 #if SECTOR_WIDTH < MIN_ROOM_SIZE + 1 || SECTOR_HEIGHT < MIN_ROOM_SIZE + MAP_TOP_ROW + 1
     #error "a szektor túl kicsi a legkisebb szobához"
 #endif
-
-#define DARK_ROOM_CHANCE_DIVISOR  10            // a szoba (mélység - 1) / DARK_ROOM_CHANCE_DIVISOR eséllyel sötét (default: 10)
-#define MAZE_CHANCE_DIVISOR       15            // a sötét szobából 1 / MAZE_CHANCE_DIVISOR eséllyel labirintus lesz (default: 15)
 
 #define SECRET_PASSAGE_DEPTH_DIVISOR   10       // a folyosó-mező titkos lehet, ha rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < mélység (default: 10)
 #define SECRET_PASSAGE_CHANCE_DIVISOR  40       // és akkor 1 / SECRET_PASSAGE_CHANCE_DIVISOR eséllyel az (default: 40)

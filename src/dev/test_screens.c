@@ -15,6 +15,13 @@
 #include "../status.h"
 #include "../view.h"
 
+// minden tesztképernyőről az ESC lép ki
+static void wait_for_escape(void)
+{
+    while (wait_for_key() != KEY_ESCAPE) {
+    }
+}
+
 // a 95 jel három sorban
 static void put_all_glyphs(uint8_t first_row, uint8_t offset)
 {
@@ -74,6 +81,10 @@ static void dev_charset_screen(void)
     put_screen_character(SCREEN_WIDTH - 1, 0, '2');
     put_screen_character(0, SCREEN_HEIGHT - 1, '3');
     put_screen_character(SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, '4');
+
+    set_screen_cursor(2, SCREEN_HEIGHT - 1);
+    put_text("ESC: end");
+    wait_for_escape();
 }
 
 static void dev_keyboard_screen(void)
@@ -465,7 +476,24 @@ static void dev_rooms_screen(void)
     }
 }
 
-void dev_run_screens(void)
+// a szint-önteszt hosszú (normál sebességen percekig), ezért csak a menüből indul
+static void dev_level_test_screen(void)
+{
+    screen_clear();
+    set_screen_cursor(0, 0);
+    put_text("Level tests:");
+    move_screen_cursor_to_next_row();
+    if (!dev_run_level_tests()) {
+        put_text("Level test failed");
+        move_screen_cursor_to_next_row();
+    }
+    move_screen_cursor_to_next_row();
+    put_text("ESC: end");
+    wait_for_escape();
+}
+
+// a seed, a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak) és a menü
+static void draw_tests_and_menu(void)
 {
     screen_clear();
 
@@ -482,21 +510,31 @@ void dev_run_screens(void)
         move_screen_cursor_to_next_row();
     }
     move_screen_cursor_to_next_row();
-    put_text("Press a key");
-    wait_for_key();
 
-    dev_charset_screen();
-    set_screen_cursor(2, 24);
-    put_text("Press a key");
-    wait_for_key();
+    put_text("L: level tests  C: charset  K: keyboard");
+    move_screen_cursor_to_next_row();
+    put_text("V: view  M: message  S: status  R: rooms");
+    move_screen_cursor_to_next_row();
+    move_screen_cursor_to_next_row();
+    put_text("RETURN: start the game");
+}
 
-    dev_keyboard_screen();
+void dev_run_screens(void)
+{
+    uint8_t code = 0;
 
-    dev_view_screen();
+    while (code != KEY_RETURN) {
+        draw_tests_and_menu();
+        code = wait_for_key();
 
-    dev_message_screen();
-
-    dev_status_screen();
-
-    dev_rooms_screen();
+        switch (code) {
+            case 'l': dev_level_test_screen(); break;
+            case 'c': dev_charset_screen(); break;
+            case 'k': dev_keyboard_screen(); break;
+            case 'v': dev_view_screen(); break;
+            case 'm': dev_message_screen(); break;
+            case 's': dev_status_screen(); break;
+            case 'r': dev_rooms_screen(); break;
+        }
+    }
 }

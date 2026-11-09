@@ -18,4 +18,11 @@ int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
 int test_map_flags(uint16_t i);
 
+// szint-önteszt: billentyűre indul, mert hosszú (VICE-ben warp módban)
+#define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
+#define LEVEL_TEST_DEPTH_COUNT  4               // ennyi mélységen, felváltva (test_level.c)
+
+int test_level_rooms(uint16_t i);               // az i. szint generálása és ellenőrzése
+int test_level_room_ratios(uint16_t i);         // az i. mélység sötét- és labirintus-aránya, a test_level_rooms után
+
 #endif

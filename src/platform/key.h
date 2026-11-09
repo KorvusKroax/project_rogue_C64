@@ -23,9 +23,4 @@ uint8_t read_key(void);           // ASCII kód, 0 ha nincs leütés
 uint8_t wait_for_key(void);       // vár egy leütésre, és annak kódját adja
 void wait_for_keys_released(void);    // a még lenyomott billentyűt a KERNAL kilépés után a BASIC-be írná
 
-#ifdef DEVMODE
-    // a mátrixhely (oszlop * KEY_ROWS + sor) kódja a módosítókkal, 0 ha nincs; az önteszthez
-    uint8_t key_decode(uint8_t position, uint8_t modifiers);
-#endif
-
 #endif

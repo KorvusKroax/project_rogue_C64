@@ -4,12 +4,16 @@
 #include "../platform/screen.h"
 #include "../state.h"
 
+#define TEST_RESULT_COLUMN  21                  // az eredmény ebben az oszlopban kezdődik
+#define TEST_PROGRESS_STEP  50                  // a hosszú teszt ennyi próbánként kiírja, hol tart
+
 struct DevTest {
     const char *name;
     int (*fn)(uint16_t i);
     uint16_t count; // hány próba (1 = egyszeri teszt)
 };
 
+// gyors öntesztek: minden indításkor lefutnak
 static const struct DevTest dev_tests[] = {
     { "RNG-RN", test_RN, 1 },
     { "RNG-RND", test_rnd, 1 },
@@ -25,20 +29,32 @@ static const struct DevTest dev_tests[] = {
     { "MAP-FLAGS", test_map_flags, 1 },
 };
 
-bool dev_run_tests(void)
+// szint-önteszt: billentyűre; az arányok a szintek számlálóiból jönnek, ezért utánuk
+static const struct DevTest dev_level_tests[] = {
+    { "LEVEL-ROOMS", test_level_rooms, LEVEL_TEST_LEVEL_COUNT },
+    { "LEVEL-ROOM RATIOS", test_level_room_ratios, LEVEL_TEST_DEPTH_COUNT },
+};
+
+// a tesztek egymás után, soronként a név és az eredmény; igaz, ha mind sikerült
+static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
 {
     bool all_ok = true;
     uint32_t saved_seed = game.seed;
+    uint8_t saved_dungeon_level = game.dungeon_level;
 
-    for (uint8_t t = 0; t < sizeof(dev_tests) / sizeof(dev_tests[0]); t++) {
-        const struct DevTest *dt = &dev_tests[t];
-        uint16_t fails = 0, first_fail = 0;
+    for (uint8_t t = 0; t < test_count; t++) {
+        const struct DevTest *dt = &tests[t];
+        uint16_t fails = 0;
+        uint16_t first_fail = 0;
 
         set_screen_cursor_x(1);
         put_text(dt->name);
-        set_screen_cursor_x(21);
 
         for (uint16_t i = 0; i < dt->count; i++) {
+            if (i % TEST_PROGRESS_STEP == 0 && dt->count > TEST_PROGRESS_STEP) {
+                set_screen_cursor_x(TEST_RESULT_COLUMN);
+                put_int(i, 0);
+            }
             if (!dt->fn(i)) {
                 if (fails == 0) {
                     first_fail = i;
@@ -47,6 +63,7 @@ bool dev_run_tests(void)
             }
         }
 
+        set_screen_cursor_x(TEST_RESULT_COLUMN);
         if (fails == 0) {
             if (dt->count == 1) {
                 put_text("OK");
@@ -63,10 +80,22 @@ bool dev_run_tests(void)
             put_int(first_fail, 0);
             all_ok = false;
         }
+        clear_to_row_end();
 
         move_screen_cursor_to_next_row();
     }
 
     game.seed = saved_seed;
+    game.dungeon_level = saved_dungeon_level;
     return all_ok;
+}
+
+bool dev_run_tests(void)
+{
+    return run_test_table(dev_tests, sizeof(dev_tests) / sizeof(dev_tests[0]));
+}
+
+bool dev_run_level_tests(void)
+{
+    return run_test_table(dev_level_tests, sizeof(dev_level_tests) / sizeof(dev_level_tests[0]));
 }
