@@ -58,6 +58,8 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 
 ## 10.5 Aritmetika
 - **RN:** `seed = seed × 11109 + 13849` (mod 2³²): 32×16 bites szorzás + 32 bites összeadás; az eredmény felső 16 bitje az RN ([0.2](00_attekintes.md#02-alapprimitívek)).
+  - **Bájtonkénti szorzótáblák:** a seed minden bájtjának a szorzó alsó (`$65`) és felső (`$2B`) bájtjával vett szorzata táblából jön (4 × 256 bájt, induláskor feltöltve, `rng_init`), és a szorzat bájtoszloponként, átvitellel adódik össze, mint az írásbeli szorzásnál; a 3. bájt fölötti rész elveszik. Egy `RN` kb. 170 µs (az Oscar64 általános 32 bites szorzójával kb. 750 µs), bitre ugyanazzal a sorozattal.
+  - **Ha kell a memória:** tábla nélkül eltolással és összeadással is számolható (`$2B65`: az alsó bájt 0., 2., 5., 6., a felső 0., 1., 3., 5. bitje), kb. 410 µs.
 - **rnd(n):** 16 bites előjel nélküli maradékos osztás.
 - **32 bites előjel nélküli** összeadás/kivonás telítéssel (felül 16 777 215-nél, alul 0-nál: exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 16×8 bites szorzás (értékszámítás).
 - **Táblázatok szorzás helyett:**

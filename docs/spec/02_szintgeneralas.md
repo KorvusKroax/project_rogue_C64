@@ -207,7 +207,7 @@ A verem legfeljebb annyi elemű, ahány cella a labirintusban van, mert minden c
 
 A fejlesztői build `DEV_CHECK`-kel ellenőrzi, hogy a verem nem telik túl. 255-nél nagyobb veremnél (pl. 1×1-es rácsnál 40 × 12 = 480) a veremindex 16 bites.
 
-A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,28 másodperc, az 1. szinten kevesebb, mert ott a `putpass` nem dob. Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
+A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,2 másodperc, az 1. szinten kevesebb, mert ott a `putpass` nem dob. Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
 
 ## 2.6 Folyosók
 Két szomszédos szoba (`room_a`, `room_b`) közti folyosó. A kisebb indexű szobától indul; ha a másik a jobb oldali szomszédja, jobbra halad, ha az alatta lévő, lefelé.

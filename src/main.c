@@ -2,11 +2,13 @@
 #include "platform/screen.h"
 #include "platform/key.h"
 #include "dev/dev.h"
+#include "rng.h"
 #include "state.h"
 
 int main(void)
 {
     platform_init();
+    rng_init();
 
     game.seed = calculate_seed();
 
