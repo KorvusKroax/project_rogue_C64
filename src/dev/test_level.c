@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 
+#include "../corridors.h"
 #include "../map.h"
 #include "../rooms.h"
 #include "../state.h"
@@ -128,7 +129,49 @@ static bool is_maze_tree(const struct Room *room)
     return count_reachable_maze_cells(room) == cell_count;
 }
 
-int test_level_rooms(uint16_t i)
+// ideiglenes, az are_rooms_connected-del együtt: a folyosók után a térképen ellenőrizzük, hogy minden szoba elérhető
+static bool rooms_reached[ROOM_COUNT];
+
+// az összekötés: mindkét szobánál ugyanaz látszik, minden szoba elérhető a 0.-ból (a gráf összefüggő),
+// és a folyosók száma a feszítőfa ROOM_COUNT - 1 éle, meg legfeljebb MAX_EXTRA_CORRIDORS extra
+static bool is_room_graph_connected(void)
+{
+    uint8_t corridor_count = 0;
+
+    for (uint8_t room_a = 0; room_a < ROOM_COUNT; room_a++) {
+        rooms_reached[room_a] = false;
+        for (uint8_t room_b = room_a + 1; room_b < ROOM_COUNT; room_b++) {
+            bool connected = are_rooms_connected(room_a, room_b);
+            if (connected != are_rooms_connected(room_b, room_a)) return false;
+            if (connected) corridor_count++;
+        }
+    }
+
+    if (corridor_count < ROOM_COUNT - 1 || corridor_count > ROOM_COUNT - 1 + MAX_EXTRA_CORRIDORS) return false;
+
+    // elárasztás a 0. szobából, amíg terjed
+    uint8_t reached_count = 1;
+    bool spread = true;
+    rooms_reached[0] = true;
+
+    while (spread) {
+        spread = false;
+        for (uint8_t room_a = 0; room_a < ROOM_COUNT; room_a++) {
+            if (!rooms_reached[room_a]) continue;
+            for (uint8_t room_b = 0; room_b < ROOM_COUNT; room_b++) {
+                if (!rooms_reached[room_b] && are_rooms_connected(room_a, room_b)) {
+                    rooms_reached[room_b] = true;
+                    reached_count++;
+                    spread = true;
+                }
+            }
+        }
+    }
+
+    return reached_count == ROOM_COUNT;
+}
+
+int test_level_generation(uint16_t i)
 {
     uint8_t depth_index = i % LEVEL_TEST_DEPTH_COUNT;
 
@@ -167,10 +210,14 @@ int test_level_rooms(uint16_t i)
         }
     }
 
+    // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
+    connect_rooms();
+    if (!is_room_graph_connected()) return false;
+
     return true;
 }
 
-// a test_level_rooms számlálóiból: a sötét szobák aránya min(mélység - 1, DARK_ROOM_CHANCE_DIVISOR) / DARK_ROOM_CHANCE_DIVISOR,
+// a test_level_generation számlálóiból: a sötét szobák aránya min(mélység - 1, DARK_ROOM_CHANCE_DIVISOR) / DARK_ROOM_CHANCE_DIVISOR,
 // a labirintusoké a sötét szobák 1 / MAZE_CHANCE_DIVISOR része; az i. próba az i. mélység
 int test_level_room_ratios(uint16_t i)
 {

@@ -31,7 +31,7 @@ static const struct DevTest dev_tests[] = {
 
 // szint-önteszt: billentyűre; az arányok a szintek számlálóiból jönnek, ezért utánuk
 static const struct DevTest dev_level_tests[] = {
-    { "LEVEL-ROOMS", test_level_rooms, LEVEL_TEST_LEVEL_COUNT },
+    { "LEVEL-GENERATION", test_level_generation, LEVEL_TEST_LEVEL_COUNT },
     { "LEVEL-ROOM RATIOS", test_level_room_ratios, LEVEL_TEST_DEPTH_COUNT },
 };
 

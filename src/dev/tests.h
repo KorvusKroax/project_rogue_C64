@@ -22,7 +22,7 @@ int test_map_flags(uint16_t i);
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
 #define LEVEL_TEST_DEPTH_COUNT  4               // ennyi mélységen, felváltva (test_level.c)
 
-int test_level_rooms(uint16_t i);               // az i. szint generálása és ellenőrzése
-int test_level_room_ratios(uint16_t i);         // az i. mélység sötét- és labirintus-aránya, a test_level_rooms után
+int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
+int test_level_room_ratios(uint16_t i);         // az i. mélység sötét- és labirintus-aránya, a test_level_generation után
 
 #endif
