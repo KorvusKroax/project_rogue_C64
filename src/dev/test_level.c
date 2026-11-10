@@ -140,7 +140,7 @@ int test_level_rooms(uint16_t i)
         }
     }
 
-    // a labirintus vermét és a térkép szélét a generálás DEV_CHECK-jei ellenőrzik
+    // a labirintus vermét a generálás, a térképen kívüli írást a map.c DEV_CHECK-jei ellenőrzik
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.dungeon_level = level_test_depths[depth_index];
     clear_map();

@@ -124,8 +124,6 @@ static void draw_room(const struct Room *room)
     uint8_t right_x = room->x + room->width - 1;
     uint8_t bottom_y = room->y + room->height - 1;
 
-    DEV_CHECK(right_x < MAP_COLUMNS && bottom_y < MAP_TOP_ROW + MAP_ROWS, "room outside the map");
-
     for (uint8_t x = room->x; x <= right_x; x++) {
         set_map_character(x, room->y, CHAR_WALL_HORIZONTAL);
         set_map_character(x, bottom_y, CHAR_WALL_HORIZONTAL);
@@ -142,8 +140,6 @@ static void draw_room(const struct Room *room)
 
 void put_passage(uint8_t x, uint8_t y)
 {
-    DEV_CHECK(x < MAP_COLUMNS && y >= MAP_TOP_ROW && y < MAP_TOP_ROW + MAP_ROWS, "passage outside the map");
-
     add_map_flags(x, y, TILE_PASSAGE);
 
     // az esély a mélységgel nő, SECRET_PASSAGE_DEPTH_DIVISOR szint után már nem; az 1. szinten 0, ott nincs dobás

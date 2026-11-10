@@ -2,7 +2,12 @@
 
 #include <string.h>
 
+#include "dev/dev.h"
 #include "state.h"
+
+// a térképen kívüli írás a játékállapot más részét rontaná el; az olvasás nincs ellenőrizve, az csak rossz értéket ad
+#define CHECK_MAP_WRITE_POSITION(x, y) \
+    DEV_CHECK((x) < MAP_COLUMNS && (y) >= MAP_TOP_ROW && (y) < MAP_TOP_ROW + MAP_ROWS, "map write outside the map")
 
 void clear_map(void)
 {
@@ -17,6 +22,7 @@ uint8_t get_map_character(uint8_t x, uint8_t y)
 
 void set_map_character(uint8_t x, uint8_t y, uint8_t character)
 {
+    CHECK_MAP_WRITE_POSITION(x, y);
     game.map_characters[y - MAP_TOP_ROW][x] = character;
 }
 
@@ -27,10 +33,12 @@ uint8_t get_map_flags(uint8_t x, uint8_t y)
 
 void add_map_flags(uint8_t x, uint8_t y, uint8_t flags)
 {
+    CHECK_MAP_WRITE_POSITION(x, y);
     game.map_flags[y - MAP_TOP_ROW][x] |= flags;
 }
 
 void remove_map_flags(uint8_t x, uint8_t y, uint8_t flags)
 {
+    CHECK_MAP_WRITE_POSITION(x, y);
     game.map_flags[y - MAP_TOP_ROW][x] &= ~flags;
 }
