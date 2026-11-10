@@ -17,6 +17,12 @@
 
 #define NO_NEIGHBOR  0xff                       // a rács szélén abban az irányban nincs szoba
 
+#define SECRET_DOOR_DEPTH_DIVISOR   10          // az ajtó titkos lehet, ha rnd(SECRET_DOOR_DEPTH_DIVISOR) + 1 < mélység (default: 10)
+#define SECRET_DOOR_CHANCE_DIVISOR  5           // és akkor 1 / SECRET_DOOR_CHANCE_DIVISOR eséllyel az (default: 5)
+
+// a két dobás egyben: az ajtó min(mélység - 1, SECRET_DOOR_DEPTH_DIVISOR) / SECRET_DOOR_ROLL_RANGE eséllyel titkos
+#define SECRET_DOOR_ROLL_RANGE  (SECRET_DOOR_DEPTH_DIVISOR * SECRET_DOOR_CHANCE_DIVISOR)   // default: 50
+
 // csak a generálás alatt kell, ezért nincs a GameState-ben
 static uint8_t connected_directions[ROOM_COUNT];   // szobánként a már összekötött irányok, irányonként egy bit
 static bool rooms_in_tree[ROOM_COUNT];             // a szoba benne van-e már a feszítőfában
@@ -47,12 +53,25 @@ static uint8_t choose_candidate(const uint8_t *candidates, uint8_t candidate_cou
     return candidates[rnd(candidate_count)];
 }
 
-// ajtó a szoba falán, a folyosó végén; a labirintusnál nincs ajtó, ott a kijárat folyosó-mező
+// ajtó a szoba falán, a folyosó végén; a labirintusnál nincs ajtó, ott a kijárat folyosó-mező;
+// mélyebben titkos is lehet: akkor a fal jele látszik, és a mező rejtett
 static void put_door(const struct Room *room, uint8_t x, uint8_t y)
 {
     if (room->flags & ROOM_MAZE) return;
 
-    set_map_character(x, y, CHAR_DOOR);
+    // az esély a mélységgel nő, SECRET_DOOR_DEPTH_DIVISOR szint után már nem; az 1. szinten 0, ott nincs dobás
+    uint8_t secret_limit = game.dungeon_level - 1;
+    if (secret_limit > SECRET_DOOR_DEPTH_DIVISOR) {
+        secret_limit = SECRET_DOOR_DEPTH_DIVISOR;
+    }
+
+    if (secret_limit > 0 && rnd(SECRET_DOOR_ROLL_RANGE) < secret_limit) {
+        bool is_horizontal_wall = y == room->y || y == room->y + room->height - 1;
+        set_map_character(x, y, is_horizontal_wall ? CHAR_WALL_HORIZONTAL : CHAR_WALL_VERTICAL);
+        remove_map_flags(x, y, TILE_REAL);
+    } else {
+        set_map_character(x, y, CHAR_DOOR);
+    }
 }
 
 // a labirintus kijárata (J18): a sor vagy az oszlop (step_x, step_y: 1, 0 vagy 0, 1) folyosó-mezői közül, a teljes hosszban,

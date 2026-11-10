@@ -386,7 +386,7 @@ static void dev_status_screen(void)
 
 #define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
 
-// egy új szint szobái és folyosói a MAP-ba, onnan a képernyőre; a titkos mezők és a fantom szobák is látszanak
+// egy új szint szobái és folyosói a MAP-ba, onnan a képernyőre; a titkos mezők, ajtók és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
     clear_map();
@@ -394,11 +394,16 @@ static void rooms_generate_level(void)
     connect_rooms();
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
-    // a titkos folyosó-mező a játékban üresnek látszik, itt inverz folyosóként
+    // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik; itt inverz folyosóként, illetve inverz ajtóként
     for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
         for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
-            if ((get_map_flags(x, y) & (TILE_PASSAGE | TILE_REAL)) == TILE_PASSAGE) {
+            uint8_t flags = get_map_flags(x, y);
+            if (flags & TILE_REAL) continue;
+
+            if (flags & TILE_PASSAGE) {
                 game.seen_map[y - MAP_TOP_ROW][x] = CHAR_PASSAGE + INVERSE_OFFSET;
+            } else {
+                game.seen_map[y - MAP_TOP_ROW][x] = CHAR_DOOR + INVERSE_OFFSET;
             }
         }
     }
@@ -448,7 +453,7 @@ static void dev_rooms_screen(void)
     set_screen_cursor(0, STATUS_ROW + 1);
     put_text("1,2,3: left/mid/right");
 
-    game.dungeon_level = 1;
+    game.dungeon_level = 10;
     game.view_window_x = 0;
     rooms_generate_level();
 
