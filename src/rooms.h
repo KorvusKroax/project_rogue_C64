@@ -14,9 +14,6 @@
 #define MAZE_CHANCE_DIVISOR       15            // a sötét szobából 1 / MAZE_CHANCE_DIVISOR eséllyel labirintus lesz (default: 15)
 
 void generate_rooms(void);              // a 9 szoba a 3×3 szektorba, a szint mélysége szerint, és a rajzuk a MAP-ba; a MAP-ot előtte törölni kell (clear_map)
-
 uint8_t choose_random_room(void);       // egy véletlen, nem fantom szoba indexe
-
-void put_passage(uint8_t x, uint8_t y); // folyosó-mező a labirintusnak és a folyosóknak; mélyebben titkos is lehet (üresnek látszik)
 
 #endif

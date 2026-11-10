@@ -1,5 +1,6 @@
 #include "rooms.h"
 
+#include "corridors.h"
 #include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
@@ -43,12 +44,6 @@
 #if SECTOR_WIDTH < MIN_ROOM_SIZE + 1 || SECTOR_HEIGHT < MIN_ROOM_SIZE + MAP_TOP_ROW + 1
     #error "a szektor túl kicsi a legkisebb szobához"
 #endif
-
-#define SECRET_PASSAGE_DEPTH_DIVISOR   10       // a folyosó-mező titkos lehet, ha rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < mélység (default: 10)
-#define SECRET_PASSAGE_CHANCE_DIVISOR  40       // és akkor 1 / SECRET_PASSAGE_CHANCE_DIVISOR eséllyel az (default: 40)
-
-// a két dobás egyben: a mező min(mélység - 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_ROLL_RANGE eséllyel titkos
-#define SECRET_PASSAGE_ROLL_RANGE  (SECRET_PASSAGE_DEPTH_DIVISOR * SECRET_PASSAGE_CHANCE_DIVISOR)   // default: 400
 
 // a labirintus cellái a páros relatív koordinátákon vannak, köztük egy-egy mező; a legnagyobb labirintus a szektor az utolsó oszlopa és sora nélkül
 #define MAZE_MAX_CELLS_X  ((SECTOR_WIDTH - 1) / 2 + 1)                   // default: 13
@@ -148,24 +143,6 @@ static void draw_room(const struct Room *room)
             set_map_character(x, y, CHAR_FLOOR);
         }
         set_map_character(right_x, y, CHAR_WALL_VERTICAL);
-    }
-}
-
-void put_passage(uint8_t x, uint8_t y)
-{
-    add_map_flags(x, y, TILE_PASSAGE);
-
-    // az esély a mélységgel nő, SECRET_PASSAGE_DEPTH_DIVISOR szint után már nem; az 1. szinten 0, ott nincs dobás
-    uint8_t secret_limit = game.dungeon_level - 1;
-    if (secret_limit > SECRET_PASSAGE_DEPTH_DIVISOR) {
-        secret_limit = SECRET_PASSAGE_DEPTH_DIVISOR;
-    }
-
-    if (secret_limit > 0 && rnd(SECRET_PASSAGE_ROLL_RANGE) < secret_limit) {
-        // a titkos folyosó-mező üresnek látszik
-        remove_map_flags(x, y, TILE_REAL);
-    } else {
-        set_map_character(x, y, CHAR_PASSAGE);
     }
 }
 
