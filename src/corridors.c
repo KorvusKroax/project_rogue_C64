@@ -1,6 +1,9 @@
 #include "corridors.h"
 
+#include "dev/dev.h"
+#include "map.h"
 #include "rng.h"
+#include "rooms.h"
 #include "state.h"
 
 // az irányok a szomszéd indexe szerint növekvő sorrendben, mint az eredeti szomszédsági táblájában
@@ -44,13 +47,121 @@ static uint8_t choose_candidate(const uint8_t *candidates, uint8_t candidate_cou
     return candidates[rnd(candidate_count)];
 }
 
-// a szoba és az adott irányban lévő szomszédja összekötve
+// ajtó a szoba falán, a folyosó végén; a labirintusnál nincs ajtó, ott a kijárat folyosó-mező
+static void put_door(const struct Room *room, uint8_t x, uint8_t y)
+{
+    if (room->flags & ROOM_MAZE) return;
+
+    set_map_character(x, y, CHAR_DOOR);
+}
+
+// a folyosó vége: a fantom szobánál maga a csomópont folyosó-mező, máskor ajtó
+static void put_corridor_end(const struct Room *room, uint8_t x, uint8_t y)
+{
+    if (room->flags & ROOM_PHANTOM) {
+        put_passage(x, y);
+    } else {
+        put_door(room, x, y);
+    }
+}
+
+// folyosó a szoba és a jobb oldali vagy az alatta lévő szomszédja közt: a fő irányban halad,
+// egy véletlen helyen oldalra fordul, amíg a célajtó vonalába nem ér, aztán megy tovább a fő irányban
+static void dig_corridor(uint8_t from_index, uint8_t direction)
+{
+    const struct Room *from = &game.rooms[from_index];
+    const struct Room *to = &game.rooms[get_neighbor_room(from_index, direction)];
+
+    // a fantom szobánál a végpont maga a csomópont
+    uint8_t start_x = from->x;
+    uint8_t start_y = from->y;
+    uint8_t end_x = to->x;
+    uint8_t end_y = to->y;
+
+    int8_t step_x;                              // a fő irány
+    int8_t step_y;
+    int8_t turn_step_x;                         // a kanyar iránya
+    int8_t turn_step_y;
+    uint8_t length;                             // ennyi mező a fő irányban a két vég között
+    uint8_t turn_length;                        // ennyi mező a kanyarban
+
+    if (direction == DIRECTION_DOWN) {
+        // ajtó a kiinduló szoba alsó falán és a célszoba felső falán, sarok nélkül
+        if (!(from->flags & ROOM_PHANTOM)) {
+            start_x = from->x + rnd(from->width - 2) + 1;
+            start_y = from->y + from->height - 1;
+        }
+        if (!(to->flags & ROOM_PHANTOM)) {
+            end_x = to->x + rnd(to->width - 2) + 1;
+        }
+
+        step_x = 0;
+        step_y = 1;
+        length = end_y - start_y - 1;
+        turn_step_x = start_x < end_x ? 1 : -1;
+        turn_step_y = 0;
+        turn_length = start_x < end_x ? end_x - start_x : start_x - end_x;
+    } else {
+        // ajtó a kiinduló szoba jobb oldalfalán és a célszoba bal oldalfalán, sarok nélkül
+        if (!(from->flags & ROOM_PHANTOM)) {
+            start_x = from->x + from->width - 1;
+            start_y = from->y + rnd(from->height - 2) + 1;
+        }
+        if (!(to->flags & ROOM_PHANTOM)) {
+            end_y = to->y + rnd(to->height - 2) + 1;
+        }
+
+        step_x = 1;
+        step_y = 0;
+        length = end_x - start_x - 1;
+        turn_step_x = 0;
+        turn_step_y = start_y < end_y ? 1 : -1;
+        turn_length = start_y < end_y ? end_y - start_y : start_y - end_y;
+    }
+
+    // hol fordul a folyosó, a hátralévő hossz szerint
+    uint8_t turn_at = rnd(length - 1) + 1;
+
+    put_corridor_end(from, start_x, start_y);
+    put_corridor_end(to, end_x, end_y);
+
+    uint8_t x = start_x;
+    uint8_t y = start_y;
+    while (length > 0) {
+        x += step_x;
+        y += step_y;
+
+        if (length == turn_at) {
+            for (uint8_t i = 0; i < turn_length; i++) {
+                put_passage(x, y);
+                x += turn_step_x;
+                y += turn_step_y;
+            }
+        }
+
+        put_passage(x, y);
+        length--;
+    }
+
+    x += step_x;
+    y += step_y;
+    DEV_CHECK(x == end_x && y == end_y, "corridor does not reach its end");
+}
+
+// a szoba és az adott irányban lévő szomszédja összekötve, folyosóval
 static void connect_neighbor_rooms(uint8_t room_index, uint8_t direction)
 {
     uint8_t neighbor_index = get_neighbor_room(room_index, direction);
 
     connected_directions[room_index] |= 1 << direction;
     connected_directions[neighbor_index] |= 1 << OPPOSITE_DIRECTION(direction);
+
+    // a folyosó a kisebb indexű szobától indul: jobbra vagy lefelé
+    if (direction == DIRECTION_UP || direction == DIRECTION_LEFT) {
+        dig_corridor(neighbor_index, OPPOSITE_DIRECTION(direction));
+    } else {
+        dig_corridor(room_index, direction);
+    }
 }
 
 void connect_rooms(void)

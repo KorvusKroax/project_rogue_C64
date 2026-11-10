@@ -7,6 +7,7 @@
 #include "../platform/screen.h"
 #include "../platform/key.h"
 #include "../platform/charset.h"
+#include "../corridors.h"
 #include "../input.h"
 #include "../map.h"
 #include "../message.h"
@@ -385,11 +386,12 @@ static void dev_status_screen(void)
 
 #define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
 
-// egy új szint szobái a MAP-ba, onnan a képernyőre; a titkos mezők és a fantom szobák is látszanak
+// egy új szint szobái és folyosói a MAP-ba, onnan a képernyőre; a titkos mezők és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
     clear_map();
     generate_rooms();
+    connect_rooms();
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
     // a titkos folyosó-mező a játékban üresnek látszik, itt inverz folyosóként
