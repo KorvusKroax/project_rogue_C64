@@ -180,7 +180,7 @@ static struct MazeCell maze_stack[MAZE_STACK_SIZE];
 static const int8_t maze_step_x[4] = { 2, -2, 0, 0 };
 static const int8_t maze_step_y[4] = { 0, 0, 2, -2 };
 
-// visszalépéses (DFS) labirintus folyosó-mezőkből; a rekurzív változat helyett saját verem, ugyanazokkal az esélyekkel
+// visszalépéses (DFS) labirintus folyosó-mezőkből; saját veremmel, mert a hardveres verem kicsi
 static void draw_maze(const struct Room *room)
 {
     uint8_t start_y = rnd(room->height) / 2 * 2;    // előbb az y, aztán az x

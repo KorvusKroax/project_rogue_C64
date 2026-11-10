@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_EXTRA_CORRIDORS  4                  // a feszítőfa után legfeljebb ennyi extra folyosó-próbálkozás (default: 4, az eredetiben rnd(5))
+#define MAX_EXTRA_CORRIDORS  4                  // a feszítőfa után legfeljebb ennyi extra folyosó-próbálkozás (default: 4)
 
 void connect_rooms(void);               // a szomszédos szobák összekötése: véletlen feszítőfa, utána néhány extra él; a szobák után kell hívni (generate_rooms)
 

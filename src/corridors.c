@@ -6,7 +6,7 @@
 #include "rooms.h"
 #include "state.h"
 
-// az irányok a szomszéd indexe szerint növekvő sorrendben, mint az eredeti szomszédsági táblájában
+// az irányok a szomszéd indexe szerint növekvő sorrendben
 #define DIRECTION_UP     0
 #define DIRECTION_LEFT   1
 #define DIRECTION_RIGHT  2
@@ -55,6 +55,32 @@ static void put_door(const struct Room *room, uint8_t x, uint8_t y)
     set_map_character(x, y, CHAR_DOOR);
 }
 
+// a labirintus kijárata (J18): a sor vagy az oszlop (step_x, step_y: 1, 0 vagy 0, 1) folyosó-mezői közül, a teljes hosszban,
+// egyetlen dobással; egy mezőnél nincs mit dobni; a visszatérés a mező távolsága az első mezőtől
+static uint8_t choose_maze_exit(uint8_t first_x, uint8_t first_y, uint8_t step_x, uint8_t step_y, uint8_t length)
+{
+    uint8_t passage_count = 0;
+    for (uint8_t offset = 0; offset < length; offset++) {
+        if (get_map_flags(first_x + offset * step_x, first_y + offset * step_y) & TILE_PASSAGE) {
+            passage_count++;
+        }
+    }
+
+    // a labirintus összefüggő, ezért mindig van ilyen mező (2.6)
+    uint8_t chosen = 0;
+    if (passage_count > 1) {
+        chosen = rnd(passage_count);
+    }
+
+    for (uint8_t offset = 0; offset < length; offset++) {
+        if (get_map_flags(first_x + offset * step_x, first_y + offset * step_y) & TILE_PASSAGE) {
+            if (chosen == 0) return offset;
+            chosen--;
+        }
+    }
+    return 0;
+}
+
 // a folyosó vége: a fantom szobánál maga a csomópont folyosó-mező, máskor ajtó
 static void put_corridor_end(const struct Room *room, uint8_t x, uint8_t y)
 {
@@ -86,12 +112,17 @@ static void dig_corridor(uint8_t from_index, uint8_t direction)
     uint8_t turn_length;                        // ennyi mező a kanyarban
 
     if (direction == DIRECTION_DOWN) {
-        // ajtó a kiinduló szoba alsó falán és a célszoba felső falán, sarok nélkül
-        if (!(from->flags & ROOM_PHANTOM)) {
+        // ajtó a kiinduló szoba alsó falán és a célszoba felső falán, sarok nélkül; labirintusnál kijárat az alsó, illetve a felső sorában
+        if (from->flags & ROOM_MAZE) {
+            start_y = from->y + from->height - 1;
+            start_x = from->x + choose_maze_exit(from->x, start_y, 1, 0, from->width);
+        } else if (!(from->flags & ROOM_PHANTOM)) {
             start_x = from->x + rnd(from->width - 2) + 1;
             start_y = from->y + from->height - 1;
         }
-        if (!(to->flags & ROOM_PHANTOM)) {
+        if (to->flags & ROOM_MAZE) {
+            end_x = to->x + choose_maze_exit(to->x, to->y, 1, 0, to->width);
+        } else if (!(to->flags & ROOM_PHANTOM)) {
             end_x = to->x + rnd(to->width - 2) + 1;
         }
 
@@ -102,12 +133,17 @@ static void dig_corridor(uint8_t from_index, uint8_t direction)
         turn_step_y = 0;
         turn_length = start_x < end_x ? end_x - start_x : start_x - end_x;
     } else {
-        // ajtó a kiinduló szoba jobb oldalfalán és a célszoba bal oldalfalán, sarok nélkül
-        if (!(from->flags & ROOM_PHANTOM)) {
+        // ajtó a kiinduló szoba jobb oldalfalán és a célszoba bal oldalfalán, sarok nélkül; labirintusnál kijárat a jobb, illetve a bal oszlopában
+        if (from->flags & ROOM_MAZE) {
+            start_x = from->x + from->width - 1;
+            start_y = from->y + choose_maze_exit(start_x, from->y, 0, 1, from->height);
+        } else if (!(from->flags & ROOM_PHANTOM)) {
             start_x = from->x + from->width - 1;
             start_y = from->y + rnd(from->height - 2) + 1;
         }
-        if (!(to->flags & ROOM_PHANTOM)) {
+        if (to->flags & ROOM_MAZE) {
+            end_y = to->y + choose_maze_exit(to->x, to->y, 0, 1, to->height);
+        } else if (!(to->flags & ROOM_PHANTOM)) {
             end_y = to->y + rnd(to->height - 2) + 1;
         }
 

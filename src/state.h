@@ -13,7 +13,7 @@
     #error "a térkép túl nagy a 8 bites koordinátákhoz"
 #endif
 
-// a logikai képernyő, az eredeti 80×24-es terminál: a térkép fölött az üzenetsor, alatta a státuszsor
+// a logikai képernyő: a térkép fölött az üzenetsor, alatta a státuszsor
 #define LOGICAL_SCREEN_ROWS  (MAP_TOP_ROW + MAP_ROWS + 1)     // default: 24
 
 // a játékos és a szörnyek közös rekordja

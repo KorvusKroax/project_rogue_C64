@@ -3,7 +3,7 @@
 #include "dev/dev.h"
 #include "state.h"
 
-// RN (5.4.4): seed = seed * RN_MULTIPLIER + RN_INCREMENT (mod 2^32), a véletlenszám a seed felső 16 bitje
+// RN: seed = seed * RN_MULTIPLIER + RN_INCREMENT (mod 2^32), a véletlenszám a seed felső 16 bitje
 #define RN_MULTIPLIER  11109                    // default: 11109 (0x2B65)
 #define RN_INCREMENT   13849                    // default: 13849 (0x3619)
 
@@ -17,8 +17,7 @@
 #define RN_INCREMENT_LOW_BYTE    (RN_INCREMENT & 0xFF)      // default: 0x19
 #define RN_INCREMENT_HIGH_BYTE   (RN_INCREMENT >> 8)        // default: 0x36
 
-// i * RN_MULTIPLIER_LOW_BYTE és i * RN_MULTIPLIER_HIGH_BYTE alsó és felső bájtja, minden i bájtra (4 × 256 bájt);
-// ha egyszer kell a memória, az RN eltolással és összeadással is számolható tábla nélkül (kb. 2,4-szer lassabb)
+// i * RN_MULTIPLIER_LOW_BYTE és i * RN_MULTIPLIER_HIGH_BYTE alsó és felső bájtja, minden i bájtra (4 × 256 bájt)
 static uint8_t low_byte_product_low[256];
 static uint8_t low_byte_product_high[256];
 static uint8_t high_byte_product_low[256];
