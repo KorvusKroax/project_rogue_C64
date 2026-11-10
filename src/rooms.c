@@ -7,6 +7,21 @@
 
 #define PHANTOM_EDGE_DISTANCE  1                // a fantom szoba pontja ennyi mezőre van legalább a szektor szélétől (default: 1)
 
+// a pont a szektor utolsó oszlopa és sora előtt: a folyosó hossza így legalább 1, és a legalsó szektorban sem kerül a státuszsorba
+#if PHANTOM_EDGE_DISTANCE < 1
+    #error "a PHANTOM_EDGE_DISTANCE legalább 1 kell legyen"
+#endif
+
+// a felső szektorsorban sem kerülhet a térkép fölé, az üzenetsorba
+#if PHANTOM_EDGE_DISTANCE < MAP_TOP_ROW
+    #error "a PHANTOM_EDGE_DISTANCE legalább MAP_TOP_ROW kell legyen"
+#endif
+
+// a két szél között marad hely a sorsoláshoz, különben a rnd tartománya 0 vagy negatív, és a pont kiesik a szektorból
+#if 2 * PHANTOM_EDGE_DISTANCE >= SECTOR_WIDTH || 2 * PHANTOM_EDGE_DISTANCE >= SECTOR_HEIGHT
+    #error "a PHANTOM_EDGE_DISTANCE túl nagy a szektorhoz"
+#endif
+
 #define PHANTOM_ROOM_LIMIT  3                   // egy szinten legfeljebb ennyi fantom szoba lehet (default: 3)
 
 // legalább egy igazi szoba kell, különben a choose_random_room végtelen ciklusba fut
@@ -77,8 +92,6 @@ static void place_room(uint8_t room_index)
         room->y = corner_y + rnd(SECTOR_HEIGHT - 2 * PHANTOM_EDGE_DISTANCE) + PHANTOM_EDGE_DISTANCE;
         room->width = 0;
         room->height = 0;
-
-        DEV_CHECK(room->y >= MAP_TOP_ROW && room->y < MAP_TOP_ROW + MAP_ROWS, "phantom room outside the map");
         return;
     }
 
