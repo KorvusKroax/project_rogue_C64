@@ -121,3 +121,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J15 | `f` szabálytalan átlós irányba nem visz el időt | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J16 | lépcső nem kerül rejtett csapdára | [2.10](02_szintgeneralas.md#210-lépcső) |
 | J17 | elírások javítása az üzenetekben | [függelék](fuggelek_uzenetkatalogus.md) |
+| J18 | a labirintus kijáratának keresése mindig megáll (ideiglenes lehet: a labirintusok elhelyezésével együtt újragondoljuk) | [2.6](02_szintgeneralas.md#26-folyosók) |

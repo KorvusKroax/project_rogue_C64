@@ -7,7 +7,7 @@ new_level():
   if level > max_level: max_level = level
   clear MAP, SCREEN, monsters (és csomagjaik), floor items  // a táblák helyei felszabadulnak (1.4.1)
   do_rooms()                    // 2.2–2.5, 2.7: szobák, és szobánként arany + kezdő szörny
-  do_passages()                 // 2.6: összekötés és folyosók
+  connect_rooms()               // 2.4, 2.6: összekötés és folyosók
   no_food++
   put_things()                  // 2.8: kincses szoba, 9 próba, amulett
   place_traps()                 // 2.9
@@ -110,47 +110,52 @@ A normál szobánál a szektor utolsó oszlopa és sora mindig üresen marad, ez
 
 Az alapértékekkel ez legalább 15 oszlopos térképet jelent (3 × 5).
 
-A fantom szoba pontjának `y`-ja az alapértékekkel mindig 1..22 (a legalsó szektorban legfeljebb 16 + 6), így újrasorsolás nélkül sem kerülhet az üzenet- vagy a státuszsorba; a fejlesztői build ezt `DEV_CHECK`-kel ellenőrzi.
+A fantom szoba pontjára (a kódban közvetlenül a `PHANTOM_EDGE_DISTANCE` definíciója után, szintén `#error`):
+- `PHANTOM_EDGE_DISTANCE ≥ 1`: a pont a szektor utolsó oszlopa és sora előtt van, így a folyosó hossza legalább 1 (2.6); és a legalsó szektorban sem kerül a státuszsorba (legfeljebb `LOGICAL_SCREEN_ROWS − 1 − PHANTOM_EDGE_DISTANCE`);
+- `PHANTOM_EDGE_DISTANCE ≥ MAP_TOP_ROW`: a felső szektorsorban sem kerül a térkép fölé, az üzenetsorba;
+- `2 × PHANTOM_EDGE_DISTANCE < SECTOR_WIDTH` és `2 × PHANTOM_EDGE_DISTANCE < SECTOR_HEIGHT`: marad hely a sorsoláshoz, különben a `rnd` tartománya 0 vagy negatív, és a pont kiesik a szektorból.
+
+Az alapértékekkel (1) a pont `y`-ja mindig 1..22, így újrasorsolás nélkül sem kerülhet az üzenet- vagy a státuszsorba. A feltételek ezt fordítási időben garantálják, a korábbi `DEV_CHECK` elhagyható.
 
 ## 2.4 Összekötés
-Szomszédság: csak ortogonális szomszéd szektorok (`adjacent` tábla: 0–1, 0–3, 1–2, 1–4, 2–5, 3–4, 3–6, 4–5, 4–7, 5–8, 6–7, 7–8). A fantom szobák is részt vesznek (folyosó-csomópontként).
+Szomszédság: csak ortogonális szomszéd szektorok. A szomszédok a rácsból számolódnak, növekvő indexsorrendben: fölötte `room − SECTOR_GRID_SIZE` (ha nem a felső sorban van), balra `room − 1` (ha nem a bal oszlopban), jobbra `room + 1` (ha nem a jobb oszlopban), alatta `room + SECTOR_GRID_SIZE` (ha nem az alsó sorban). Az alapértékekkel ez az eredeti `adjacent` táblája: 0–1, 0–3, 1–2, 1–4, 2–5, 3–4, 3–6, 4–5, 4–7, 5–8, 6–7, 7–8. A fantom szobák is részt vesznek (folyosó-csomópontként).
 
 Az összekötés egy véletlen feszítőfa a szobák szomszédsági gráfján, utána néhány extra éllel:
 ```
-do_passages():
+connect_rooms():
   connected[a][b] = false minden szobapárra                // a és b közt van-e már folyosó
   in_tree[r]      = false minden szobára                   // r benne van-e már a fában
-  from_room = rnd(9); in_tree[from_room] = true; rooms_in_tree = 1
-  while rooms_in_tree < 9:
+  from_room = rnd(ROOM_COUNT); in_tree[from_room] = true; rooms_in_tree = 1
+  while rooms_in_tree < ROOM_COUNT:
     // from_room egy véletlen, még fán kívüli szomszédja (egyenletesen a jelöltek közül)
-    candidates = 0
-    for neighbor in 0..8:
-      if adjacent[from_room][neighbor] and !in_tree[neighbor] and rnd(++candidates) == 0:
-        to_room = neighbor
-    if candidates == 0:
-       repeat from_room = rnd(9) until in_tree[from_room]  // nincs ilyen szomszéd: új kiinduló szoba a fából
+    candidates = from_room szomszédai, amelyek még nincsenek a fában (a fenti sorrendben)
+    if candidates üres:
+       repeat from_room = rnd(ROOM_COUNT) until in_tree[from_room]  // nincs ilyen szomszéd: új kiinduló szoba a fából
     else:
+       to_room = candidates[count > 1 ? rnd(count) : 0]
        in_tree[to_room] = true
        corridor(from_room, to_room)
        connected[from_room][to_room] = connected[to_room][from_room] = true
        rooms_in_tree++                                     // from_room marad a kiinduló szoba!
 
   // extra élek: néhány további folyosó még össze nem kötött szomszédok közt
-  repeat rnd(5) times:
-    from_room = rnd(9)
-    candidates = 0
-    for neighbor in 0..8:
-      if adjacent[from_room][neighbor] and !connected[from_room][neighbor] and rnd(++candidates) == 0:
-        to_room = neighbor
-    if candidates != 0:
+  repeat rnd(MAX_EXTRA_CORRIDORS + 1) times:
+    from_room = rnd(ROOM_COUNT)
+    candidates = from_room szomszédai, amelyekkel még nincs összekötve
+    if candidates nem üres:
+       to_room = candidates[count > 1 ? rnd(count) : 0]
        corridor(from_room, to_room)
        connected[from_room][to_room] = connected[to_room][from_room] = true
-
-  passnum()  // az összefüggő folyosóhálózatok megszámozása (F_PNUM), kijáratlistával – csak az A változatban (1.4.7)
 ```
 A kiinduló szoba addig marad ugyanaz, amíg van fán kívüli szomszédja; csak utána választ a fából újat.
 
-A `rnd(++candidates) == 0` minta egyenletesen választ a jelöltek közül anélkül, hogy előre megszámolná őket: az első jelöltet 1/1, a másodikat 1/2, a harmadikat 1/3 eséllyel veszi át, így a végén mindegyik ugyanakkora eséllyel marad. A `rnd` minden jelöltnél lefut.
+| konstans | érték | alapérték (5.4.4) |
+|---|---|---|
+| `MAX_EXTRA_CORRIDORS` | a feszítőfa után legfeljebb ennyi extra folyosó-próbálkozás (`rnd(MAX_EXTRA_CORRIDORS + 1)`) | 4 (az eredetiben `rnd(5)`) |
+
+**Eltérés az eredetitől (dobássorrend):** az eredeti a `rnd(++candidates) == 0` mintával választ, ez minden jelöltnél dob (az első jelöltet 1/1, a másodikat 1/2, a harmadikat 1/3 eséllyel veszi át). A C64-es változat, mint a labirintus (2.5), előbb összegyűjti a jelölteket, aztán egyetlen `rnd(count)`-tal választ, egy jelöltnél nem dob. Az esélyek ugyanazok, a szintek mások.
+
+Az eredeti a generálás végén a `passnum`-mal megszámozza a folyosóhálózatokat. Ez csak az A változatban kell ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörnymozgással együtt dől el, és akkor kerül ide.
 
 Átlós lépés ajtóra vagy ajtóról külön tiltás nélkül is lehetetlen: az ajtó két oldalán fal áll, és az átlós lépéshez mindkét ortogonális szomszédnak járhatónak kell lennie.
 
@@ -185,7 +190,7 @@ dig(cell):  // cell: relatív koordináta a labirintusban
 ```
 A labirintus is `putpass`-szal készül, így a mezői is lehetnek rejtettek ([2.6](#26-folyosók)).
 
-**A felső és a középső labirintus összeérhet**, ahogy az eredetiben is: a felső szektorsorban a labirintus az 1. sorban kezdődik, ezért a cellái a páratlan sorokra esnek, és az utolsó a szektor utolsó sorába (alapértékekkel a 7.-be) kerül, a középső labirintus első cellasora pedig a 8. sor. A középső és az alsó között a szektor utolsó sora üres marad. Később újragondoljuk: egy ötlet, hogy a 2. és a 3. szektorsorban is eggyel lejjebb kezdődjön a labirintus, így a középső eggyel magasabb lenne, a felső és az alsó pedig egyforma.
+**A felső és a középső labirintus összeérhet**, ahogy az eredetiben is: a felső szektorsorban a labirintus az 1. sorban kezdődik, ezért a cellái a páratlan sorokra esnek, és az utolsó a szektor utolsó sorába (alapértékekkel a 7.-be) kerül, a középső labirintus első cellasora pedig a 8. sor. A középső és az alsó között a szektor utolsó sora üres marad. Később újragondoljuk: egy ötlet, hogy a 2. és a 3. szektorsorban is eggyel lejjebb kezdődjön a labirintus, így a középső eggyel magasabb lenne, a felső és az alsó pedig egyforma. Ezzel a labirintus kijáratának javítása (J18, [2.6](#26-folyosók)) is elhagyható lenne.
 
 **C64-en a `dig` nem lehet rekurzív**, mert a 6502 hardveres verme 256 bájtos. Az iteratív változat ugyanazokkal az esélyekkel választ, de kevesebb dobással: előbb összegyűjti az ásható szomszédokat, aztán egyetlen `rnd(options)`-szal választ közülük, egy szomszédnál pedig nem dob. A labirintusok ezért mások, mint az eredetiben, de ugyanolyan eloszlásúak:
 ```
@@ -216,26 +221,28 @@ corridor(room_a, room_b):
   first = min(room_a, room_b)
   direction = (max(room_a, room_b) == first + 1) ? RIGHT : DOWN
   from = rooms[first]
-  to   = rooms[direction == RIGHT ? first + 1 : first + 3]
+  to   = rooms[direction == RIGHT ? first + 1 : first + SECTOR_GRID_SIZE]
 
   if direction == DOWN:
      start = from.pos; end = to.pos                  // fantom szobánál maga a csomópont
-     if !PHANTOM(from):                              // ajtó a kiinduló szoba alsó falán
-        repeat:
-          start.x = from.pos.x + rnd(from.size.x - 2) + 1
-          start.y = from.pos.y + from.size.y - 1
-        until !MAZE(from) or start folyosó-mező
-     if !PHANTOM(to):                                // ajtó a célszoba felső falán
-        repeat:
-          end.x = to.pos.x + rnd(to.size.x - 2) + 1  // end.y = to.pos.y
-        until !MAZE(to) or end folyosó-mező
+     if MAZE(from):                                  // kijárat a labirintus alsó sorában (J18)
+        start.y = from.pos.y + from.size.y - 1
+        start.x = véletlen folyosó-mező a start.y sorban, from.pos.x .. from.pos.x + from.size.x - 1 közül
+     else if !PHANTOM(from):                         // ajtó a kiinduló szoba alsó falán, sarok nélkül
+        start.x = from.pos.x + rnd(from.size.x - 2) + 1
+        start.y = from.pos.y + from.size.y - 1
+     if MAZE(to):                                    // kijárat a labirintus felső sorában (J18); end.y = to.pos.y
+        end.x = véletlen folyosó-mező az end.y sorban, to.pos.x .. to.pos.x + to.size.x - 1 közül
+     else if !PHANTOM(to):                           // ajtó a célszoba felső falán, sarok nélkül
+        end.x = to.pos.x + rnd(to.size.x - 2) + 1    // end.y = to.pos.y
      step = (0, 1)                                   // a fő irány: lefelé
      length = |start.y - end.y| - 1                  // ennyi mező a fő irányban
      turn_step = (start.x < end.x ? +1 : -1, 0)      // a kanyar iránya: jobbra vagy balra
      turn_length = |start.x - end.x|                 // ennyi mező a kanyarban
   else (direction == RIGHT): ugyanez a tengelyek felcserélésével
-     (start a kiinduló szoba jobb oldalfalán, end a célszoba bal oldalfalán, step = (1, 0))
-  turn_at = rnd(length - 1) + 1                      // hol fordul a folyosó (a hátralévő hossz szerint)
+     (start a kiinduló szoba jobb oldalfalán, end a célszoba bal oldalfalán, step = (1, 0);
+      labirintusnál a jobb szélső, illetve a bal szélső oszlop egy véletlen folyosó-mezője)
+  turn_at = rnd(length - 1) + 1                      // hol fordul a folyosó (a hátralévő hossz szerint); length >= 1, lásd lent
 
   PHANTOM(from) ? putpass(start) : door(from, start)
   PHANTOM(to)   ? putpass(end)   : door(to, end)
@@ -245,7 +252,7 @@ corridor(room_a, room_b):
     if length == turn_at:
        repeat turn_length: putpass(pos); pos += turn_step
     putpass(pos); length--
-  pos += step  // most pos == end kell legyen
+  pos += step  // most pos == end kell legyen (a fejlesztői build DEV_CHECK-kel ellenőrzi; az eredeti itt figyelmeztetett: „connectivity problem”)
 
 door(room, pos):
   exits += (pos, room)                                                // a közös ajtótáblába (1.4.7)
@@ -265,8 +272,27 @@ putpass(pos):
 |---|---|---|
 | `SECRET_PASSAGE_DEPTH_DIVISOR` | a folyosó-mező titkos lehet, ha `rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < level` | 10 |
 | `SECRET_PASSAGE_CHANCE_DIVISOR` | és akkor `1 / SECRET_PASSAGE_CHANCE_DIVISOR` eséllyel az | 40 |
+| `SECRET_DOOR_DEPTH_DIVISOR` | az ajtó titkos lehet, ha `rnd(SECRET_DOOR_DEPTH_DIVISOR) + 1 < level` | 10 |
+| `SECRET_DOOR_CHANCE_DIVISOR` | és akkor `1 / SECRET_DOOR_CHANCE_DIVISOR` eséllyel az | 5 |
 
-A kódban `put_passage` (`rooms.c`), mert először a labirintus használja. A két dobás helyett egyetlen dobással, ugyanazzal az eséllyel: az első feltétel `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_DEPTH_DIVISOR` eséllyel teljesül, így a mező együtt `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / (SECRET_PASSAGE_DEPTH_DIVISOR × SECRET_PASSAGE_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/400 = 1/40). Az 1. szinten nincs dobás, mert ott az esély 0. A dobások sorrendje ezért eltér az eredetitől.
+> **C64-javítás (J18):** a labirintus kijárata a falsor (oszlop) folyosó-mezői közül egyetlen dobással választódik, a sor (oszlop) teljes szélességében. *Eredetileg* a sarkok nélküli tartományban (`rnd(size − 2) + 1`) addig dobott, amíg folyosó-mezőt nem talált. A felső szektorsor labirintusa az 1. sorban kezdődik, így az alsó sora páratlan relatív sor, ahol csak a cellasorok közti átkötéseknél van folyosó-mező. Ha mindegyik a szélső oszlopban van (szimulálva a felső labirintusok kb. 0,05%-ánál), a keresés soha nem állt meg. A javítás ideiglenes lehet: ha a labirintusok eggyel lejjebb kezdődnek (lásd az összeérésüket, 2.5), a falsor mindig cellasor, és az eredeti keresés is megáll. A teljes szélességben mindig van folyosó-mező, mert a labirintus összefüggő: a páratlan falsor alatt még van cellasor, és azt csak ezen át lehet elérni. A normál szoba ajtaja változatlanul sarok nélkül, egy dobással kerül a falra.
+
+**A folyosó hossza** (`length`) mindig legalább 1, így a `turn_at` dobása (`rnd(0)` = 0) is értelmes: a szoba falai, a labirintus kijárata és a fantom szoba pontja a szektor utolsó oszlopa és sora előtt vannak, a szomszéd szektoré pedig legkorábban annak első oszlopában, illetve sorában. Ehhez a fantom pontnak legalább 1 mezőre kell lennie a szektor szélétől: ez a `PHANTOM_EDGE_DISTANCE ≥ 1` fordítási feltétel (2.3). Futás közbeni ellenőrzés nem kell: ha a hossz mégis 0 lenne, a folyosó nem érne a végpontba, és azt a végpont `DEV_CHECK`-je jelzi.
+
+**Titkos ajtó egyetlen dobással**, ugyanúgy, mint a titkos folyosó-mező (lent): az ajtó `min(level − 1, SECRET_DOOR_DEPTH_DIVISOR) / (SECRET_DOOR_DEPTH_DIVISOR × SECRET_DOOR_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/50 = 1/5). Az 1. szinten nincs dobás. **Eltérés az eredetitől (dobássorrend):** az eredeti két dobása helyett egy; az esély ugyanaz.
+```
+door(room, pos):  // a C64-es változat
+  exits += (pos, room)
+  if MAZE(room): return
+  secret_limit = min(level - 1, SECRET_DOOR_DEPTH_DIVISOR)
+  if secret_limit > 0 and rnd(SECRET_DOOR_DEPTH_DIVISOR * SECRET_DOOR_CHANCE_DIVISOR) < secret_limit:
+     MAP[pos] = (pos a felső vagy alsó falon) ? '-' : '|'; F_REAL le
+  else: MAP[pos] = DOOR
+```
+
+A kódban a folyosók (`connect_rooms`, `corridor`, `door`, `put_passage`) a `corridors.c`-ben vannak; a labirintus is innen hívja a `put_passage`-et.
+
+**Titkos folyosó-mező egyetlen dobással:** a `putpass` két dobása helyett egy, ugyanazzal az eséllyel: az első feltétel `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_DEPTH_DIVISOR` eséllyel teljesül, így a mező együtt `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / (SECRET_PASSAGE_DEPTH_DIVISOR × SECRET_PASSAGE_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/400 = 1/40). Az 1. szinten nincs dobás, mert ott az esély 0. **Eltérés az eredetitől (dobássorrend):** a dobások sorrendje ezért eltér; az esély ugyanaz.
 ```
 put_passage(pos):
   F_PASS be
