@@ -1,5 +1,7 @@
 #include "corridors.h"
 
+#include <stdbool.h>
+
 #include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
@@ -301,16 +303,3 @@ void connect_rooms(void)
         }
     }
 }
-
-// ideiglenes: a folyosók után a szint-önteszt a térképen ellenőrzi, hogy minden szoba elérhető, akkor ez törlődik
-#ifdef DEVMODE
-bool are_rooms_connected(uint8_t room_a, uint8_t room_b)
-{
-    for (uint8_t direction = 0; direction < DIRECTION_COUNT; direction++) {
-        if (get_neighbor_room(room_a, direction) == room_b) {
-            return (connected_directions[room_a] & (1 << direction)) != 0;
-        }
-    }
-    return false;
-}
-#endif

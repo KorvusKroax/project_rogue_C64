@@ -4,6 +4,7 @@
 
 #include "../corridors.h"
 #include "../map.h"
+#include "../platform/screen.h"
 #include "../rooms.h"
 #include "../state.h"
 
@@ -129,46 +130,136 @@ static bool is_maze_tree(const struct Room *room)
     return count_reachable_maze_cells(room) == cell_count;
 }
 
-// ideiglenes, az are_rooms_connected-del együtt: a folyosók után a térképen ellenőrizzük, hogy minden szoba elérhető
-static bool rooms_reached[ROOM_COUNT];
-
-// az összekötés: mindkét szobánál ugyanaz látszik, minden szoba elérhető a 0.-ból (a gráf összefüggő),
-// és a folyosók száma a feszítőfa ROOM_COUNT - 1 éle, meg legfeljebb MAX_EXTRA_CORRIDORS extra
-static bool is_room_graph_connected(void)
+// a titkos ajtó és a titkos folyosó-mező rejtett (nincs TILE_REAL); a titkos ajtó nem folyosó-mező
+static bool is_door_tile(uint8_t x, uint8_t y)
 {
-    uint8_t corridor_count = 0;
+    uint8_t flags = get_map_flags(x, y);
+    if (flags & TILE_PASSAGE) return false;
+    return !(flags & TILE_REAL) || get_map_character(x, y) == CHAR_DOOR;
+}
 
-    for (uint8_t room_a = 0; room_a < ROOM_COUNT; room_a++) {
-        rooms_reached[room_a] = false;
-        for (uint8_t room_b = room_a + 1; room_b < ROOM_COUNT; room_b++) {
-            bool connected = are_rooms_connected(room_a, room_b);
-            if (connected != are_rooms_connected(room_b, room_a)) return false;
-            if (connected) corridor_count++;
+// az ajtó egy normál szoba falán van, sarok nélkül; a titkos ajtó jele a fal jele: felső és alsó falon vízszintes, oldalfalon függőleges
+static bool is_door_on_room_wall(uint8_t x, uint8_t y)
+{
+    bool is_secret = !(get_map_flags(x, y) & TILE_REAL);
+    uint8_t character = get_map_character(x, y);
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & (ROOM_PHANTOM | ROOM_MAZE)) continue;
+
+        uint8_t right_x = room->x + room->width - 1;
+        uint8_t bottom_y = room->y + room->height - 1;
+        bool is_between_corners_x = x > room->x && x < right_x;
+        bool is_between_corners_y = y > room->y && y < bottom_y;
+
+        if (is_between_corners_x && (y == room->y || y == bottom_y)) {
+            return !is_secret || character == CHAR_WALL_HORIZONTAL;
+        }
+        if (is_between_corners_y && (x == room->x || x == right_x)) {
+            return !is_secret || character == CHAR_WALL_VERTICAL;
         }
     }
+    return false;
+}
 
-    if (corridor_count < ROOM_COUNT - 1 || corridor_count > ROOM_COUNT - 1 + MAX_EXTRA_CORRIDORS) return false;
+// a teljes térkép: minden ajtó egy szoba falán, és az 1. szinten nincs rejtett mező; közben a TILE_SEEN törlődik az elárasztáshoz
+static bool are_map_tiles_valid(void)
+{
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            remove_map_flags(x, y, TILE_SEEN);
 
-    // elárasztás a 0. szobából, amíg terjed
-    uint8_t reached_count = 1;
-    bool spread = true;
-    rooms_reached[0] = true;
-
-    while (spread) {
-        spread = false;
-        for (uint8_t room_a = 0; room_a < ROOM_COUNT; room_a++) {
-            if (!rooms_reached[room_a]) continue;
-            for (uint8_t room_b = 0; room_b < ROOM_COUNT; room_b++) {
-                if (!rooms_reached[room_b] && are_rooms_connected(room_a, room_b)) {
-                    rooms_reached[room_b] = true;
-                    reached_count++;
-                    spread = true;
-                }
-            }
+            if (game.dungeon_level == 1 && !(get_map_flags(x, y) & TILE_REAL)) return false;
+            if (is_door_tile(x, y) && !is_door_on_room_wall(x, y)) return false;
         }
     }
+    return true;
+}
 
-    return reached_count == ROOM_COUNT;
+// a labirintusban nincs ajtó: a mezői folyosó-mezők vagy üresek, a kijárat is folyosó-mező marad
+static bool is_maze_without_doors(const struct Room *room)
+{
+    uint8_t last_x = room->x + room->width / 2 * 2;
+    uint8_t last_y = room->y + room->height / 2 * 2;
+
+    for (uint8_t y = room->y; y <= last_y; y++) {
+        for (uint8_t x = room->x; x <= last_x; x++) {
+            uint8_t character = get_map_character(x, y);
+            if (character != CHAR_PASSAGE && character != CHAR_SOLID_ROCK) return false;
+        }
+    }
+    return true;
+}
+
+// járható mező: padló, ajtó, folyosó-mező, a titkosakkal együtt
+static bool is_walkable_tile(uint8_t x, uint8_t y)
+{
+    uint8_t flags = get_map_flags(x, y);
+    if (flags & TILE_PASSAGE) return true;
+    if (!(flags & TILE_REAL)) return true;
+
+    uint8_t character = get_map_character(x, y);
+    return character == CHAR_FLOOR || character == CHAR_DOOR;
+}
+
+// az elárasztás verme: minden mező legfeljebb egyszer kerül bele, mert a berakáskor megjelölődik
+static uint8_t flood_stack_x[MAP_ROWS * MAP_COLUMNS];
+static uint8_t flood_stack_y[MAP_ROWS * MAP_COLUMNS];
+static uint16_t flood_stack_count;
+
+// a járható, még jelöletlen mező megjelölve (TILE_SEEN) a verembe kerül
+static void visit_tile(uint8_t x, uint8_t y)
+{
+    if (get_map_flags(x, y) & TILE_SEEN) return;
+    if (!is_walkable_tile(x, y)) return;
+
+    add_map_flags(x, y, TILE_SEEN);
+    flood_stack_x[flood_stack_count] = x;
+    flood_stack_y[flood_stack_count] = y;
+    flood_stack_count++;
+}
+
+// a szoba egy mezője, amelyik biztosan járható: a normál szobánál a bal felső padló, a labirintusnál a bal felső cella
+static uint8_t get_room_inner_x(const struct Room *room)
+{
+    return room->flags & ROOM_MAZE ? room->x : room->x + 1;
+}
+
+static uint8_t get_room_inner_y(const struct Room *room)
+{
+    return room->flags & ROOM_MAZE ? room->y : room->y + 1;
+}
+
+// a szint összefüggő: az első nem fantom szobából elárasztva, a négy szomszéd felé, minden nem fantom szoba elérhető
+static bool is_level_connected(void)
+{
+    uint8_t first_room_index = 0;
+    while (game.rooms[first_room_index].flags & ROOM_PHANTOM) {
+        first_room_index++;
+    }
+
+    const struct Room *first_room = &game.rooms[first_room_index];
+    flood_stack_count = 0;
+    visit_tile(get_room_inner_x(first_room), get_room_inner_y(first_room));
+
+    while (flood_stack_count > 0) {
+        flood_stack_count--;
+        uint8_t x = flood_stack_x[flood_stack_count];
+        uint8_t y = flood_stack_y[flood_stack_count];
+
+        if (x > 0) visit_tile(x - 1, y);
+        if (x < MAP_COLUMNS - 1) visit_tile(x + 1, y);
+        if (y > MAP_TOP_ROW) visit_tile(x, y - 1);
+        if (y < MAP_TOP_ROW + MAP_ROWS - 1) visit_tile(x, y + 1);
+    }
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & ROOM_PHANTOM) continue;
+        if (!(get_map_flags(get_room_inner_x(room), get_room_inner_y(room)) & TILE_SEEN)) return false;
+    }
+    return true;
 }
 
 int test_level_generation(uint16_t i)
@@ -212,25 +303,49 @@ int test_level_generation(uint16_t i)
 
     // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
     connect_rooms();
-    if (!is_room_graph_connected()) return false;
 
-    return true;
+    if (!are_map_tiles_valid()) return false;
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if ((room->flags & ROOM_MAZE) && !is_maze_without_doors(room)) return false;
+    }
+
+    // az are_map_tiles_valid után, mert az törli a labirintus-ellenőrzés TILE_SEEN jelöléseit
+    return is_level_connected();
 }
 
-// a test_level_generation számlálóiból: a sötét szobák aránya min(mélység - 1, DARK_ROOM_CHANCE_DIVISOR) / DARK_ROOM_CHANCE_DIVISOR,
-// a labirintusoké a sötét szobák 1 / MAZE_CHANCE_DIVISOR része; az i. próba az i. mélység
-int test_level_room_ratios(uint16_t i)
+// az arány-táblázat oszlopai: mélység, szobák, sötét szobák várt és kapott száma, labirintusok várt és kapott száma, eredmény;
+// a számok és a fejlécek jobbra igazítva RATIO_COLUMN_WIDTH széles mezőben
+#define RATIO_COLUMN_WIDTH      5
+#define RATIO_DEPTH_COLUMN      1
+#define RATIO_ROOMS_COLUMN      7
+#define RATIO_DARK_WANT_COLUMN  13
+#define RATIO_DARK_GOT_COLUMN   19
+#define RATIO_MAZE_WANT_COLUMN  25
+#define RATIO_MAZE_GOT_COLUMN   31
+#define RATIO_RESULT_COLUMN     37              // "OK" vagy "FAIL", a 40 oszlopos képernyő végéig
+
+// a sötét szobák esélye a mélységen: min(mélység - 1, DARK_ROOM_CHANCE_DIVISOR) / DARK_ROOM_CHANCE_DIVISOR
+static uint8_t get_dark_chance(uint8_t depth_index)
 {
-    uint32_t room_count = level_room_counts[i];
-    uint32_t dark_count = level_dark_counts[i];
-    uint32_t maze_count = level_maze_counts[i];
-    uint8_t dark_chance = level_test_depths[i] - 1;
-
-    if (room_count == 0) return false;
-
+    uint8_t dark_chance = level_test_depths[depth_index] - 1;
     if (dark_chance > DARK_ROOM_CHANCE_DIVISOR) {
         dark_chance = DARK_ROOM_CHANCE_DIVISOR;
     }
+    return dark_chance;
+}
+
+// a sötét szobák aránya legfeljebb DARK_RATIO_TOLERANCE_PERCENT százalékponttal, a labirintusok száma a sötétek
+// 1 / MAZE_CHANCE_DIVISOR részétől legfeljebb MAZE_RATIO_TOLERANCE_PERCENT százalékkal tér el
+static bool is_depth_ratio_ok(uint8_t depth_index)
+{
+    uint32_t room_count = level_room_counts[depth_index];
+    uint32_t dark_count = level_dark_counts[depth_index];
+    uint32_t maze_count = level_maze_counts[depth_index];
+    uint8_t dark_chance = get_dark_chance(depth_index);
+
+    if (room_count == 0) return false;
 
     // százalékban: |sötét / szobák - esély / osztó| <= tűrés
     int32_t dark_difference = (int32_t)(dark_count * 100 * DARK_ROOM_CHANCE_DIVISOR) - (int32_t)(room_count * 100 * dark_chance);
@@ -243,4 +358,66 @@ int test_level_room_ratios(uint16_t i)
     if (maze_difference > maze_limit || maze_difference < -maze_limit) return false;
 
     return true;
+}
+
+static void put_ratio_number(uint8_t column, uint32_t number)
+{
+    set_screen_cursor_x(column);
+    put_int(number, RATIO_COLUMN_WIDTH);
+}
+
+// a fejléc jobbra igazítva, mint a számok
+static void put_ratio_header(uint8_t column, const char *text, uint8_t length)
+{
+    set_screen_cursor_x(column + RATIO_COLUMN_WIDTH - length);
+    put_text(text);
+}
+
+bool show_level_room_ratios(void)
+{
+    bool all_ok = true;
+
+    set_screen_cursor_x(1);
+    put_text("LEVEL-ROOM RATIOS");
+    move_screen_cursor_to_next_row();
+    move_screen_cursor_to_next_row();
+
+    put_ratio_header(RATIO_DARK_WANT_COLUMN, "DARK", 4);
+    put_ratio_header(RATIO_MAZE_WANT_COLUMN, "MAZE", 4);
+    move_screen_cursor_to_next_row();
+
+    put_ratio_header(RATIO_DEPTH_COLUMN, "DEPTH", 5);
+    put_ratio_header(RATIO_ROOMS_COLUMN, "ROOMS", 5);
+    put_ratio_header(RATIO_DARK_WANT_COLUMN, "WANT", 4);
+    put_ratio_header(RATIO_DARK_GOT_COLUMN, "GOT", 3);
+    put_ratio_header(RATIO_MAZE_WANT_COLUMN, "WANT", 4);
+    put_ratio_header(RATIO_MAZE_GOT_COLUMN, "GOT", 3);
+    move_screen_cursor_to_next_row();
+
+    for (uint8_t depth_index = 0; depth_index < LEVEL_TEST_DEPTH_COUNT; depth_index++) {
+        uint32_t room_count = level_room_counts[depth_index];
+        uint32_t dark_count = level_dark_counts[depth_index];
+
+        // a várt értékek kerekítve
+        uint32_t dark_want = (room_count * get_dark_chance(depth_index) + DARK_ROOM_CHANCE_DIVISOR / 2) / DARK_ROOM_CHANCE_DIVISOR;
+        uint32_t maze_want = (dark_count + MAZE_CHANCE_DIVISOR / 2) / MAZE_CHANCE_DIVISOR;
+
+        put_ratio_number(RATIO_DEPTH_COLUMN, level_test_depths[depth_index]);
+        put_ratio_number(RATIO_ROOMS_COLUMN, room_count);
+        put_ratio_number(RATIO_DARK_WANT_COLUMN, dark_want);
+        put_ratio_number(RATIO_DARK_GOT_COLUMN, dark_count);
+        put_ratio_number(RATIO_MAZE_WANT_COLUMN, maze_want);
+        put_ratio_number(RATIO_MAZE_GOT_COLUMN, level_maze_counts[depth_index]);
+
+        set_screen_cursor_x(RATIO_RESULT_COLUMN);
+        if (is_depth_ratio_ok(depth_index)) {
+            put_text("OK");
+        } else {
+            put_text("FAIL");
+            all_ok = false;
+        }
+        move_screen_cursor_to_next_row();
+    }
+
+    return all_ok;
 }

@@ -29,10 +29,9 @@ static const struct DevTest dev_tests[] = {
     { "MAP-FLAGS", test_map_flags, 1 },
 };
 
-// szint-önteszt: billentyűre; az arányok a szintek számlálóiból jönnek, ezért utánuk
+// szint-önteszt: billentyűre
 static const struct DevTest dev_level_tests[] = {
     { "LEVEL-GENERATION", test_level_generation, LEVEL_TEST_LEVEL_COUNT },
-    { "LEVEL-ROOM RATIOS", test_level_room_ratios, LEVEL_TEST_DEPTH_COUNT },
 };
 
 // a tesztek egymás után, soronként a név és az eredmény; igaz, ha mind sikerült
@@ -95,7 +94,10 @@ bool dev_run_tests(void)
     return run_test_table(dev_tests, sizeof(dev_tests) / sizeof(dev_tests[0]));
 }
 
+// az arányok a szintek számlálóiból jönnek, ezért a generálás után
 bool dev_run_level_tests(void)
 {
-    return run_test_table(dev_level_tests, sizeof(dev_level_tests) / sizeof(dev_level_tests[0]));
+    bool generation_ok = run_test_table(dev_level_tests, sizeof(dev_level_tests) / sizeof(dev_level_tests[0]));
+    bool ratios_ok = show_level_room_ratios();
+    return generation_ok && ratios_ok;
 }

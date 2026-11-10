@@ -1,6 +1,7 @@
 #ifndef TESTS_H
 #define TESTS_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // egy önteszt: az i. próbát futtatja, igaz = sikerült
@@ -23,6 +24,6 @@ int test_map_flags(uint16_t i);
 #define LEVEL_TEST_DEPTH_COUNT  4               // ennyi mélységen, felváltva (test_level.c)
 
 int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
-int test_level_room_ratios(uint16_t i);         // az i. mélység sötét- és labirintus-aránya, a test_level_generation után
+bool show_level_room_ratios(void);              // mélységenként a sötét szobák és a labirintusok várt és kapott száma, a test_level_generation után; igaz, ha mind a tűrésen belül
 
 #endif
