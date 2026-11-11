@@ -323,8 +323,10 @@ find_floor(room /*null = véletlen nem fantom szoba minden próbánál*/, mode):
     pos.x = room.pos.x + rnd(room.size.x - 2) + 1  // véletlen mező a falakon belül; előbb az x, aztán az y
     pos.y = room.pos.y + rnd(room.size.y - 2) + 1
     mode == item:    return pos, ha MAP[pos] == (MAZE(room) ? PASSAGE : FLOOR)  (nincs rajta semmi)
-    mode == monster: return pos, ha járható és nincs rajta szörny (tárgy, lépcső, rejtett csapda lehet)
+    mode == monster: return pos, ha a jele járható és nincs rajta szörny (tárgy, lépcső, rejtett csapda lehet)
 ```
+A szörnymódban a járhatóságot a mező jele dönti el, nem a flagjei: járható, ha a jele nem szóköz és nem fal. A titkos folyosó-mező jele szóköz, a titkos ajtóé fal, így ezekre sem szörny, sem a játékos (2.11) nem kerül.
+
 A kezdő szörny alszik, mert `new_monster` csak a típus flagjeit adja (ISRUN nélkül).
 
 ## 2.8 Tárgyak (`put_things`)
