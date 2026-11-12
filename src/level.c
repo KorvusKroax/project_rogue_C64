@@ -1,5 +1,6 @@
 #include "level.h"
 
+#include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
 #include "rooms.h"
@@ -131,4 +132,16 @@ bool find_empty_floor(uint8_t room_index, uint8_t *x, uint8_t *y)
 bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
 {
     return find_tile(room_index, FIND_FOR_PLAYER, x, y);
+}
+
+void place_stairs(void)
+{
+    uint8_t x;
+    uint8_t y;
+
+    // a még üres szobákban mindig van hely; ha mégsem, az x és az y érvénytelen, és egy véletlen mező íródna felül
+    bool found = find_empty_floor(ANY_ROOM, &x, &y);
+    DEV_CHECK(found, "no room for the stairs");
+
+    set_map_character(x, y, CHAR_STAIRS);
 }

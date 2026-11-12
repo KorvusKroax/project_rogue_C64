@@ -13,4 +13,6 @@
 bool find_empty_floor(uint8_t room_index, uint8_t *x, uint8_t *y);         // üres padló, labirintusban üres járat: tárgynak, lépcsőnek
 bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y);       // járható mező szörny nélkül: a játékosnak
 
+void place_stairs(void);        // a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra); a folyosók után, amíg a szobák üresek
+
 #endif

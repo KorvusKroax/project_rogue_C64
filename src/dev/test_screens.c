@@ -9,6 +9,7 @@
 #include "../platform/charset.h"
 #include "../corridors.h"
 #include "../input.h"
+#include "../level.h"
 #include "../map.h"
 #include "../message.h"
 #include "../rooms.h"
@@ -386,12 +387,13 @@ static void dev_status_screen(void)
 
 #define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
 
-// egy új szint szobái és folyosói a MAP-ba, onnan a képernyőre; a titkos mezők, ajtók és a fantom szobák is látszanak
+// egy új szint szobái, folyosói és lépcsője a MAP-ba, onnan a képernyőre; a titkos mezők, ajtók és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
     clear_map();
     generate_rooms();
     connect_rooms();
+    place_stairs();
     hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 

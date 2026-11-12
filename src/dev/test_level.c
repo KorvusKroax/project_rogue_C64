@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "../corridors.h"
+#include "../level.h"
 #include "../map.h"
 #include "../platform/screen.h"
 #include "../rooms.h"
@@ -177,7 +178,7 @@ static bool are_map_tiles_valid(void)
     return true;
 }
 
-// a labirintusban nincs ajtó: a mezői folyosó-mezők vagy üresek, a kijárat is folyosó-mező marad
+// a labirintusban nincs ajtó: a mezői folyosó-mezők, üresek, vagy a lépcső áll rajtuk; a kijárat is folyosó-mező marad
 static bool is_maze_without_doors(const struct Room *room)
 {
     uint8_t last_x = room->x + room->width / 2 * 2;
@@ -186,13 +187,13 @@ static bool is_maze_without_doors(const struct Room *room)
     for (uint8_t y = room->y; y <= last_y; y++) {
         for (uint8_t x = room->x; x <= last_x; x++) {
             uint8_t character = get_map_character(x, y);
-            if (character != CHAR_PASSAGE && character != CHAR_SOLID_ROCK) return false;
+            if (character != CHAR_PASSAGE && character != CHAR_SOLID_ROCK && character != CHAR_STAIRS) return false;
         }
     }
     return true;
 }
 
-// járható mező: padló, ajtó, folyosó-mező, a titkosakkal együtt
+// járható mező: padló, ajtó, lépcső, folyosó-mező, a titkosakkal együtt
 static bool is_walkable_tile(uint8_t x, uint8_t y)
 {
     uint8_t flags = get_map_flags(x, y);
@@ -200,7 +201,38 @@ static bool is_walkable_tile(uint8_t x, uint8_t y)
     if (!(flags & TILE_REAL)) return true;
 
     uint8_t character = get_map_character(x, y);
-    return character == CHAR_FLOOR || character == CHAR_DOOR;
+    return character == CHAR_FLOOR || character == CHAR_DOOR || character == CHAR_STAIRS;
+}
+
+// pontosan egy lépcső van, egy nem fantom szoba falain belül, nem rejtett mezőn
+static bool is_stairs_valid(void)
+{
+    uint8_t stairs_count = 0;
+    uint8_t stairs_x = 0;
+    uint8_t stairs_y = 0;
+
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            if (get_map_character(x, y) == CHAR_STAIRS) {
+                stairs_count++;
+                stairs_x = x;
+                stairs_y = y;
+            }
+        }
+    }
+
+    if (stairs_count != 1) return false;
+    if (!(get_map_flags(stairs_x, stairs_y) & TILE_REAL)) return false;
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & ROOM_PHANTOM) continue;
+
+        bool is_inside_x = stairs_x > room->x && stairs_x < room->x + room->width - 1;
+        bool is_inside_y = stairs_y > room->y && stairs_y < room->y + room->height - 1;
+        if (is_inside_x && is_inside_y) return true;
+    }
+    return false;
 }
 
 // az elárasztás verme: minden mező legfeljebb egyszer kerül bele, mert a berakáskor megjelölődik
@@ -303,8 +335,10 @@ int test_level_generation(uint16_t i)
 
     // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
     connect_rooms();
+    place_stairs();
     hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
 
+    if (!is_stairs_valid()) return false;
     if (!are_map_tiles_valid()) return false;
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
