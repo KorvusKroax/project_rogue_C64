@@ -24,6 +24,9 @@ static uint16_t level_room_counts[LEVEL_TEST_DEPTH_COUNT];
 static uint16_t level_dark_counts[LEVEL_TEST_DEPTH_COUNT];
 static uint16_t level_maze_counts[LEVEL_TEST_DEPTH_COUNT];
 
+// hány szint futott le; ESC-re a teszt LEVEL_TEST_LEVEL_COUNT előtt leáll
+static uint16_t level_test_run_count;
+
 // mélységenként a leglassabb generate_level képkockában
 static uint16_t level_max_frames[LEVEL_TEST_DEPTH_COUNT];
 
@@ -357,6 +360,7 @@ int test_level_generation(uint16_t i)
             level_max_frames[d] = 0;
         }
     }
+    level_test_run_count = i + 1;
 
     // a labirintus vermét a generálás, a térképen kívüli írást a map.c DEV_CHECK-jei ellenőrzik
     game.seed = LEVEL_TEST_FIRST_SEED + i;
@@ -484,9 +488,11 @@ static void put_ratio_header(uint8_t column, const char *text, uint8_t length)
     put_text(text);
 }
 
+// leállított futásnál csak a számok: a tűrés a teljes futás szobaszámára van szabva, kevés szintnél a véletlen is kilóg belőle
 bool show_level_room_ratios(void)
 {
     bool all_ok = true;
+    bool is_level_test_complete = level_test_run_count == LEVEL_TEST_LEVEL_COUNT;
 
     set_screen_cursor_x(1);
     put_text("LEVEL-ROOM RATIOS");
@@ -521,7 +527,9 @@ bool show_level_room_ratios(void)
         put_ratio_number(RATIO_MAZE_GOT_COLUMN, level_maze_counts[depth_index]);
 
         set_screen_cursor_x(RATIO_RESULT_COLUMN);
-        if (is_depth_ratio_ok(depth_index)) {
+        if (!is_level_test_complete) {
+            put_text("-");
+        } else if (is_depth_ratio_ok(depth_index)) {
             put_text("OK");
         } else {
             put_text("FAIL");
