@@ -29,12 +29,17 @@ A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https:
 
 A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított módban futtathatók: **Alt+W** ki-be kapcsolja a warp módot (vagy indításkor a `-warp` kapcsoló).
 
+### A két fordító összevetése
+
+A `compare.bat` a szintgeneráló fájlokat (`rooms`, `corridors`, `map`, `rng`, `level`, `state`) változtatás nélkül, egy kis keretprogrammal (`src/dev/compare.c`) mindkét fordítóval lefordítja: `build\compare_oscar64.prg` és `build\compare_llvm-mos.prg`. Ehhez az Oscar64 mellett az **llvm-mos** is kell (`C:\llvm-mos`); ha máshol van, a `compare.bat` elején (`LLVM_MOS`) kell átírni az utat. A PRG-k VICE-ben futnak (pl. a fájlt az ablakra húzva), és a szint térképének bal felét mutatják. Az eredmények: [Eszközlánc](#eszközlánc), a háttér: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54).
+
 Projektszerkezet:
 ```
 src/          a játék forrása
 build/        a fordítás kimenete (nincs a repóban)
 build.bat     fordítás
 run.bat       fordítás + indítás VICE-ban
+compare.bat   a két fordító összevetése a szintgenerálón
 ```
 
 ### Magyar billentyűzet a VICE-ban
