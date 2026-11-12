@@ -89,7 +89,151 @@ A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal lett kiprób
 - egyetlen futtatható fájl, a beépített emulátorával (`-e`) VICE nélkül is gyorsan kipróbálható a program;
 - várhatóan kisebb kódot ad, ami a játék méreténél a legfontosabb szempont.
 
-A tartalék az **llvm-mos**. A választás visszafordítható marad, mert a játéklogika szabványos C, fordítóspecifikus dolog csak a platformfájlokba kerül. A kódméret és a sebesség ellenőrzése az M03 végén, a valódi szintgenerálón történik ([M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54)).
+A tartalék az **llvm-mos**. A választás visszafordítható marad, mert a játéklogika szabványos C, fordítóspecifikus dolog csak a platformfájlokba kerül. A kódméret és a sebesség ellenőrzése az M03 végén, a valódi szintgenerálón történt ([M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54)), lásd lent.
+
+#### Összevetés a szintgenerálón
+
+Fordítók: **Oscar64 1.32.273** és **llvm-mos** (clang 24.0.0git, `cd91455`). A mérés a `compare.bat`-tal készült ([A két fordító összevetése](#a-két-fordító-összevetése)): a szintgeneráló fájlok változtatás nélkül, 100 szint a szint-önteszt magjaival (`seed = 1 + i`, az 1., 10., 26. és 40. mélység váltakozva). Az idő a CIA2 két összeláncolt időzítőjével, ciklusban mérve, tiltott CIA1-megszakítással, képkockára átszámolva (PAL: 19 656 ciklus). A méret a keretprogram mérete mínusz az üres keretprogramé, vagyis a szintgenerálás kódja és állandó adata.
+
+| beállítás | méret | átlagos idő | leglassabb |
+|---|---|---|---|
+| Oscar64 `-O2` | **3 814 bájt** | **21,2 képkocka** | **44,2 képkocka** |
+| Oscar64 `-Os` | 3 455 bájt | 30,5 képkocka | 57,5 képkocka |
+| llvm-mos `-O2` | 12 406 bájt | 31,1 képkocka | 60,0 képkocka |
+| llvm-mos `-Os` | 6 600 bájt | 34,7 képkocka | 67,4 képkocka |
+
+Mélységenként (átlag / leglassabb, képkocka):
+
+| mélység | Oscar64 `-O2` | Oscar64 `-Os` | llvm-mos `-O2` | llvm-mos `-Os` |
+|---|---|---|---|---|
+| 1 | 10,88 / 12,80 | 14,47 / 17,04 | 18,92 / 22,21 | 21,69 / 25,02 |
+| 10 | 24,33 / 42,63 | 35,51 / 56,04 | 34,79 / 59,17 | 38,53 / 64,43 |
+| 26 | 26,86 / 39,32 | 38,29 / 51,41 | 38,09 / 55,95 | 42,07 / 60,71 |
+| 40 | 22,78 / 44,17 | 33,66 / 57,46 | 32,76 / 60,01 | 36,11 / 67,42 |
+
+- Mind a négy változat ugyanazt a 100 szintet adja (összesített ellenőrzőösszeg: `765E36E1`), és mind bőven belül van a 2 másodperces (100 képkockás) kereten ([10.8](docs/spec/10_platform.md#108-erőforrás-keretek)).
+- Az Oscar64 mindkét szempontból jobb: már a `-Os` beállítása is kisebb és gyorsabb kódot ad, mint az llvm-mos bármelyike. Az llvm-mos kódja 1,7-szer (`-Os`; `-Oz`-vel 6 309 bájt) vagy 3,3-szor (`-O2`) akkora. Ha ez az arány a teljes játékra is áll, a becsült 28–34 KB kód llvm-mos-szal 48–58 KB lenne, és nem férne el a 46 976 bájtos fő régióban.
+- Az Oscar64-en belül a `-Os` 10%-kal kisebb, de kb. 40%-kal lassabb kódot ad, mint az `-O2`.
+- Az llvm-mos `-O2` a gyári zero page-kerettel (`-mlto-zp=110`) nem linkelhető (`relocation R_MOS_ADDR8 out of range`), 61 bájtig igen; a `compare.bat` 32-t ad meg.
+- A fordítási idő a keretprogramon mindkettőnél 1 másodperc alatti.
+
+**A váltás költsége.** A játéklogika változás nélkül fordul, Oscar64-specifikus rész csak a `src/platform/` alatt és a `build.bat`-ban van:
+
+| Oscar64 | llvm-mos |
+|---|---|
+| `#pragma region(main, …)`, `#pragma heapsize(0)` | saját linkerszkript: RAM `$0880–$BFFF`, a verem a `$C000` alatt |
+| `__asm raster_interrupt_handler { … }`, `__asm { sei }` | külön `.s` fájl vagy modulszintű `asm` (GNU szintaxis), `SEI()` / `CLI()` |
+| `__interrupt`, `__forceinline` | `__attribute__((interrupt))`, `__attribute__((always_inline))` |
+| `<c64/vic.h>`, `<c64/cia.h>`, `<c64/memmap.h>` (`vic.`, `cia1.`, `mmap_set`, `vic_setmode`) | `<c64.h>` (`VIC.`, `CIA1.`), a `$01`, `$D018`, `$DD00` közvetlen írása |
+| `-d64=` | `c1541` a VICE-ből |
+| beépített emulátor (`-e`) | nincs |
+
+Ez kb. 250 sornyi platformkód és egy linkerszkript. A szövegek a ROM-ok alá és a képernyőmodul mindkét fordítóval külön memóriatérképet kíván, ez nem a váltás költsége.
+
+#### Oscar64-hibák és megkerülésük
+
+Az Oscar64 1.32.273 eddig talált hibái. A csendes hibák a veszélyesebbek: ezek futáskor rossz eredményt adnak, hibaüzenet nélkül.
+
+**1. Függvénymutatón át hívott függvény 8 bites visszatérési értéke** – futáskor, csendben; VICE-ben ellenőrizve. A hívó rossz helyről olvassa az eredményt, és egy korábbi értéket kap (a hibás teszt sikeresnek látszott). `-O0`-n is; közvetlen hívásnál és egyelemű táblánál nem jön elő.
+```c
+// rossz: bool vagy uint8_t visszatérés mutatón át
+typedef bool (*TestFunction)(uint16_t i);
+bool test_RN(uint16_t i);
+if (tests[t](i)) { … }              // régi értéket olvas
+
+// jó: int visszatérés
+typedef int (*TestFunction)(uint16_t i);
+int test_RN(uint16_t i);
+```
+Hol: `src/dev/tests.h`. Bejelentve: [#468](https://github.com/drmortalwombat/oscar64/issues/468).
+
+**2. Struct-tag inline asm-ben, és a globális változó asm után** – futáskor, csendben; VICE-ben ellenőrizve. Két külön hiba:
+- A `változó.tag` forma asm-ben nem dokumentált, a fordító mégis szó nélkül elfogadja, és a tag eltolását elhagyja. A dokumentált forma a `Típus::tag` ([oscar64.md, Inline Assembler](https://github.com/drmortalwombat/oscar64/blob/main/oscar64.md#inline-assembler)), de ez csak C++ fájlban fordul; C-ben fordítási hiba. Bejelentve: [#471](https://github.com/drmortalwombat/oscar64/issues/471).
+- Az optimalizáló nem tudja, hogy az asm írt a globális változóba. Ezt a kiadás után a fő ágban javították ([#392](https://github.com/drmortalwombat/oscar64/issues/392), [#413](https://github.com/drmortalwombat/oscar64/issues/413)), az 1.32.273-ban még benne van.
+```c
+// rossz
+__asm { lda game.seed + 2 }         // a game + 2 címét olvassa, nem a seed 2. bájtját
+rn_asm();                           // asm-ben írja a game.seed-et
+uint32_t s = game.seed;             // a hívás előtti, gyorsítótárazott értéket adhatja
+
+// C++ fájlban jó: a tag eltolása Típus::tag formában (C-ben nem fordul)
+__asm { lda game + GameState::seed + 2 }
+
+// jó: a game-et érintő kód C-ben, így a második hiba sem érinti
+uint8_t *seed = (uint8_t *)&game.seed;
+seed[2] = …;
+```
+Hol: `src/rng.c` (az RN C-ben gyorsabb is lett: kb. 870 ciklus az asm-es 1062 helyett).
+
+**3. Típuskényszerítés zárójeles makró előtt** – fordításkor, hibaüzenettel („Array expected”, „Struct expected”). A fordító a kényszerítést a `[ ]` vagy a `.` előtt alkalmazza.
+```c
+#define JIFFY_CLOCK  ((volatile uint8_t *)0x00a0)
+
+// rossz
+uint32_t t = (uint32_t)JIFFY_CLOCK[0];
+(void)cia1.icr;
+
+// jó: az operandus zárójelben
+uint32_t t = (uint32_t)(JIFFY_CLOCK[0]);
+(void)(cia1.icr);
+```
+Hol: `src/platform/platform.c`. Bejelentve: [#469](https://github.com/drmortalwombat/oscar64/issues/469).
+
+**4. Inline-olt hívás tömbindexként összetett értékadásban** – fordításkor, a fordító összeomlik (`-O2`, „Addressing Error”, kilépési kód 30). Csak akkor jön elő, ha a függvényt hívják és a fordító inline-olja, ezért egy még nem hívott modulban rejtve maradhat; a forrásban kell keresni.
+```c
+// rossz
+game.rooms[choose_random_room()].flags |= ROOM_PHANTOM;
+
+// jó: a hívás eredménye előbb helyi változóba
+uint8_t room_index = choose_random_room();
+game.rooms[room_index].flags |= ROOM_PHANTOM;
+```
+Hol: `src/rooms.c`. Bejelentve: [#470](https://github.com/drmortalwombat/oscar64/issues/470).
+
+**5. Rövid ciklusú függvény egymás után, más-más állandó argumentummal** – futáskor, csendben; a tesztképernyőn látszott, de nincs feljegyezve, hogy VICE-ben vagy az `-e` emulátorban. `-O2`-n az előző hívás eredményét adja vissza, ha a ciklus 3–4 lépéses (pl. 2×2-es szobarácsnál); 8–9 lépésnél helyes. A `__noinline` és a `#pragma unroll(0)` nem segít.
+```c
+// rossz
+static uint8_t count_rooms_with_flag(uint8_t flag)
+{
+    uint8_t count = 0;
+    for (uint8_t i = 0; i < ROOM_COUNT; i++) {      // ROOM_COUNT = 4
+        if (game.rooms[i].flags & flag) count++;
+    }
+    return count;
+}
+uint8_t phantom_count = count_rooms_with_flag(ROOM_PHANTOM);
+uint8_t dark_count = count_rooms_with_flag(ROOM_DARK);   // a phantom_count értékét kaphatja
+
+// jó: egy menetben, több számlálóval
+for (uint8_t i = 0; i < ROOM_COUNT; i++) {
+    uint8_t flags = game.rooms[i].flags;
+    if (flags & ROOM_PHANTOM) phantom_count++;
+    if (flags & ROOM_DARK) dark_count++;
+}
+```
+Hol: `src/dev/test_screens.c`.
+
+**6. `uint8_t` számlálós ciklus több `printf`-fel** – futáskor, csendben; eddig csak az `-e` emulátorban jött elő, VICE-ben nincs ellenőrizve. `-O2`-n kimarad egy lépés; `-O0`-n, `uint16_t` számlálóval vagy kevesebb `printf`-fel helyes.
+```c
+// rossz: 3 helyett 2-szer fut
+for (uint8_t d = 1; d < 40; d += 13) {
+    printf("%d", d); printf("%d", d); printf("%d", d);
+}
+
+// jó
+for (uint16_t d = 1; d < 40; d += 13) { … }
+```
+A játék nem használ `printf`-et; próbaprogramban számít.
+
+**Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
+```c
+// a BASIC ROM visszalapozása után a $B000 fölötti C-verem helyén ROM látszott
+platform_exit();
+put_text("bye");                    // összeomlott
+
+// a fordító zero page-e felülírja a BASIC szövegverem-mutatóit ($16–$18)
+return 0;                           // a BASIC-ben néhány parancs után ?FORMULA TOO COMPLEX
+```
 
 ## Dokumentáció
 
