@@ -466,9 +466,12 @@ static void rooms_ask_depth(void)
     }
 }
 
+// a seedet és a mélységet kilépéskor visszaállítja, így ugyanazzal a seeddel minden belépés ugyanazt a szintet adja
 static void dev_rooms_screen(void)
 {
     uint8_t code = 0;
+    uint32_t saved_seed = game.seed;
+    uint8_t saved_dungeon_level = game.dungeon_level;
 
     screen_clear();
     set_screen_cursor(0, STATUS_ROW);
@@ -476,7 +479,7 @@ static void dev_rooms_screen(void)
     set_screen_cursor(0, STATUS_ROW + 1);
     put_text("1,2,3: left/mid/right  P: player");
 
-    game.dungeon_level = 10;
+    game.dungeon_level = 1;
     rooms_generate_level();
 
     while (code != KEY_ESCAPE) {
@@ -505,6 +508,9 @@ static void dev_rooms_screen(void)
             case 'd': rooms_ask_depth(); break;
         }
     }
+
+    game.seed = saved_seed;
+    game.dungeon_level = saved_dungeon_level;
 }
 
 // a szint-önteszt hosszú (normál sebességen percekig), ezért csak a menüből indul
