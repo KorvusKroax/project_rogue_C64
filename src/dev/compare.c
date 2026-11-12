@@ -164,16 +164,61 @@ static void clear_compare_screen(void)
     }
 }
 
+// a szám nyolc hexadecimális jeggyel
+static void put_compare_hex(uint8_t x, uint8_t y, uint32_t number)
+{
+    for (int8_t shift = 28; shift >= 0; shift -= 4) {
+        uint8_t digit = (uint8_t)((number >> shift) & 0x0f);
+        put_compare_character(x, y, digit < 10 ? '0' + digit : 'A' + digit - 10);
+        x++;
+    }
+}
+
+// a teljes szint ujjlenyomata, ugyanúgy, mint a szint-önteszt calculate_level_checksum-ja (test_level.c):
+// a MAP két rétege, a szobák és a játékos helye, összegzéssel (Fletcher-féle két összeg)
+static uint16_t calculate_level_checksum(void)
+{
+    uint8_t sum = 0;
+    uint8_t sum_of_sums = 0;
+    const uint8_t *bytes = &game.map_characters[0][0];
+
+    for (uint16_t i = 0; i < sizeof(game.map_characters); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    bytes = &game.map_flags[0][0];
+    for (uint16_t i = 0; i < sizeof(game.map_flags); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    bytes = (const uint8_t *)game.rooms;
+    for (uint16_t i = 0; i < sizeof(game.rooms); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    sum += game.player.x;
+    sum_of_sums += sum;
+    sum += game.player.y;
+    sum_of_sums += sum;
+
+    return ((uint16_t)sum_of_sums << 8) | sum;
+}
+
 // a táblázat oszlopai
 #define DEPTH_COLUMN    0
 #define AVERAGE_COLUMN  8
 #define MAXIMUM_COLUMN  20
 #define RESULT_ROW      3                       // az első mélység sora; a mélységek alatt egy üres sor, majd az összesítés
+#define CHECKSUM_ROW    (RESULT_ROW + COMPARE_DEPTH_COUNT + 3)
 
 // mélységenként a generate_level ideje ciklusban: összeg, darab, a leglassabb
 static uint32_t depth_cycle_sums[COMPARE_DEPTH_COUNT];
 static uint16_t depth_level_counts[COMPARE_DEPTH_COUNT];
 static uint32_t depth_cycle_maximums[COMPARE_DEPTH_COUNT];
+
+// a szintek ujjlenyomatai sorban összefűzve (Fletcher-féle két összeg, 16 biten): ha a két fordítónál egyezik, szintenként is egyeznek
+static uint16_t level_checksum_sum;
+static uint16_t level_checksum_sum_of_sums;
 
 // az átlag és a leglassabb a sor felirata mellé
 static void put_compare_result_row(uint8_t y, uint32_t cycle_sum, uint16_t level_count, uint32_t cycle_maximum)
@@ -205,6 +250,9 @@ static void measure_levels(void)
         start_cycle_counter();
         generate_level();
         uint32_t cycles = stop_cycle_counter() - counter_overhead;
+
+        level_checksum_sum += calculate_level_checksum();
+        level_checksum_sum_of_sums += level_checksum_sum;
 
         depth_cycle_sums[depth_index] += cycles;
         depth_level_counts[depth_index]++;
@@ -239,6 +287,9 @@ static void put_compare_results(void)
 
     put_compare_text(DEPTH_COLUMN, RESULT_ROW + COMPARE_DEPTH_COUNT + 1, "ALL");
     put_compare_result_row(RESULT_ROW + COMPARE_DEPTH_COUNT + 1, all_cycle_sum, all_level_count, all_cycle_maximum);
+
+    uint8_t x = put_compare_text(DEPTH_COLUMN, CHECKSUM_ROW, "CHECKSUM ");
+    put_compare_hex(x, CHECKSUM_ROW, ((uint32_t)level_checksum_sum_of_sums << 16) | level_checksum_sum);
 }
 
 int main(void)
