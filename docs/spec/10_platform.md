@@ -66,7 +66,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
   - **négyzettábla:** 0..79 négyzetei (80 × 16 bit = 160 bájt); a `dist2` két kiolvasás és egy összeadás;
   - **sorcím-tábla:** a térképrétegek soronkénti kezdő eltolása, `(y − 1) × 80` (22 × 16 bit = 44 bájt); a mezőindex egy kiolvasás és egy összeadás.
 - **8 bites számolás, ahol elég:** koordináták, számlálók, kis értékek; a 16 bites művelet a 6502-n két-háromszor lassabb. Ahol egy érték biztosan elfér 8 biten, ott nem használunk 16 bitet.
-- **Szám kiírása:** egyetlen, előjeles 32 bites értéket váró rutin, decimálisan (az arany és a tapasztalat 16 777 215-nél telítődik, így belefér; a 32 bites seed előjelesen, akár negatívként jelenik meg, és így is visszaírható), a státuszsor (3.3) és az üzenetek formázásához (`%d`, `%-Nd`, `%Nd`).
+- **Szám kiírása:** egyetlen, előjeles 32 bites értéket váró rutin, decimálisan (az arany és a tapasztalat 16 777 215-nél telítődik, így belefér; a 32 bites seedet a fejlesztői menü az utolsó jegyét külön kiírva jeleníti meg, így előjel nélkül, a teljes tartományban), a státuszsor (3.3) és az üzenetek formázásához (`%d`, `%-Nd`, `%Nd`).
 - Lebegőpontos számítás nincs.
 
 ## 10.6 Időzítés

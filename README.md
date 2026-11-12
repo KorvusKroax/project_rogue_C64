@@ -25,7 +25,7 @@ Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C
 A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A kiadási buildbe ezekből semmi nem kerül:
 - **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd visszatér a BASIC-be. A feltételnek nem lehet mellékhatása, mert a kiadási buildben ki sem értékelődik.
 - **Öntesztek** (`src/dev/`, a teszteket a `dev_tests` lista sorolja fel a `tests.c`-ben): induláskor lefutnak, az eredményük a képernyőre kerül (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`).
-- **Seed:** induláskor kiíródik; a második paraméterrel (`build.bat dev 12345`) rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
+- **Seed:** induláskor kiíródik; a menüben az `E` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
 
 A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított módban futtathatók: **Alt+W** ki-be kapcsolja a warp módot (vagy indításkor a `-warp` kapcsoló).
 

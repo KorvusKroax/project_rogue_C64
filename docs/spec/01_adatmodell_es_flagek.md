@@ -263,7 +263,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 ### 1.4.2 Számok
 | mező | ábrázolás |
 |---|---|
-| `seed` | 32 bit előjel nélküli; a fejlesztői képernyőn előjelesen jelenik meg ([10.5](10_platform.md#105-aritmetika)) |
+| `seed` | 32 bit előjel nélküli; a fejlesztői menüben is előjel nélkül jelenik meg és adható meg ([10.5](10_platform.md#105-aritmetika)) |
 | `exp` (játékos és szörny), `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
 | `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
 | `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
