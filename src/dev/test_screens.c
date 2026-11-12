@@ -444,13 +444,35 @@ static void put_room_flag_counts(void)
     put_int(maze_count, 0);
 }
 
+#define ROOMS_DEPTH_MAX         UINT8_MAX       // a mélység 8 bites
+#define ROOMS_DEPTH_DIGITS_MAX  3               // a ROOMS_DEPTH_MAX jegyei
+
+#if ROOMS_DEPTH_MAX > 999
+    #error "a ROOMS_DEPTH_DIGITS_MAX kevés a ROOMS_DEPTH_MAX-hoz"
+#endif
+
+// a mélység kézi megadása a sávban (1..ROOMS_DEPTH_MAX), utána új szint; nem szám, tartományon kívüli szám vagy ESC esetén semmi nem változik
+static void rooms_ask_depth(void)
+{
+    char answer[ROOMS_DEPTH_DIGITS_MAX + 1];
+    uint32_t depth;
+
+    bool answered = ask_text("depth: ", answer, ROOMS_DEPTH_DIGITS_MAX);
+    message_clear();
+
+    if (answered && convert_text_to_number(answer, ROOMS_DEPTH_MAX, &depth) && depth >= 1) {
+        game.dungeon_level = depth;
+        rooms_generate_level();
+    }
+}
+
 static void dev_rooms_screen(void)
 {
     uint8_t code = 0;
 
     screen_clear();
     set_screen_cursor(0, STATUS_ROW);
-    put_text("SPACE: new level  +,-: depth  ESC: end");
+    put_text("SPACE: new level  +,-,D: depth  ESC: end");
     set_screen_cursor(0, STATUS_ROW + 1);
     put_text("1,2,3: left/mid/right  P: player");
 
@@ -469,7 +491,7 @@ static void dev_rooms_screen(void)
         switch (code) {
             case ' ': rooms_generate_level(); break;
             case '+':
-                if (game.dungeon_level < 255) game.dungeon_level++;
+                if (game.dungeon_level < ROOMS_DEPTH_MAX) game.dungeon_level++;
                 rooms_generate_level();
                 break;
             case '-':
@@ -480,6 +502,7 @@ static void dev_rooms_screen(void)
             case '2': center_view_window(MAP_COLUMNS / 2); break;
             case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
             case 'p': center_view_window(game.player.x); break;
+            case 'd': rooms_ask_depth(); break;
         }
     }
 }
