@@ -81,7 +81,7 @@ Egyszerűbb, de kevésbé tartós megoldás a három sort közvetlenül a `gtk3_
 
 ### Eszközlánc
 
-**Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1).
+**Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1), megerősítve a valódi szintgenerálón: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54). Az Oscar64 marad, mert az llvm-mos kódja nem kisebb, hanem 1,7–3,3-szor nagyobb, és az Oscar64-gyel a leglassabb szint is csak 44 képkocka (kb. 0,9 s) a 2 másodperces keretből ([Összevetés a szintgenerálón](#összevetés-a-szintgenerálón)).
 
 A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal lett kipróbálva: RN/rnd, szobarajzolás a videomemóriába, assemblyben írt RN-rutin C-ből hívva, több forrásfájlos fordítás, a BASIC ROM kilapozása és az `$A000–$BFFF` RAM használata. Mindkettő ugyanazt az RN-sorozatot adta. Az Oscar64 mellett szólt:
 - kifejezetten C64-re készült, a C64-es teendőkre saját könyvtára van (pl. `conio.h`, `c64/memmap.h`);
