@@ -64,18 +64,31 @@ static uint8_t choose_candidate(const uint8_t *candidates, uint8_t candidate_cou
 void put_passage(uint8_t x, uint8_t y)
 {
     add_map_flags(x, y, TILE_PASSAGE);
+    set_map_character(x, y, CHAR_PASSAGE);
+}
 
+void hide_passages(uint8_t kept_x, uint8_t kept_y)
+{
     // az esély a mélységgel nő, SECRET_PASSAGE_DEPTH_DIVISOR szint után már nem; az 1. szinten 0, ott nincs dobás
     uint8_t secret_limit = game.dungeon_level - 1;
     if (secret_limit > SECRET_PASSAGE_DEPTH_DIVISOR) {
         secret_limit = SECRET_PASSAGE_DEPTH_DIVISOR;
     }
+    if (secret_limit == 0) return;
 
-    if (secret_limit > 0 && rnd(SECRET_PASSAGE_ROLL_RANGE) < secret_limit) {
-        // a titkos folyosó-mező üresnek látszik
-        remove_map_flags(x, y, TILE_REAL);
-    } else {
-        set_map_character(x, y, CHAR_PASSAGE);
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            // csak a szabad folyosó-mező: a lépcső jele már nem CHAR_PASSAGE
+            if (!(get_map_flags(x, y) & TILE_PASSAGE)) continue;
+            if (get_map_character(x, y) != CHAR_PASSAGE) continue;
+            if (x == kept_x && y == kept_y) continue;
+
+            // a titkos folyosó-mező üresnek látszik
+            if (rnd(SECRET_PASSAGE_ROLL_RANGE) < secret_limit) {
+                set_map_character(x, y, CHAR_SOLID_ROCK);
+                remove_map_flags(x, y, TILE_REAL);
+            }
+        }
     }
 }
 

@@ -303,6 +303,7 @@ int test_level_generation(uint16_t i)
 
     // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
     connect_rooms();
+    hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
 
     if (!are_map_tiles_valid()) return false;
 

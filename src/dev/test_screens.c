@@ -392,6 +392,7 @@ static void rooms_generate_level(void)
     clear_map();
     generate_rooms();
     connect_rooms();
+    hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
     // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik; itt inverz folyosóként, illetve inverz ajtóként
