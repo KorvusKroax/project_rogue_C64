@@ -1,10 +1,12 @@
 #include "level.h"
 
+#include "corridors.h"
 #include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
+#include "view.h"
 
 // mire keresünk mezőt
 #define FIND_FOR_ITEM    0                      // üres padló, labirintusban üres járat
@@ -134,7 +136,8 @@ bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
     return find_tile(room_index, FIND_FOR_PLAYER, x, y);
 }
 
-void place_stairs(void)
+// a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra)
+static void place_stairs(void)
 {
     uint8_t x;
     uint8_t y;
@@ -146,9 +149,45 @@ void place_stairs(void)
     set_map_character(x, y, CHAR_STAIRS);
 }
 
-void choose_player_position(void)
+// a játékos helye egy véletlen nem fantom szoba járható mezőjén
+static void choose_player_position(void)
 {
     // a szobákban még csak a lépcső van, ezért mindig van hely; ha mégsem, a játékos helye érvénytelen maradna
     bool found = find_walkable_tile(ANY_ROOM, &game.player.x, &game.player.y);
     DEV_CHECK(found, "no room for the player");
+}
+
+void generate_level(void)
+{
+    // ide jön: ha a mélység nagyobb az eddigi legnagyobbnál (max_level), az lesz az új legnagyobb
+    clear_map();
+    // ide jön: a szörnyek a csomagjaikkal és a padlón lévő tárgyak törlése, a táblákban a helyük felszabadul
+
+    generate_rooms();
+    connect_rooms();
+
+    // a lépcső és a játékos még az üres szobákba kerül, minden járat látható: mindkettő mindig talál helyet
+    place_stairs();
+    choose_player_position();
+    hide_passages(game.player.x, game.player.y);
+
+    // ide jön: szobánként arany és kezdő szörny
+    // ide jön: a szintek számlálója az étel nélküli tárgygeneráláshoz (no_food) eggyel nő
+    // ide jön: tárgyak (kincses szoba, 9 próba, amulett)
+    // ide jön: csapdák
+    // ide jön: minden szörnynél a szoba, amelyikben áll
+}
+
+void new_level(void)
+{
+    // ide jön: a játékost nem tartja fogva semmi (ISHELD le)
+    clear_seen_map();
+    generate_level();
+    // ide jön: a lépcsőt a játékos még nem látta (seenstairs)
+
+    // ide jön: a játékos szobájának megvilágítása és a szörnyek ébresztése (enter_room)
+    center_view_window(game.player.x);
+
+    // ide jön: szörnyészlelés alatt a szörnyek azonnal kirajzolódnak (turn_see)
+    // ide jön: hallucináció alatt a jelek azonnal hallucináltak (visuals)
 }

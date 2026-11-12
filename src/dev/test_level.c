@@ -1,8 +1,8 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <string.h>
 
-#include "../corridors.h"
 #include "../level.h"
 #include "../map.h"
 #include "../platform/screen.h"
@@ -349,11 +349,13 @@ int test_level_generation(uint16_t i)
         }
     }
 
-    // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
-    connect_rooms();
-    place_stairs();
-    choose_player_position();
-    hide_passages(game.player.x, game.player.y);
+    // a teljes szint ugyanazzal a maggal újra, a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört
+    // hozhat létre a labirintusban; a szobáknak ugyanazoknak kell lenniük
+    struct Room checked_rooms[ROOM_COUNT];
+    memcpy(checked_rooms, game.rooms, sizeof(checked_rooms));
+    game.seed = LEVEL_TEST_FIRST_SEED + i;
+    generate_level();
+    if (memcmp(checked_rooms, game.rooms, sizeof(checked_rooms)) != 0) return false;
 
     if (!is_stairs_valid()) return false;
     if (!is_player_position_valid()) return false;

@@ -7,7 +7,6 @@
 #include "../platform/screen.h"
 #include "../platform/key.h"
 #include "../platform/charset.h"
-#include "../corridors.h"
 #include "../input.h"
 #include "../level.h"
 #include "../map.h"
@@ -391,12 +390,7 @@ static void dev_status_screen(void)
 // a titkos mezők, ajtók és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
-    clear_map();
-    generate_rooms();
-    connect_rooms();
-    place_stairs();
-    choose_player_position();
-    hide_passages(game.player.x, game.player.y);
+    generate_level();
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
     // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik; itt inverz folyosóként, illetve inverz ajtóként
