@@ -31,7 +31,7 @@ A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított mód
 
 ### A két fordító összevetése
 
-A `compare.bat` a szintgeneráló fájlokat (`rooms`, `corridors`, `map`, `rng`, `level`, `state`) változtatás nélkül, egy kis keretprogrammal (`src/dev/compare.c`) mindkét fordítóval lefordítja: `build\compare_oscar64.prg` és `build\compare_llvm-mos.prg`. Ehhez az Oscar64 mellett az **llvm-mos** is kell (`C:\llvm-mos`); ha máshol van, a `compare.bat` elején (`LLVM_MOS`) kell átírni az utat. A PRG-k VICE-ben futnak (pl. a fájlt az ablakra húzva), és a szint térképének bal felét mutatják. Az eredmények: [Eszközlánc](#eszközlánc), a háttér: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54).
+A `compare.bat` a szintgeneráló fájlokat (`rooms`, `corridors`, `map`, `rng`, `level`, `state`) változtatás nélkül, egy kis keretprogrammal (`src/dev/compare.c`) mindkét fordítóval, `-O2` és `-Os` mellett is lefordítja: `build\compare_<fordító>-<beállítás>.prg` (pl. `build\compare_llvm-mos-Os.prg`). Mindegyik mellé az üres keretprogram is lefordul (`src/dev/compare_empty.c`, a szintgenerálás helyett csonkokkal), és a két méret különbsége, a szintgenerálás kódja és állandó adata kiíródik. Ehhez az Oscar64 mellett az **llvm-mos** is kell (`C:\llvm-mos`); ha máshol van, a `compare.bat` elején (`LLVM_MOS`) kell átírni az utat. A PRG-k VICE-ben futnak (pl. a fájlt az ablakra húzva): 100 szintet generálnak, és mélységenként kiírják a generálás átlagos és leglassabb idejét képkockában, valamint a szintek összesített ellenőrzőösszegét, amelynek minden változatnál egyeznie kell. Az eredmények: [Eszközlánc](#eszközlánc), a háttér: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54).
 
 Projektszerkezet:
 ```
