@@ -129,11 +129,11 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 | **futás** | lépésenként mindig ugyanannyi képkocka (1 vagy 2, a mérés alapján rögzítve, [10.6](#106-időzítés)) |
 | **görgetés** | legfeljebb 2 képkocka |
 
-A fejlesztői mód mutatja a szabad memóriát és a táblák foglaltságát ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
+A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák foglaltságát a fejlesztői mód mutatja ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
 ## 10.9 Fejlesztői build és determinizmus
 - A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert, így a hardverközeli kód egy helyen van.
-- **Fejlesztői build:** külön fordítási beállítással készül. Benne vannak a fejlesztői mód eszközei (lásd az M03-04 issue-t), a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és az öntesztek (pl. sok szint generálása és ellenőrzése). A kiadott változatban egyik sincs benne. A hosszú öntesztek VICE-ben, gyorsított (warp) módban futnak. A gyors öntesztek minden indításkor lefutnak, alattuk egy menü: innen indulnak billentyűre a szint-önteszt (1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; normál sebességen percekig tart) és a tesztképernyők, bármelyik bármikor; mindegyikből az ESC lép vissza a menübe, a RETURN pedig a játékot indítja.
+- **Fejlesztői build:** külön fordítási beállítással készül. Benne vannak a fejlesztői mód eszközei (a menüben és a tesztképernyőkön, valamint fejlesztői parancsként játék közben), a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és az öntesztek (pl. sok szint generálása és ellenőrzése). A kiadott változatban egyik sincs benne. A hosszú öntesztek VICE-ben, gyorsított (warp) módban futnak. A gyors öntesztek minden indításkor lefutnak, alattuk egy menü: innen indulnak billentyűre a szint-önteszt (1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; normál sebességen percekig tart) és a tesztképernyők, bármelyik bármikor, és itt adható meg kézzel a seed; mindegyikből az ESC lép vissza a menübe, a RETURN pedig a játékot indítja.
 - **Determinizmus:** ugyanazzal a programváltozattal és ugyanazzal a seeddel ugyanaz a szint és ugyanaz a dobássorozat jön létre, és mentés, majd betöltés után a játék ugyanúgy folytatódik. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
 - A cél az eredeti játékszabályok követése, nem az eredeti program dobássorozatának bájtra pontos utánzása: kódváltozás után ugyanaz a seed más játékot adhat.
 

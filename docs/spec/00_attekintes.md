@@ -45,7 +45,7 @@ bekapcsolás / betöltés után:
   O: beállítások (4.2.5), utána vissza a címképernyőre (a modul még a memóriában van)
 játék vége (halál, kilépés, győzelem, mentés) után: a képernyőmodul betöltése, a végkimenetel szerinti képernyő és a ranglista (4.3), majd a címképernyő
 ```
-A forrásban lévő „varázsló” (wizard) mód egy külön fordítási változat hibakereső eszköze, a játék része nem; helyette a fejlesztői mód szolgál (lásd az M03-04 issue-t), amely csak külön fordítási beállítással kerül a programba.
+A forrásban lévő „varázsló” (wizard) mód egy külön fordítási változat hibakereső eszköze, a játék része nem; helyette a fejlesztői mód szolgál ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)), amely csak külön fordítási beállítással kerül a programba.
 
 ---
 
