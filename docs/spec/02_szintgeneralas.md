@@ -6,18 +6,28 @@ new_level():
   player.ISHELD = false
   if level > max_level: max_level = level
   clear MAP, SCREEN, monsters (és csomagjaik), floor items  // a táblák helyei felszabadulnak (1.4.1)
-  do_rooms()                    // 2.2–2.5, 2.7: szobák, és szobánként arany + kezdő szörny
-  connect_rooms()               // 2.4, 2.6: összekötés és folyosók
+  do_rooms()                    // 2.2–2.5: szobák
+  connect_rooms()               // 2.4, 2.6: összekötés és folyosók; minden folyosó-mező látható
+  place_stairs()                // 2.10; seenstairs = false; a szobák még üresek
+  choose_player_position()      // 2.11; a szobákban még csak a lépcső van
+  hide_passages()               // 2.6: titkos folyosó-mezők, a játékos mezője nélkül
+  put_gold_and_monsters()       // 2.7: szobánként arany + kezdő szörny
   no_food++
   put_things()                  // 2.8: kincses szoba, 9 próba, amulett
   place_traps()                 // 2.9
-  place_stairs()                // 2.10; seenstairs = false
   minden szörny: monster.room = room(monster.pos)
-  place_player()                // 2.11 + enter_room
-  center_view_window()                 // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás
+  enter_room(player.pos)        // 2.11: megvilágítás + ébresztés (6.4), a szörnyek után
+  center_view_window()          // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás
   if SEEMONST: turn_see(false)  // a szörnyek az új szinten is azonnal kirajzolódnak
   if ISHALU: visuals()          // a hallucinált jelek azonnal
 ```
+
+> **C64-javítás (J19):** a szint berendezése mindig véget ér. *Eredetileg* a `find_floor` korlát nélkül próbálkozott, és végtelen ciklusba futott, ha nem volt alkalmas mező: a csapdák elhelyezése, ha minden igazi szoba labirintus (nincs `FLOOR` jelű mező; a 11. szinttől lehetséges, és ott mindig vannak csapdák) vagy ha a szobák padlója betelt; a lépcső, ha minden szoba betelt az arannyal, a tárgyakkal és a csapdákkal; a lépcső és a játékos, ha minden szoba labirintus, és a belsejükben minden járat titkos. A javítás három része:
+> - a `find_floor` egy szoba alkalmas mezőit gyűjti össze, és egy dobással választ közülük; ha nincs ilyen, másik szobát próbál, és ha sehol nincs, „nincs” eredményt ad (2.7);
+> - a lépcső és a játékos helye közvetlenül a folyosók után, a még üres szobákban dől el, a titkos folyosó-mezők csak utánuk (2.6); a többi elhelyezés (arany, szörny, tárgy, csapda) kimarad, ha nincs hely;
+> - a sorrend ezért eltér az eredetitől: ott az arany és a kezdő szörnyek a szobákkal együtt, a lépcső a csapdák után, a játékos utoljára került a helyére, a titkos folyosó-mezők pedig ásás közben dőltek el.
+>
+> A szabályok és az esélyek nem változnak, a dobások sorrendje igen.
 
 ## 2.1 Szektorok
 A térkép `SECTOR_GRID_SIZE × SECTOR_GRID_SIZE` szektorra oszlik, minden szektorba pontosan egy szoba kerül; a szoba indexe a szektor indexe. Az `i`-edik szektor (`i = row * SECTOR_GRID_SIZE + col`, 0..`ROOM_COUNT − 1`):
@@ -49,7 +59,7 @@ for each room i (sorrendben):
   if rnd(DARK_ROOM_CHANCE_DIVISOR) < level - 1:
      rooms[i].flags |= DARK
      if rnd(MAZE_CHANCE_DIVISOR) == 0: rooms[i].flags = MAZE  // értékadás: a DARK törlődik
-  méret (2.3), rajzolás (2.5), arany + kezdő szörny (2.7)
+  méret (2.3), rajzolás (2.5)   // az arany és a kezdő szörny később, a lépcső és a játékos után kerül a szobába (2.7, J19)
 
 rnd_room():  // véletlen, nem fantom szoba indexe
   repeat candidate = rnd(ROOM_COUNT) until !PHANTOM(candidate)
@@ -188,7 +198,7 @@ dig(cell):  // cell: relatív koordináta a labirintusban
     putpass(room.pos + chosen)
     dig(chosen)
 ```
-A labirintus is `putpass`-szal készül, így a mezői is lehetnek rejtettek ([2.6](#26-folyosók)).
+A labirintus is `putpass`-szal készül, így a mezői is lehetnek rejtettek ([2.6](#26-folyosók)); a C64-es változatban ez a titkos folyosó-mezőkkel együtt, a lépcső és a játékos helye után dől el.
 
 **A felső és a középső labirintus összeérhet**, ahogy az eredetiben is: a felső szektorsorban a labirintus az 1. sorban kezdődik, ezért a cellái a páratlan sorokra esnek, és az utolsó a szektor utolsó sorába (alapértékekkel a 7.-be) kerül, a középső labirintus első cellasora pedig a 8. sor. A középső és az alsó között a szektor utolsó sora üres marad. Később újragondoljuk: egy ötlet, hogy a 2. és a 3. szektorsorban is eggyel lejjebb kezdődjön a labirintus, így a középső eggyel magasabb lenne, a felső és az alsó pedig egyforma. Ezzel a labirintus kijáratának javítása (J18, [2.6](#26-folyosók)) is elhagyható lenne.
 
@@ -212,7 +222,7 @@ A verem legfeljebb annyi elemű, ahány cella a labirintusban van, mert minden c
 
 A fejlesztői build `DEV_CHECK`-kel ellenőrzi, hogy a verem nem telik túl. 255-nél nagyobb veremnél (pl. 1×1-es rácsnál 40 × 12 = 480) a veremindex 16 bites.
 
-A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,2 másodperc, az 1. szinten kevesebb, mert ott a `putpass` nem dob. Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
+A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,2 másodperc (mérve még akkor, amikor a `put_passage` mezőnként dobott a titkos mezőért; azóta ez a `hide_passages`-ben történik, 2.6). Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
 
 ## 2.6 Folyosók
 Két szomszédos szoba (`room_a`, `room_b`) közti folyosó. A kisebb indexű szobától indul; ha a másik a jobb oldali szomszédja, jobbra halad, ha az alatta lévő, lefelé.
@@ -292,40 +302,63 @@ door(room, pos):  // a C64-es változat
 
 A kódban a folyosók (`connect_rooms`, `corridor`, `door`, `put_passage`) a `corridors.c`-ben vannak; a labirintus is innen hívja a `put_passage`-et.
 
-**Titkos folyosó-mező egyetlen dobással:** a `putpass` két dobása helyett egy, ugyanazzal az eséllyel: az első feltétel `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_DEPTH_DIVISOR` eséllyel teljesül, így a mező együtt `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / (SECRET_PASSAGE_DEPTH_DIVISOR × SECRET_PASSAGE_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/400 = 1/40). Az 1. szinten nincs dobás, mert ott az esély 0. **Eltérés az eredetitől (dobássorrend):** a dobások sorrendje ezért eltér; az esély ugyanaz.
+**Titkos folyosó-mező a lépcső és a játékos után, egyetlen dobással (J19):** a `put_passage` minden folyosó- és labirintusmezőt láthatóként tesz le. Hogy melyik titkos, azt a `hide_passages` dönti el, a lépcső és a játékos helye után, de az arany, a szörnyek, a tárgyak és a csapdák előtt (2.). Így a lépcső és a játékos mindig talál helyet; a későbbi elhelyezések a titkos mezőt ugyanúgy elkerülik, mint az eredetiben, mert a jele kőzet.
+
+A `putpass` két dobása helyett egy, ugyanazzal az eséllyel: az első feltétel `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / SECRET_PASSAGE_DEPTH_DIVISOR` eséllyel teljesül, így a mező együtt `min(level − 1, SECRET_PASSAGE_DEPTH_DIVISOR) / (SECRET_PASSAGE_DEPTH_DIVISOR × SECRET_PASSAGE_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/400 = 1/40). Az 1. szinten nincs dobás, mert ott az esély 0. **Eltérés az eredetitől (dobássorrend):** a dobások sorrendje ezért eltér. Az eredetiben a kétszer ásott mező (pl. ahol a folyosó a labirintus szélső cellasorán halad át) kétszer dobott; itt minden mező egyszer.
 ```
 put_passage(pos):
   F_PASS be
+  MAP[pos] = PASSAGE
+
+hide_passages():
   secret_limit = min(level - 1, SECRET_PASSAGE_DEPTH_DIVISOR)
-  if secret_limit > 0 and rnd(SECRET_PASSAGE_DEPTH_DIVISOR * SECRET_PASSAGE_CHANCE_DIVISOR) < secret_limit:
-     F_REAL le
-  else: MAP[pos] = PASSAGE
+  if secret_limit == 0: return
+  minden mező, ahol F_PASS van, MAP == PASSAGE, és nem a játékos helye:   // a lépcső jele nem PASSAGE
+    if rnd(SECRET_PASSAGE_DEPTH_DIVISOR * SECRET_PASSAGE_CHANCE_DIVISOR) < secret_limit:
+       MAP[pos] = SOLID_ROCK; F_REAL le                                   // titkos folyosó-mező: üresnek látszik
 ```
 
 ## 2.7 Arany és kezdő szörnyek (szobánként, nem fantom szoba)
+A folyosók, a lépcső, a játékos helye és a titkos folyosó-mezők után (2., J19).
 ```
+put_gold_and_monsters():
 for each room (not PHANTOM):
   has_gold = false
   if rnd(2) == 0 and (not has_amulet or level >= max_level):  // a rnd(2) mindig lefut
-     room.gold_val = rnd(50 + 10*level) + 2
-     room.gold_pos = find_floor(room, item)                   // üres padló (labirintusnál üres járat)
-     place GOLD on room.gold_pos
-     has_gold = true
+     pos = find_floor(room, item)                             // üres padló (labirintusnál üres járat)
+     if pos van:                                              // ha nincs: nincs arany (J19)
+        room.gold_val = rnd(50 + 10*level) + 2
+        room.gold_pos = pos
+        place GOLD on room.gold_pos
+        has_gold = true
   if rnd(100) < (has_gold ? 80 : 25):
-     monster = new_monster(level, initial_list=true)
-     place monster on find_floor(room, monster)               // bármely járható mező szörny nélkül – lehet aranyon is
-     monster.flags = típus flagjei (nincs ISRUN → alszik)
-     give_item(monster)  (lásd 6.3)
-
-find_floor(room /*null = véletlen nem fantom szoba minden próbánál*/, mode):
-  loop:
-    if room param == null: room = rooms[rnd_room()]
-    pos.x = room.pos.x + rnd(room.size.x - 2) + 1  // véletlen mező a falakon belül; előbb az x, aztán az y
-    pos.y = room.pos.y + rnd(room.size.y - 2) + 1
-    mode == item:    return pos, ha MAP[pos] == (MAZE(room) ? PASSAGE : FLOOR)  (nincs rajta semmi)
-    mode == monster: return pos, ha a jele járható és nincs rajta szörny (tárgy, lépcső, rejtett csapda lehet)
+     pos = find_floor(room, monster)                          // bármely járható mező szörny és játékos nélkül – lehet aranyon is
+     if pos van:                                              // ha nincs: nincs szörny (J19)
+        monster = new_monster(level, initial_list=true)
+        place monster on pos
+        monster.flags = típus flagjei (nincs ISRUN → alszik)
+        give_item(monster)  (lásd 6.3)
 ```
-A szörnymódban a járhatóságot a mező jele dönti el, nem a flagjei: járható, ha a jele nem szóköz és nem fal. A titkos folyosó-mező jele szóköz, a titkos ajtóé fal, így ezekre sem szörny, sem a játékos (2.11) nem kerül.
+
+**`find_floor`** (a C64-es változat, J19): egy szoba falakon belüli alkalmas mezőit gyűjti össze, és egyetlen dobással választ közülük. Mindig véget ér, és „nincs” eredményt ad, ha nincs alkalmas mező.
+```
+find_floor(room /*null = véletlen nem fantom szoba*/, mode):
+  tried = üres
+  loop:
+    r = room, ha meg van adva; különben egy véletlen, még nem próbált nem fantom szoba
+    candidates = r falakon belüli mezői, amelyek a mode szerint alkalmasak:
+      item:    MAP[pos] == (MAZE(r) ? PASSAGE : FLOOR)              // nincs rajta semmi
+      trap:    MAP[pos] == FLOOR                                    // labirintusban nincs ilyen
+      player:  a jele járható, és nincs rajta szörny                // a játékos saját mezője is lehet (teleport, 8.3)
+      monster: a jele járható, nincs rajta szörny, és nem a játékos helye   // tárgy, arany, lépcső, rejtett csapda lehet
+    if candidates nem üres: return candidates[count > 1 ? rnd(count) : 0]
+    if room meg van adva: return nincs
+    tried += r
+    if minden nem fantom szoba próbálva: return nincs
+```
+A járhatóságot a mező jele dönti el, nem a flagjei: járható, ha a jele nem szóköz és nem fal. A titkos folyosó-mező jele szóköz, a titkos ajtóé fal, így ezekre semmi nem kerül.
+
+*Eredetileg* a `find_floor` minden próbánál véletlen mezőt dobott (`ANY_ROOM`-nál véletlen szobában is), és addig próbálkozott, amíg alkalmasat nem talált; ha nem volt ilyen, soha nem állt meg. A szobán belül minden alkalmas mező ugyanolyan eséllyel jön ki, mint az eredetiben; a szoba választásában kis különbség van: az eredetiben az a szoba nyert nagyobb eséllyel, amelyikben az alkalmas mezők aránya nagyobb, itt minden szoba egyforma eséllyel, amelyikben van alkalmas mező.
 
 A kezdő szörny alszik, mert `new_monster` csak a típus flagjeit adja (ISRUN nélkül).
 
@@ -336,10 +369,11 @@ put_things():
   if rnd(20) == 0: treasure_room()             // 5% kincses szoba
   repeat 9:
     if rnd(100) < 36:
-      item = new_item()                        // 8.1
-      place item on find_floor(null, item)     // labirintus is lehet
+      pos = find_floor(null, item)             // labirintus is lehet; ha nincs: kimarad (J19)
+      if pos van: item = new_item(); place item on pos   // 8.1
   if level >= AMULET_LEVEL and not has_amulet:
-      place AMULET on find_floor(null, item)
+      pos = find_floor(null, item)             // ha nincs: kimarad, a következő szinten újra jön (J19)
+      if pos van: place AMULET on pos
 ```
 
 **Kincses szoba:**
@@ -351,21 +385,21 @@ treasure_room():
   extra = min(inner_area - MIN, MAX - MIN)            // a MIN feletti véletlen többlet felső határa; rnd(≤0) = 0 → ilyenkor is MIN tárgy
   item_count = rnd(extra) + MIN
   repeat item_count:
-     pos = find_floor(room, item) max. 20 próbával
-     ha nincs találat: kihagy (J7)
+     pos = find_floor(room, item)
+     ha nincs: kihagy (J7)
      new_item() a pos-ra
   monster_count = max(rnd(extra) + MIN, item_count + 2)
   monster_count = min(monster_count, inner_area)
   level++                                             // a szörnyek ÉS a tárgyaik is a következő szintről
   repeat monster_count:
-     pos = find_floor(room, monster) max. 10 próbával; ha nincs: kihagy
+     pos = find_floor(room, monster); ha nincs: kihagy
      monster = new_monster(level, initial_list=true); monster.flags |= ISMEAN
      give_item(monster)
   level--
 ```
 Szörnyből mindig legalább kettővel több van, mint a tervezett tárgyszám (`item_count`).
 
-> **C64-javítás (J7):** ha a 20 próba egyike sem talál üres mezőt, a tárgy nem jön létre. *Eredetileg* ilyenkor az előző próba `pos`-a maradt, és két tárgy került egy mezőre, amit a padló egyetlen jele nem tud mutatni.
+> **C64-javítás (J7):** ha a szobában nincs üres mező, a tárgy nem jön létre. *Eredetileg* a tárgyaknál 20, a szörnyeknél 10 próba után adta fel a keresést (akkor is, ha lett volna szabad mező), és a tárgynál ilyenkor az előző próba `pos`-a maradt, így két tárgy került egy mezőre, amit a padló egyetlen jele nem tud mutatni. A C64-es `find_floor` (2.7, J19) próbaszám nélkül, a szoba összes mezőjét nézi.
 
 Tárgy és szörny csak a táblák szabad helyeinek erejéig jön létre ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); ez a 2.7–2.8 minden elhelyezésére vonatkozik.
 
@@ -374,24 +408,26 @@ Tárgy és szörny csak a táblák szabad helyeinek erejéig jön létre ([1.4.1
 if rnd(10) < level:
   trap_count = min(rnd(level/4) + 1, MAX_TRAPS)                  // MAX_TRAPS = 10
   repeat trap_count:
-    repeat pos = find_floor(null, item) until MAP[pos] == FLOOR  // labirintusba nem kerül
+    pos = find_floor(null, trap)                                 // csak FLOOR: labirintusba nem kerül
+    if pos nincs: kimarad (J19)                                  // eredetileg itt végtelen ciklus, ha nincs FLOOR mező
     F_REAL le                                                    // rejtett: padlóként látszik
     trap_type[pos] = rnd(8)                                      // TRAPDOOR, ARROW, SLEEP, BEAR, TELEPORT, DART, RUST, MYSTERY (F_TMASK)
 ```
 
 ## 2.10 Lépcső
 ```
-repeat pos = find_floor(null, item)  // bármely nem fantom szoba, labirintus is (ott járat-mező)
-until F_REAL(pos)                    // rejtett csapdára nem kerülhet (J16)
+pos = find_floor(null, item)  // bármely nem fantom szoba, labirintus is (ott járat-mező); a szobák még üresek, ezért mindig talál
 MAP[pos] = STAIRS
 ```
 
-> **C64-javítás (J16):** a `find_floor` csak a karaktert nézi, és a rejtett csapda karaktere FLOOR. *Eredetileg* ezért a lépcső rejtett csapda mezőjére is kerülhetett, a mező flagjei (csapdatípus, F_REAL nélkül) pedig megmaradtak. A javítás a rejtett (F_REAL nélküli) mezőt kihagyja és újra próbál.
+> **C64-javítás (J16):** a lépcső a csapdák előtt kerül le (2., J19), és a csapda csak `FLOOR` jelű mezőre kerülhet, így a lépcső soha nincs rejtett csapdán. *Eredetileg* a lépcső a csapdák után jött, a `find_floor` csak a jelet nézte, és a rejtett csapda jele `FLOOR`. Ezért a lépcső rejtett csapda mezőjére is kerülhetett, a mező flagjei (csapdatípus, F_REAL nélkül) pedig megmaradtak.
 
 ## 2.11 Játékos elhelyezése
 ```
-pos = find_floor(null, monster)  // bármely nem fantom szoba (labirintus is), szörny nélküli járható mező
-player.pos = pos; player.ISHELD = false
-enter_room(pos)                  // megvilágítás + ébresztés (6.4)
+choose_player_position():           // a lépcső után, a titkos folyosó-mezők előtt (2., J19)
+  player.pos = find_floor(null, player)   // bármely nem fantom szoba (labirintus is); a szobákban még csak a lépcső van, ezért mindig talál
+  player.ISHELD = false
+
+enter_room(player.pos)              // a szint berendezése után: megvilágítás + ébresztés (6.4)
 ```
-A játékos tárgyon, aranyon, lépcsőn vagy rejtett csapdán is kezdhet (a csapda csak rálépéskor sül el, a kezdőmezőn nem).
+A játékos lépcsőn is kezdhet. Az arany, a tárgyak és a rejtett csapdák a mezőjére is kerülhetnek (a kezdőmezőn a csapda nem sül el, a tárgyat nem veszi fel, mert nem lépett rá), szörny viszont nem (2.7). Ez ugyanaz, mint az eredetiben, ahol a játékos került utoljára a helyére, és tárgyon, aranyon, lépcsőn vagy rejtett csapdán is kezdhetett.

@@ -119,6 +119,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J13 | a Medusa pillantásához a Medusa szobájának világossága számít | [6.4](06_szornyek.md#64-ébresztés) |
 | J14 | a haste self ivása is időbe kerül | [8.2](08_targyak.md#82-bájitalok-q) |
 | J15 | `f` szabálytalan átlós irányba nem visz el időt | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
-| J16 | lépcső nem kerül rejtett csapdára | [2.10](02_szintgeneralas.md#210-lépcső) |
+| J16 | lépcső nem kerül rejtett csapdára (a lépcső a csapdák előtt kerül le) | [2.10](02_szintgeneralas.md#210-lépcső) |
 | J17 | elírások javítása az üzenetekben | [függelék](fuggelek_uzenetkatalogus.md) |
 | J18 | a labirintus kijáratának keresése mindig megáll (ideiglenes lehet: a labirintusok elhelyezésével együtt újragondoljuk) | [2.6](02_szintgeneralas.md#26-folyosók) |
+| J19 | a szint berendezése mindig véget ér: a `find_floor` gyűjtve választ, a lépcső és a játékos az üres szobákba kerül, a titkos folyosó-mezők utánuk dőlnek el, a hely nélküli elhelyezés kimarad | [2.](02_szintgeneralas.md#2-szintgenerálás) |
