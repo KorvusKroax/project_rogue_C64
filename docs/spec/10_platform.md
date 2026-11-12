@@ -6,6 +6,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 - Commodore 64 vagy 64C, PAL és NTSC; bővítés (REU, gyorstöltő, SuperCPU) nem szükséges, de nem is zavarhat.
 - Lemezegység: 1541 / 1571 / 1581 vagy kompatibilis (SD2IEC, emulátor), 8–11. eszközszám.
 - A program két PRG fájl: a `rogue` maga a játék, a `rogue.screens` a képernyőmodul ([10.10](#1010-képernyőmodul)). A játék `LOAD"ROGUE",8,1` (vagy `,8` + `RUN`) után indul, egy BASIC-indítósorral (`SYS`), a modult pedig a játék tölti be. A kiadás egy lemezkép, amelyen mindkét fájl rajta van.
+- A programból nincs kilépés a BASIC-be: a játék vége után a címképernyő jön ([0.1](00_attekintes.md#01-indítás)), a gépet újraindítással lehet elhagyni. Így a kilépéskor semmit nem kell visszaállítani (megszakításvektorok, ROM-lapozás, a BASIC zero page-e).
 - Fejlesztéshez és teszteléshez: VICE (x64sc) emulátor, a kiadás előtt valódi gépen is ki kell próbálni.
 
 ## 10.2 Memória

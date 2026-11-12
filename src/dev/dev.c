@@ -1,10 +1,6 @@
 #include "dev.h"
 
-#include <stdlib.h>
-
-#include "../platform/platform.h"
 #include "../platform/screen.h"
-#include "../platform/key.h"
 
 void dev_fail(const char *message, const char *file, int line)
 {
@@ -25,10 +21,8 @@ void dev_fail(const char *message, const char *file, int line)
     put_text(":");
     put_int(line, 0);
 
-    wait_for_key();
-
-    platform_exit();
-    exit(1);
+    // megállás: a képernyő és a memória marad, a VICE monitorában megnézhető
+    while (true) {}
 }
 
 bool convert_text_to_number(const char *text, uint32_t max_value, uint32_t *number)

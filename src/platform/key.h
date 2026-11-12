@@ -21,6 +21,5 @@ void key_init(void);
 __interrupt void key_irq(void);  // képkockánként egyszer, a raszter-IRQ-ból
 uint8_t read_key(void);           // ASCII kód, 0 ha nincs leütés
 uint8_t wait_for_key(void);       // vár egy leütésre, és annak kódját adja
-void wait_for_keys_released(void);    // a még lenyomott billentyűt a KERNAL kilépés után a BASIC-be írná
 
 #endif

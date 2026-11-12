@@ -91,19 +91,6 @@ void key_init(void)
     }
 }
 
-void wait_for_keys_released(void)
-{
-    bool any_down;
-    do {
-        any_down = false;
-        for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
-            if (key_matrix[column]) {
-                any_down = true;
-            }
-        }
-    } while (any_down);
-}
-
 uint8_t read_key(void)
 {
     if (key_buffer_read == key_buffer_write) {

@@ -1,6 +1,7 @@
+#include <stdbool.h>
+
 #include "platform/platform.h"
 #include "platform/screen.h"
-#include "platform/key.h"
 #include "dev/dev.h"
 #include "rng.h"
 #include "state.h"
@@ -28,8 +29,6 @@ int main(void)
     move_screen_cursor_to_next_row();
     put_text("(based on Rogue 5.4.4)");
 
-    wait_for_key();
-
-    platform_exit();
-    return 0;
+    // ideiglenes: a címképernyő elkészültéig itt megáll
+    while (true) {}
 }

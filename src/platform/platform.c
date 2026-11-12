@@ -22,10 +22,7 @@
 
 #define IRQ_VECTOR            (*(void **)0x0314)
 #define NMI_VECTOR            (*(void **)0x0318)
-#define KERNAL_IRQ_HANDLER    ((void *)0xea31)
-#define KERNAL_NMI_HANDLER    ((void *)0xfe47)
 #define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt
-#define BASIC_STRING_STACK    ((volatile uint8_t *)0x0016)  // 3 bájt
 #define RASTER_INTERRUPT_ROW  250                           // a látható rész alatt
 #define VIC_RASTER_INTERRUPT  0x01
 
@@ -70,31 +67,6 @@ void platform_init(void)
     screen_init();
 
     __asm { cli }
-}
-
-void platform_exit(void)
-{
-    wait_for_keys_released();
-
-    __asm { sei }
-
-    vic.intr_enable = 0;                    // raszter-IRQ ki
-    vic.intr_ctrl = 0xff;                   // a függő VIC-IRQ törlése
-
-    IRQ_VECTOR = KERNAL_IRQ_HANDLER;
-    NMI_VECTOR = KERNAL_NMI_HANDLER;
-
-    vic_setbank(0);
-    __asm { jsr $ff81 }                   // CINT: VIC, színek, képernyőtörlés, CIA1 időzítő-IRQ
-
-    __asm { cli }
-
-    mmap_set(MMAP_ROM);                     // BASIC ROM be
-
-    // a BASIC szövegverem-mutatói: a fordító zero page-e felülírja őket
-    BASIC_STRING_STACK[0] = 0x19;
-    BASIC_STRING_STACK[1] = 0x16;
-    BASIC_STRING_STACK[2] = 0x00;
 }
 
 // ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön
