@@ -387,14 +387,16 @@ static void dev_status_screen(void)
 
 #define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
 
-// egy új szint szobái, folyosói és lépcsője a MAP-ba, onnan a képernyőre; a titkos mezők, ajtók és a fantom szobák is látszanak
+// egy új szint szobái, folyosói, lépcsője és a játékos a MAP-ba, onnan a képernyőre, a nézőablak a játékoson;
+// a titkos mezők, ajtók és a fantom szobák is látszanak
 static void rooms_generate_level(void)
 {
     clear_map();
     generate_rooms();
     connect_rooms();
     place_stairs();
-    hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
+    choose_player_position();
+    hide_passages(game.player.x, game.player.y);
     memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
     // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik; itt inverz folyosóként, illetve inverz ajtóként
@@ -419,7 +421,8 @@ static void rooms_generate_level(void)
         }
     }
 
-    redraw_map();
+    game.seen_map[game.player.y - MAP_TOP_ROW][game.player.x] = CHAR_PLAYER;
+    center_view_window(game.player.x);
 }
 
 // a fantom, a sötét és a labirintus szobák száma, egy menetben: ha egy rövid ciklusú függvényt egymás után más-más
@@ -454,10 +457,9 @@ static void dev_rooms_screen(void)
     set_screen_cursor(0, STATUS_ROW);
     put_text("SPACE: new level  +,-: depth  ESC: end");
     set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1,2,3: left/mid/right");
+    put_text("1,2,3: left/mid/right  P: player");
 
     game.dungeon_level = 10;
-    game.view_window_x = 0;
     rooms_generate_level();
 
     while (code != KEY_ESCAPE) {
@@ -482,6 +484,7 @@ static void dev_rooms_screen(void)
             case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
             case '2': center_view_window(MAP_COLUMNS / 2); break;
             case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
+            case 'p': center_view_window(game.player.x); break;
         }
     }
 }

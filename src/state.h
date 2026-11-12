@@ -18,6 +18,8 @@
 
 // a játékos és a szörnyek közös rekordja
 struct Creature {
+    uint8_t  x;                                 // a pozíció a térképen
+    uint8_t  y;
     uint8_t  strength;                          // 3..31
     uint8_t  experience_level;
     int16_t  hit_points;

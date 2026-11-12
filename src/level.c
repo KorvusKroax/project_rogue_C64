@@ -145,3 +145,10 @@ void place_stairs(void)
 
     set_map_character(x, y, CHAR_STAIRS);
 }
+
+void choose_player_position(void)
+{
+    // a szobákban még csak a lépcső van, ezért mindig van hely; ha mégsem, a játékos helye érvénytelen maradna
+    bool found = find_walkable_tile(ANY_ROOM, &game.player.x, &game.player.y);
+    DEV_CHECK(found, "no room for the player");
+}

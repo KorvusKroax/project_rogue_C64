@@ -14,5 +14,6 @@ bool find_empty_floor(uint8_t room_index, uint8_t *x, uint8_t *y);         // ü
 bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y);       // járható mező szörny nélkül: a játékosnak
 
 void place_stairs(void);        // a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra); a folyosók után, amíg a szobák üresek
+void choose_player_position(void);  // a játékos helye (game.player.x, y) egy véletlen nem fantom szoba járható mezőjén; a lépcső után, a titkos folyosó-mezők előtt
 
 #endif

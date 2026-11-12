@@ -204,6 +204,20 @@ static bool is_walkable_tile(uint8_t x, uint8_t y)
     return character == CHAR_FLOOR || character == CHAR_DOOR || character == CHAR_STAIRS;
 }
 
+// a mező egy nem fantom szoba falain belül van
+static bool is_inside_room(uint8_t x, uint8_t y)
+{
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & ROOM_PHANTOM) continue;
+
+        bool is_inside_x = x > room->x && x < room->x + room->width - 1;
+        bool is_inside_y = y > room->y && y < room->y + room->height - 1;
+        if (is_inside_x && is_inside_y) return true;
+    }
+    return false;
+}
+
 // pontosan egy lépcső van, egy nem fantom szoba falain belül, nem rejtett mezőn
 static bool is_stairs_valid(void)
 {
@@ -223,16 +237,18 @@ static bool is_stairs_valid(void)
 
     if (stairs_count != 1) return false;
     if (!(get_map_flags(stairs_x, stairs_y) & TILE_REAL)) return false;
+    return is_inside_room(stairs_x, stairs_y);
+}
 
-    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
-        const struct Room *room = &game.rooms[room_index];
-        if (room->flags & ROOM_PHANTOM) continue;
+// a játékos egy nem fantom szoba falain belül, járható, nem rejtett mezőn áll
+static bool is_player_position_valid(void)
+{
+    uint8_t x = game.player.x;
+    uint8_t y = game.player.y;
 
-        bool is_inside_x = stairs_x > room->x && stairs_x < room->x + room->width - 1;
-        bool is_inside_y = stairs_y > room->y && stairs_y < room->y + room->height - 1;
-        if (is_inside_x && is_inside_y) return true;
-    }
-    return false;
+    if (!(get_map_flags(x, y) & TILE_REAL)) return false;
+    if (!is_walkable_character(get_map_character(x, y))) return false;
+    return is_inside_room(x, y);
 }
 
 // az elárasztás verme: minden mező legfeljebb egyszer kerül bele, mert a berakáskor megjelölődik
@@ -263,17 +279,11 @@ static uint8_t get_room_inner_y(const struct Room *room)
     return room->flags & ROOM_MAZE ? room->y : room->y + 1;
 }
 
-// a szint összefüggő: az első nem fantom szobából elárasztva, a négy szomszéd felé, minden nem fantom szoba elérhető
+// a szint összefüggő: a játékos mezőjéből elárasztva (BFS), a négy szomszéd felé, minden nem fantom szoba és minden fantom-csomópont elérhető
 static bool is_level_connected(void)
 {
-    uint8_t first_room_index = 0;
-    while (game.rooms[first_room_index].flags & ROOM_PHANTOM) {
-        first_room_index++;
-    }
-
-    const struct Room *first_room = &game.rooms[first_room_index];
     flood_stack_count = 0;
-    visit_tile(get_room_inner_x(first_room), get_room_inner_y(first_room));
+    visit_tile(game.player.x, game.player.y);
 
     while (flood_stack_count > 0) {
         flood_stack_count--;
@@ -286,10 +296,16 @@ static bool is_level_connected(void)
         if (y < MAP_TOP_ROW + MAP_ROWS - 1) visit_tile(x, y + 1);
     }
 
+    // a fantom szobánál maga a csomópont
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         const struct Room *room = &game.rooms[room_index];
-        if (room->flags & ROOM_PHANTOM) continue;
-        if (!(get_map_flags(get_room_inner_x(room), get_room_inner_y(room)) & TILE_SEEN)) return false;
+        uint8_t x = room->x;
+        uint8_t y = room->y;
+        if (!(room->flags & ROOM_PHANTOM)) {
+            x = get_room_inner_x(room);
+            y = get_room_inner_y(room);
+        }
+        if (!(get_map_flags(x, y) & TILE_SEEN)) return false;
     }
     return true;
 }
@@ -336,9 +352,11 @@ int test_level_generation(uint16_t i)
     // a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört hozhat létre a labirintusban
     connect_rooms();
     place_stairs();
-    hide_passages(MAP_COLUMNS, MAP_TOP_ROW);    // a térképen kívüli oszlop: egyik mező sem marad ki
+    choose_player_position();
+    hide_passages(game.player.x, game.player.y);
 
     if (!is_stairs_valid()) return false;
+    if (!is_player_position_valid()) return false;
     if (!are_map_tiles_valid()) return false;
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
