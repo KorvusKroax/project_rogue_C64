@@ -487,15 +487,17 @@ static void dev_rooms_screen(void)
 static void dev_level_test_screen(void)
 {
     screen_clear();
+    set_screen_cursor(0, SCREEN_HEIGHT - 1);
+    put_text("ESC: stop");
     set_screen_cursor(0, 0);
     put_text("Level tests:");
     move_screen_cursor_to_next_row();
     if (!dev_run_level_tests()) {
         put_text("Level test failed");
-        move_screen_cursor_to_next_row();
     }
-    move_screen_cursor_to_next_row();
+    set_screen_cursor(0, SCREEN_HEIGHT - 1);
     put_text("ESC: end");
+    clear_to_row_end();
     wait_for_escape();
 }
 

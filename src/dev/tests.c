@@ -1,11 +1,11 @@
 #include "dev.h"
 #include "tests.h"
 
+#include "../platform/key.h"
 #include "../platform/screen.h"
 #include "../state.h"
 
 #define TEST_RESULT_COLUMN  21                  // az eredmény ebben az oszlopban kezdődik
-#define TEST_PROGRESS_STEP  50                  // a hosszú teszt ennyi próbánként kiírja, hol tart
 
 struct DevTest {
     const char *name;
@@ -49,17 +49,26 @@ static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
         set_screen_cursor_x(1);
         put_text(dt->name);
 
-        for (uint16_t i = 0; i < dt->count; i++) {
-            if (i % TEST_PROGRESS_STEP == 0 && dt->count > TEST_PROGRESS_STEP) {
+        uint16_t tried = 0;
+        while (tried < dt->count) {
+            // a többpróbás teszt minden próba előtt kiírja, hányadiknál tart és mennyi van összesen,
+            // és ESC-re abbahagyja: az eredmény az addigi próbákból jön
+            if (dt->count > 1) {
                 set_screen_cursor_x(TEST_RESULT_COLUMN);
-                put_int(i, 0);
+                put_int(tried, 0);
+                put_text("/");
+                put_int(dt->count, 0);
+                if (read_key() == KEY_ESCAPE) {
+                    break;
+                }
             }
-            if (!dt->fn(i)) {
+            if (!dt->fn(tried)) {
                 if (fails == 0) {
-                    first_fail = i;
+                    first_fail = tried;
                 }
                 fails++;
             }
+            tried++;
         }
 
         set_screen_cursor_x(TEST_RESULT_COLUMN);
@@ -67,14 +76,17 @@ static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
             if (dt->count == 1) {
                 put_text("OK");
             } else {
-                put_int(dt->count, 0);
+                put_int(tried, 0);
                 put_text("/");
                 put_int(dt->count, 0);
+                if (tried < dt->count) {
+                    put_text(" STOP");
+                }
             }
         } else {
-            put_int(dt->count - fails, 0);
+            put_int(tried - fails, 0);
             put_text("/");
-            put_int(dt->count, 0);
+            put_int(tried, 0);
             put_text(" FAIL AT ");
             put_int(first_fail, 0);
             all_ok = false;
@@ -94,10 +106,12 @@ bool dev_run_tests(void)
     return run_test_table(dev_tests, sizeof(dev_tests) / sizeof(dev_tests[0]));
 }
 
-// az arányok a szintek számlálóiból jönnek, ezért a generálás után
+// az arányok és az idők a szintek számlálóiból jönnek, ezért a generálás után
 bool dev_run_level_tests(void)
 {
     bool generation_ok = run_test_table(dev_level_tests, sizeof(dev_level_tests) / sizeof(dev_level_tests[0]));
     bool ratios_ok = show_level_room_ratios();
-    return generation_ok && ratios_ok;
+    move_screen_cursor_to_next_row();
+    bool times_ok = show_level_generation_times();
+    return generation_ok && ratios_ok && times_ok;
 }

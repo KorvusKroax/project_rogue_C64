@@ -5,6 +5,7 @@
 
 #include "../level.h"
 #include "../map.h"
+#include "../platform/platform.h"
 #include "../platform/screen.h"
 #include "../rooms.h"
 #include "../state.h"
@@ -22,6 +23,11 @@ static const uint8_t level_test_depths[LEVEL_TEST_DEPTH_COUNT] = { 1, 10, 26, 40
 static uint16_t level_room_counts[LEVEL_TEST_DEPTH_COUNT];
 static uint16_t level_dark_counts[LEVEL_TEST_DEPTH_COUNT];
 static uint16_t level_maze_counts[LEVEL_TEST_DEPTH_COUNT];
+
+// mélységenként a leglassabb generate_level képkockában
+static uint16_t level_max_frames[LEVEL_TEST_DEPTH_COUNT];
+
+#define LEVEL_TIME_LIMIT_FRAMES  100            // egy szint legfeljebb 2 másodperc: PAL-on 50 képkocka/s (NTSC-n 60, ott ez szigorúbb)
 
 // a szoba nem lóg ki a szektorából, és a térkép sorain belül van (a 0. és a 23. logikai sorba nem ér);
 // a normál és a fantom szoba a szektor utolsó oszlopát és sorát üresen hagyja; a labirintus legtávolabbi mezője
@@ -310,6 +316,35 @@ static bool is_level_connected(void)
     return true;
 }
 
+// a teljes szint ujjlenyomata: a MAP két rétege, a szobák és a játékos helye, összegzéssel (Fletcher-féle két összeg)
+static uint16_t calculate_level_checksum(void)
+{
+    uint8_t sum = 0;
+    uint8_t sum_of_sums = 0;
+    const uint8_t *bytes = &game.map_characters[0][0];
+
+    for (uint16_t i = 0; i < sizeof(game.map_characters); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    bytes = &game.map_flags[0][0];
+    for (uint16_t i = 0; i < sizeof(game.map_flags); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    bytes = (const uint8_t *)game.rooms;
+    for (uint16_t i = 0; i < sizeof(game.rooms); i++) {
+        sum += bytes[i];
+        sum_of_sums += sum;
+    }
+    sum += game.player.x;
+    sum_of_sums += sum;
+    sum += game.player.y;
+    sum_of_sums += sum;
+
+    return ((uint16_t)sum_of_sums << 8) | sum;
+}
+
 int test_level_generation(uint16_t i)
 {
     uint8_t depth_index = i % LEVEL_TEST_DEPTH_COUNT;
@@ -319,6 +354,7 @@ int test_level_generation(uint16_t i)
             level_room_counts[d] = 0;
             level_dark_counts[d] = 0;
             level_maze_counts[d] = 0;
+            level_max_frames[d] = 0;
         }
     }
 
@@ -350,12 +386,22 @@ int test_level_generation(uint16_t i)
     }
 
     // a teljes szint ugyanazzal a maggal újra, a labirintus-ellenőrzés után, mert a felső labirintusból induló folyosó kört
-    // hozhat létre a labirintusban; a szobáknak ugyanazoknak kell lenniük
+    // hozhat létre a labirintusban; a szobáknak ugyanazoknak kell lenniük; közben az idejét is mérjük
     struct Room checked_rooms[ROOM_COUNT];
     memcpy(checked_rooms, game.rooms, sizeof(checked_rooms));
     game.seed = LEVEL_TEST_FIRST_SEED + i;
+
+    uint16_t start_frame = get_frame_count_16();
     generate_level();
+    uint16_t frames = get_frame_count_16() - start_frame;
+    if (frames > level_max_frames[depth_index]) {
+        level_max_frames[depth_index] = frames;
+    }
+
     if (memcmp(checked_rooms, game.rooms, sizeof(checked_rooms)) != 0) return false;
+
+    // az ujjlenyomat még az ellenőrzések előtt, mert azok a TILE_SEEN flaget írják
+    uint16_t level_checksum = calculate_level_checksum();
 
     if (!is_stairs_valid()) return false;
     if (!is_player_position_valid()) return false;
@@ -367,19 +413,29 @@ int test_level_generation(uint16_t i)
     }
 
     // az are_map_tiles_valid után, mert az törli a labirintus-ellenőrzés TILE_SEEN jelöléseit
-    return is_level_connected();
+    if (!is_level_connected()) return false;
+
+    // ugyanazzal a maggal ugyanaz a szint: harmadszor generálva az ujjlenyomatnak egyeznie kell
+    game.seed = LEVEL_TEST_FIRST_SEED + i;
+    generate_level();
+    return calculate_level_checksum() == level_checksum;
 }
 
 // az arány-táblázat oszlopai: mélység, szobák, sötét szobák várt és kapott száma, labirintusok várt és kapott száma, eredmény;
-// a számok és a fejlécek jobbra igazítva RATIO_COLUMN_WIDTH széles mezőben
+// a számok és a fejlécek jobbra igazítva RATIO_COLUMN_WIDTH széles mezőben, a mezők között egy szóköz
 #define RATIO_COLUMN_WIDTH      5
-#define RATIO_DEPTH_COLUMN      1
-#define RATIO_ROOMS_COLUMN      7
-#define RATIO_DARK_WANT_COLUMN  13
-#define RATIO_DARK_GOT_COLUMN   19
-#define RATIO_MAZE_WANT_COLUMN  25
-#define RATIO_MAZE_GOT_COLUMN   31
-#define RATIO_RESULT_COLUMN     37              // "OK" vagy "FAIL", a 40 oszlopos képernyő végéig
+#define RATIO_COLUMN_STEP       (RATIO_COLUMN_WIDTH + 1)
+#define RATIO_DEPTH_COLUMN      0
+#define RATIO_ROOMS_COLUMN      (RATIO_DEPTH_COLUMN + RATIO_COLUMN_STEP)
+#define RATIO_DARK_WANT_COLUMN  (RATIO_ROOMS_COLUMN + RATIO_COLUMN_STEP)
+#define RATIO_DARK_GOT_COLUMN   (RATIO_DARK_WANT_COLUMN + RATIO_COLUMN_STEP)
+#define RATIO_MAZE_WANT_COLUMN  (RATIO_DARK_GOT_COLUMN + RATIO_COLUMN_STEP)
+#define RATIO_MAZE_GOT_COLUMN   (RATIO_MAZE_WANT_COLUMN + RATIO_COLUMN_STEP)
+#define RATIO_RESULT_COLUMN     (RATIO_MAZE_GOT_COLUMN + RATIO_COLUMN_STEP)    // "OK" vagy "FAIL"
+#define RATIO_RESULT_WIDTH      4                                               // a "FAIL" hossza
+#if RATIO_RESULT_COLUMN + RATIO_RESULT_WIDTH > SCREEN_WIDTH
+#error "az arány-táblázat nem fér ki a képernyő szélességébe"
+#endif
 
 // a sötét szobák esélye a mélységen: min(mélység - 1, DARK_ROOM_CHANCE_DIVISOR) / DARK_ROOM_CHANCE_DIVISOR
 static uint8_t get_dark_chance(uint8_t depth_index)
@@ -466,6 +522,37 @@ bool show_level_room_ratios(void)
 
         set_screen_cursor_x(RATIO_RESULT_COLUMN);
         if (is_depth_ratio_ok(depth_index)) {
+            put_text("OK");
+        } else {
+            put_text("FAIL");
+            all_ok = false;
+        }
+        move_screen_cursor_to_next_row();
+    }
+
+    return all_ok;
+}
+
+bool show_level_generation_times(void)
+{
+    bool all_ok = true;
+
+    set_screen_cursor_x(1);
+    put_text("LEVEL TIME (FRAMES)");
+    move_screen_cursor_to_next_row();
+
+    put_ratio_header(RATIO_DEPTH_COLUMN, "DEPTH", 5);
+    put_ratio_header(RATIO_ROOMS_COLUMN, "MAX", 3);
+    put_ratio_header(RATIO_DARK_WANT_COLUMN, "LIMIT", 5);
+    move_screen_cursor_to_next_row();
+
+    for (uint8_t depth_index = 0; depth_index < LEVEL_TEST_DEPTH_COUNT; depth_index++) {
+        put_ratio_number(RATIO_DEPTH_COLUMN, level_test_depths[depth_index]);
+        put_ratio_number(RATIO_ROOMS_COLUMN, level_max_frames[depth_index]);
+        put_ratio_number(RATIO_DARK_WANT_COLUMN, LEVEL_TIME_LIMIT_FRAMES);
+
+        set_screen_cursor_x(RATIO_RESULT_COLUMN);
+        if (level_max_frames[depth_index] <= LEVEL_TIME_LIMIT_FRAMES) {
             put_text("OK");
         } else {
             put_text("FAIL");

@@ -106,6 +106,20 @@ uint32_t calculate_seed(void)
     return seed;
 }
 
+// a jiffy óra a legnagyobb helyiértékkel kezdődik: $A1 a felső, $A2 az alsó bájt; ha olvasás közben átfordul, újra
+uint16_t get_frame_count_16(void)
+{
+    uint8_t high;
+    uint8_t low;
+
+    do {
+        high = JIFFY_CLOCK[1];
+        low = JIFFY_CLOCK[2];
+    } while (high != JIFFY_CLOCK[1]);
+
+    return ((uint16_t)high << 8) | low;
+}
+
 void wait_for_next_frame(void)
 {
     uint8_t start_frame = frame_count;
