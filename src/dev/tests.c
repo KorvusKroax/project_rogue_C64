@@ -21,6 +21,7 @@ static const struct DevTest dev_tests[] = {
     { "RNG-SPREAD", test_spread, 1 },
     { "NUM-SAT ARITHMETIC", test_saturating_arithmetic, 1 },
     { "NUM-FORMAT", test_format, 1 },
+    { "NUM-FROM TEXT", test_convert_text_to_number, 1 },
     { "KEY-DECODE", test_key_decode, 1 },
     { "VIEW-FOLLOW", test_view_follow, 1 },
     { "MESS-PREPARE TEXT", test_prepare_message_text, 1 },

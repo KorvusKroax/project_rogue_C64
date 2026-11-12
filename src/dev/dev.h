@@ -11,6 +11,9 @@
     bool dev_run_tests(void);           // öntesztek: mindegyik lefut, az eredmény a képernyőre kerül, igazat ad, ha mind sikerült
     bool dev_run_level_tests(void);     // szint-önteszt: sok véletlen szint rögzített magokkal; hosszú, VICE-ben warp módban
     void dev_run_screens(void);         // seed, gyors öntesztek és alattuk menü: a szint-önteszt és a tesztképernyők billentyűre, ESC-re vissza; RETURN-re visszatér
+
+    // a csak decimális jegyekből álló szöveg értéke a *number-be; hamis, ha üres, más karakter is van benne, vagy max_value-nál nagyobb (ekkor a *number nem változik)
+    bool convert_text_to_number(const char *text, uint32_t max_value, uint32_t *number);
 #else
     #define DEV_CHECK(cond, message) ((void)0)
 #endif

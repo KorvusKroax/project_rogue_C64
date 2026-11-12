@@ -30,3 +30,23 @@ void dev_fail(const char *message, const char *file, int line)
     platform_exit();
     exit(1);
 }
+
+bool convert_text_to_number(const char *text, uint32_t max_value, uint32_t *number)
+{
+    if (*text == 0) return false;
+
+    uint32_t value = 0;
+    while (*text) {
+        if (*text < '0' || *text > '9') return false;
+
+        // value * 10 + digit <= max_value, túlcsordulás nélkül ellenőrizve
+        uint8_t digit = *text - '0';
+        if (digit > max_value || value > (max_value - digit) / 10) return false;
+
+        value = value * 10 + digit;
+        text++;
+    }
+
+    *number = value;
+    return true;
+}

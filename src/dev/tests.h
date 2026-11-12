@@ -12,6 +12,7 @@ int test_ROLL(uint16_t i);
 int test_spread(uint16_t i);
 int test_saturating_arithmetic(uint16_t i);
 int test_format(uint16_t i);
+int test_convert_text_to_number(uint16_t i);
 int test_key_decode(uint16_t i);
 int test_view_follow(uint16_t i);
 int test_prepare_message_text(uint16_t i);

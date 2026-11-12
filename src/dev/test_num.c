@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../num.h"
+#include "dev.h"
 
 int test_saturating_arithmetic(uint16_t i)
 {
@@ -38,4 +39,37 @@ int test_format(uint16_t i)
         text_is(buffer, format_int(buffer, 12345, 3), "12345") &&
         text_is(buffer, format_int(buffer, 12345, -3), "12345") &&
         text_is(buffer, format_int(buffer, 42, 100), "         42");
+}
+
+// sikeres átalakításnál a várt érték jön ki
+static bool number_is(const char *text, uint32_t max_value, uint32_t expected)
+{
+    uint32_t number = 0;
+    return convert_text_to_number(text, max_value, &number) && number == expected;
+}
+
+// hibás szövegnél hamis, és a szám nem változik
+static bool number_rejected(const char *text, uint32_t max_value)
+{
+    uint32_t number = 12345;
+    return !convert_text_to_number(text, max_value, &number) && number == 12345;
+}
+
+int test_convert_text_to_number(uint16_t i)
+{
+    return
+        number_is("0", UINT32_MAX, 0) &&
+        number_is("42", UINT32_MAX, 42) &&
+        number_is("007", UINT32_MAX, 7) &&
+        number_is("4294967295", UINT32_MAX, 4294967295UL) &&
+        number_is("255", 255, 255) &&
+        number_is("5", 5, 5) &&
+        number_rejected("4294967296", UINT32_MAX) &&
+        number_rejected("10000000000", UINT32_MAX) &&
+        number_rejected("256", 255) &&
+        number_rejected("6", 5) &&
+        number_rejected("", UINT32_MAX) &&
+        number_rejected("12a", UINT32_MAX) &&
+        number_rejected("-1", UINT32_MAX) &&
+        number_rejected(" 1", UINT32_MAX);
 }

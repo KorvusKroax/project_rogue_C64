@@ -11,6 +11,7 @@
 #include "../level.h"
 #include "../map.h"
 #include "../message.h"
+#include "../num.h"
 #include "../rooms.h"
 #include "../state.h"
 #include "../status.h"
@@ -501,6 +502,26 @@ static void dev_level_test_screen(void)
     wait_for_escape();
 }
 
+// a seed előjel nélküli, a put_int előjeles: az utolsó jegy külön, így a többi elfér 31 biten
+static void put_seed(uint32_t seed)
+{
+    if (seed >= 10) {
+        put_int(seed / 10, 0);
+    }
+    put_int(seed % 10, 0);
+}
+
+// a seed kézi megadása a sávban; nem szám vagy ESC esetén marad a régi
+static void ask_seed(void)
+{
+    char answer[FORMAT_DIGITS_MAX + 1];
+
+    if (ask_text("seed: ", answer, FORMAT_DIGITS_MAX)) {
+        convert_text_to_number(answer, UINT32_MAX, &game.seed);
+    }
+    message_clear();
+}
+
 // a seed, a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak) és a menü
 static void draw_tests_and_menu(void)
 {
@@ -508,7 +529,7 @@ static void draw_tests_and_menu(void)
 
     set_screen_cursor(0, 0);
     put_text("Seed: ");
-    put_int(game.seed, 0);
+    put_seed(game.seed);
     move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
 
@@ -524,6 +545,8 @@ static void draw_tests_and_menu(void)
     move_screen_cursor_to_next_row();
     put_text("V: view  M: message  S: status  R: rooms");
     move_screen_cursor_to_next_row();
+    put_text("E: enter seed");
+    move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
     put_text("RETURN: start the game");
 }
@@ -537,6 +560,7 @@ void dev_run_screens(void)
         code = wait_for_key();
 
         switch (code) {
+            case 'e': ask_seed(); break;
             case 'l': dev_level_test_screen(); break;
             case 'c': dev_charset_screen(); break;
             case 'k': dev_keyboard_screen(); break;
