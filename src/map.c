@@ -42,3 +42,8 @@ void remove_map_flags(uint8_t x, uint8_t y, uint8_t flags)
     CHECK_MAP_WRITE_POSITION(x, y);
     game.map_flags[y - MAP_TOP_ROW][x] &= ~flags;
 }
+
+bool is_walkable_character(uint8_t character)
+{
+    return character != CHAR_SOLID_ROCK && character != CHAR_WALL_HORIZONTAL && character != CHAR_WALL_VERTICAL;
+}

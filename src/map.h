@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // a térkép jelei
 #define CHAR_PASSAGE           '#'
@@ -40,5 +41,7 @@ void set_map_character(uint8_t x, uint8_t y, uint8_t character);
 uint8_t get_map_flags(uint8_t x, uint8_t y);                    // a mező összes flagje egy bájtban
 void add_map_flags(uint8_t x, uint8_t y, uint8_t flags);        // a megadott flagek bekapcsolása, a többi marad
 void remove_map_flags(uint8_t x, uint8_t y, uint8_t flags);     // a megadott flagek kikapcsolása, a többi marad
+
+bool is_walkable_character(uint8_t character);                  // a jel szerint rá lehet lépni: nem kőzet és nem fal; a titkos folyosó kőzetnek, a titkos ajtó falnak látszik
 
 #endif

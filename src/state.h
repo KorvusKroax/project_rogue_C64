@@ -31,6 +31,11 @@ struct Creature {
 // a szobák száma: szektoronként egy, a szoba indexe a szektor indexe
 #define ROOM_COUNT  (SECTOR_GRID_SIZE * SECTOR_GRID_SIZE)      // default: 9
 
+// a szobaindex 8 bites: a szobák ciklusai uint8_t számlálóval mennek, és a 0xff szabad marad (ANY_ROOM)
+#if ROOM_COUNT > 255
+    #error "túl sok szoba: a szobaindex 8 bites"
+#endif
+
 // szobaflagek
 #define ROOM_PHANTOM  0x01                      // nem igazi szoba, csak egy folyosó-csomópont
 #define ROOM_DARK     0x02                      // sötét szoba
