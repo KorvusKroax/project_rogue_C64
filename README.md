@@ -279,6 +279,6 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J14 haste self | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31) |
 | J15 `f` átlósan | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |
 | J16 lépcső csapdán | [M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16), [M09-01](https://github.com/KorvusKroax/project_rogue_C64/issues/37) |
-| J17 elírások | [M04-01](https://github.com/KorvusKroax/project_rogue_C64/issues/18), [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) |
+| J17 elírások | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) |
 | J18 labirintus kijárata | [M03-02](https://github.com/KorvusKroax/project_rogue_C64/issues/15) |
 | J19 a szint berendezése mindig véget ér | [M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16), [M05-01](https://github.com/KorvusKroax/project_rogue_C64/issues/22), [M06-01](https://github.com/KorvusKroax/project_rogue_C64/issues/26), [M09-01](https://github.com/KorvusKroax/project_rogue_C64/issues/37) |

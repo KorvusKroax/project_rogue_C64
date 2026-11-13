@@ -24,7 +24,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | helyzet | normál | hallucinálva |
 |---|---|---|
 | alvás/ájulás/fagyás vége | you can move again | |
-| ismeretlen billentyű | illegal command '<bill>' | |
+| ismeretlen billentyű | illegal command '<bill>'; CTRL-kódnál `^` + nagybetű, mint a súgóban (pl. `'^A'`), a törlésnél `'^?'` | |
 | `a` első parancsként | you haven't typed a command yet | |
 | irány bekérése | which direction? | |
 | `f` olyan irányba, ahol nincs látott szörny | I see no monster there | |
