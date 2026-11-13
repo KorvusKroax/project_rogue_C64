@@ -22,7 +22,7 @@ if /i "%~1"=="dev" (
     set DEFS=-dDEVMODE
 )
 rem a fejlesztoi fajlok csak a fejlesztoi buildbe kerulnek
-if /i "%~1"=="dev" set SOURCES=%SOURCES% src\dev\dev.c src\dev\tests.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_level.c src\dev\test_screens.c
+if /i "%~1"=="dev" set SOURCES=%SOURCES% src\dev\dev.c src\dev\dev_commands.c src\dev\tests.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_level.c src\dev\test_screens.c
 rem "build.bat dev 12345": fejlesztoi build rogzitett seeddel
 if /i "%~1"=="dev" if not "%~2"=="" set DEFS=%DEFS% -dDEV_SEED=%~2UL
 

@@ -608,6 +608,8 @@ void dev_run_screens(void)
 {
     uint8_t code = 0;
 
+    enable_function_keys();     // a fejlesztői parancsokhoz
+
     while (code != KEY_RETURN) {
         draw_tests_and_menu();
         code = wait_for_key();

@@ -41,8 +41,12 @@ static const struct KeyCase key_cases[] = {
     { 1, 2, KEY_MODIFIER_CTRL | KEY_MODIFIER_SHIFT, 1 },
     { 7, 0, KEY_MODIFIER_CTRL, 0 },
     { 0, 1, KEY_MODIFIER_CTRL, 0 },
+    // F-billentyűk (a táblában van kódjuk; az enable_function_keys a key.c-ben szűr)
+    { 0, 4, 0, KEY_F1 }, { 0, 4, KEY_MODIFIER_SHIFT, KEY_F2 },
+    { 0, 3, 0, KEY_F7 }, { 0, 3, KEY_MODIFIER_SHIFT, KEY_F8 },
+    { 0, 4, KEY_MODIFIER_CTRL, 0 },
     // kód nélkül
-    { 0, 2, 0, 0 }, { 0, 3, 0, 0 }, { 6, 3, 0, 0 },
+    { 0, 2, 0, 0 }, { 0, 7, 0, 0 }, { 6, 3, 0, 0 },
     { 4, 3, KEY_MODIFIER_SHIFT, 0 }, { 5, 6, KEY_MODIFIER_SHIFT, 0 },
 };
 

@@ -26,6 +26,7 @@ A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https:
 - **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A feltételnek nem lehet mellékhatása, mert a kiadási buildben ki sem értékelődik.
 - **Öntesztek** (`src/dev/`, a teszteket a `dev_tests` lista sorolja fel a `tests.c`-ben): induláskor lefutnak, az eredményük a képernyőre kerül (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`).
 - **Seed:** induláskor kiíródik; a menüben az `E` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
+- **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot): **F1** új szint ugyanazon a mélységen, **F3** ugrás tetszőleges mélységre (1..255). Egyik sem visz el időt.
 
 A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított módban futtathatók: **Alt+W** ki-be kapcsolja a warp módot (vagy indításkor a `-warp` kapcsoló).
 

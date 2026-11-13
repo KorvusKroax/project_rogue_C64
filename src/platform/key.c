@@ -36,6 +36,15 @@ static uint8_t repeat_row_bit;          // 0: nincs ismételhető billentyű
 static uint8_t repeat_position;
 static uint8_t repeat_frames;           // a leütés vagy az előző ismétlés óta, bekapcsolt ismétlés mellett
 
+static bool function_keys_enabled;
+
+// bekapcsolás nélkül az F-billentyűnek nincs kódja
+static __forceinline uint8_t get_enabled_key_code(uint8_t position)
+{
+    uint8_t code = get_key_code(position, key_modifiers);
+    return is_function_key(code) && !function_keys_enabled ? 0 : code;
+}
+
 // a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
 static __forceinline void scan_keyboard(void)
 {
@@ -76,7 +85,7 @@ static __forceinline void detect_keypress(void)
             if (fresh & row_bit) {
                 fresh ^= row_bit;
                 key_counted[column] |= row_bit;
-                code = get_key_code(position, key_modifiers);
+                code = get_enabled_key_code(position);
                 if (code) {
                     repeat_column = column;
                     repeat_row_bit = row_bit;
@@ -110,7 +119,7 @@ static __forceinline void repeat_held_key(void)
     repeat_frames = KEY_REPEAT_DELAY - KEY_REPEAT_INTERVAL;
 
     if (key_buffer_write == key_buffer_read) {
-        uint8_t code = get_key_code(repeat_position, key_modifiers);
+        uint8_t code = get_enabled_key_code(repeat_position);
         if (code) {
             key_buffer[key_buffer_write & (KEY_BUFFER_SIZE - 1)] = code;
             key_buffer_write++;
@@ -130,6 +139,11 @@ __interrupt void key_irq(void)
 void set_key_repeat(bool enabled)
 {
     key_repeat_enabled = enabled;
+}
+
+void enable_function_keys(void)
+{
+    function_keys_enabled = true;
 }
 
 void key_init(void)

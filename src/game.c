@@ -12,6 +12,10 @@
 #include "status.h"
 #include "texts.h"
 
+#ifdef DEVMODE
+    #include "dev/dev.h"
+#endif
+
 #define KEY_NAME_SIZE  3    // legfeljebb két karakter és a lezáró nulla
 
 // a billentyű kiírható alakja: a vezérlőkód ^ + nagybetű (^A, ^[), a törlés ^?, a többi maga a karakter
@@ -51,6 +55,11 @@ static bool execute_command(uint8_t code)
             repeat_last_message();
             return false;
         default:
+            #ifdef DEVMODE
+                if (is_function_key(code)) {
+                    return dev_execute_command(code);
+                }
+            #endif
             report_illegal_command(code);
             return false;
     }
