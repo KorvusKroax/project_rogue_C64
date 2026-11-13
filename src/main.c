@@ -25,9 +25,9 @@ int main(void)
     screen_clear();
     set_screen_colors(0, 0, 15);
 
-    set_screen_cursor(0, 0);
+    set_screen_cursor(14, 5);
     put_text("Rogue for C64");
-    move_screen_cursor_to_next_row();
+    set_screen_cursor(9, 6);
     put_text("(based on Rogue 5.4.4)");
 
     run_game();
