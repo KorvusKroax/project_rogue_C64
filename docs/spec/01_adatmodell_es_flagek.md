@@ -112,7 +112,6 @@ GameState {
   monsters               // a szinten lévő szörnyek listája
   floor_items            // a padlón lévő tárgyak listája
   last_command           // az előző parancs, az 'a' ismétléshez (4.2.5)
-  last_message           // az utolsó üzenet, a CTRL-P-hez (3.4)
   count_prefix           // a parancs előtti számprefix (pl. "5s") (4.2.5)
   can_huh                // CANHUH: a következő sikeres ütés összezavarja a szörnyet (8.3)
   max_hit_this_fight     // az aktuális harc legnagyobb egyszeri sebzése, az 'f' leállásához (7.2)

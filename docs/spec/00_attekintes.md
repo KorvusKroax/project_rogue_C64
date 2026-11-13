@@ -100,6 +100,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E17 | a sírkövön nincs évszám (nincs valós idejű óra) | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E18 | nincs `terse` opció: csak a normál üzenetek vannak, a dobás mindig animálódik | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
 | E19 | tekercsfeliratok: legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
+| E20 | `CTRL-P`: a kérdések nem számítanak utolsó üzenetnek, és az utolsó üzenet nem kerül a mentésbe | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |
