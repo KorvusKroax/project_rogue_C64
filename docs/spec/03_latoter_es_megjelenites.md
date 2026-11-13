@@ -78,7 +78,7 @@ Mindkét sor a végéig törlődik. A legszélesebb reális értékekkel (255. s
 |---|---|---|
 | `MESSAGE_ROW` | 0: az üzenetsáv első sora | 0 |
 | `MESSAGE_ROW_COUNT` | 2: a sáv sorai; két 40 karakteres sor annyi, mint az eredeti 80 karakteres üzenetsor | 1 |
-| `MORE_TEXT` | `--More--`: a sáv utolsó sorában mindig marad neki hely | `--More--` |
+| `TEXT_MORE` | `--More--`: a sáv utolsó sorában mindig marad neki hely | `--More--` |
 
 Fordítási feltételek: a sáv legalább egy sor, és nem érhet a státuszsorig. A sáv hossza 16 bites, így a sorainak számát csak a képernyő korlátozza.
 

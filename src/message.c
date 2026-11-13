@@ -8,6 +8,7 @@
 #include "platform/screen.h"
 #include "num.h"
 #include "status.h"
+#include "texts.h"
 #include "view.h"
 
 // a sáv legalább egy sor, és nem érhet a státuszsorig
@@ -121,7 +122,7 @@ static const char *text_after_break(const char *text)
     return *text == ' ' ? text + 1 : text;  // a törés szóköze nem kerül a következő sor elejére
 }
 
-// az utolsó sorban a MORE_TEXT helye is megmarad
+// az utolsó sorban a TEXT_MORE helye is megmarad
 uint16_t calculate_message_chars_fitting_bar(const char *text)
 {
     const char *row_text = text;
@@ -129,7 +130,7 @@ uint16_t calculate_message_chars_fitting_bar(const char *text)
         row_text = text_after_break(row_text + calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH));
     }
 
-    return (row_text - text) + calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH - MORE_TEXT_LENGTH);
+    return (row_text - text) + calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH - TEXT_MORE_LENGTH);
 }
 
 // a sáv ennyi sort foglal; a felszabaduló sorok törlődnek, és ahol térkép van, oda visszajön
@@ -178,12 +179,12 @@ static void show_message_bar(void)
 static void show_more_and_wait(void)
 {
     // ha az utolsó használt sorban nincs helye, a következő sor elejére kerül; a sáv utolsó sorában mindig van helye
-    if (message_bar_end_column > SCREEN_WIDTH - MORE_TEXT_LENGTH) {
+    if (message_bar_end_column > SCREEN_WIDTH - TEXT_MORE_LENGTH) {
         set_screen_cursor(0, MESSAGE_ROW + message_bar_rows_in_use);
         set_message_bar_rows_in_use(message_bar_rows_in_use + 1);
     }
 
-    put_text(MORE_TEXT);
+    put_text(TEXT_MORE);
     clear_to_row_end();
 
     while (wait_for_key() != ' ') {}
@@ -191,7 +192,7 @@ static void show_more_and_wait(void)
     message_clear();
 }
 
-// az eddigi szöveg után fűzi, ha a MORE_TEXT is elfér vele
+// az eddigi szöveg után fűzi, ha a TEXT_MORE is elfér vele
 static bool append_to_message_bar(const char *text)
 {
     uint16_t joined_length = message_bar_length + 1 + strlen(text);

@@ -6,10 +6,11 @@
 
 #include "../platform/screen.h"
 #include "../message.h"
+#include "../texts.h"
 
 // a próbaszöveg 'a' betűs szavakból áll, egy-egy szóközzel; a szavak hossza a képernyő és a sáv méretéből jön
 #define WIDTH       SCREEN_WIDTH                        // egy teljes sor
-#define LAST_WIDTH  (SCREEN_WIDTH - MORE_TEXT_LENGTH)   // a sáv utolsó sora, a --More-- helye nélkül
+#define LAST_WIDTH  (SCREEN_WIDTH - TEXT_MORE_LENGTH)   // a sáv utolsó sora, a --More-- helye nélkül
 #define HALF_LAST   (LAST_WIDTH / 2 + 1)                // két ekkora szó nem fér egy utolsó sorba
 
 #define MAX_WORDS   3
