@@ -39,6 +39,8 @@ static void report_illegal_command(uint8_t code)
 static bool execute_command(uint8_t code)
 {
     switch (code) {
+        case '.':
+            return true;
         case KEY_ESCAPE:
         case ' ':
             return false;
