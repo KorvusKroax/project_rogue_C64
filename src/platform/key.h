@@ -2,6 +2,7 @@
 #define KEY_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // a nem nyomtatható logikai billentyűk kódja; a CTRL + betű 1..26
 #define KEY_RETURN  13
@@ -21,5 +22,6 @@ void key_init(void);
 __interrupt void key_irq(void);  // képkockánként egyszer, a raszter-IRQ-ból
 uint8_t read_key(void);           // ASCII kód, 0 ha nincs leütés
 uint8_t wait_for_key(void);       // vár egy leütésre, és annak kódját adja
+void set_key_repeat(bool enabled); // a nyomva tartott billentyű ismétlése; csak a parancsra várakozás idejére kapcsolandó be
 
 #endif

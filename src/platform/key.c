@@ -22,6 +22,20 @@ static uint8_t key_counted[KEY_COLUMNS];    // a már leütésnek számolt, még
 static uint8_t key_buffer[KEY_BUFFER_SIZE];
 static volatile uint8_t key_buffer_write, key_buffer_read;  // az IRQ csak a write-ot, a játék csak a read-et írja
 
+// ismétlés: az utolsó leütött billentyű, amíg nyomva van
+#define KEY_REPEAT_DELAY     16     // az első ismétlés ennyi képkocka után (default: 16)
+#define KEY_REPEAT_INTERVAL  4      // a többi ennyi képkockánként (default: 4)
+
+#if KEY_REPEAT_INTERVAL < 1 || KEY_REPEAT_INTERVAL > KEY_REPEAT_DELAY
+    #error "a KEY_REPEAT_INTERVAL 1 és a KEY_REPEAT_DELAY között legyen"
+#endif
+
+static volatile bool key_repeat_enabled;
+static uint8_t repeat_column;
+static uint8_t repeat_row_bit;          // 0: nincs ismételhető billentyű
+static uint8_t repeat_position;
+static uint8_t repeat_frames;           // a leütés vagy az előző ismétlés óta, bekapcsolt ismétlés mellett
+
 // a módosítók mátrixpontjai a key_matrix-ból kikerülnek; a SHIFT LOCK a bal SHIFT pontja
 static __forceinline void scan_keyboard(void)
 {
@@ -63,6 +77,12 @@ static __forceinline void detect_keypress(void)
                 fresh ^= row_bit;
                 key_counted[column] |= row_bit;
                 code = get_key_code(position, key_modifiers);
+                if (code) {
+                    repeat_column = column;
+                    repeat_row_bit = row_bit;
+                    repeat_position = position;
+                    repeat_frames = 0;
+                }
             }
             row_bit <<= 1;
             position++;
@@ -76,11 +96,40 @@ static __forceinline void detect_keypress(void)
     }
 }
 
+// az ismételt kód csak üres pufferbe kerül, így felengedés után nem fut tovább; a kód a mostani módosítókkal áll elő
+static __forceinline void repeat_held_key(void)
+{
+    if (!(key_matrix[repeat_column] & repeat_row_bit)) {
+        repeat_row_bit = 0;
+        return;
+    }
+
+    if (!key_repeat_enabled || ++repeat_frames < KEY_REPEAT_DELAY) {
+        return;
+    }
+    repeat_frames = KEY_REPEAT_DELAY - KEY_REPEAT_INTERVAL;
+
+    if (key_buffer_write == key_buffer_read) {
+        uint8_t code = get_key_code(repeat_position, key_modifiers);
+        if (code) {
+            key_buffer[key_buffer_write & (KEY_BUFFER_SIZE - 1)] = code;
+            key_buffer_write++;
+        }
+    }
+}
+
 // a raszter-IRQ része; az __interrupt menti a fordító zero page regisztereit
+// az ismétlés a leütés előtt jön, így az új leütés képkockája nem számít bele a késleltetésbe
 __interrupt void key_irq(void)
 {
     scan_keyboard();
+    repeat_held_key();
     detect_keypress();
+}
+
+void set_key_repeat(bool enabled)
+{
+    key_repeat_enabled = enabled;
 }
 
 void key_init(void)

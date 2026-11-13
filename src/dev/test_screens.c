@@ -92,6 +92,8 @@ static void dev_charset_screen(void)
 static void dev_keyboard_screen(void)
 {
     uint8_t last_code = 0, presses = 0;
+    uint8_t frames = 0, gap = 0;    // a két utolsó leütés között eltelt képkockák
+    bool repeat = false;
 
     screen_clear();
     set_screen_cursor(2, 0);
@@ -104,11 +106,20 @@ static void dev_keyboard_screen(void)
     put_text("Last press:");
     set_screen_cursor(2, 16);
     put_text("Presses:");
+    set_screen_cursor(2, 17);
+    put_text("Frames between:");
+    set_screen_cursor(2, 18);
+    put_text("Repeat:");
+    set_screen_cursor(2, 23);
+    put_text("R: repeat on/off");
     set_screen_cursor(2, 24);
     put_text("ESC to leave, SHIFT: stop reading");
 
     while (last_code != KEY_ESCAPE) {
         wait_for_next_frame();
+        if (frames < 255) {
+            frames++;
+        }
 
         // a SHIFT nyomva tartása alatt a puffer megtelhet
         if (!(key_modifiers & KEY_MODIFIER_SHIFT)) {
@@ -116,6 +127,13 @@ static void dev_keyboard_screen(void)
             if (code) {
                 last_code = code;
                 presses++;
+                gap = frames;
+                frames = 0;
+
+                if (code == 'r') {
+                    repeat = !repeat;
+                    set_key_repeat(repeat);
+                }
             }
         }
 
@@ -133,7 +151,13 @@ static void dev_keyboard_screen(void)
         put_int(last_code, 3);
         set_screen_cursor(14, 16);
         put_int(presses, 3);
+        set_screen_cursor(18, 17);
+        put_int(gap, 3);
+        set_screen_cursor(10, 18);
+        put_text(repeat ? "on " : "off");
     }
+
+    set_key_repeat(false);
 }
 
 // a térkép első két sora az oszlop száma, a többi betűje tízesenként vált

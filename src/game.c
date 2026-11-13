@@ -54,7 +54,11 @@ static void play_turn(void)
     uint8_t actions = 1;
     while (actions) {
         draw_status();
-        uint8_t code = wait_for_key_and_clear_message();
+        set_key_repeat(true);
+        uint8_t code = wait_for_key();
+        set_key_repeat(false);
+
+        message_clear();
         if (execute_command(code)) {
             actions--;
         }
