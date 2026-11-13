@@ -3,6 +3,7 @@
 #include "platform/platform.h"
 #include "platform/screen.h"
 #include "dev/dev.h"
+#include "game.h"
 #include "rng.h"
 #include "state.h"
 
@@ -29,6 +30,5 @@ int main(void)
     move_screen_cursor_to_next_row();
     put_text("(based on Rogue 5.4.4)");
 
-    // ideiglenes: a címképernyő elkészültéig itt megáll
-    while (true) {}
+    run_game();
 }
