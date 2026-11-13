@@ -25,10 +25,6 @@ int main(void)
     screen_clear();
     set_screen_colors(0, 0, 15);
 
-    set_screen_cursor(14, 5);
-    put_text("Rogue for C64");
-    set_screen_cursor(9, 6);
-    put_text("(based on Rogue 5.4.4)");
-
+    // ideiglenes: a címképernyő elkészültéig a játék közvetlenül indul
     run_game();
 }

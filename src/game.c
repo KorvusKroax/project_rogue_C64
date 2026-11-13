@@ -5,8 +5,10 @@
 #include <stddef.h>
 
 #include "platform/key.h"
+#include "level.h"
 #include "message.h"
 #include "player.h"
+#include "state.h"
 #include "status.h"
 #include "texts.h"
 
@@ -79,6 +81,8 @@ static void play_turn(void)
 void run_game(void)
 {
     init_player();
+    game.dungeon_level = 1;
+    new_level();
 
     while (true) {
         play_turn();
