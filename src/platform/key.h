@@ -8,20 +8,21 @@
 #define KEY_RETURN  13
 #define KEY_ESCAPE  27
 #define KEY_DELETE  127
+#define KEY_CTRL(letter)  ((letter) - 'a' + 1)   // a CTRL + kisbetű kódja
 
-#define KEY_COLUMNS    8    // a billentyűmátrix oszlopai
-#define KEY_ROWS       8    // és sorai: egy oszlop egy bájt
-#define KEY_MODIFIER_SHIFT  0x01 // bal vagy jobb SHIFT, SHIFT LOCK
-#define KEY_MODIFIER_CTRL   0x02 // CTRL vagy C=
+#define KEY_COLUMNS    8            // a billentyűmátrix oszlopai
+#define KEY_ROWS       8            // és sorai: egy oszlop egy bájt
+#define KEY_MODIFIER_SHIFT  0x01    // bal vagy jobb SHIFT, SHIFT LOCK
+#define KEY_MODIFIER_CTRL   0x02    // CTRL vagy C=
 
 // a key_irq tölti: a key_matrix[oszlop] bitjei a sorok (1 = lenyomva), a módosítók nélkül
 extern volatile uint8_t key_matrix[KEY_COLUMNS];
 extern volatile uint8_t key_modifiers;
 
 void key_init(void);
-__interrupt void key_irq(void);  // képkockánként egyszer, a raszter-IRQ-ból
-uint8_t read_key(void);           // ASCII kód, 0 ha nincs leütés
-uint8_t wait_for_key(void);       // vár egy leütésre, és annak kódját adja
-void set_key_repeat(bool enabled); // a nyomva tartott billentyű ismétlése; csak a parancsra várakozás idejére kapcsolandó be
+__interrupt void key_irq(void);     // képkockánként egyszer, a raszter-IRQ-ból
+uint8_t read_key(void);             // ASCII kód, 0 ha nincs leütés
+uint8_t wait_for_key(void);         // vár egy leütésre, és annak kódját adja
+void set_key_repeat(bool enabled);  // a nyomva tartott billentyű ismétlése; csak a parancsra várakozás idejére kapcsolandó be
 
 #endif

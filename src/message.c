@@ -23,6 +23,7 @@
 #define PLACEHOLDER_NUMBER      '\3'
 
 static char message_text[MESSAGE_TEXT_SIZE];
+static char last_message_text[MESSAGE_TEXT_SIZE];   // kiírt alakjában, a CTRL-P-hez
 static uint8_t message_text_length;
 static char message_bar_text[SCREEN_WIDTH * MESSAGE_ROW_COUNT + 1];
 static uint16_t message_bar_length;
@@ -241,7 +242,19 @@ void message(const char *text)
 
 void message_format(const char *text, const char *first_text, const char *second_text, int16_t number)
 {
+    const char *prepared_text = prepare_message_text(text, first_text, second_text, number, true);
+    strcpy(last_message_text, prepared_text);
+    add_to_message_bar(prepared_text);
+}
+
+void message_format_without_recall(const char *text, const char *first_text, const char *second_text, int16_t number)
+{
     add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true));
+}
+
+void repeat_last_message(void)
+{
+    message(last_message_text);
 }
 
 void message_prompt(const char *text)

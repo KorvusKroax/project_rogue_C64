@@ -32,13 +32,19 @@ static void report_illegal_command(uint8_t code)
 {
     char name[KEY_NAME_SIZE];
     write_key_name(name, code);
-    message_format(text_illegal_command, name, NULL, 0);
+    message_format_without_recall(text_illegal_command, name, NULL, 0);
 }
 
 // a parancs végrehajtása; igaz, ha időt vitt
 static bool execute_command(uint8_t code)
 {
     switch (code) {
+        case KEY_ESCAPE:
+        case ' ':
+            return false;
+        case KEY_CTRL('p'):
+            repeat_last_message();
+            return false;
         default:
             report_illegal_command(code);
             return false;
