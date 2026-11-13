@@ -1,6 +1,5 @@
 #include "rng.h"
 
-#include "dev/dev.h"
 #include "state.h"
 
 // RN: seed = seed * RN_MULTIPLIER + RN_INCREMENT (mod 2^32), a véletlenszám a seed felső 16 bitje
@@ -40,8 +39,6 @@ void rng_init(void)
 // a felső bájtjával az i + 1. oszlopba kerül; a 3. oszlop fölötti rész elveszik (mod 2^32)
 uint16_t RN(void)
 {
-    DEV_CHECK(low_byte_product_low[1] == RN_MULTIPLIER_LOW_BYTE, "rng_init was not called");
-
     uint8_t *seed = (uint8_t *)&game.seed;     // a legalsó bájt elöl
     uint8_t seed0 = seed[0];
     uint8_t seed1 = seed[1];

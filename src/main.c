@@ -2,10 +2,13 @@
 
 #include "platform/platform.h"
 #include "platform/screen.h"
-#include "dev/dev.h"
 #include "game.h"
 #include "rng.h"
 #include "state.h"
+
+#ifdef DEVMODE
+    #include "dev/dev.h"
+#endif
 
 int main(void)
 {

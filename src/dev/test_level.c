@@ -362,7 +362,7 @@ int test_level_generation(uint16_t i)
     }
     level_test_run_count = i + 1;
 
-    // a labirintus vermét a generálás, a térképen kívüli írást a map.c DEV_CHECK-jei ellenőrzik
+    // a térképen kívüli írást a map.c DEV_CHECK-je ellenőrzi
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.dungeon_level = level_test_depths[depth_index];
     clear_map();

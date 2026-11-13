@@ -23,7 +23,7 @@ Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C
 ### Fejlesztői build
 
 A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A kiadási buildbe ezekből semmi nem kerül:
-- **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A feltételnek nem lehet mellékhatása, mert a kiadási buildben ki sem értékelődik.
+- **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A kiadási buildben nincs ilyen makró, ezért játékfájlban csak `#ifdef DEVMODE` alatt használható (jelenleg csak a `map.c` térképírás-ellenőrzése, ideiglenesen).
 - **Öntesztek** (`src/dev/`, a teszteket a `dev_tests` lista sorolja fel a `tests.c`-ben): induláskor lefutnak, az eredményük a képernyőre kerül (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`).
 - **Seed:** induláskor kiíródik; a menüben az `E` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
 - **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot): **F1** új szint ugyanazon a mélységen, **F3** ugrás tetszőleges mélységre (1..255). Egyik sem visz el időt.

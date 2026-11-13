@@ -15,8 +15,6 @@
 
     // a csak decimális jegyekből álló szöveg értéke a *number-be; hamis, ha üres, más karakter is van benne, vagy max_value-nál nagyobb (ekkor a *number nem változik)
     bool convert_text_to_number(const char *text, uint32_t max_value, uint32_t *number);
-#else
-    #define DEV_CHECK(cond, message) ((void)0)
 #endif
 
 #endif

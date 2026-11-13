@@ -220,7 +220,7 @@ A verem legfeljebb annyi elemű, ahány cella a labirintusban van, mert minden c
 |---|---|---|
 | `MAZE_STACK_SIZE` | `((SECTOR_WIDTH − 1) / 2 + 1) × ((SECTOR_HEIGHT − 1) / 2 + 1)` | 13 × 4 = 52 (az eredetiben nincs, ott a C verem dolgozik) |
 
-A fejlesztői build `DEV_CHECK`-kel ellenőrzi, hogy a verem nem telik túl. 255-nél nagyobb veremnél (pl. 1×1-es rácsnál 40 × 12 = 480) a veremindex 16 bites.
+A verem nem telik túl, mert minden cella legfeljebb egyszer kerül bele. 255-nél nagyobb veremnél (pl. 1×1-es rácsnál 40 × 12 = 480) a veremindex 16 bites.
 
 A labirintus generálása lassú: egy labirintus mélyen nagyjából 0,2 másodperc (mérve még akkor, amikor a `put_passage` mezőnként dobott a titkos mezőért; azóta ez a `hide_passages`-ben történik, 2.6). Az alapértékekkel labirintus ritkán van egy szinten (a sötét szobák kb. 1/15-e).
 
@@ -262,7 +262,7 @@ corridor(room_a, room_b):
     if length == turn_at:
        repeat turn_length: putpass(pos); pos += turn_step
     putpass(pos); length--
-  pos += step  // most pos == end kell legyen (a fejlesztői build DEV_CHECK-kel ellenőrzi; az eredeti itt figyelmeztetett: „connectivity problem”)
+  pos += step  // most pos == end (a hossz és a fordulópont számítása garantálja; az eredeti itt figyelmeztetett: „connectivity problem”)
 
 door(room, pos):
   exits += (pos, room)                                                // a közös ajtótáblába (1.4.7)
@@ -287,7 +287,7 @@ putpass(pos):
 
 > **C64-javítás (J18):** a labirintus kijárata a falsor (oszlop) folyosó-mezői közül egyetlen dobással választódik, a sor (oszlop) teljes szélességében. *Eredetileg* a sarkok nélküli tartományban (`rnd(size − 2) + 1`) addig dobott, amíg folyosó-mezőt nem talált. A felső szektorsor labirintusa az 1. sorban kezdődik, így az alsó sora páratlan relatív sor, ahol csak a cellasorok közti átkötéseknél van folyosó-mező. Ha mindegyik a szélső oszlopban van (szimulálva a felső labirintusok kb. 0,05%-ánál), a keresés soha nem állt meg. A javítás ideiglenes lehet: ha a labirintusok eggyel lejjebb kezdődnek (lásd az összeérésüket, 2.5), a falsor mindig cellasor, és az eredeti keresés is megáll. A teljes szélességben mindig van folyosó-mező, mert a labirintus összefüggő: a páratlan falsor alatt még van cellasor, és azt csak ezen át lehet elérni. A normál szoba ajtaja változatlanul sarok nélkül, egy dobással kerül a falra.
 
-**A folyosó hossza** (`length`) mindig legalább 1, így a `turn_at` dobása (`rnd(0)` = 0) is értelmes: a szoba falai, a labirintus kijárata és a fantom szoba pontja a szektor utolsó oszlopa és sora előtt vannak, a szomszéd szektoré pedig legkorábban annak első oszlopában, illetve sorában. Ehhez a fantom pontnak legalább 1 mezőre kell lennie a szektor szélétől: ez a `PHANTOM_EDGE_DISTANCE ≥ 1` fordítási feltétel (2.3). Futás közbeni ellenőrzés nem kell: ha a hossz mégis 0 lenne, a folyosó nem érne a végpontba, és azt a végpont `DEV_CHECK`-je jelzi.
+**A folyosó hossza** (`length`) mindig legalább 1, így a `turn_at` dobása (`rnd(0)` = 0) is értelmes: a szoba falai, a labirintus kijárata és a fantom szoba pontja a szektor utolsó oszlopa és sora előtt vannak, a szomszéd szektoré pedig legkorábban annak első oszlopában, illetve sorában. Ehhez a fantom pontnak legalább 1 mezőre kell lennie a szektor szélétől: ez a `PHANTOM_EDGE_DISTANCE ≥ 1` fordítási feltétel (2.3). Futás közbeni ellenőrzés nem kell.
 
 **Titkos ajtó egyetlen dobással**, ugyanúgy, mint a titkos folyosó-mező (lent): az ajtó `min(level − 1, SECRET_DOOR_DEPTH_DIVISOR) / (SECRET_DOOR_DEPTH_DIVISOR × SECRET_DOOR_CHANCE_DIVISOR)` eséllyel titkos (mélyen legfeljebb 10/50 = 1/5). Az 1. szinten nincs dobás. **Eltérés az eredetitől (dobássorrend):** az eredeti két dobása helyett egy; az esély ugyanaz.
 ```

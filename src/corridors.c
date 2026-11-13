@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 
-#include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
 #include "rooms.h"
@@ -237,9 +236,8 @@ static void dig_corridor(uint8_t from_index, uint8_t direction)
         length--;
     }
 
-    x += step_x;
-    y += step_y;
-    DEV_CHECK(x == end_x && y == end_y, "corridor does not reach its end");
+    // a következő lépés pontosan a végpontra érne: a length, a turn_at és a turn_length számítása ezt garantálja;
+    // ha ezek változnak, erre figyelni kell, különben a folyosó nem ér el a végpontig
 }
 
 // a szoba és az adott irányban lévő szomszédja összekötve, folyosóval

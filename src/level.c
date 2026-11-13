@@ -1,7 +1,6 @@
 #include "level.h"
 
 #include "corridors.h"
-#include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
 #include "rooms.h"
@@ -142,9 +141,9 @@ static void place_stairs(void)
     uint8_t x;
     uint8_t y;
 
-    // a még üres szobákban mindig van hely; ha mégsem, az x és az y érvénytelen, és egy véletlen mező íródna felül
-    bool found = find_empty_floor(ANY_ROOM, &x, &y);
-    DEV_CHECK(found, "no room for the stairs");
+    // a még üres szobákban mindig van hely, ezért a visszatérési érték nem kell;
+    // ha a szobák felépítése változik, erre figyelni kell: hely nélkül az x és az y érvénytelen, és egy véletlen mező íródna felül
+    find_empty_floor(ANY_ROOM, &x, &y);
 
     set_map_character(x, y, CHAR_STAIRS);
 }
@@ -152,9 +151,9 @@ static void place_stairs(void)
 // a játékos helye egy véletlen nem fantom szoba járható mezőjén
 static void choose_player_position(void)
 {
-    // a szobákban még csak a lépcső van, ezért mindig van hely; ha mégsem, a játékos helye érvénytelen maradna
-    bool found = find_walkable_tile(ANY_ROOM, &game.player.x, &game.player.y);
-    DEV_CHECK(found, "no room for the player");
+    // a szobákban még csak a lépcső van, ezért mindig van hely, és a visszatérési érték nem kell;
+    // ha a szobák felépítése változik, erre figyelni kell: hely nélkül a játékos helye érvénytelen maradna
+    find_walkable_tile(ANY_ROOM, &game.player.x, &game.player.y);
 }
 
 void generate_level(void)

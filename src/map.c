@@ -2,12 +2,18 @@
 
 #include <string.h>
 
-#include "dev/dev.h"
 #include "state.h"
 
+// ideiglenes: amíg a térképre író kód (szörnyek, tárgyak, varázslatok) el nem készül
 // a térképen kívüli írás a játékállapot más részét rontaná el; az olvasás nincs ellenőrizve, az csak rossz értéket ad
-#define CHECK_MAP_WRITE_POSITION(x, y) \
-    DEV_CHECK((x) < MAP_COLUMNS && (y) >= MAP_TOP_ROW && (y) < MAP_TOP_ROW + MAP_ROWS, "map write outside the map")
+#ifdef DEVMODE
+    #include "dev/dev.h"
+
+    #define CHECK_MAP_WRITE_POSITION(x, y) \
+        DEV_CHECK((x) < MAP_COLUMNS && (y) >= MAP_TOP_ROW && (y) < MAP_TOP_ROW + MAP_ROWS, "map write outside the map")
+#else
+    #define CHECK_MAP_WRITE_POSITION(x, y) ((void)0)
+#endif
 
 void clear_map(void)
 {

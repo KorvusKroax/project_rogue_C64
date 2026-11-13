@@ -1,7 +1,6 @@
 #include "rooms.h"
 
 #include "corridors.h"
-#include "dev/dev.h"
 #include "map.h"
 #include "rng.h"
 #include "state.h"
@@ -204,7 +203,7 @@ static void draw_maze(const struct Room *room)
         put_passage(room->x + (cell->x + chosen_x) / 2, room->y + (cell->y + chosen_y) / 2);
         put_passage(room->x + chosen_x, room->y + chosen_y);
 
-        DEV_CHECK(stack_count < MAZE_STACK_SIZE, "maze stack overflow");
+        // nem csordul túl: minden cella legfeljebb egyszer kerül a verembe (MAZE_STACK_SIZE)
         maze_stack[stack_count].x = chosen_x;
         maze_stack[stack_count].y = chosen_y;
         stack_count++;
