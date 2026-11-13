@@ -6,6 +6,7 @@
 
 #include "platform/key.h"
 #include "message.h"
+#include "player.h"
 #include "status.h"
 #include "texts.h"
 
@@ -77,6 +78,8 @@ static void play_turn(void)
 
 void run_game(void)
 {
+    init_player();
+
     while (true) {
         play_turn();
     }
