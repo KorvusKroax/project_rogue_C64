@@ -126,3 +126,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J18 | a labirintus kijáratának keresése mindig megáll (ideiglenes lehet: a labirintusok elhelyezésével együtt újragondoljuk) | [2.6](02_szintgeneralas.md#26-folyosók) |
 | J19 | a szint berendezése mindig véget ér: a `find_floor` gyűjtve választ, a lépcső és a játékos az üres szobákba kerül, a titkos folyosó-mezők utánuk dőlnek el, a hely nélküli elhelyezés kimarad | [2.](02_szintgeneralas.md#2-szintgenerálás) |
 | J20 | új szinten és betöltés után a `look` előző pozíciója a játékosé, így az `erase_lamp` nem töröl a régi szint helyén | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
+| J21 | a kanyarkövetés csak a futás első lépése után fordít, így a fal felé indított futás nem szalad vissza | [4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás) |

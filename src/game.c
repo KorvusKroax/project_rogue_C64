@@ -102,8 +102,11 @@ static void play_turn(void)
     uint8_t actions = 1;
     while (actions) {
         look_around();
-        show_map_changes();
-        draw_status();
+        // futás közben jump_to_run_end mellett a képernyő csak a futás végén frissül
+        if (!(is_running() && (options.flags & OPTION_JUMP_TO_RUN_END))) {
+            show_map_changes();
+            draw_status();
+        }
 
         // futás közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak
         bool took_time;

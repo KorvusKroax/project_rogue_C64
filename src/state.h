@@ -78,6 +78,7 @@ extern struct GameState game;
 
 // a beállítások bitjei (4.2.5)
 #define OPTION_FOLLOW_PASSAGES  0x01            // futásnál a folyosó kanyarjainak követése
+#define OPTION_JUMP_TO_RUN_END  0x02            // futás közben nincs rajzolás, csak a végén
 
 // a beállításblokk: a GameState-en kívül, mert a képernyőmodul is használja; alapból minden kikapcsolva (nulla)
 struct Options {

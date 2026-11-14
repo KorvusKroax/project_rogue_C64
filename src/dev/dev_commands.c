@@ -99,6 +99,9 @@ bool dev_execute_command(uint8_t code)
         case KEY_F5:
             toggle_full_map();
             break;
+        case KEY_F7:
+            toggle_option(OPTION_JUMP_TO_RUN_END, "jump to run end");
+            break;
         case KEY_F8:
             toggle_option(OPTION_FOLLOW_PASSAGES, "follow passages");
             break;
