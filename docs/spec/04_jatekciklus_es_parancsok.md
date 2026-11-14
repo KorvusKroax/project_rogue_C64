@@ -128,7 +128,7 @@ A zavarodott véletlen lépés soha nem támad szörnyre (a szörny jele nem já
 
 A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ott ugyanazt adta, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki. A B változatban ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)) a labirintus szoba, ezért a labirintusba lépés és az onnan kilépés csak a célmezőből számolva helyes.
 
-**Futás:** a futás ugyanazt a lépést ismétli minden akcióban, amíg valami le nem állítja.
+**Futás:** a futás ugyanazt a lépést ismétli minden akcióban, amíg valami le nem állítja. A SHIFT vagy CTRL + irány leütése maga nem visz időt, a futás minden lépése egy akció; ha már az első lépés falba ütközik, a futás időt sem visz. Futás közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak, és a futás után hajtódnak végre.
 
 *Mindkét futást megállítja:*
 - fal, kő vagy a pálya széle (kivéve a kanyarkövetést, lent), szabálytalan átlós lépés;
@@ -139,12 +139,12 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 - ha a keresés (searching gyűrű) talál valamit;
 - confusion-nál, ha a véletlen irány helyben hagyná.
 
-*Kanyarkövetés (`passgo` opció, alapból KI):* folyosón, ha a futás falba ütközne és pontosan egy irányba lehet derékszögben továbbmenni, a futás befordul. Csak ortogonális futásnál, vakságban nem.
+*Kanyarkövetés (`passgo` opció, alapból KI):* ha a játékos F_PASS mezőn áll (folyosón vagy labirintusban), a futás falba ütközne, és a két derékszögű oldalirány közül pontosan az egyikben lehet továbbmenni, a futás befordul. Továbbmenni ajtóra vagy nem rejtett (F_REAL) folyosó-mezőre lehet; a térkép első és utolsó sora, oszlopa felé nem. Csak ortogonális futásnál, vakságban nem. Befordulás után, ha a játékos mezője még nem F_SEEN, megkapja az F_SEEN-t, és `jump` mellett a képernyő egyszer frissül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)), így ugrásos futásnál a kanyarok első bejárásakor is látszik az út.
 
-*CTRL-futás (`door_stop`) – minden lépés után megnézi a 3×3 környezetet, a futás irányával ellentétes oldalt kihagyva:*
-- egy ajtó a futás vonalában (ugyanabban a sorban/oszlopban) → megáll;
-- több mint egy folyosó-mező oldalirányban (elágazás) → megáll;
-- bármi más, ami nem padló, fal vagy üres (tárgy, lépcső, szörny, csapda) → megáll;
+*CTRL-futás (`door_stop`) – minden lépés után megnézi a 3×3 környezet látható mezőit (a `look` rálátási szabálya szerint, [3.1](03_latoter_es_megjelenites.md#31-felderítés)), a futás irányával ellentétes oldalt kihagyva (ortogonális futásnál a hátsó oszlopot vagy sort, átlósnál a hátsó félsík három mezőjét):*
+- ajtó a játékos mellett ortogonálisan (elöl vagy oldalt) → megáll;
+- a játékos ortogonális szomszédjai közül (elöl és oldalt) egynél több folyosó-mező (elágazás) → megáll;
+- bármi más, ami nem padló, fal vagy üres (tárgy, lépcső, szörny, csapda), átlósan is → megáll; az ajtó és a folyosó-mező átlósan nem számít;
 - az első lépés után kezd ellenőrizni (az indulóhelyet nem nézi).
 
 *A SHIFT-futást egy szörny megjelenése önmagában nem állítja meg*, csak a támadása.
