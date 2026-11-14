@@ -200,7 +200,7 @@ waste_time():
 | `.` | pihenés 1 kör |
 | s | keresés ([9.2](09_csapdak.md#92-keresés-s-searching-gyűrű)) |
 | a | utolsó parancs ismétlése; „you haven't typed a command yet” |
-| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL), `C`; minden másnál a szám elvész. Megszakítja (a futással azonos esetek): szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
+| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
 | ESC * | megszakít |
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
@@ -216,7 +216,7 @@ waste_time():
 | opció | alapérték | sor a menüben | jelentés |
 |---|---|---|---|
 | flush | ki | Flush typeahead ("flush") | harcban eldobja az előre leütött billentyűket |
-| jump_to_run_end (eredetileg jump) | ki | Jump to end of run ("jump") | futás közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
+| jump_to_run_end (eredetileg jump) | ki | Jump to end of run ("jump") | futás és számprefixes ismétlés közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
 | follow_passages (eredetileg passgo) | ki | Follow corridors ("passgo") | futásnál a folyosó kanyarjait követi ([4.2.1](#421-mozgás)) |
 | tombstone | be | Tombstone at death ("tombstone") | halálkor sírkő-rajz ([4.3](#43-szintváltás-és-játék-vége)) |
 | inven | clear | Inventory style ("inven") | csomaglista: overwrite (a térkép fölé), slow (soronként az üzenetsávban), clear (külön képernyő) |

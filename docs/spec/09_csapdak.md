@@ -37,8 +37,10 @@ A csapdák állandók, minden rálépéskor újra aktiválódnak.
 search():
   for each of 8 neighbours cell, ha rejtett (F_REAL nélkül):
     penalty = (ISHALU ? 3 : 0) + (ISBLIND ? 2 : 0)  // hallucinálva és vakon nehezebb megtalálni
-    titkos ajtó:     if rnd(5 + penalty) == 0: reveal(cell)
-    rejtett csapda:  if rnd(2 + penalty) == 0: reveal(cell), "you found <trap name>"
-    titkos folyosó:  if rnd(3 + penalty) == 0: reveal(cell)
-  reveal(cell): F_REAL be, SCREEN frissül, futás/ismétlés megszakad
+    titkos ajtó (fal jele):       if rnd(5 + penalty) == 0: MAP[cell] = DOOR; reveal(cell); "a secret door"
+    rejtett csapda (padló jele):  if rnd(2 + penalty) == 0: MAP[cell] = TRAP; reveal(cell)
+                                    "you found <csapdanév>"   // hallucinálva véletlen csapdanév, különben a valódi, és a mező F_SEEN-t kap
+    titkos folyosó (kőzet jele):  if rnd(3 + penalty) == 0: MAP[cell] = PASSAGE; reveal(cell)
+  reveal(cell): F_REAL be, futás/ismétlés megszakad
+  // a felfedett mezőt a következő look rajzolja ki (3.1)
 ```
