@@ -146,10 +146,10 @@ if (tests[t](i)) { … }              // régi értéket olvas
 typedef int (*TestFunction)(uint16_t i);
 int test_RN(uint16_t i);
 ```
-Hol: `src/dev/tests.h`. Bejelentve: [#468](https://github.com/drmortalwombat/oscar64/issues/468).
+Hol: `src/dev/tests.h`. Bejelentve: [#468](https://github.com/drmortalwombat/oscar64/issues/468); javítva a fő ágban, a következő kiadásban várható.
 
 **2. Struct-tag inline asm-ben, és a globális változó asm után** – futáskor, csendben; VICE-ben ellenőrizve. Két külön hiba:
-- A `változó.tag` forma asm-ben nem dokumentált, a fordító mégis szó nélkül elfogadja, és a tag eltolását elhagyja. A dokumentált forma a `Típus::tag` ([oscar64.md, Inline Assembler](https://github.com/drmortalwombat/oscar64/blob/main/oscar64.md#inline-assembler)), de ez csak C++ fájlban fordul; C-ben fordítási hiba. Bejelentve: [#471](https://github.com/drmortalwombat/oscar64/issues/471).
+- A `változó.tag` forma asm-ben nem dokumentált, a fordító mégis szó nélkül elfogadja, és a tag eltolását elhagyja. A dokumentált forma a `Típus::tag` ([oscar64.md, Inline Assembler](https://github.com/drmortalwombat/oscar64/blob/main/oscar64.md#inline-assembler)), de ez csak C++ fájlban fordul; C-ben fordítási hiba. Bejelentve: [#471](https://github.com/drmortalwombat/oscar64/issues/471); a fő ágban a `változó.tag` forma már támogatott, a következő kiadásban várható.
 - Az optimalizáló nem tudja, hogy az asm írt a globális változóba. Ezt a kiadás után a fő ágban javították ([#392](https://github.com/drmortalwombat/oscar64/issues/392), [#413](https://github.com/drmortalwombat/oscar64/issues/413)), az 1.32.273-ban még benne van.
 ```c
 // rossz
@@ -178,7 +178,7 @@ uint32_t t = (uint32_t)JIFFY_CLOCK[0];
 uint32_t t = (uint32_t)(JIFFY_CLOCK[0]);
 (void)(cia1.icr);
 ```
-Hol: `src/platform/platform.c`. Bejelentve: [#469](https://github.com/drmortalwombat/oscar64/issues/469).
+Hol: `src/platform/platform.c`. Bejelentve: [#469](https://github.com/drmortalwombat/oscar64/issues/469); javítva a fő ágban, a következő kiadásban várható.
 
 **4. Inline-olt hívás tömbindexként összetett értékadásban** – fordításkor, a fordító összeomlik (`-O2`, „Addressing Error”, kilépési kód 30). Csak akkor jön elő, ha a függvényt hívják és a fordító inline-olja, ezért egy még nem hívott modulban rejtve maradhat; a forrásban kell keresni.
 ```c
@@ -189,7 +189,7 @@ game.rooms[choose_random_room()].flags |= ROOM_PHANTOM;
 uint8_t room_index = choose_random_room();
 game.rooms[room_index].flags |= ROOM_PHANTOM;
 ```
-Hol: `src/rooms.c`. Bejelentve: [#470](https://github.com/drmortalwombat/oscar64/issues/470).
+Hol: `src/rooms.c`. Bejelentve: [#470](https://github.com/drmortalwombat/oscar64/issues/470); javítva a fő ágban, a következő kiadásban várható.
 
 **5. Rövid ciklusú függvény egymás után, más-más állandó argumentummal** – futáskor, csendben; a tesztképernyőn látszott, de nincs feljegyezve, hogy VICE-ben vagy az `-e` emulátorban. `-O2`-n az előző hívás eredményét adja vissza, ha a ciklus 3–4 lépéses (pl. 2×2-es szobarácsnál); 8–9 lépésnél helyes. A `__noinline` és a `#pragma unroll(0)` nem segít.
 ```c
