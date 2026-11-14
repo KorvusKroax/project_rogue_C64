@@ -1,8 +1,12 @@
 #include "explore.h"
 
 #include "map.h"
+#include "message.h"
+#include "move.h"
+#include "rng.h"
 #include "rooms.h"
 #include "state.h"
+#include "texts.h"
 #include "view.h"
 
 // a look_around előző hívásakor a játékos helye és szobája: ha azóta elmozdult, ott törlődik a lámpafény
@@ -63,11 +67,11 @@ static void erase_lamp_light(uint8_t x, uint8_t y, uint8_t room_index)
     // ide jön: vakon nem töröl
     if (room_index == IN_PASSAGE || !(game.rooms[room_index].flags & ROOM_DARK)) return;
 
-    // eltolással, mert a 0. oszlop (sor) előtti mező 255 lesz: azt a térképen kívüliként kihagyja
-    for (uint8_t offset_y = 0; offset_y < 3; offset_y++) {
-        for (uint8_t offset_x = 0; offset_x < 3; offset_x++) {
-            uint8_t tile_x = x - 1 + offset_x;
-            uint8_t tile_y = y - 1 + offset_y;
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t tile_x = x + offset_x;
+            uint8_t tile_y = y + offset_y;
             if (!is_on_map(tile_x, tile_y)) continue;
             if (tile_x == game.player.x && tile_y == game.player.y) continue;
 
@@ -112,11 +116,11 @@ void look_around(void)
     }
 
     // ide jön: vakon csak a játékos mezője, de a szomszédos szörnyek ébresztése vakon is
-    // eltolással, mint az erase_lamp_light
-    for (uint8_t offset_y = 0; offset_y < 3; offset_y++) {
-        for (uint8_t offset_x = 0; offset_x < 3; offset_x++) {
-            uint8_t x = player_x - 1 + offset_x;
-            uint8_t y = player_y - 1 + offset_y;
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t x = player_x + offset_x;
+            uint8_t y = player_y + offset_y;
             if (!is_on_map(x, y)) continue;
             if (x == player_x && y == player_y) continue;
             if (!is_neighbor_visible(player_x, player_y, x, y)) continue;
@@ -127,6 +131,53 @@ void look_around(void)
     }
 
     draw_tile(player_x, player_y, CHAR_PLAYER);
+}
+
+bool try_to_find_hidden_tile(uint8_t x, uint8_t y)
+{
+    if (get_map_flags(x, y) & TILE_REAL) return false;
+
+    // ide jön: hallucinálva +3, vakon +2
+    uint8_t penalty = 0;
+    uint8_t character = get_map_character(x, y);
+
+    if (character == CHAR_WALL_HORIZONTAL || character == CHAR_WALL_VERTICAL) {
+        if (rnd(5 + penalty) != 0) return false;
+        set_map_character(x, y, CHAR_DOOR);
+    } else if (character == CHAR_SOLID_ROCK) {
+        if (rnd(3 + penalty) != 0) return false;
+        set_map_character(x, y, CHAR_PASSAGE);
+    } else {
+        // ide jön: rejtett csapda (a padló jele)
+        return false;
+    }
+
+    add_map_flags(x, y, TILE_REAL);
+    return true;
+}
+
+void search_around(void)
+{
+    uint8_t player_x = game.player.x;
+    uint8_t player_y = game.player.y;
+
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t x = player_x + offset_x;
+            uint8_t y = player_y + offset_y;
+            if (!is_on_map(x, y)) continue;
+            if (x == player_x && y == player_y) continue;
+            if (!try_to_find_hidden_tile(x, y)) continue;
+
+            if (get_map_character(x, y) == CHAR_DOOR) {
+                message(text_secret_door);
+            }
+            // a felfedett mezőt a következő look_around rajzolja ki
+            stop_running();
+            // ide jön: az ismétlés megszakítása
+        }
+    }
 }
 
 void forget_previous_position(void)

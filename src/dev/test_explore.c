@@ -237,3 +237,40 @@ int test_passage_turn(uint16_t i)
     clear_map();
     return true;
 }
+
+// a rejtett mező a próbálkozások során előkerül; legfeljebb ennyi próbát vár (az esély 1/5 vagy 1/3)
+#define SEARCH_TRIES_MAX  200
+
+static bool is_test_tile_found(uint8_t offset_x, uint8_t offset_y)
+{
+    for (uint8_t tries = 0; tries < SEARCH_TRIES_MAX; tries++) {
+        if (try_to_find_hidden_tile(BASE_X + offset_x, BASE_Y + offset_y)) return true;
+    }
+    return false;
+}
+
+int test_search(uint16_t i)
+{
+    // titkos ajtó: a fal jeléből ajtó lesz, és látható
+    clear_map();
+    put_test_tile(0, 0, CHAR_WALL_VERTICAL);
+    remove_map_flags(BASE_X, BASE_Y, TILE_REAL);
+    if (!is_test_tile_found(0, 0)) return false;
+    if (get_map_character(BASE_X, BASE_Y) != CHAR_DOOR) return false;
+    if (!(get_map_flags(BASE_X, BASE_Y) & TILE_REAL)) return false;
+
+    // titkos folyosó-mező: a kőzet jeléből folyosó lesz
+    put_test_tile(1, 0, CHAR_SOLID_ROCK);
+    add_map_flags(BASE_X + 1, BASE_Y, TILE_PASSAGE);
+    remove_map_flags(BASE_X + 1, BASE_Y, TILE_REAL);
+    if (!is_test_tile_found(1, 0)) return false;
+    if (get_map_character(BASE_X + 1, BASE_Y) != CHAR_PASSAGE) return false;
+
+    // a látható mező nem változik, és a már megtalált sem
+    put_test_tile(2, 0, CHAR_WALL_VERTICAL);
+    if (is_test_tile_found(2, 0)) return false;
+    if (is_test_tile_found(0, 0)) return false;
+
+    clear_map();
+    return true;
+}

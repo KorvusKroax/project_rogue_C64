@@ -76,6 +76,9 @@ static bool execute_command(uint8_t code)
         case KEY_CTRL('n'): start_running(1, 1, true); return false;
         case '.':
             return true;
+        case 's':
+            search_around();
+            return true;
         case KEY_ESCAPE:
         case ' ':
             return false;

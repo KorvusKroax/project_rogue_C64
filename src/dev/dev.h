@@ -9,6 +9,7 @@
     #define DEV_CHECK(cond, message) do { if (!(cond)) dev_fail(message, __FILE__, __LINE__); } while (0)
 
     bool dev_run_tests(void);           // öntesztek: mindegyik lefut, az eredmény a képernyőre kerül, igazat ad, ha mind sikerült
+    void put_failed_test_names(const char *prefix);   // az utolsó tesztfutás hibás tesztjei soronként, a prefix után
     bool dev_run_level_tests(void);     // szint-önteszt: sok véletlen szint rögzített magokkal; hosszú, VICE-ben warp módban
     void dev_run_screens(void);         // seed, gyors öntesztek és alattuk menü: a szint-önteszt és a tesztképernyők billentyűre, ESC-re vissza; RETURN-re visszatér
     bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint, F3 ugrás mélységre, F5 teljes térkép, F7 a jump_to_run_end, F8 a follow_passages be- és kikapcsolása; igaz, ha időt vitt (egyik sem)

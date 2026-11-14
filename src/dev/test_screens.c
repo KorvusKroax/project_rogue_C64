@@ -568,23 +568,23 @@ static void ask_seed(void)
     message_clear();
 }
 
-// a seed, a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak) és a menü
+// a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak), a seed és a menü;
+// ami nem fér ki, az a képernyő tetején kigörget
 static void draw_tests_and_menu(void)
 {
     screen_clear();
 
     set_screen_cursor(0, 0);
-    put_text("Seed: ");
-    put_seed(game.seed);
-    move_screen_cursor_to_next_row();
-    move_screen_cursor_to_next_row();
-
     put_text("Tests:");
     move_screen_cursor_to_next_row();
     if (!dev_run_tests()) {
-        put_text("Selftest failed");
-        move_screen_cursor_to_next_row();
+        put_failed_test_names("Selftest failed: ");
     }
+    move_screen_cursor_to_next_row();
+
+    put_text("Seed: ");
+    put_seed(game.seed);
+    move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
 
     put_text("L: level tests  C: charset  K: keyboard");

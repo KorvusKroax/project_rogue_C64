@@ -32,6 +32,7 @@ static const struct DevTest dev_tests[] = {
     { "LOOK-NEIGHBORS", test_neighbor_visibility, 1 },
     { "RUN-CAREFUL", test_careful_run, 1 },
     { "RUN-PASSAGE TURN", test_passage_turn, 1 },
+    { "SEARCH-HIDDEN", test_search, 1 },
 };
 
 // szint-önteszt: billentyűre
@@ -39,10 +40,17 @@ static const struct DevTest dev_level_tests[] = {
     { "LEVEL-GENERATION", test_level_generation, LEVEL_TEST_LEVEL_COUNT },
 };
 
+// a hibás tesztek neve a lista utáni kiíráshoz, mert a lista eleje kigörgethet; ennél többet nem jegyez meg
+#define FAILED_TEST_NAMES_MAX  8
+
+static const char *failed_test_names[FAILED_TEST_NAMES_MAX];
+static uint8_t failed_test_count;
+
 // a tesztek egymás után, soronként a név és az eredmény; igaz, ha mind sikerült
 static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
 {
     bool all_ok = true;
+    failed_test_count = 0;
     uint32_t saved_seed = game.seed;
     uint8_t saved_dungeon_level = game.dungeon_level;
 
@@ -95,6 +103,9 @@ static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
             put_text(" FAIL AT ");
             put_int(first_fail, 0);
             all_ok = false;
+            if (failed_test_count < FAILED_TEST_NAMES_MAX) {
+                failed_test_names[failed_test_count++] = dt->name;
+            }
         }
         clear_to_row_end();
 
@@ -104,6 +115,15 @@ static bool run_test_table(const struct DevTest *tests, uint8_t test_count)
     game.seed = saved_seed;
     game.dungeon_level = saved_dungeon_level;
     return all_ok;
+}
+
+void put_failed_test_names(const char *prefix)
+{
+    for (uint8_t i = 0; i < failed_test_count; i++) {
+        put_text(prefix);
+        put_text(failed_test_names[i]);
+        move_screen_cursor_to_next_row();
+    }
 }
 
 bool dev_run_tests(void)

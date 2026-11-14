@@ -91,12 +91,25 @@ uint8_t get_screen_cursor_y(void)
     return cursor_y;
 }
 
-// az utolsó sorban marad: nem görget
+// a képernyő egy sorral feljebb, az utolsó sor üres lesz
+static void scroll_screen_up(void)
+{
+    for (uint16_t i = 0; i < SCREEN_WIDTH * (SCREEN_HEIGHT - 1); i++) {
+        SCREEN_RAM[i] = SCREEN_RAM[i + SCREEN_WIDTH];
+    }
+    for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+        SCREEN_RAM[SCREEN_WIDTH * (SCREEN_HEIGHT - 1) + x] = ' ';
+    }
+}
+
+// az utolsó sorból görget
 void move_screen_cursor_to_next_row(void)
 {
     cursor_x = 0;
     if (cursor_y < SCREEN_HEIGHT - 1) {
         cursor_y++;
+    } else {
+        scroll_screen_up();
     }
 }
 
