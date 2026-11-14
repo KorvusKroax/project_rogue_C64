@@ -16,8 +16,9 @@ new_level():
   put_things()                  // 2.8: kincses szoba, 9 próba, amulett
   place_traps()                 // 2.9
   minden szörny: monster.room = room(monster.pos)
-  enter_room(player.pos)        // 2.11: megvilágítás + ébresztés (6.4), a szörnyek után
-  center_view_window()          // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás
+  center_view_window()          // 3.5: a nézőablak a játékosra áll, teljes újrarajzolás (a régi szint képe eltűnik)
+  a look előző pozíciója és szobája = a játékosé   // 3.1, J20
+  enter_room(player.pos)        // 2.11: megvilágítás + ébresztés (6.4), a szörnyek után; már a beállt nézőablakba rajzol
   if SEEMONST: turn_see(false)  // a szörnyek az új szinten is azonnal kirajzolódnak
   if ISHALU: visuals()          // a hallucinált jelek azonnal
 ```

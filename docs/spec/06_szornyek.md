@@ -227,7 +227,7 @@ rndmove(who):  // zavarodott mozgás (szörny és játékos is)
 
 **relocate(monster, new_pos):** ha new_pos ≠ monster.pos: a régi mező helyére `monster.oldch` kerül, `monster.room = room(new_pos)`, majd `monster.oldch` = new_pos képernyőjele, a következő módosításokkal (vakon egyik sem érvényes):
 - sötét szobában, ha a régi VAGY az új `oldch` FLOOR, akkor ' ' (így egy tárgy emléke is törlődhet);
-- különben a 3×3-as környezeten belül, seefloor mellett a MAP jele.
+- különben a 3×3-as környezeten belül a MAP jele.
 
 Ezután a szörny new_pos-ra kerül. A jele kirajzolódik, ha látható (`disguise`), SEEMONST alatt inverzen a típusa.
 

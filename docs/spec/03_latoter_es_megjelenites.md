@@ -17,23 +17,39 @@ leave_room(pos):  // szobából ajtón át folyosóra lépéskor
   player.room = a folyosórendszer (a B változatban: „folyosón”, 1.4.7); door_open(régi szoba)
 
 look(wakeup):  // minden akció előtt
-  ha elmozdult: erase_lamp(régi pozíció, régi szoba)
+  ha elmozdult: erase_lamp(régi pozíció, régi szoba)   // új szinten és betöltés után a régi = a játékosé (J20)
   a 3×3 környezet minden mezője (a játékosé kivételével):
-     ' ' mező kimarad; folyosó és szoba közt csak ajtón át lát (F_PASS-egyezés);
-     sarkon át átlósan nem lát
+     a térképen kívüli és a ' ' mező kimarad
+     ha sem ez, sem a játékos mezője nem DOOR, és az F_PASS-uk eltér: kimarad
+        (folyosó és szoba közt csak ajtón át lát, folyosóról a szoba fala sem látszik)
+     ha mindkettő F_PASS vagy DOOR, a mező átlós, és a két köztes mező közül
+        egyik sem léphető (MAP-jel ' ', '|', '-'): kimarad (sarkon át nem lát; szobában nincs ilyen korlát)
      szörny: ha SEEMONST és a szörny ISINVIS: a mező teljesen kimarad (nem rajzol, nem ébreszt;
              CTRL-futásnál a futás megáll)
              különben wakeup esetén wake_monster; ha see_monst → a jele (hallucinálva véletlen betű),
              ha nem látszik → a MAP karaktere (trip_ch nélkül)
      egyébként a MAP karaktere, trip_ch-n át (hallucinálva véletlen tárgyjel, de csak ha az akció időt vitt)
-     sötét szobában, seefloor ki: a FLOOR helyett ' '
   vakon csak a játékos mezőjét rajzolja, de a szomszédos szörnyek ébresztése vakon is lefut
+  végül a játékos mezőjére PLAYER (futás jump mellett nem, 3.5)
 
-erase_lamp(pos, room):  // csak sötét, nem fantom szobában, seefloor be, nem vak
+erase_lamp(pos, room):  // csak sötét, nem fantom szobában, nem vak
   a pos körüli 3×3-ban a SCREEN FLOOR jelei ' '-re (a játékos mezője kivételével)
+
+floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport): ez kerül a régi helyére
+  ch = a MAP karaktere a játékos mezőjén
+  if ch == FLOOR and PHANTOM(player.room): ch = PASSAGE
+  return ch
 ```
+- **Folyosón:** a folyosórendszer az A változatban PHANTOM és DARK szoba ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); a B változatban a „folyosón” állapot ugyanígy számít a fenti vizsgálatokban (PHANTOM, DARK).
+- **Lámpafény:** sötét szobában a játékos körüli 3×3 padlója mindig látszik, és lépéskor mögötte törlődik (`erase_lamp`).
+
+  > **C64-javítás (J20):** új szinten és betöltés után a `look` előző pozíciója és szobája a játékosé, így az első `look` nem fut `erase_lamp`-ra. *Eredetileg* csak a játék indulásakor állítódtak be: új szinten az első `look` a régi szint pozíciója körül futtatta az `erase_lamp`-ot, a régi szoba sorszámával, amely már az új szint ugyanilyen sorszámú szobáját jelentette. Ha az sötét volt, a frissen kirajzolt világos kezdőszoba padlójába lyukakat törölhetett.
+
+  > **C64-eltérés (E21):** nincs `seefloor` opció, a lámpafény mindig látszik. *Eredetileg* kikapcsolható volt (ekkor sötét szobában a padló sosem látszott), és 1200 baud vagy lassabb terminálon alapból ki volt kapcsolva, mert minden lépés kiírásokkal járt. C64-en a képernyőírás gyors, így az opciónak nincs szerepe.
+- **Átlós rálátás:** a `look` átlós korlátja enyhébb, mint a mozgás sarokvágás-tilalma ([4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás)): a rálátást csak az veszi el, ha mindkét köztes mező nem léphető, a lépést már egy is tiltja. Ami átlósan látszik, arra nem feltétlenül lehet átlósan lépni.
 - **Ami a SCREEN-en marad (memória):** falak, ajtók, folyosók, lépcső, felfedezett csapdák **és a már látott tárgyak**. Sötét szobából távozva *kizárólag a FLOOR karakterek* törlődnek.
 - **Tárgyak:** a látott tárgy emlékként a helyén marad akkor is, ha már nincs fény/rálátás. Az emlék nem frissül: ha közben egy szörny felveszi vagy elmozdítja, a képernyőn a régi jel marad, amíg a játékos újra nem látja a mezőt. Sötét szobában az új tárgy csak akkor jelenik meg, ha a 3×3-as környezetbe kerül; világos szobában belépéskor az összes látszik.
+- **A játékos jele** a SCREEN-be is bekerül, mint bármely más jel, így görgetéskor ([3.5](#35-nézőablak-görgetés)) is a helyén van. Alatta nincs eltárolt emlék (`oldch`, mint a szörnyeknél): a játékos mindig látja a saját mezőjét, ezért távozáskor a `floor_at` a MAP-ból adja a visszarajzolandó jelet.
 - **Szörnyek:** sosem maradnak emlékként. Csak akkor látszanak, ha *éppen* láthatók: világos szobában a játékossal azonos szobában, sötét szobában és folyosón csak a 3×3-ban (dist2 < 3), egyébként SEEMONST/CANSEE szabályai szerint. Ha nem látható, a helyén az alatta lévő emlékezett mező (`oldch`) jelenik meg.
 - Rejtett (F_REAL nélküli) mezők a rejtett alakjukban jelennek meg, amíg fel nem fedezik őket.
 - A láthatóság logikai fogalom: egy szörny akkor is „látható”, ha a mezője éppen kívül esik a nézőablakon ([3.5](#35-nézőablak-görgetés)). A nézőablak csak a kirajzolást vágja, a játékszabályokat nem befolyásolja.

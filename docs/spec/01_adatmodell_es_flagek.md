@@ -36,8 +36,9 @@ Creature {
   room      // a szoba vagy folyosórendszer, amelyben áll (1.1.1); a B változatban a szoba vagy „folyosón” (1.4.7)
   flags     // állapotflagek (1.2.1 játékos, 1.2.2 szörny)
   pack      // list<Item>: játékosnál a csomag, szörnynél a nála lévő tárgyak
-  oldch     // a mező képernyőjele a lény alatt; ezt kell visszarajzolni, ha elmegy vagy nem látszik
   // csak szörny:
+  oldch     // a mező képernyőjele a szörny alatt; ezt kell visszarajzolni, ha elmegy vagy nem látszik
+            // (a játékosnál nincs: az ő régi mezőjére a floor_at kerül, 3.1)
   type      // 'A'..'Z': a típus betűje, index a típustáblába (6.1)
   dest      // hová tart: a játékos vagy egy padlón fekvő tárgy (6.5)
   disguise  // amilyen jellel kirajzolódik: a saját betűje, a Xeroc álcázva tárgyjel (6.2, 6.7)

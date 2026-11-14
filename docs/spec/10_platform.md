@@ -138,6 +138,7 @@ A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák fogla
 - **Fejlesztői parancsok** játék közben az F-billentyűkön (F1–F8, a párosak SHIFT-tel), így egyik játékparancsot sem takarják el. Egyik sem visz el időt.
   - **F1:** új szint ugyanazon a mélységen.
   - **F3:** ugrás tetszőleges mélységre (1..255); a mélységet a sávban kéri be, ESC-re elmarad.
+  - **F5:** a teljes térkép be- és kikapcsolása. Bekapcsolva a képernyőn a MAP látszik a játékossal: a titkos folyosó-mező inverz `#`, a titkos ajtó inverz `+`. A nézőablak közben is a játékost követi, és új szinten is bekapcsolva marad. A SCREEN réteg közben is frissül, így kikapcsoláskor a normál nézet pontosan visszaáll.
 - **Determinizmus:** ugyanazzal a programváltozattal és ugyanazzal a seeddel ugyanaz a szint és ugyanaz a dobássorozat jön létre, és mentés, majd betöltés után a játék ugyanúgy folytatódik. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
 - A cél az eredeti játékszabályok követése, nem az eredeti program dobássorozatának bájtra pontos utánzása: kódváltozás után ugyanaz a seed más játékot adhat.
 

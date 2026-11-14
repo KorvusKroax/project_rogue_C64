@@ -115,12 +115,18 @@ move(dir):
   else if ISHELD and target-en nem a flytrap jele áll: "you are being held"; uses turn
   if monster at target: attack(target)
   else if target walkable (FLOOR, DOOR, PASSAGE, STAIRS, TRAP, tárgy):
-     player.pos = target; check room enter/leave (3.1, 6.4); follow_view_window() (3.5)
+     draw_tile(player.pos, floor_at())                               // 3.1
+     if target DOOR and a régi mező F_PASS: enter_room(target)       // folyosóról ajtón át be (3.1, 6.4)
+     else if target F_PASS and a régi mező DOOR: leave_room(target)  // ajtóról folyosóra ki (3.1, 6.4)
+     else if target F_PASS: player.room = room(target)               // folyosón belül, labirintusba be vagy ki
+     player.pos = target; follow_view_window() (3.5)
      if TRAP: trigger (9)
      if item and not 'm' and not ISLEVIT: pick_up
   else: no time
 ```
 A zavarodott véletlen lépés soha nem támad szörnyre (a szörny jele nem járható), és Scare monster tekercsre sem lép. A „pálya széle” a logikai 80×22-es térkép széle, nem a nézőablaké.
+
+A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ott ugyanazt adta, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki. A B változatban ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)) a labirintus szoba, ezért a labirintusba lépés és az onnan kilépés csak a célmezőből számolva helyes.
 
 **Futás:** a futás ugyanazt a lépést ismétli minden akcióban, amíg valami le nem állítja.
 
@@ -209,7 +215,6 @@ waste_time():
 |---|---|---|---|
 | flush | ki | Flush typeahead ("flush") | harcban eldobja az előre leütött billentyűket |
 | jump | ki | Jump to end of run ("jump") | futás közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
-| seefloor | be | Show lamp floor ("seefloor") | sötét szobában a 3×3 környezet padlója látszik ([3.1](03_latoter_es_megjelenites.md#31-felderítés)) |
 | passgo | ki | Follow corridors ("passgo") | futásnál a folyosó kanyarjait követi ([4.2.1](#421-mozgás)) |
 | tombstone | be | Tombstone at death ("tombstone") | halálkor sírkő-rajz ([4.3](#43-szintváltás-és-játék-vége)) |
 | inven | clear | Inventory style ("inven") | csomaglista: overwrite (a térkép fölé), slow (soronként az üzenetsávban), clear (külön képernyő) |

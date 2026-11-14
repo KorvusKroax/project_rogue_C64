@@ -101,6 +101,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E18 | nincs `terse` opció: csak a normál üzenetek vannak, a dobás mindig animálódik | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
 | E19 | tekercsfeliratok: legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 | E20 | `CTRL-P`: a kérdések nem számítanak utolsó üzenetnek, és az utolsó üzenet nem kerül a mentésbe | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
+| E21 | nincs `seefloor` opció: sötét szobában a lámpafény (a 3×3 padlója) mindig látszik | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |
@@ -124,3 +125,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J17 | elírások javítása az üzenetekben | [függelék](fuggelek_uzenetkatalogus.md) |
 | J18 | a labirintus kijáratának keresése mindig megáll (ideiglenes lehet: a labirintusok elhelyezésével együtt újragondoljuk) | [2.6](02_szintgeneralas.md#26-folyosók) |
 | J19 | a szint berendezése mindig véget ér: a `find_floor` gyűjtve választ, a lépcső és a játékos az üres szobákba kerül, a titkos folyosó-mezők utánuk dőlnek el, a hely nélküli elhelyezés kimarad | [2.](02_szintgeneralas.md#2-szintgenerálás) |
+| J20 | új szinten és betöltés után a `look` előző pozíciója a játékosé, így az `erase_lamp` nem töröl a régi szint helyén | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
