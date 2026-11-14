@@ -76,4 +76,14 @@ struct GameState {
 
 extern struct GameState game;
 
+// a beállítások bitjei (4.2.5)
+#define OPTION_FOLLOW_PASSAGES  0x01            // futásnál a folyosó kanyarjainak követése
+
+// a beállításblokk: a GameState-en kívül, mert a képernyőmodul is használja; alapból minden kikapcsolva (nulla)
+struct Options {
+    uint8_t flags;                              // OPTION_ bitek
+};
+
+extern struct Options options;
+
 #endif

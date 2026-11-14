@@ -126,7 +126,7 @@ void look_around(void)
         }
     }
 
-    // ide jön: futás jump mellett nem rajzol
+    // ide jön: futás jump_to_run_end mellett nem rajzol
     draw_tile(player_x, player_y, CHAR_PLAYER);
 }
 

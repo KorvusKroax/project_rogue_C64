@@ -38,6 +38,18 @@ static bool is_test_interesting(int8_t step_x, int8_t step_y)
     return is_something_interesting_beside(BASE_X + 2, BASE_Y + 2, step_x, step_y);
 }
 
+// a (2, 2) mezőről step_x, step_y irányba futva befordul-e, és ha igen, az új irány expected_x, expected_y-e
+static bool is_test_turn(int8_t step_x, int8_t step_y, int8_t expected_x, int8_t expected_y)
+{
+    if (!find_passage_turn(BASE_X + 2, BASE_Y + 2, &step_x, &step_y)) return false;
+    return step_x == expected_x && step_y == expected_y;
+}
+
+static bool is_test_turn_found(int8_t step_x, int8_t step_y)
+{
+    return find_passage_turn(BASE_X + 2, BASE_Y + 2, &step_x, &step_y);
+}
+
 // a (0, 0)..(4, 4) terület padló, a játékos (2, 2) mezője körül
 static void put_test_floor(void)
 {
@@ -175,6 +187,52 @@ int test_careful_run(uint16_t i)
     put_test_tile(1, 2, CHAR_FLOOR);
     put_test_tile(1, 3, CHAR_STAIRS);
     if (!is_test_interesting(1, 1)) return false;
+
+    clear_map();
+    return true;
+}
+
+int test_passage_turn(uint16_t i)
+{
+    // kanyar: jobbra futva lefelé, felfelé futva balra fordul
+    clear_map();
+    put_test_passage(1, 2);
+    put_test_passage(2, 2);
+    put_test_passage(2, 3);
+    if (!is_test_turn(1, 0, 0, 1)) return false;
+    if (!is_test_turn(0, -1, -1, 0)) return false;
+
+    // egyenes folyosóban, ahol továbbmehet, nem fordul; átlósan sem
+    if (is_test_turn_found(-1, 0)) return false;
+    if (is_test_turn_found(1, 1)) return false;
+
+    // elágazás: mindkét oldalon folyosó
+    put_test_passage(2, 1);
+    if (is_test_turn_found(1, 0)) return false;
+
+    // zsákutca: egyik oldalon sincs semmi
+    clear_map();
+    put_test_passage(1, 2);
+    put_test_passage(2, 2);
+    if (is_test_turn_found(1, 0)) return false;
+
+    // a rejtett folyosó-mező felé nem fordul
+    put_test_passage(2, 3);
+    remove_map_flags(BASE_X + 2, BASE_Y + 3, TILE_REAL);
+    if (is_test_turn_found(1, 0)) return false;
+
+    // ajtó felé igen
+    clear_map();
+    put_test_passage(1, 2);
+    put_test_passage(2, 2);
+    put_test_tile(2, 1, CHAR_DOOR);
+    if (!is_test_turn(1, 0, 0, -1)) return false;
+
+    // szobában (nem F_PASS mezőn) nem fordul
+    put_test_floor();
+    put_test_tile(3, 2, CHAR_WALL_VERTICAL);
+    put_test_tile(2, 1, CHAR_WALL_HORIZONTAL);
+    if (is_test_turn_found(1, 0)) return false;
 
     clear_map();
     return true;

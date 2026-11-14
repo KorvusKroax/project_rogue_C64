@@ -16,21 +16,22 @@ struct DevTest {
 // gyors öntesztek: minden indításkor lefutnak
 static const struct DevTest dev_tests[] = {
     { "RNG-RN", test_RN, 1 },
-    { "   -RND", test_rnd, 1 },
-    { "   -ROLL", test_ROLL, 1 },
-    { "   -SPREAD", test_spread, 1 },
+    { "RNG-RND", test_rnd, 1 },
+    { "RNG-ROLL", test_ROLL, 1 },
+    { "RNG-SPREAD", test_spread, 1 },
     { "NUM-SAT ARITHMETIC", test_saturating_arithmetic, 1 },
-    { "   -FORMAT", test_format, 1 },
-    { "   -FROM TEXT", test_convert_text_to_number, 1 },
+    { "NUM-FORMAT", test_format, 1 },
+    { "NUM-FROM TEXT", test_convert_text_to_number, 1 },
     { "KEY-DECODE", test_key_decode, 1 },
     { "VIEW-FOLLOW", test_view_follow, 1 },
     { "MESS-PREPARE TEXT", test_prepare_message_text, 1 },
-    { "    -LINE LENGTH", test_message_chars_fitting_row, 1 },
-    { "    -PAGE LENGTH", test_message_chars_fitting_bar, 1 },
+    { "MESS-LINE LENGTH", test_message_chars_fitting_row, 1 },
+    { "MESS-PAGE LENGTH", test_message_chars_fitting_bar, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
     { "MOVE-DIAGONAL", test_diagonal_step, 1 },
     { "LOOK-NEIGHBORS", test_neighbor_visibility, 1 },
     { "RUN-CAREFUL", test_careful_run, 1 },
+    { "RUN-PASSAGE TURN", test_passage_turn, 1 },
 };
 
 // szint-önteszt: billentyűre

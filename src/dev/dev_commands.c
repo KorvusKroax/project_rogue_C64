@@ -65,6 +65,13 @@ static void toggle_full_map(void)
     redraw_map();
 }
 
+// a beállítás bitjének átváltása, és az új állapot az üzenetsorba
+static void toggle_option(uint8_t option, const char *name)
+{
+    options.flags ^= option;
+    message_format_without_recall("\1: \2", name, (options.flags & option) ? "on" : "off", 0);
+}
+
 // ESC-re vagy hibás számra nem történik semmi
 static void jump_to_depth(void)
 {
@@ -91,6 +98,9 @@ bool dev_execute_command(uint8_t code)
             break;
         case KEY_F5:
             toggle_full_map();
+            break;
+        case KEY_F8:
+            toggle_option(OPTION_FOLLOW_PASSAGES, "follow passages");
             break;
     }
 

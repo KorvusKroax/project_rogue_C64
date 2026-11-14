@@ -20,6 +20,10 @@ bool is_running(void);
 // a futás következő lépése; ha nem sikerül, a futás véget ér; igaz, ha időt vitt
 bool take_run_step(void);
 
+// kanyarkövetés (follow_passages): ha az x, y F_PASS mezőről a step_x, step_y irányú ortogonális lépés falba (kőzetbe, a pálya szélén túlra) ütközne,
+// és a két oldalirány közül pontosan az egyikben ajtó vagy nem rejtett folyosó-mező van, a step_x, step_y arra fordul; igaz, ha befordult
+bool find_passage_turn(uint8_t x, uint8_t y, int8_t *step_x, int8_t *step_y);
+
 // az x, y mezőn álló, step_x, step_y irányba futó játékos mellett, a látható mezők közül a hátsó oldalt kihagyva:
 // ortogonálisan ajtó, ortogonálisan egynél több folyosó-mező, vagy bármi, ami nem padló, fal, kőzet, folyosó vagy ajtó
 bool is_something_interesting_beside(uint8_t x, uint8_t y, int8_t step_x, int8_t step_y);

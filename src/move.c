@@ -82,9 +82,22 @@ bool is_running(void)
     return is_run_active;
 }
 
+// befordulás után az első bejárású kanyar megjelölése
+static void mark_passage_turn(void)
+{
+    if (get_map_flags(game.player.x, game.player.y) & TILE_SEEN) return;
+
+    add_map_flags(game.player.x, game.player.y, TILE_SEEN);
+    // ide jön: jump_to_run_end mellett egyszeri képernyőfrissítés
+}
+
 bool take_run_step(void)
 {
-    // ide jön: kanyarkövetés
+    // ide jön: vakon nincs kanyarkövetés
+    if ((options.flags & OPTION_FOLLOW_PASSAGES) && find_passage_turn(game.player.x, game.player.y, &run_step_x, &run_step_y)) {
+        mark_passage_turn();
+    }
+
     if (!move_player(run_step_x, run_step_y)) {
         stop_running();
         return false;
@@ -93,6 +106,40 @@ bool take_run_step(void)
     // ide jön: vakon a CTRL-futás is SHIFT-futás
     if (is_run_careful && is_something_interesting_beside(game.player.x, game.player.y, run_step_x, run_step_y)) {
         stop_running();
+    }
+    return true;
+}
+
+// a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+static bool is_passage_turn_allowed(uint8_t x, uint8_t y)
+{
+    if (!is_on_map(x, y)) return false;
+    if (get_map_character(x, y) == CHAR_DOOR) return true;
+    return (get_map_flags(x, y) & (TILE_PASSAGE | TILE_REAL)) == (TILE_PASSAGE | TILE_REAL);
+}
+
+bool find_passage_turn(uint8_t x, uint8_t y, int8_t *step_x, int8_t *step_y)
+{
+    if (!(get_map_flags(x, y) & TILE_PASSAGE)) return false;
+    if (*step_x != 0 && *step_y != 0) return false;
+
+    uint8_t target_x = x + *step_x;
+    uint8_t target_y = y + *step_y;
+    if (is_on_map(target_x, target_y) && is_walkable_character(get_map_character(target_x, target_y))) return false;
+
+    // a két derékszögű oldalirány: (side_x, side_y) és az ellentéte
+    int8_t side_x = *step_y;
+    int8_t side_y = *step_x;
+    bool is_side_allowed = is_passage_turn_allowed(x + side_x, y + side_y);
+    bool is_opposite_side_allowed = is_passage_turn_allowed(x - side_x, y - side_y);
+    if (is_side_allowed == is_opposite_side_allowed) return false;
+
+    if (is_side_allowed) {
+        *step_x = side_x;
+        *step_y = side_y;
+    } else {
+        *step_x = -side_x;
+        *step_y = -side_y;
     }
     return true;
 }

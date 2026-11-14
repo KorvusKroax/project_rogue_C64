@@ -72,7 +72,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 
 ## 10.6 Időzítés
 - **Raszter-IRQ** képkockánként egyszer (PAL 50 Hz, NTSC 60 Hz): billentyűolvasás, képkocka-számláló, jiffy óra.
-- **Futás üteme:** futás közben (`jump` nélkül) minden lépés után a játék a következő ütem elejéig vár, így minden lépés ugyanannyi képkockáig tart (1 vagy 2, [10.8](#108-erőforrás-keretek)), akár van szörny a közelben, akár nincs. `jump` mellett nincs várakozás, mert a futás közben nincs rajzolás.
+- **Futás üteme:** futás közben (`jump_to_run_end` nélkül) minden lépés után a játék a következő ütem elejéig vár, így minden lépés ugyanannyi képkockáig tart (1 vagy 2, [10.8](#108-erőforrás-keretek)), akár van szörny a közelben, akár nincs. `jump_to_run_end` mellett nincs várakozás, mert a futás közben nincs rajzolás.
 - **Animációs késleltetés:** a dobott tárgy és a lövedék lépésenként 2 képkockát vár, a sugár (7.6) lépésenként 2-t, és a teljes sugár a visszarajzolás előtt még 10 képkockáig látszik. A nézőablakon kívüli lépések nem várnak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 - **Seed:** a címképernyőn az `N` lenyomásakor a 32 bites seed bájtjai: CIA1 A időzítő alsó bájtja, felső bájtja, a raszter-sor (`$D012`) és a jiffy-számláló alsó bájtja, mindegyik XOR-olva a jiffy-számláló többi bájtjával ([0.2](00_attekintes.md#02-alapprimitívek)). Ha az eredmény 0, a seed 1.
 - A játéklogika soha nem függ az időtől: az időzítés csak a megjelenítést és a seed kezdőértékét érinti.
@@ -139,7 +139,7 @@ A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák fogla
   - **F1:** új szint ugyanazon a mélységen.
   - **F3:** ugrás tetszőleges mélységre (1..255); a mélységet a sávban kéri be, ESC-re elmarad.
   - **F5:** a teljes térkép be- és kikapcsolása. Bekapcsolva a képernyőn a MAP látszik a játékossal: a titkos folyosó-mező inverz `#`, a titkos ajtó inverz `+`. A nézőablak közben is a játékost követi, és új szinten is bekapcsolva marad. A SCREEN réteg közben is frissül, így kikapcsoláskor a normál nézet pontosan visszaáll. Bekapcsolt állapotban más a keret színe.
-  - **F7, F8:** a `jump`, illetve a `passgo` opció be- és kikapcsolása ([4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)), amíg nincs beállítások menü; az új állapotot az üzenetsor mutatja.
+  - **F7, F8:** a `jump_to_run_end`, illetve a `follow_passages` opció be- és kikapcsolása ([4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)), amíg nincs beállítások menü; az új állapotot az üzenetsor mutatja.
 - **Determinizmus:** ugyanazzal a programváltozattal és ugyanazzal a seeddel ugyanaz a szint és ugyanaz a dobássorozat jön létre, és mentés, majd betöltés után a játék ugyanúgy folytatódik. Az RN-t csak a játéklogika hívhatja; a megjelenítés, a görgetés, az animáció és az időzítés soha.
 - A cél az eredeti játékszabályok követése, nem az eredeti program dobássorozatának bájtra pontos utánzása: kódváltozás után ugyanaz a seed más játékot adhat.
 

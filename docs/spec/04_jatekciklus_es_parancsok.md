@@ -139,7 +139,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 - ha a keresés (searching gyűrű) talál valamit;
 - confusion-nál, ha a véletlen irány helyben hagyná.
 
-*Kanyarkövetés (`passgo` opció, alapból KI):* ha a játékos F_PASS mezőn áll (folyosón vagy labirintusban), a futás falba ütközne, és a két derékszögű oldalirány közül pontosan az egyikben lehet továbbmenni, a futás befordul. Továbbmenni ajtóra vagy nem rejtett (F_REAL) folyosó-mezőre lehet; a térkép első és utolsó sora, oszlopa felé nem. Csak ortogonális futásnál, vakságban nem. Befordulás után, ha a játékos mezője még nem F_SEEN, megkapja az F_SEEN-t, és `jump` mellett a képernyő egyszer frissül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)), így ugrásos futásnál a kanyarok első bejárásakor is látszik az út.
+*Kanyarkövetés (`follow_passages` opció, alapból KI):* ha a játékos F_PASS mezőn áll (folyosón vagy labirintusban), a futás falba ütközne, és a két derékszögű oldalirány közül pontosan az egyikben lehet továbbmenni, a futás befordul. Továbbmenni ajtóra vagy nem rejtett (F_REAL) folyosó-mezőre lehet; a térkép első és utolsó sora, oszlopa felé nem. Csak ortogonális futásnál, vakságban nem. Befordulás után, ha a játékos mezője még nem F_SEEN, megkapja az F_SEEN-t, és `jump_to_run_end` mellett a képernyő egyszer frissül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)), így ugrásos futásnál a kanyarok első bejárásakor is látszik az út.
 
 *CTRL-futás (`door_stop`) – minden lépés után megnézi a 3×3 környezet látható mezőit (a `look` rálátási szabálya szerint, [3.1](03_latoter_es_megjelenites.md#31-felderítés)), a futás irányával ellentétes oldalt kihagyva (ortogonális futásnál a hátsó oszlopot vagy sort, átlósnál a hátsó félsík három mezőjét):*
 - ajtó a játékos mellett ortogonálisan (elöl vagy oldalt) → megáll;
@@ -214,8 +214,8 @@ waste_time():
 | opció | alapérték | sor a menüben | jelentés |
 |---|---|---|---|
 | flush | ki | Flush typeahead ("flush") | harcban eldobja az előre leütött billentyűket |
-| jump | ki | Jump to end of run ("jump") | futás közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
-| passgo | ki | Follow corridors ("passgo") | futásnál a folyosó kanyarjait követi ([4.2.1](#421-mozgás)) |
+| jump_to_run_end (eredetileg jump) | ki | Jump to end of run ("jump") | futás közben nem rajzol minden lépést, csak a végén ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)) |
+| follow_passages (eredetileg passgo) | ki | Follow corridors ("passgo") | futásnál a folyosó kanyarjait követi ([4.2.1](#421-mozgás)) |
 | tombstone | be | Tombstone at death ("tombstone") | halálkor sírkő-rajz ([4.3](#43-szintváltás-és-játék-vége)) |
 | inven | clear | Inventory style ("inven") | csomaglista: overwrite (a térkép fölé), slow (soronként az üzenetsávban), clear (külön képernyő) |
 | name | a megadott név (0.1) | Name ("name") | a sírkövön és a ranglistán; ≤ 15 karakter |
