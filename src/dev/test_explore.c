@@ -32,6 +32,23 @@ static bool is_test_neighbor_visible(uint8_t from_x, uint8_t from_y, uint8_t x, 
     return is_neighbor_visible(BASE_X + from_x, BASE_Y + from_y, BASE_X + x, BASE_Y + y);
 }
 
+static bool is_test_interesting(int8_t step_x, int8_t step_y)
+{
+    // a játékos a (2, 2) mezőn áll, hogy mind a nyolc szomszéd pozitív eltolású legyen
+    return is_something_interesting_beside(BASE_X + 2, BASE_Y + 2, step_x, step_y);
+}
+
+// a (0, 0)..(4, 4) terület padló, a játékos (2, 2) mezője körül
+static void put_test_floor(void)
+{
+    clear_map();
+    for (uint8_t y = 0; y < 5; y++) {
+        for (uint8_t x = 0; x < 5; x++) {
+            put_test_tile(x, y, CHAR_FLOOR);
+        }
+    }
+}
+
 int test_diagonal_step(uint16_t i)
 {
     // folyosókanyar: átlósan nem lehet átvágni, ha a sarok egyik mezője kő
@@ -117,6 +134,47 @@ int test_neighbor_visibility(uint16_t i)
     put_test_tile(0, 0, CHAR_FLOOR);
     put_test_tile(1, 1, CHAR_FLOOR);
     if (!is_test_neighbor_visible(0, 0, 1, 1)) return false;
+
+    clear_map();
+    return true;
+}
+
+int test_careful_run(uint16_t i)
+{
+    // egyenes folyosó: csak az elülső folyosó-mező számít, a hátsó nem
+    clear_map();
+    put_test_passage(1, 2);
+    put_test_passage(2, 2);
+    put_test_passage(3, 2);
+    if (is_test_interesting(1, 0)) return false;
+
+    // elágazás: elöl és oldalt is folyosó
+    put_test_passage(2, 1);
+    if (!is_test_interesting(1, 0)) return false;
+
+    // szobában a fal mellett: az oldalt lévő ajtónál megáll, az átlósnál nem
+    put_test_floor();
+    put_test_tile(1, 1, CHAR_WALL_HORIZONTAL);
+    put_test_tile(2, 1, CHAR_WALL_HORIZONTAL);
+    put_test_tile(3, 1, CHAR_DOOR);
+    if (is_test_interesting(1, 0)) return false;
+    put_test_tile(2, 1, CHAR_DOOR);
+    put_test_tile(3, 1, CHAR_WALL_HORIZONTAL);
+    if (!is_test_interesting(1, 0)) return false;
+
+    // a lépcső átlósan elöl számít, hátul nem
+    put_test_floor();
+    put_test_tile(3, 3, CHAR_STAIRS);
+    if (!is_test_interesting(1, 0)) return false;
+    if (is_test_interesting(-1, 0)) return false;
+
+    // átlós futásnál a hátsó félsík három mezője kimarad, az oldalsó átlók nem
+    put_test_floor();
+    put_test_tile(1, 2, CHAR_STAIRS);
+    if (is_test_interesting(1, 1)) return false;
+    put_test_tile(1, 2, CHAR_FLOOR);
+    put_test_tile(1, 3, CHAR_STAIRS);
+    if (!is_test_interesting(1, 1)) return false;
 
     clear_map();
     return true;

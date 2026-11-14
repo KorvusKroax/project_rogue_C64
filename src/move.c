@@ -6,10 +6,11 @@
 #include "state.h"
 #include "view.h"
 
-// a futás állapota: fut-e, és merre
+// a futás állapota: fut-e, merre, és óvatos (CTRL) futás-e
 static bool is_run_active;
 static int8_t run_step_x;
 static int8_t run_step_y;
+static bool is_run_careful;
 
 bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint8_t to_y)
 {
@@ -63,11 +64,12 @@ bool move_player(int8_t step_x, int8_t step_y)
     return true;
 }
 
-void start_running(int8_t step_x, int8_t step_y)
+void start_running(int8_t step_x, int8_t step_y, bool is_careful)
 {
     is_run_active = true;
     run_step_x = step_x;
     run_step_y = step_y;
+    is_run_careful = is_careful;
 }
 
 void stop_running(void)
@@ -88,6 +90,42 @@ bool take_run_step(void)
         return false;
     }
 
-    // ide jön: a CTRL-futás vizsgálata
+    // ide jön: vakon a CTRL-futás is SHIFT-futás
+    if (is_run_careful && is_something_interesting_beside(game.player.x, game.player.y, run_step_x, run_step_y)) {
+        stop_running();
+    }
     return true;
+}
+
+bool is_something_interesting_beside(uint8_t x, uint8_t y, int8_t step_x, int8_t step_y)
+{
+    uint8_t orthogonal_passage_count = 0;
+
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            if (offset_x == 0 && offset_y == 0) continue;
+
+            // a hátsó oldal: ortogonális futásnál a hátsó oszlop vagy sor, átlósnál a hátsó félsík három mezője
+            if (offset_x * step_x + offset_y * step_y < 0) continue;
+
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t tile_x = x + offset_x;
+            uint8_t tile_y = y + offset_y;
+            if (!is_on_map(tile_x, tile_y)) continue;
+            if (!is_neighbor_visible(x, y, tile_x, tile_y)) continue;
+
+            bool is_orthogonal = offset_x == 0 || offset_y == 0;
+            // ide jön: a látható szörny
+            uint8_t character = get_map_character(tile_x, tile_y);
+            if (character == CHAR_DOOR) {
+                if (is_orthogonal) return true;
+            } else if (character == CHAR_PASSAGE) {
+                if (is_orthogonal) orthogonal_passage_count++;
+            } else if (character != CHAR_FLOOR && character != CHAR_WALL_HORIZONTAL && character != CHAR_WALL_VERTICAL && character != CHAR_SOLID_ROCK) {
+                return true;
+            }
+        }
+    }
+
+    return orthogonal_passage_count > 1;
 }
