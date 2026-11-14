@@ -16,10 +16,13 @@
 // a logikai képernyő: a térkép fölött az üzenetsor, alatta a státuszsor
 #define LOGICAL_SCREEN_ROWS  (MAP_TOP_ROW + MAP_ROWS + 1)     // default: 24
 
+#define IN_PASSAGE  0xfe                        // a lény nem szobában, hanem folyosón áll; a labirintus szobának számít
+
 // a játékos és a szörnyek közös rekordja
 struct Creature {
     uint8_t  x;                                 // a pozíció a térképen
     uint8_t  y;
+    uint8_t  room;                              // a szoba indexe, amelyben áll, vagy IN_PASSAGE
     uint8_t  strength;                          // 3..31
     uint8_t  experience_level;
     int16_t  hit_points;
@@ -33,8 +36,8 @@ struct Creature {
 // a szobák száma: szektoronként egy, a szoba indexe a szektor indexe
 #define ROOM_COUNT  (SECTOR_GRID_SIZE * SECTOR_GRID_SIZE)      // default: 9
 
-// a szobaindex 8 bites: a szobák ciklusai uint8_t számlálóval mennek, és a 0xff szabad marad (ANY_ROOM)
-#if ROOM_COUNT > 255
+// a szobaindex 8 bites: a szobák ciklusai uint8_t számlálóval mennek, és a 0xfe és a 0xff szabad marad (IN_PASSAGE, ANY_ROOM)
+#if ROOM_COUNT > 254
     #error "túl sok szoba: a szobaindex 8 bites"
 #endif
 

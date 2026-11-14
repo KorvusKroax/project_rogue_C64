@@ -221,6 +221,31 @@ uint8_t choose_random_room(void)
     return room_index;
 }
 
+// a labirintus a legtávolabbi celláig ér: a helye + a mérete páros része, ami a felső szektorsorban a méretnél eggyel több is lehet
+uint8_t get_room_at(uint8_t x, uint8_t y)
+{
+    bool is_passage = (get_map_flags(x, y) & TILE_PASSAGE) != 0;
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & ROOM_PHANTOM) continue;
+
+        bool is_maze = (room->flags & ROOM_MAZE) != 0;
+        if (is_passage && !is_maze) continue;
+
+        uint8_t last_x = room->x + room->width - 1;
+        uint8_t last_y = room->y + room->height - 1;
+        if (is_maze) {
+            last_x = room->x + room->width / 2 * 2;
+            last_y = room->y + room->height / 2 * 2;
+        }
+
+        if (x >= room->x && x <= last_x && y >= room->y && y <= last_y) return room_index;
+    }
+
+    return IN_PASSAGE;
+}
+
 void generate_rooms(void)
 {
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {

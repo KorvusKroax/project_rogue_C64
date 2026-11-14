@@ -260,6 +260,46 @@ static bool is_player_position_valid(void)
     return is_inside_room(x, y);
 }
 
+// a mezők szobája: a normál szoba teljes területe (fal, ajtó, padló, lépcső) és a labirintus minden cellája az övé, a fantom szoba pontja
+// folyosón van, folyosó-mező csak labirintusé lehet, és a játékos egy nem fantom szobában kezd
+static bool are_room_lookups_valid(void)
+{
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+
+        if (room->flags & ROOM_PHANTOM) {
+            if (get_room_at(room->x, room->y) != IN_PASSAGE) return false;
+        } else if (room->flags & ROOM_MAZE) {
+            uint8_t last_x = room->x + room->width / 2 * 2;
+            uint8_t last_y = room->y + room->height / 2 * 2;
+            for (uint8_t y = room->y; y <= last_y; y += 2) {
+                for (uint8_t x = room->x; x <= last_x; x += 2) {
+                    if (get_room_at(x, y) != room_index) return false;
+                }
+            }
+        } else {
+            for (uint8_t y = room->y; y < room->y + room->height; y++) {
+                for (uint8_t x = room->x; x < room->x + room->width; x++) {
+                    if (get_room_at(x, y) != room_index) return false;
+                }
+            }
+        }
+    }
+
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            if (!(get_map_flags(x, y) & TILE_PASSAGE)) continue;
+
+            uint8_t room_index = get_room_at(x, y);
+            if (room_index == IN_PASSAGE) continue;
+            if (room_index >= ROOM_COUNT || !(game.rooms[room_index].flags & ROOM_MAZE)) return false;
+        }
+    }
+
+    uint8_t player_room = get_room_at(game.player.x, game.player.y);
+    return player_room < ROOM_COUNT && !(game.rooms[player_room].flags & ROOM_PHANTOM);
+}
+
 // az elárasztás verme: minden mező legfeljebb egyszer kerül bele, mert a berakáskor megjelölődik
 static uint8_t flood_stack_x[MAP_ROWS * MAP_COLUMNS];
 static uint8_t flood_stack_y[MAP_ROWS * MAP_COLUMNS];
@@ -409,6 +449,7 @@ int test_level_generation(uint16_t i)
 
     if (!is_stairs_valid()) return false;
     if (!is_player_position_valid()) return false;
+    if (!are_room_lookups_valid()) return false;
     if (!are_map_tiles_valid()) return false;
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {

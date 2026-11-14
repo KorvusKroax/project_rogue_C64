@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 // a keresés egy véletlen nem fantom szobában kezd, és ha ott nincs alkalmas mező, másikban folytatja;
-// nem lehet szobaindex, mert legfeljebb 255 szoba van (state.h), így a legnagyobb index 254
+// nem lehet szobaindex, mert legfeljebb 254 szoba van (state.h), így a legnagyobb index 253
 #define ANY_ROOM  0xff
 
 // a szoba falain belüli alkalmas mezők közül egy, egyforma eséllyel; hamis, ha nincs ilyen (ANY_ROOM-nál egyik szobában sem)
