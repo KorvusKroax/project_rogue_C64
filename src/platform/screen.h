@@ -9,6 +9,8 @@
 void screen_init(void);     // csak tiltott megszakítással hívható
 
 void set_screen_colors(uint8_t border, uint8_t background, uint8_t text);
+uint8_t get_border_color(void);
+void set_border_color(uint8_t color);
 void screen_clear(void);
 
 void put_screen_character(uint8_t x, uint8_t y, uint8_t character);     // character: ASCII (inverz: +128)

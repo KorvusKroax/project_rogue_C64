@@ -44,6 +44,17 @@ void set_screen_colors(uint8_t border, uint8_t background, uint8_t text)
     vic.color_back   = background;
 }
 
+// a színregiszter felső 4 bitje olvasáskor 1, ezért maszkolva
+uint8_t get_border_color(void)
+{
+    return vic.color_border & 0x0f;
+}
+
+void set_border_color(uint8_t color)
+{
+    vic.color_border = color;
+}
+
 void screen_clear(void)
 {
     for (uint8_t i = 0; i < SCREEN_QUARTER; i++) {

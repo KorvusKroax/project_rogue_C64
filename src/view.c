@@ -9,6 +9,10 @@
 #include "state.h"
 #include "status.h"
 
+#ifdef DEVMODE
+    #include "dev/dev.h"
+#endif
+
 // görgethető nézőablakban a két szél holt zónája között maradnia kell helynek, különben a nézőablak minden lépésnél ide-oda ugrana
 #if VIEW_WINDOW_X_MAX > 0 && 2 * VIEW_WINDOW_EDGE_DISTANCE >= VIEW_WINDOW_WIDTH
     #error "a VIEW_WINDOW_EDGE_DISTANCE túl nagy a nézőablakhoz"
@@ -52,7 +56,15 @@ uint8_t get_seen_character(uint8_t map_x, uint8_t y)
 
 static void redraw_map_row(uint8_t y)
 {
-    screen_copy_row(y, game.seen_map[y - MAP_TOP_ROW] + game.view_window_x, VIEW_WINDOW_WIDTH);
+    const uint8_t *row = game.seen_map[y - MAP_TOP_ROW] + game.view_window_x;
+
+    #ifdef DEVMODE
+        if (is_full_map_shown()) {
+            row = build_full_map_row(y);
+        }
+    #endif
+
+    screen_copy_row(y, row, VIEW_WINDOW_WIDTH);
 }
 
 void redraw_map(void)

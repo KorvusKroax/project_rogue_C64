@@ -1,7 +1,6 @@
 #include "dev.h"
 
 #include <stddef.h>
-#include <string.h>
 
 #include "../platform/platform.h"
 #include "../platform/screen.h"
@@ -418,19 +417,11 @@ static void dev_status_screen(void)
 static void rooms_generate_level(void)
 {
     generate_level();
-    memcpy(game.seen_map, game.map_characters, sizeof(game.seen_map));
 
-    // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik; itt inverz folyosóként, illetve inverz ajtóként
+    // a titkos mezők inverzen, mint a játékban a teljes térképen (F5)
     for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
         for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
-            uint8_t flags = get_map_flags(x, y);
-            if (flags & TILE_REAL) continue;
-
-            if (flags & TILE_PASSAGE) {
-                game.seen_map[y - MAP_TOP_ROW][x] = CHAR_PASSAGE + INVERSE_OFFSET;
-            } else {
-                game.seen_map[y - MAP_TOP_ROW][x] = CHAR_DOOR + INVERSE_OFFSET;
-            }
+            game.seen_map[y - MAP_TOP_ROW][x] = calculate_full_map_character(x, y);
         }
     }
 
