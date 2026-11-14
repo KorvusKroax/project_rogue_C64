@@ -6,6 +6,11 @@
 #include "state.h"
 #include "view.h"
 
+// a futás állapota: fut-e, és merre
+static bool is_run_active;
+static int8_t run_step_x;
+static int8_t run_step_y;
+
 bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint8_t to_y)
 {
     if (from_x == to_x || from_y == to_y) return true;
@@ -50,6 +55,39 @@ bool move_player(int8_t step_x, int8_t step_y)
     game.player.y = target_y;
     follow_view_window(target_x);
 
+    if (target_character == CHAR_DOOR || target_character == CHAR_STAIRS) {
+        stop_running();
+    }
+
     // ide jön: csapda kioldása, tárgy felvétele
+    return true;
+}
+
+void start_running(int8_t step_x, int8_t step_y)
+{
+    is_run_active = true;
+    run_step_x = step_x;
+    run_step_y = step_y;
+}
+
+void stop_running(void)
+{
+    is_run_active = false;
+}
+
+bool is_running(void)
+{
+    return is_run_active;
+}
+
+bool take_run_step(void)
+{
+    // ide jön: kanyarkövetés
+    if (!move_player(run_step_x, run_step_y)) {
+        stop_running();
+        return false;
+    }
+
+    // ide jön: a CTRL-futás vizsgálata
     return true;
 }

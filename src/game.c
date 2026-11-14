@@ -57,6 +57,24 @@ static bool execute_command(uint8_t code)
         case 'u': return move_player(1, -1);
         case 'b': return move_player(-1, 1);
         case 'n': return move_player(1, 1);
+        // a futás indítása nem visz időt
+        case 'H': start_running(-1, 0); return false;
+        case 'J': start_running(0, 1); return false;
+        case 'K': start_running(0, -1); return false;
+        case 'L': start_running(1, 0); return false;
+        case 'Y': start_running(-1, -1); return false;
+        case 'U': start_running(1, -1); return false;
+        case 'B': start_running(-1, 1); return false;
+        case 'N': start_running(1, 1); return false;
+        // ide jön: a CTRL-futás saját vizsgálata
+        case KEY_CTRL('h'): start_running(-1, 0); return false;
+        case KEY_CTRL('j'): start_running(0, 1); return false;
+        case KEY_CTRL('k'): start_running(0, -1); return false;
+        case KEY_CTRL('l'): start_running(1, 0); return false;
+        case KEY_CTRL('y'): start_running(-1, -1); return false;
+        case KEY_CTRL('u'): start_running(1, -1); return false;
+        case KEY_CTRL('b'): start_running(-1, 1); return false;
+        case KEY_CTRL('n'): start_running(1, 1); return false;
         case '.':
             return true;
         case KEY_ESCAPE:
@@ -87,12 +105,20 @@ static void play_turn(void)
         look_around();
         show_map_changes();
         draw_status();
-        set_key_repeat(true);
-        uint8_t code = wait_for_key();
-        set_key_repeat(false);
 
-        message_clear();
-        if (execute_command(code)) {
+        // futás közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak
+        bool took_time;
+        if (is_running()) {
+            took_time = take_run_step();
+        } else {
+            set_key_repeat(true);
+            uint8_t code = wait_for_key();
+            set_key_repeat(false);
+
+            message_clear();
+            took_time = execute_command(code);
+        }
+        if (took_time) {
             actions--;
         }
     }
