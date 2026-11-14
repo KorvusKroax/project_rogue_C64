@@ -35,6 +35,8 @@
 
 void clear_map(void);                                           // minden mező CHAR_SOLID_ROCK, nem rejtett (TILE_REAL), más flag nélkül
 
+bool is_on_map(uint8_t x, uint8_t y);                           // a mező a térképen van; a 0. oszlop (sor) előtti 255 is kívül esik
+
 uint8_t get_map_character(uint8_t x, uint8_t y);                // y: MAP_TOP_ROW..MAP_TOP_ROW+MAP_ROWS-1
 void set_map_character(uint8_t x, uint8_t y, uint8_t character);
 

@@ -5,8 +5,11 @@
 #include <stddef.h>
 
 #include "platform/key.h"
+#include "explore.h"
 #include "level.h"
 #include "message.h"
+#include "move.h"
+#include "view.h"
 #include "player.h"
 #include "state.h"
 #include "status.h"
@@ -46,6 +49,14 @@ static void report_illegal_command(uint8_t code)
 static bool execute_command(uint8_t code)
 {
     switch (code) {
+        case 'h': return move_player(-1, 0);
+        case 'j': return move_player(0, 1);
+        case 'k': return move_player(0, -1);
+        case 'l': return move_player(1, 0);
+        case 'y': return move_player(-1, -1);
+        case 'u': return move_player(1, -1);
+        case 'b': return move_player(-1, 1);
+        case 'n': return move_player(1, 1);
         case '.':
             return true;
         case KEY_ESCAPE:
@@ -73,6 +84,8 @@ static void play_turn(void)
     // az ingyenes parancs nem fogyaszt akciót
     uint8_t actions = 1;
     while (actions) {
+        look_around();
+        show_map_changes();
         draw_status();
         set_key_repeat(true);
         uint8_t code = wait_for_key();

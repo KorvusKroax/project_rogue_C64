@@ -10,7 +10,7 @@
     #include "dev/dev.h"
 
     #define CHECK_MAP_WRITE_POSITION(x, y) \
-        DEV_CHECK((x) < MAP_COLUMNS && (y) >= MAP_TOP_ROW && (y) < MAP_TOP_ROW + MAP_ROWS, "map write outside the map")
+        DEV_CHECK(is_on_map(x, y), "map write outside the map")
 #else
     #define CHECK_MAP_WRITE_POSITION(x, y) ((void)0)
 #endif
@@ -19,6 +19,11 @@ void clear_map(void)
 {
     memset(game.map_characters, CHAR_SOLID_ROCK, sizeof(game.map_characters));
     memset(game.map_flags, TILE_REAL, sizeof(game.map_flags));
+}
+
+bool is_on_map(uint8_t x, uint8_t y)
+{
+    return x < MAP_COLUMNS && y >= MAP_TOP_ROW && y < MAP_TOP_ROW + MAP_ROWS;
 }
 
 uint8_t get_map_character(uint8_t x, uint8_t y)

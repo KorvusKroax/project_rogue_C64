@@ -1,6 +1,7 @@
 #include "level.h"
 
 #include "corridors.h"
+#include "explore.h"
 #include "map.h"
 #include "rng.h"
 #include "rooms.h"
@@ -184,8 +185,10 @@ void new_level(void)
     generate_level();
     // ide jön: a lépcsőt a játékos még nem látta (seenstairs)
 
-    // ide jön: a játékos szobájának megvilágítása és a szörnyek ébresztése (enter_room)
+    // előbb a nézőablak: az újrarajzolás az üres látott térképből letörli a régi szintet, és az enter_room már a jó oszlopokba rajzol
     center_view_window(game.player.x);
+    enter_room(game.player.x, game.player.y);
+    forget_previous_position();
 
     // ide jön: szörnyészlelés alatt a szörnyek azonnal kirajzolódnak (turn_see)
     // ide jön: hallucináció alatt a jelek azonnal hallucináltak (visuals)

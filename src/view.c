@@ -21,6 +21,11 @@
 
 static uint8_t map_first_visible_row = MAP_TOP_ROW;    // a fölötte lévő térképsorokat az üzenetsáv takarja
 
+// a show_map_changes ezeket viszi a képernyőre: a görgetés óta a teljes térképet, különben a változott sorokat
+static bool is_scroll_pending = false;
+static uint8_t changed_first_row = 0xff;    // ha nagyobb, mint a changed_last_row, nincs változott sor
+static uint8_t changed_last_row = 0;
+
 void clear_seen_map(void)
 {
     memset(game.seen_map, CHAR_SOLID_ROCK, sizeof(game.seen_map));
@@ -28,12 +33,21 @@ void clear_seen_map(void)
 
 void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch)
 {
-    game.seen_map[y - MAP_TOP_ROW][map_x] = ch;
+    uint8_t *seen = &game.seen_map[y - MAP_TOP_ROW][map_x];
+    if (*seen == ch) return;
 
-    uint8_t column = map_x - game.view_window_x;
-    if (column < VIEW_WINDOW_WIDTH && y >= map_first_visible_row) {
-        put_screen_character(column, y, ch);
+    *seen = ch;
+    if (y < changed_first_row) {
+        changed_first_row = y;
     }
+    if (y > changed_last_row) {
+        changed_last_row = y;
+    }
+}
+
+uint8_t get_seen_character(uint8_t map_x, uint8_t y)
+{
+    return game.seen_map[y - MAP_TOP_ROW][map_x];
 }
 
 static void redraw_map_row(uint8_t y)
@@ -46,6 +60,34 @@ void redraw_map(void)
     wait_for_next_frame();
 
     for (uint8_t y = map_first_visible_row; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        redraw_map_row(y);
+    }
+    is_scroll_pending = false;
+    changed_first_row = 0xff;
+    changed_last_row = 0;
+}
+
+// a képkocka végén kezd (a megszakítás a látható rész alatt jön), így a néhány sor a sugár előtt kerül a képernyőre
+void show_map_changes(void)
+{
+    if (is_scroll_pending) {
+        redraw_map();
+        return;
+    }
+
+    // az üzenetsáv alatti sorok kimaradnak: a set_map_first_visible_row rajzolja vissza őket, amikor felszabadulnak
+    uint8_t first_row = changed_first_row;
+    uint8_t last_row = changed_last_row;
+    changed_first_row = 0xff;
+    changed_last_row = 0;
+
+    if (first_row < map_first_visible_row) {
+        first_row = map_first_visible_row;
+    }
+    if (first_row > last_row) return;
+
+    wait_for_next_frame();
+    for (uint8_t y = first_row; y <= last_row; y++) {
         redraw_map_row(y);
     }
 }
@@ -102,6 +144,6 @@ void follow_view_window(uint8_t map_x)
 
     if (view_window_x != game.view_window_x) {
         game.view_window_x = view_window_x;
-        redraw_map();
+        is_scroll_pending = true;
     }
 }

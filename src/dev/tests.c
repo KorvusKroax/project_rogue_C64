@@ -28,6 +28,8 @@ static const struct DevTest dev_tests[] = {
     { "MESS-LINE LENGTH", test_message_chars_fitting_row, 1 },
     { "MESS-PAGE LENGTH", test_message_chars_fitting_bar, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
+    { "MOVE-DIAGONAL", test_diagonal_step, 1 },
+    { "LOOK-NEIGHBORS", test_neighbor_visibility, 1 },
 };
 
 // szint-önteszt: billentyűre

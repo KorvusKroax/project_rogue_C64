@@ -12,7 +12,7 @@ rem --- a karakterkeszlet: src\platform\charset_custom.c (sajat) vagy src\platfo
 set CHARSET=src\platform\charset_rom.c
 
 rem --- a jatek forrasfajljai ---
-set SOURCES=src\main.c src\game.c src\texts.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c src\platform\key_codes.c %CHARSET% src\map.c src\view.c src\message.c src\input.c src\status.c src\player.c src\rooms.c src\corridors.c src\level.c src\rng.c src\num.c
+set SOURCES=src\main.c src\game.c src\texts.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c src\platform\key_codes.c %CHARSET% src\map.c src\view.c src\message.c src\input.c src\status.c src\player.c src\explore.c src\move.c src\rooms.c src\corridors.c src\level.c src\rng.c src\num.c
 
 rem --- kiadasi vagy fejlesztoi build ---
 set NAME=rogue
@@ -22,7 +22,7 @@ if /i "%~1"=="dev" (
     set DEFS=-dDEVMODE
 )
 rem a fejlesztoi fajlok csak a fejlesztoi buildbe kerulnek
-if /i "%~1"=="dev" set SOURCES=%SOURCES% src\dev\dev.c src\dev\dev_commands.c src\dev\tests.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_level.c src\dev\test_screens.c
+if /i "%~1"=="dev" set SOURCES=%SOURCES% src\dev\dev.c src\dev\dev_commands.c src\dev\tests.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_explore.c src\dev\test_level.c src\dev\test_screens.c
 rem "build.bat dev 12345": fejlesztoi build rogzitett seeddel
 if /i "%~1"=="dev" if not "%~2"=="" set DEFS=%DEFS% -dDEV_SEED=%~2UL
 

@@ -62,7 +62,7 @@ static const uint8_t compare_depths[COMPARE_DEPTH_COUNT] = { 1, 10, 26, 40 };
 #define CIA_TIMER_A_START          0x11         // betöltés a kezdőértékből és indítás; a rendszerórajelet számolja, körbefut
 #define CIA_TIMER_B_START          0x51         // betöltés és indítás; az A időzítő átfordulásait számolja
 
-// a szintgenerálás a látott térképet törli és a nézőablakot állítja: a keretprogramban nincs képernyőréteg, ezek üres csonkok
+// a new_level a látott térképet törli, a nézőablakot állítja és a kezdőszobát kirajzolja: a keretprogramban nincs képernyőréteg, ezek üres csonkok
 void clear_seen_map(void)
 {
 }
@@ -70,6 +70,16 @@ void clear_seen_map(void)
 void center_view_window(uint8_t map_x)
 {
     (void)map_x;
+}
+
+void enter_room(uint8_t x, uint8_t y)
+{
+    (void)x;
+    (void)y;
+}
+
+void forget_previous_position(void)
+{
 }
 
 // a CIA2 két időzítője 32 bites ciklusszámlálóként: az A ciklusonként lefelé számol $FFFF-től,

@@ -180,6 +180,7 @@ static uint8_t view_step(uint8_t x, int8_t step)
     draw_tile(x, VIEW_TEST_ROW, view_pattern(x, VIEW_TEST_ROW));
     draw_tile(target, VIEW_TEST_ROW, CHAR_PLAYER);
     follow_view_window(target);
+    show_map_changes();
 
     return target;
 }
@@ -252,6 +253,7 @@ static void dev_view_screen(void)
 
     view_draw_pattern();
     draw_tile(x, VIEW_TEST_ROW, CHAR_PLAYER);
+    redraw_map();
 
     while (code != KEY_ESCAPE) {
         set_screen_cursor(0, 0);

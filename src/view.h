@@ -19,14 +19,19 @@
 
 void clear_seen_map(void);                              // a látott térkép szóközzel feltöltése, nem rajzol
 
-void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch);   // a mező jele a látott térképre, és ha látszik, a videomemóriába; y: MAP_TOP_ROW..MAP_TOP_ROW+MAP_ROWS-1
+void draw_tile(uint8_t map_x, uint8_t y, uint8_t ch);   // a mező jele a látott térképre; a képernyőre a show_map_changes viszi; y: MAP_TOP_ROW..MAP_TOP_ROW+MAP_ROWS-1
+uint8_t get_seen_character(uint8_t map_x, uint8_t y);   // a mező jele a látott térképen
 
 void redraw_map(void);                                  // a térképterület újrarajzolása a látott térképből
+
+// a látott térkép változásai egyszerre a képernyőre, egy képkocka elején: görgetés után a teljes térkép, különben a változott sorok;
+// így egy lépés (régi mező, lámpafény, 3×3, játékos jele) köztes kép nélkül jelenik meg
+void show_map_changes(void);
 
 void set_map_first_visible_row(uint8_t row);            // a térkép csak a row. képernyősortól rajzol, a fölötte lévőket az üzenetsáv foglalja; a felszabaduló sorokat visszarajzolja; MAP_TOP_ROW vagy kisebb: semmi nincs takarva
 
 void center_view_window(uint8_t map_x);                 // a nézőablak a map_x oszlopra áll, újrarajzolással
-void follow_view_window(uint8_t map_x);                 // görget, ha a map_x oszlop a holt zónán kívül van
+void follow_view_window(uint8_t map_x);                 // görget, ha a map_x oszlop a holt zónán kívül van; az újrarajzolás a show_map_changes-ben
 
 uint8_t calculate_view_window_x_after_step(uint8_t map_x, uint8_t view_window_x);   // a nézőablak új helye, ha a követett oszlop map_x lett; nem rajzol
 
