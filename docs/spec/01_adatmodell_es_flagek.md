@@ -344,7 +344,7 @@ Két változat van, a szörnymozgás megírásakor döntünk, melyik marad.
   - *Ajtóra érve* belép a szobába, onnan a szobaszabály érvényes: a célhoz legközelebbi kijárat.
   - Ehhez szörnyenként el kell tárolni az utolsó lépés irányát. Ez 3 bit, ha elfér a szörny flagjei között, különben 1 bájt.
 - **Labirintusban** a szobaszabály érvényes, a labirintus kijárataival. Ha a szörny beragad, az belefér.
-- **Sötétség:** folyosón a játékos csak a 3×3 környezetét látja, ahogy most is. Ehhez elég a „folyosón” állapot.
+- **Sötétség:** folyosón a játékos csak a 3×3 környezetét látja, ahogy most is. Ehhez elég a „folyosón” állapot. A labirintus szoba, de DARK flag nélkül jön létre (2.2), ezért a láthatóságnál sötétnek kell számítani, mint a folyosót; az A változatban ez magától adódik, mert ott a labirintus a folyosóhálózat része.
 - **Drain life folyosón:** a varázslás pillanatában egy kitöltés a játékos mezőjéről az összefüggő F_PASS mezőkön, a labirintussal együtt. A bejárt mezők jelölésére a folyosómezők szabad F_PNUM bitjei szolgálnak, a végén törlődnek. A célpontok: a bejárt mezőkön állók és a szomszédos ajtókon állók. Ez ugyanaz a kör, mint az A változatban.
 - Az eredetitől ebben tér el: folyosón a szörnyek akkor sem ragadnak be, ha a hálózat elágazik, vagy kerülővel vezet. A játék emiatt kicsit nehezebb lehet. Ha ez a változat marad, C64-eltérésként felkerül az eltérések jegyzékébe ([0.3](00_attekintes.md#03-eltérések-és-javítások-jegyzéke)).
 - Méret: 9 rekord × 9 bájt + 26 × 3 bájt = **159 bájt**, szörnyenként 1 bájt iránnyal **199 bájt**.
