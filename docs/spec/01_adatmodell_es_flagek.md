@@ -47,7 +47,7 @@ Creature {
 // a szörny neve és carry értéke a típustáblából jön (6.1), nem kell a rekordban tárolni
 // a Venus flytrap számlálója (vf_hit) nem a lényhez tartozik: globális, a GameState-ben van
 ```
-Játékos-specifikus állapot a `GameState`-ben (lásd lent).
+Játékos-specifikus állapot a `GameState`-ben (lásd lent). A C64-en a játékos és a szörny rekordja külön van, a szörnyét az [1.4.8](#148-szörnyrekord) írja le.
 
 ### 1.1.3 Item
 ```
@@ -248,7 +248,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 
 | tábla | méret | megjegyzés |
 |---|---|---|
-| szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek |
+| szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 19 bájt ([1.4.8](#148-szörnyrekord)) |
 | tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető |
 | nevek (`guess`, `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusonkénti `guess` és a tárgy `label` mezője 1 bájtos index ide (0 = nincs) |
 | szobák | 9 + MAX_PASSAGES (13) | a folyosórendszerek csak az A változatban ([1.4.7](#147-kijáratok-és-folyosók)) |
@@ -352,3 +352,24 @@ Két változat van, a szörnymozgás megírásakor döntünk, melyik marad.
 - **Drain life folyosón:** a varázslás pillanatában egy kitöltés a játékos mezőjéről az összefüggő F_PASS mezőkön, a labirintussal együtt. A bejárt mezők jelölésére a folyosómezők szabad F_PNUM bitjei szolgálnak, a végén törlődnek. A célpontok: a bejárt mezőkön állók és a szomszédos ajtókon állók. Ez ugyanaz a kör, mint az A változatban.
 - Az eredetitől ebben tér el: folyosón a szörnyek akkor sem ragadnak be, ha a hálózat elágazik, vagy kerülővel vezet. A játék emiatt kicsit nehezebb lehet. Ha ez a változat marad, C64-eltérésként felkerül az eltérések jegyzékébe ([0.3](00_attekintes.md#03-eltérések-és-javítások-jegyzéke)).
 - Méret: 9 rekord × 9 bájt + 26 × 3 bájt = **159 bájt**, szörnyenként 1 bájt iránnyal **199 bájt**.
+
+### 1.4.8 Szörnyrekord
+A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) szörnyre vonatkozó mezői közül csak az tárolódik, ami szörnyenként eltérhet. A játékos rekordja külön van, mert a mezők szélessége (pl. az `exp`: a játékosé 32, a szörnyé 16 bit) és köre eltér. Egy szörnyrekord 19 bájt:
+
+| mező | bájt | tartalom |
+|---|---|---|
+| `x`, `y` | 2 | pozíció |
+| `room` | 1 | a szoba indexe, vagy „folyosón” |
+| `type` | 1 | a típus betűje, `'A'..'Z'` |
+| `lvl` | 1 | |
+| `arm` | 1 | előjeles |
+| `hpt`, `maxhp` | 4 | 2 + 2 bájt, előjeles |
+| `exp` | 2 | ennyi XP-t ad ([1.4.2](#142-számok)) |
+| `flags` | 2 | [1.2.2](#122-szörny), a `turn` is |
+| `oldch` | 1 | a mező képernyőjele a szörny alatt |
+| `disguise` | 1 | a kirajzolt jel |
+| `dest` | 1 | a padlón fekvő céltárgy indexe; 0 = a játékos |
+| `pack` | 1 | a szörny tárgylistájának eleje (0 = nincs) |
+| `next` | 1 | a szörnylista következő rekordja (0 = vége) |
+
+Nem tárolódik: az `str` (mindig 10), a `dmg`, a név és a carry érték, mert ezek a típustáblából jönnek ([6.1](06_szornyek.md#61-típusok)). A B változatban ([1.4.7](#147-kijáratok-és-folyosók)) a folyosón haladás iránya még 1 bájt.

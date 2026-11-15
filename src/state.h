@@ -18,8 +18,7 @@
 
 #define IN_PASSAGE  0xfe                        // a lény nem szobában, hanem folyosón áll; a labirintus szobának számít
 
-// a játékos és a szörnyek közös rekordja
-struct Creature {
+struct Player {
     uint8_t  x;                                 // a pozíció a térképen
     uint8_t  y;
     uint8_t  room;                              // a szoba indexe, amelyben áll, vagy IN_PASSAGE
@@ -28,6 +27,27 @@ struct Creature {
     int16_t  hit_points;
     int16_t  max_hit_points;
     uint32_t experience;
+};
+
+#define DESTINATION_PLAYER  0                   // a szörny célpontja a játékos, nem egy tárgy
+
+// egy szörny a szörnytáblában; az ereje, a sebzése, a neve és a carry értéke a típustáblából jön (monsters.h)
+struct Monster {
+    uint8_t  x;                                 // a pozíció a térképen
+    uint8_t  y;
+    uint8_t  room;                              // a szoba indexe, amelyben áll, vagy IN_PASSAGE
+    uint8_t  type;                              // 'A'..'Z'; a típustábla indexe a betű − 'A'
+    uint8_t  experience_level;
+    int8_t   armor;
+    int16_t  hit_points;
+    int16_t  max_hit_points;
+    uint16_t experience;                        // ennyi XP-t ad, ha megölik
+    uint16_t flags;                             // MONSTER_ flagek (monsters.h)
+    uint8_t  character_below;                   // a mező képernyőjele a szörny alatt: ez rajzolódik ki, ha elmegy vagy nem látszik (oldch)
+    uint8_t  disguise;                          // ezzel a jellel rajzolódik ki: a saját betűje, a xeroc egy tárgyjel
+    uint8_t  destination_item;                  // a padlón fekvő tárgy indexe, amely felé tart, vagy DESTINATION_PLAYER
+    uint8_t  first_pack_item;                   // a nála lévő tárgyak listájának eleje (0 = nincs)
+    uint8_t  next;                              // a szörnylista következő elemének indexe (0 = vége)
 };
 
 // a logikai képernyő SECTOR_GRID_SIZE × SECTOR_GRID_SIZE szektorra osztva
@@ -63,7 +83,7 @@ struct GameState {
     uint8_t  dungeon_level;                     // 1..DUNGEON_LEVEL_MAX
 
     uint32_t gold;
-    struct Creature player;
+    struct Player player;
     uint8_t  max_strength;                      // a legnagyobb elért erő, gyűrűk nélkül
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
 
