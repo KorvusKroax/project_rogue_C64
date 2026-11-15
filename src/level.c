@@ -4,6 +4,7 @@
 #include "explore.h"
 #include "map.h"
 #include "message.h"
+#include "monsters.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -163,7 +164,8 @@ void generate_level(void)
 {
     // ide jön: ha a mélység nagyobb az eddigi legnagyobbnál (max_level), az lesz az új legnagyobb
     clear_map();
-    // ide jön: a szörnyek a csomagjaikkal és a padlón lévő tárgyak törlése, a táblákban a helyük felszabadul
+    clear_monsters();
+    // ide jön: a szörnyek csomagjainak és a padlón lévő tárgyaknak a törlése, a tárgytáblában a helyük felszabadul
 
     generate_rooms();
     connect_rooms();

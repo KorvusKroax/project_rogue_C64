@@ -34,6 +34,7 @@ static const struct DevTest dev_tests[] = {
     { "RUN-PASSAGE TURN", test_passage_turn, 1 },
     { "SEARCH-HIDDEN", test_search, 1 },
     { "MONST-TYPES", test_monster_types, 1 },
+    { "MONST-TABLE", test_monster_table, 1 },
 };
 
 // szint-önteszt: billentyűre

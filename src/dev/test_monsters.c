@@ -31,6 +31,30 @@ static bool segment_counts_valid(void)
     return true;
 }
 
+// a tábla betelése után a foglalás NO_MONSTER-t ad, törlés után újra az első helyet
+int test_monster_table(uint16_t i)
+{
+    bool ok = true;
+
+    clear_monsters();
+    for (uint8_t expected = 1; expected <= MAX_MONSTERS; expected++) {
+        if (allocate_monster('A') != expected) {
+            ok = false;
+        }
+    }
+    if (allocate_monster('A') != NO_MONSTER) {
+        ok = false;
+    }
+
+    clear_monsters();
+    if (allocate_monster('B') != 1 || get_monster(1)->type != 'B') {
+        ok = false;
+    }
+
+    clear_monsters();
+    return ok;
+}
+
 int test_monster_types(uint16_t i)
 {
     return

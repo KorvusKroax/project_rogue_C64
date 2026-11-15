@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "state.h"
+
 // a szörnyflagek (16 bit); az alsó bájtban azok, amelyek a típustáblában is szerepelnek, mert ott egy bájton tárolódnak
 #define MONSTER_MEAN          0x0001            // belépéskor felébredhet (ISMEAN)
 #define MONSTER_FLYING        0x0002            // a játékostól távol kétszer lép (ISFLY)
@@ -51,5 +53,11 @@ struct MonsterType {
 
 // a típusok a betűjük sorrendjében: az index a betű − 'A'; a nevük a text_monster_names-ben
 extern const struct MonsterType monster_types[MONSTER_TYPE_COUNT];
+
+#define NO_MONSTER  0                           // szörnyindex helyett: nincs szörny
+
+struct Monster *get_monster(uint8_t index);     // index: 1..MAX_MONSTERS
+uint8_t allocate_monster(uint8_t type);         // egy szabad hely a szörnytáblában, a típussal ('A'..'Z'); NO_MONSTER, ha betelt
+void clear_monsters(void);                      // a szörnytábla minden helye szabad: új szintnél
 
 #endif

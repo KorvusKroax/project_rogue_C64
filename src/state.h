@@ -50,6 +50,14 @@ struct Monster {
     uint8_t  next;                              // a szörnylista következő elemének indexe (0 = vége)
 };
 
+// a szörnytábla mérete; a szörnyekre 1..MAX_MONSTERS index hivatkozik, a 0 a „nincs”
+#define MAX_MONSTERS  40                        // default: 40
+
+// a szörnyindex 8 bites, a 0 foglalt, és a táblát bejáró ciklusok uint8_t számlálója 255-nél nem állna meg
+#if MAX_MONSTERS > 254
+    #error "túl sok szörny: a szörnyindex 8 bites"
+#endif
+
 // a logikai képernyő SECTOR_GRID_SIZE × SECTOR_GRID_SIZE szektorra osztva
 #define SECTOR_GRID_SIZE  3                     // default: 3
 
@@ -88,6 +96,7 @@ struct GameState {
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
 
     struct Room rooms[ROOM_COUNT];
+    struct Monster monsters[MAX_MONSTERS];      // a szörnytábla; a szabad hely type mezője 0 (monsters.h)
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
     uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)
