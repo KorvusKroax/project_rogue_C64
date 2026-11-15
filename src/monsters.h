@@ -3,11 +3,20 @@
 
 #include <stdint.h>
 
-// a szörnyflagek közül azok, amelyek a típustáblában is szerepelnek; a táblában egy bájton tárolódnak
-#define MONSTER_MEAN       0x01                 // belépéskor felébredhet (ISMEAN)
-#define MONSTER_FLYING     0x02                 // a játékostól távol kétszer lép (ISFLY)
-#define MONSTER_GREEDY     0x04                 // előbb a szobabeli aranyra megy (ISGREED)
-#define MONSTER_INVISIBLE  0x08                 // csak láthatatlan-látással látszik (ISINVIS)
+// a szörnyflagek (16 bit); az alsó bájtban azok, amelyek a típustáblában is szerepelnek, mert ott egy bájton tárolódnak
+#define MONSTER_MEAN          0x0001            // belépéskor felébredhet (ISMEAN)
+#define MONSTER_FLYING        0x0002            // a játékostól távol kétszer lép (ISFLY)
+#define MONSTER_GREEDY        0x0004            // előbb a szobabeli aranyra megy (ISGREED)
+#define MONSTER_INVISIBLE     0x0008            // csak láthatatlan-látással látszik (ISINVIS)
+#define MONSTER_RUNNING       0x0010            // ébren van és üldöz; nélküle egyáltalán nem mozog (ISRUN)
+#define MONSTER_HELD          0x0020            // egyáltalán nem mozog, a Hold monster tekercstől (ISHELD)
+#define MONSTER_SLOW          0x0040            // csak minden második körben cselekszik (ISSLOW)
+#define MONSTER_SLOW_TURN     0x0080            // lassított szörnynél: ebben a körben cselekszik; körönként váltakozik (turn)
+#define MONSTER_HASTED        0x0100            // két akció egy körben (ISHASTE)
+#define MONSTER_CONFUSED      0x0200            // 80%-ban véletlen irányba lép (ISHUH)
+#define MONSTER_CANCELLED     0x0400            // a különleges képessége ki van kapcsolva (ISCANC)
+#define MONSTER_ABILITY_USED  0x0800            // a különleges képességét már elsütötte, pl. a Medusa pillantása (ISFOUND)
+#define MONSTER_TARGET        0x1000            // az f parancs célpontja (ISTARGET)
 
 #define MONSTER_TYPE_FLAGS  (MONSTER_MEAN | MONSTER_FLYING | MONSTER_GREEDY | MONSTER_INVISIBLE)
 

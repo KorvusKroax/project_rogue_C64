@@ -42,7 +42,7 @@ Creature {
   type      // 'A'..'Z': a típus betűje, index a típustáblába (6.1)
   dest      // hová tart: a játékos vagy egy padlón fekvő tárgy (6.5)
   disguise  // amilyen jellel kirajzolódik: a saját betűje, a Xeroc álcázva tárgyjel (6.2, 6.7)
-  turn      // bool: ISSLOW szörnynél váltogat, csak true-nál lép (6.2)
+  turn      // bool: ISSLOW szörnynél váltogat, csak true-nál lép (6.2); a C64-en egy flagbit (1.2.2)
 }
 // a szörny neve és carry értéke a típustáblából jön (6.1), nem kell a rekordban tárolni
 // a Venus flytrap számlálója (vf_hit) nem a lényhez tartozik: globális, a GameState-ben van
@@ -159,6 +159,9 @@ GameState {
 | ISHUH | 80% véletlen mozgás; minden zavart lépésnél 1/20 eséllyel feloldódik |
 | ISHASTE | 2 akció / kör |
 | ISHELD | egyáltalán nem mozog (Hold monster tekercs) |
+| `turn` | nem flag az eredetiben, csak a C64-en: lassított szörnynél ebben a körben cselekszik ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) |
+
+A flagek 16 biten férnek el; a típustábla flagjei (ISMEAN, ISFLY, ISGREED, ISINVIS) az alsó bájtban vannak, mert a típustábla ([6.1](06_szornyek.md#61-típusok)) egy bájton tárolja őket.
 
 Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 
