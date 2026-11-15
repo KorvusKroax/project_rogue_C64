@@ -33,6 +33,7 @@ static const struct DevTest dev_tests[] = {
     { "RUN-CAREFUL", test_careful_run, 1 },
     { "RUN-PASSAGE TURN", test_passage_turn, 1 },
     { "SEARCH-HIDDEN", test_search, 1 },
+    { "MONST-TYPES", test_monster_types, 1 },
 };
 
 // szint-önteszt: billentyűre

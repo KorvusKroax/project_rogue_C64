@@ -24,6 +24,7 @@ int test_neighbor_visibility(uint16_t i);
 int test_careful_run(uint16_t i);
 int test_passage_turn(uint16_t i);
 int test_search(uint16_t i);
+int test_monster_types(uint16_t i);
 
 // szint-önteszt: billentyűre indul, mert hosszú (VICE-ben warp módban)
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

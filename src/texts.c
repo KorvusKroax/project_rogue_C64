@@ -8,3 +8,32 @@ const char text_way_magically_blocked[] = "your way is magically blocked";
 const char text_no_command_yet[] = "you haven't typed a command yet";
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
+
+const char *const text_monster_names[MONSTER_TYPE_COUNT] = {
+    "aquator",
+    "bat",
+    "centaur",
+    "dragon",
+    "emu",
+    "venus flytrap",
+    "griffin",
+    "hobgoblin",
+    "ice monster",
+    "jabberwock",
+    "kestrel",
+    "leprechaun",
+    "medusa",
+    "nymph",
+    "orc",
+    "phantom",
+    "quagga",
+    "rattlesnake",
+    "snake",
+    "troll",
+    "black unicorn",
+    "vampire",
+    "wraith",
+    "xeroc",
+    "yeti",
+    "zombie",
+};
