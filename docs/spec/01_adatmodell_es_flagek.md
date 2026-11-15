@@ -264,14 +264,15 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | mező | ábrázolás |
 |---|---|
 | `seed` | 32 bit előjel nélküli; a fejlesztői menüben is előjel nélkül jelenik meg és adható meg ([10.5](10_platform.md#105-aritmetika)) |
-| `exp` (játékos és szörny), `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
+| a játékos `exp`-je, `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
+| a szörny `exp`-je | 16 bit előjel nélküli; csak a generálás írja ([6.2](06_szornyek.md#62-generálás)), a legnagyobb értéke kb. 13 650 (dragon a 255. szinten) |
 | `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
 | `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
 | Creature `arm`, Item `hplus`, `dplus`, a páncél védelme és a gyűrű modja (Item `arm`) | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
 | koordináták | 8 bit (x 0..79, y 0..23) |
 
 ### 1.4.3 Sebzés-stringek
-Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. A típustáblákban (6.1, 8.4) így tárolódik; a tárgyak sebzése egyszegmensű, egy-egy (N, M) pár a fegyvertáblában, illetve a botnál és a pálcánál rögzítve (8.7); a tárgyrekordban nem tárolódik ([1.4.6](#146-tárgyrekord)).
+Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. A szegmensek száma külön tárolódik, mert a (0, 0) is valódi szegmens: az aquator `0x0/0x0` sebzése két támadás, mindkettő külön dob a találatra. A típustáblákban (6.1, 8.4) így tárolódik; a tárgyak sebzése egyszegmensű, egy-egy (N, M) pár a fegyvertáblában, illetve a botnál és a pálcánál rögzítve (8.7); a tárgyrekordban nem tárolódik ([1.4.6](#146-tárgyrekord)).
 
 ### 1.4.4 Szövegek
 | szöveg | legfeljebb |
