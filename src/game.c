@@ -62,19 +62,73 @@ static void report_illegal_command(uint8_t code)
     message_format_without_recall(text_illegal_command, name, NULL, 0);
 }
 
+#define DIRECTION_COUNT  8
+
+// az irányok betűi és lépései, azonos sorrendben
+static const char direction_letters[DIRECTION_COUNT] = { 'h', 'j', 'k', 'l', 'y', 'u', 'b', 'n' };
+static const int8_t direction_steps_x[DIRECTION_COUNT] = { -1, 0, 0, 1, -1, 1, -1, 1 };
+static const int8_t direction_steps_y[DIRECTION_COUNT] = { 0, 1, -1, 0, -1, -1, 1, 1 };
+
+static bool is_uppercase_key(uint8_t code)
+{
+    return code >= 'A' && code <= 'Z';
+}
+
+static bool is_ctrl_letter_key(uint8_t code)
+{
+    return code >= KEY_CTRL('a') && code <= KEY_CTRL('z');
+}
+
+// a nagybetű és a CTRL + betű kisbetűvé válik, más kód változatlan
+static uint8_t get_lowercase_letter(uint8_t code)
+{
+    if (is_uppercase_key(code)) return code - 'A' + 'a';
+    if (is_ctrl_letter_key(code)) return code - KEY_CTRL('a') + 'a';
+    return code;
+}
+
+// az irány sorszáma a parancs betűjéből (kis- és nagybetű, CTRL); DIRECTION_COUNT, ha nem irány
+static uint8_t get_direction_index(uint8_t code)
+{
+    uint8_t letter = get_lowercase_letter(code);
+    uint8_t index = 0;
+    while (index < DIRECTION_COUNT && direction_letters[index] != letter) {
+        index++;
+    }
+    return index;
+}
+
 // a parancsok, amelyeknél a számprefix megmarad
 static bool is_repeatable_command(uint8_t code)
 {
+    if (get_direction_index(code) < DIRECTION_COUNT) return true;
+
     switch (code) {
-        case 'h': case 'j': case 'k': case 'l': case 'y': case 'u': case 'b': case 'n':
-        case 'H': case 'J': case 'K': case 'L': case 'Y': case 'U': case 'B': case 'N':
-        case KEY_CTRL('h'): case KEY_CTRL('j'): case KEY_CTRL('k'): case KEY_CTRL('l'):
-        case KEY_CTRL('y'): case KEY_CTRL('u'): case KEY_CTRL('b'): case KEY_CTRL('n'):
-        case '.': case 'a': case 's':
+        case '.':
+        case 'a':
+        case 's':
             return true;
         default:
             return false;
     }
+}
+
+// lépés (kisbetű), futás (nagybetű) vagy óvatos futás (CTRL); igaz, ha időt vitt
+static bool execute_direction_command(uint8_t code, uint8_t direction_index)
+{
+    int8_t step_x = direction_steps_x[direction_index];
+    int8_t step_y = direction_steps_y[direction_index];
+
+    // a futás indítása nem visz időt
+    if (is_uppercase_key(code)) {
+        start_running(step_x, step_y, false);
+        return false;
+    }
+    if (is_ctrl_letter_key(code)) {
+        start_running(step_x, step_y, true);
+        return false;
+    }
+    return move_player(step_x, step_y);
 }
 
 static bool is_digit_key(uint8_t code)
@@ -110,7 +164,6 @@ static uint8_t read_command(void)
 
     if (code == 'a' || code == KEY_ESCAPE) return code;
     #ifdef DEVMODE
-        // a fejlesztői parancsokat az `a` nem ismétli
         if (is_function_key(code)) return code;
     #endif
     last_code = code;
@@ -128,32 +181,12 @@ static bool execute_command(uint8_t code)
         code = last_code;
     }
 
+    uint8_t direction_index = get_direction_index(code);
+    if (direction_index < DIRECTION_COUNT) {
+        return execute_direction_command(code, direction_index);
+    }
+
     switch (code) {
-        case 'h': return move_player(-1, 0);
-        case 'j': return move_player(0, 1);
-        case 'k': return move_player(0, -1);
-        case 'l': return move_player(1, 0);
-        case 'y': return move_player(-1, -1);
-        case 'u': return move_player(1, -1);
-        case 'b': return move_player(-1, 1);
-        case 'n': return move_player(1, 1);
-        // a futás indítása nem visz időt
-        case 'H': start_running(-1, 0, false); return false;
-        case 'J': start_running(0, 1, false); return false;
-        case 'K': start_running(0, -1, false); return false;
-        case 'L': start_running(1, 0, false); return false;
-        case 'Y': start_running(-1, -1, false); return false;
-        case 'U': start_running(1, -1, false); return false;
-        case 'B': start_running(-1, 1, false); return false;
-        case 'N': start_running(1, 1, false); return false;
-        case KEY_CTRL('h'): start_running(-1, 0, true); return false;
-        case KEY_CTRL('j'): start_running(0, 1, true); return false;
-        case KEY_CTRL('k'): start_running(0, -1, true); return false;
-        case KEY_CTRL('l'): start_running(1, 0, true); return false;
-        case KEY_CTRL('y'): start_running(-1, -1, true); return false;
-        case KEY_CTRL('u'): start_running(1, -1, true); return false;
-        case KEY_CTRL('b'): start_running(-1, 1, true); return false;
-        case KEY_CTRL('n'): start_running(1, 1, true); return false;
         case '.':
             return true;
         case 's':
