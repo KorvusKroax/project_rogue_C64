@@ -7,11 +7,9 @@
 #include "../platform/key.h"
 #include "../platform/charset.h"
 #include "../input.h"
-#include "../level.h"
 #include "../map.h"
 #include "../message.h"
 #include "../num.h"
-#include "../rooms.h"
 #include "../state.h"
 #include "../status.h"
 #include "../view.h"
@@ -88,144 +86,12 @@ static void dev_charset_screen(void)
     wait_for_escape();
 }
 
-static void dev_keyboard_screen(void)
-{
-    uint8_t last_code = 0, presses = 0;
-    uint8_t frames = 0, gap = 0;    // a két utolsó leütés között eltelt képkockák
-    bool repeat = false;
-
-    screen_clear();
-    set_screen_cursor(2, 0);
-    put_text("Keyboard matrix");
-    set_screen_cursor(2, 1);
-    put_text("0..7 column, row bits down");
-    set_screen_cursor(2, 13);
-    put_text("Modifiers:");
-    set_screen_cursor(2, 15);
-    put_text("Last press:");
-    set_screen_cursor(2, 16);
-    put_text("Presses:");
-    set_screen_cursor(2, 17);
-    put_text("Frames between:");
-    set_screen_cursor(2, 18);
-    put_text("Repeat:");
-    set_screen_cursor(2, 23);
-    put_text("R: repeat on/off");
-    set_screen_cursor(2, 24);
-    put_text("ESC to leave, SHIFT: stop reading");
-
-    while (last_code != KEY_ESCAPE) {
-        wait_for_next_frame();
-        if (frames < 255) {
-            frames++;
-        }
-
-        // a SHIFT nyomva tartása alatt a puffer megtelhet
-        if (!(key_modifiers & KEY_MODIFIER_SHIFT)) {
-            uint8_t code = read_key();
-            if (code) {
-                last_code = code;
-                presses++;
-                gap = frames;
-                frames = 0;
-
-                if (code == 'r') {
-                    repeat = !repeat;
-                    set_key_repeat(repeat);
-                }
-            }
-        }
-
-        for (uint8_t row = 0; row < 8; row++) {
-            for (uint8_t column = 0; column < KEY_COLUMNS; column++) {
-                put_screen_character(2 + column, 3 + row, (key_matrix[column] >> row) & 1 ? '#' : '.');
-            }
-        }
-
-        set_screen_cursor(13, 13);
-        put_text(key_modifiers & KEY_MODIFIER_SHIFT ? "SHIFT " : "      ");
-        put_text(key_modifiers & KEY_MODIFIER_CTRL ? "CTRL" : "    ");
-
-        set_screen_cursor(14, 15);
-        put_int(last_code, 3);
-        set_screen_cursor(14, 16);
-        put_int(presses, 3);
-        set_screen_cursor(18, 17);
-        put_int(gap, 3);
-        set_screen_cursor(10, 18);
-        put_text(repeat ? "on " : "off");
-    }
-
-    set_key_repeat(false);
-}
-
 // a térkép első két sora az oszlop száma, a többi betűje tízesenként vált
 static uint8_t view_pattern(uint8_t x, uint8_t y)
 {
     if (y == MAP_TOP_ROW) return '0' + x / 10;
     if (y == MAP_TOP_ROW + 1) return '0' + x % 10;
     return x % 10 == 0 ? '|' : 'a' + x / 10;
-}
-
-#define VIEW_TEST_ROW  (MAP_TOP_ROW + MAP_ROWS / 2)     // a térkép középső sora
-
-// a jel a mintát visszaállítva lép, a széleken megáll
-static uint8_t view_step(uint8_t x, int8_t step)
-{
-    int8_t target = x + step;
-    if (target < 0) target = 0;
-    if (target > MAP_COLUMNS - 1) target = MAP_COLUMNS - 1;
-
-    draw_tile(x, VIEW_TEST_ROW, view_pattern(x, VIEW_TEST_ROW));
-    draw_tile(target, VIEW_TEST_ROW, CHAR_PLAYER);
-    follow_view_window(target);
-    show_map_changes();
-
-    return target;
-}
-
-#define VIEW_MEASURE_REDRAW_COUNT       50
-#define VIEW_MEASURE_FRAMES_PER_REDRAW  2
-#define VIEW_MEASURE_LIMIT              (VIEW_MEASURE_REDRAW_COUNT * VIEW_MEASURE_FRAMES_PER_REDRAW)
-
-// a képkockaszámláló 8 bites
-#if VIEW_MEASURE_LIMIT > 255
-    #error "a VIEW_MEASURE_LIMIT nem fér el 8 biten"
-#endif
-
-// VIEW_MEASURE_REDRAW_COUNT teljes újrarajzolás két távoli nézet között, a képkockák száma
-static uint8_t view_measure(void)
-{
-    uint8_t saved_view_window_x = game.view_window_x;
-    uint8_t start = frame_count;
-
-    for (uint8_t i = 0; i < VIEW_MEASURE_REDRAW_COUNT; i++) {
-        game.view_window_x = i & 1 ? 0 : VIEW_WINDOW_X_MAX;
-        redraw_map();
-    }
-
-    uint8_t frames = frame_count - start;
-    game.view_window_x = saved_view_window_x;
-    redraw_map();
-    return frames;
-}
-
-// a teljes üzenetsávot utánozza: az első sora alatti sorai a térkép felső sorait takarják
-static void view_toggle_message_bar_rows(bool covered)
-{
-    if (!covered) {
-        set_map_first_visible_row(MAP_TOP_ROW);
-        return;
-    }
-
-    set_map_first_visible_row(MESSAGE_ROW + MESSAGE_ROW_COUNT);
-
-    for (uint8_t row = 1; row < MESSAGE_ROW_COUNT; row++) {
-        set_screen_cursor(0, MESSAGE_ROW + row);
-        put_text("message row ");
-        put_int(row + 1, 0);
-        clear_to_row_end();
-    }
 }
 
 static void view_draw_pattern(void)
@@ -237,56 +103,6 @@ static void view_draw_pattern(void)
             draw_tile(column, y, view_pattern(column, y));
         }
     }
-}
-
-static void dev_view_screen(void)
-{
-    uint8_t code = 0, x = VIEW_WINDOW_WIDTH / 2, frames = 0;
-    bool message_bar_rows_covered = false;
-
-    screen_clear();
-    set_screen_cursor(0, STATUS_ROW);
-    put_text("A,D: step  Q,E: 8 steps  F: time");
-    set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1,2,3: left/mid/right H: bar ESC: end");
-
-    view_draw_pattern();
-    draw_tile(x, VIEW_TEST_ROW, CHAR_PLAYER);
-    redraw_map();
-
-    while (code != KEY_ESCAPE) {
-        set_screen_cursor(0, 0);
-        put_text("view_x:");
-        put_int(game.view_window_x, 3);
-        put_text("  x:");
-        put_int(x, 3);
-        put_text("  ");
-        put_int(VIEW_MEASURE_REDRAW_COUNT, 0);
-        put_text(" redraws:");
-        put_int(frames, 4);
-        if (frames) {
-            put_text(frames <= VIEW_MEASURE_LIMIT ? " OK  " : " FAIL");
-        }
-
-        code = wait_for_key();
-
-        switch (code) {
-            case 'a': x = view_step(x, -1); break;
-            case 'd': x = view_step(x, 1); break;
-            case 'q': x = view_step(x, -8); break;
-            case 'e': x = view_step(x, 8); break;
-            case 'f': frames = view_measure(); break;
-            case 'h':
-                message_bar_rows_covered = !message_bar_rows_covered;
-                view_toggle_message_bar_rows(message_bar_rows_covered);
-                break;
-            case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
-            case '2': center_view_window(MAP_COLUMNS / 2); break;
-            case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
-        }
-    }
-
-    set_map_first_visible_row(MAP_TOP_ROW);
 }
 
 #define TEST_FIELD_LENGTH  20
@@ -410,126 +226,6 @@ static void dev_status_screen(void)
     }
 }
 
-#define ROOMS_PHANTOM_MARK  '&'                 // a térkép jelei között nincs ilyen
-
-// egy új szint szobái, folyosói, lépcsője és a játékos a MAP-ba, onnan a képernyőre, a nézőablak a játékoson;
-// a titkos mezők, ajtók és a fantom szobák is látszanak
-static void rooms_generate_level(void)
-{
-    generate_level();
-
-    // a titkos mezők inverzen, mint a játékban a teljes térképen (F5)
-    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
-        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
-            game.seen_map[y - MAP_TOP_ROW][x] = calculate_full_map_character(x, y);
-        }
-    }
-
-    // a fantom szoba pontja a játékban nem látszik (a folyosó halad át rajta), itt egy a térképen nem használt jellel
-    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
-        const struct Room *room = &game.rooms[room_index];
-        if (room->flags & ROOM_PHANTOM) {
-            game.seen_map[room->y - MAP_TOP_ROW][room->x] = ROOMS_PHANTOM_MARK;
-        }
-    }
-
-    game.seen_map[game.player.y - MAP_TOP_ROW][game.player.x] = CHAR_PLAYER;
-    center_view_window(game.player.x);
-}
-
-// a fantom, a sötét és a labirintus szobák száma, egy menetben: ha egy rövid ciklusú függvényt egymás után más-más
-// állandó flaggel hívnánk, az Oscar64 -O2 kis ROOM_COUNT-nál (pl. 2×2-es rácsnál) az előző hívás eredményét adná vissza
-static void put_room_flag_counts(void)
-{
-    uint8_t phantom_count = 0;
-    uint8_t dark_count = 0;
-    uint8_t maze_count = 0;
-
-    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
-        uint8_t flags = game.rooms[room_index].flags;
-
-        if (flags & ROOM_PHANTOM) phantom_count++;
-        if (flags & ROOM_DARK) dark_count++;
-        if (flags & ROOM_MAZE) maze_count++;
-    }
-
-    put_text("  phantom:");
-    put_int(phantom_count, 0);
-    put_text(" dark:");
-    put_int(dark_count, 0);
-    put_text(" maze:");
-    put_int(maze_count, 0);
-}
-
-#define ROOMS_DEPTH_MAX         UINT8_MAX       // a mélység 8 bites
-#define ROOMS_DEPTH_DIGITS_MAX  3               // a ROOMS_DEPTH_MAX jegyei
-
-#if ROOMS_DEPTH_MAX > 999
-    #error "a ROOMS_DEPTH_DIGITS_MAX kevés a ROOMS_DEPTH_MAX-hoz"
-#endif
-
-// a mélység kézi megadása a sávban (1..ROOMS_DEPTH_MAX), utána új szint; nem szám, tartományon kívüli szám vagy ESC esetén semmi nem változik
-static void rooms_ask_depth(void)
-{
-    char answer[ROOMS_DEPTH_DIGITS_MAX + 1];
-    uint32_t depth;
-
-    bool answered = ask_text("depth: ", answer, ROOMS_DEPTH_DIGITS_MAX);
-    message_clear();
-
-    if (answered && convert_text_to_number(answer, ROOMS_DEPTH_MAX, &depth) && depth >= 1) {
-        game.dungeon_level = depth;
-        rooms_generate_level();
-    }
-}
-
-// a seedet és a mélységet kilépéskor visszaállítja, így ugyanazzal a seeddel minden belépés ugyanazt a szintet adja
-static void dev_rooms_screen(void)
-{
-    uint8_t code = 0;
-    uint32_t saved_seed = game.seed;
-    uint8_t saved_dungeon_level = game.dungeon_level;
-
-    screen_clear();
-    set_screen_cursor(0, STATUS_ROW);
-    put_text("SPACE: new level  +,-,D: depth  ESC: end");
-    set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1,2,3: left/mid/right  P: player");
-
-    game.dungeon_level = 1;
-    rooms_generate_level();
-
-    while (code != KEY_ESCAPE) {
-        set_screen_cursor(0, MESSAGE_ROW);
-        put_text("depth:");
-        put_int(game.dungeon_level, 3);
-        put_room_flag_counts();
-        clear_to_row_end();
-
-        code = wait_for_key();
-
-        switch (code) {
-            case ' ': rooms_generate_level(); break;
-            case '+':
-                if (game.dungeon_level < ROOMS_DEPTH_MAX) game.dungeon_level++;
-                rooms_generate_level();
-                break;
-            case '-':
-                if (game.dungeon_level > 1) game.dungeon_level--;
-                rooms_generate_level();
-                break;
-            case '1': center_view_window(VIEW_WINDOW_WIDTH / 2); break;
-            case '2': center_view_window(MAP_COLUMNS / 2); break;
-            case '3': center_view_window(MAP_COLUMNS - VIEW_WINDOW_WIDTH / 2); break;
-            case 'p': center_view_window(game.player.x); break;
-            case 'd': rooms_ask_depth(); break;
-        }
-    }
-
-    game.seed = saved_seed;
-    game.dungeon_level = saved_dungeon_level;
-}
-
 // a szint-önteszt hosszú (normál sebességen percekig), ezért csak a menüből indul
 static void dev_level_test_screen(void)
 {
@@ -587,9 +283,9 @@ static void draw_tests_and_menu(void)
     move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
 
-    put_text("L: level tests  C: charset  K: keyboard");
+    put_text("L: level tests  C: charset  M: message");
     move_screen_cursor_to_next_row();
-    put_text("V: view  M: message  S: status  R: rooms");
+    put_text("S: status");
     move_screen_cursor_to_next_row();
     put_text("E: enter seed");
     move_screen_cursor_to_next_row();
@@ -611,11 +307,8 @@ void dev_run_screens(void)
             case 'e': ask_seed(); break;
             case 'l': dev_level_test_screen(); break;
             case 'c': dev_charset_screen(); break;
-            case 'k': dev_keyboard_screen(); break;
-            case 'v': dev_view_screen(); break;
             case 'm': dev_message_screen(); break;
             case 's': dev_status_screen(); break;
-            case 'r': dev_rooms_screen(); break;
         }
     }
 }

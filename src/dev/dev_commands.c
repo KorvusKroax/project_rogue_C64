@@ -25,11 +25,6 @@ static uint8_t choose_full_map_character(uint8_t character, uint8_t flags)
     return (flags & TILE_PASSAGE ? CHAR_PASSAGE : CHAR_DOOR) + INVERSE_OFFSET;
 }
 
-uint8_t calculate_full_map_character(uint8_t x, uint8_t y)
-{
-    return choose_full_map_character(get_map_character(x, y), get_map_flags(x, y));
-}
-
 bool is_full_map_shown(void)
 {
     return full_map_shown;
