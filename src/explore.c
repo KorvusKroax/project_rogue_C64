@@ -1,8 +1,8 @@
 #include "explore.h"
 
+#include "game.h"
 #include "map.h"
 #include "message.h"
-#include "move.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -174,8 +174,7 @@ void search_around(void)
                 message(text_secret_door);
             }
             // a felfedett mezőt a következő look_around rajzolja ki
-            stop_running();
-            // ide jön: az ismétlés megszakítása
+            stop_running_and_repeating();
         }
     }
 }
