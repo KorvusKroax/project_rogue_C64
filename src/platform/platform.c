@@ -20,6 +20,9 @@
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
 
+// a fordító becsült veremmélysége a .map fájl STACK sorában (a régió vége − a sor kezdete); mérve 194 bájt volt a dev buildben
+#pragma stacksize(512)
+
 #define IRQ_VECTOR            (*(void **)0x0314)
 #define NMI_VECTOR            (*(void **)0x0318)
 #define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt

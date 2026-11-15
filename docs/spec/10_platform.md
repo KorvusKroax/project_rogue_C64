@@ -23,7 +23,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 | `$0200–$03FF` | KERNAL munkaterület |
 | `$0400–$07FF` | szabad (az alapértelmezett képernyő áthelyezve): pl. pufferek, bevitel |
 | `$0801–$087F` | BASIC-indítósor |
-| `$0880–$BFFF` | fő régió (46 976 bájt): kód, állandó adatok, változók, verem; a játékállapot-blokk helyére a címképernyő idején a képernyőmodul töltődik ([10.10](#1010-képernyőmodul)) |
+| `$0880–$BFFF` | fő régió (46 976 bájt): kód, állandó adatok, változók, a fordító szoftveres verme (512 bájt, `#pragma stacksize`; a dev buildben mérve 194 bájt kell); a játékállapot-blokk helyére a címképernyő idején a képernyőmodul töltődik ([10.10](#1010-képernyőmodul)) |
 | `$C000–$C3FF` | képernyőmemória (VIC 3. bank) |
 | `$C400–$C7FF` | szabad (1 KB, lapozás nélkül elérhető): pl. pufferek, ritkán használt táblák |
 | `$C800–$CFFF` | saját karakterkészlet (2 KB) |
