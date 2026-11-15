@@ -81,7 +81,7 @@ static void jump_to_depth(void)
     bool answered = ask_text("depth (1-255): ", answer, DEPTH_DIGITS_MAX);
     message_clear();
 
-    if (answered && convert_text_to_number(answer, 255, &depth) && depth >= 1) {
+    if (answered && convert_text_to_number(answer, DUNGEON_LEVEL_MAX, &depth) && depth >= 1) {
         game.dungeon_level = depth;
         new_level();
     }

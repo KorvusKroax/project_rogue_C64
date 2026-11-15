@@ -79,6 +79,12 @@ static bool execute_command(uint8_t code)
         case 's':
             search_around();
             return true;
+        case '>':
+            go_down_stairs();
+            return false;
+        case '<':
+            go_up_stairs();
+            return false;
         case KEY_ESCAPE:
         case ' ':
             return false;

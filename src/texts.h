@@ -9,6 +9,9 @@
 
 extern const char text_illegal_command[];
 extern const char text_secret_door[];
+extern const char text_no_way_down[];
+extern const char text_no_way_up[];
+extern const char text_way_magically_blocked[];
 extern const char *const text_hunger_states[];     // a hunger_state szerint: 0 rendben (üres), 1 Hungry, 2 Weak, 3 Faint
 
 #endif

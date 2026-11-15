@@ -56,9 +56,11 @@ struct Room {
 
 // a játékállapot-blokk: a mentés és a betöltés egyben írja és olvassa (kezdőcím: &game, méret: sizeof(game))
 // csak ide kerülhet perzisztens adat; mutató nem, csak index
+#define DUNGEON_LEVEL_MAX  255                  // a mélység 8 bites; a legmélyebb szinten a lépcső új ugyanilyen mély szintet generál
+
 struct GameState {
     uint32_t seed;
-    uint8_t  dungeon_level;
+    uint8_t  dungeon_level;                     // 1..DUNGEON_LEVEL_MAX
 
     uint32_t gold;
     struct Creature player;

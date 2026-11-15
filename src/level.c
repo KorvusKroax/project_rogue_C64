@@ -3,9 +3,11 @@
 #include "corridors.h"
 #include "explore.h"
 #include "map.h"
+#include "message.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
+#include "texts.h"
 #include "view.h"
 
 // mire keresünk mezőt
@@ -192,4 +194,35 @@ void new_level(void)
 
     // ide jön: szörnyészlelés alatt a szörnyek azonnal kirajzolódnak (turn_see)
     // ide jön: hallucináció alatt a jelek azonnal hallucináltak (visuals)
+}
+
+static bool is_player_on_stairs(void)
+{
+    return get_map_character(game.player.x, game.player.y) == CHAR_STAIRS;
+}
+
+void go_down_stairs(void)
+{
+    // ide jön: lebegve nem lehet
+    if (!is_player_on_stairs()) {
+        message(text_no_way_down);
+        return;
+    }
+
+    if (game.dungeon_level < DUNGEON_LEVEL_MAX) {
+        game.dungeon_level++;
+    }
+    new_level();
+}
+
+void go_up_stairs(void)
+{
+    // ide jön: lebegve nem lehet
+    if (!is_player_on_stairs()) {
+        message(text_no_way_up);
+        return;
+    }
+
+    // ide jön: amulettel egy szinttel feljebb, az 1. szintről győzelem
+    message(text_way_magically_blocked);
 }
