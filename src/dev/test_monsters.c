@@ -180,14 +180,20 @@ static bool xeroc_disguises_valid(uint8_t depth)
     return true;
 }
 
-// betelt táblánál a generálás NO_MONSTER-t ad, és nem dob
+// betelt táblánál a generálás és a létrehozás NO_MONSTER-t ad: nem dob, a mezőre nem kerül TILE_MONSTER, a szörnyek száma marad
 static bool full_table_generation_valid(void)
 {
     clear_monsters();
+    remove_map_flags(GENERATION_TEST_X, GENERATION_TEST_Y, TILE_MONSTER);
     while (allocate_monster() != NO_MONSTER) {}
 
     uint32_t seed = game.seed;
-    return generate_monster(false, GENERATION_TEST_X, GENERATION_TEST_Y) == NO_MONSTER && game.seed == seed;
+    return
+        generate_monster(false, GENERATION_TEST_X, GENERATION_TEST_Y) == NO_MONSTER &&
+        create_monster('X', GENERATION_TEST_X, GENERATION_TEST_Y) == NO_MONSTER &&
+        game.seed == seed &&
+        game.monster_count == MAX_MONSTERS &&
+        !(get_map_flags(GENERATION_TEST_X, GENERATION_TEST_Y) & TILE_MONSTER);
 }
 
 int test_monster_generation(uint16_t i)
