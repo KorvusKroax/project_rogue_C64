@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "checks.h"
 
 #include <stdbool.h>
 #include <string.h>

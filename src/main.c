@@ -22,7 +22,7 @@ int main(void)
             game.seed = DEV_SEED;
         #endif
 
-        dev_run_screens();
+        dev_run_start_screen();
     #endif
 
     screen_clear();

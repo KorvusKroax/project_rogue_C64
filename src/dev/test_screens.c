@@ -1,4 +1,5 @@
 #include "dev.h"
+#include "tests.h"
 
 #include <stddef.h>
 
@@ -244,27 +245,7 @@ static void dev_level_test_screen(void)
     wait_for_escape();
 }
 
-// a seed előjel nélküli, a put_int előjeles: az utolsó jegy külön, így a többi elfér 31 biten
-static void put_seed(uint32_t seed)
-{
-    if (seed >= 10) {
-        put_int(seed / 10, 0);
-    }
-    put_int(seed % 10, 0);
-}
-
-// a seed kézi megadása a sávban; nem szám vagy ESC esetén marad a régi
-static void ask_seed(void)
-{
-    char answer[FORMAT_DIGITS_MAX + 1];
-
-    if (ask_text("seed: ", answer, FORMAT_DIGITS_MAX)) {
-        convert_text_to_number(answer, UINT32_MAX, &game.seed);
-    }
-    message_clear();
-}
-
-// a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak), a seed és a menü;
+// a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak) és a menü;
 // ami nem fér ki, az a képernyő tetején kigörget
 static void draw_tests_and_menu(void)
 {
@@ -278,16 +259,9 @@ static void draw_tests_and_menu(void)
     }
     move_screen_cursor_to_next_row();
 
-    put_text("Seed: ");
-    put_seed(game.seed);
-    move_screen_cursor_to_next_row();
-    move_screen_cursor_to_next_row();
-
     put_text("L: level tests  C: charset  M: message");
     move_screen_cursor_to_next_row();
     put_text("S: status");
-    move_screen_cursor_to_next_row();
-    put_text("E: enter seed");
     move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
     put_text("RETURN: start the game");
@@ -304,7 +278,6 @@ void dev_run_screens(void)
         code = wait_for_key();
 
         switch (code) {
-            case 'e': ask_seed(); break;
             case 'l': dev_level_test_screen(); break;
             case 'c': dev_charset_screen(); break;
             case 'm': dev_message_screen(); break;

@@ -12,7 +12,7 @@
 #include "../num.h"
 #include "../state.h"
 #include "../view.h"
-#include "tests.h"
+#include "checks.h"
 
 #define DEPTH_DIGITS_MAX  3         // 1..255
 
