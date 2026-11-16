@@ -1,5 +1,6 @@
 #include "dev.h"
 #include "tests.h"
+#include "test_runner.h"
 
 #include <stddef.h>
 

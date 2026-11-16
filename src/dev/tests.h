@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 bool dev_run_tests(void);           // öntesztek: mindegyik lefut, az eredmény a képernyőre kerül, igazat ad, ha mind sikerült
-void put_failed_test_names(const char *prefix);   // az utolsó tesztfutás hibás tesztjei soronként, a prefix után
 bool dev_run_level_tests(void);     // szint-önteszt: sok véletlen szint rögzített magokkal; hosszú, VICE-ben warp módban
 void dev_run_screens(void);         // gyors öntesztek és alattuk menü: a szint-önteszt és a tesztképernyők billentyűre, ESC-re vissza; RETURN-re visszatér
 
