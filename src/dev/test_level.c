@@ -5,6 +5,7 @@
 
 #include "../level.h"
 #include "../map.h"
+#include "../monsters.h"
 #include "../platform/platform.h"
 #include "../platform/screen.h"
 #include "../rooms.h"
@@ -260,6 +261,32 @@ static bool is_player_position_valid(void)
     return is_inside_room(x, y);
 }
 
+// a kezdő szörnyek: szobánként legfeljebb egy, a saját szobája falain belül, nem rejtett, járható mezőn, nem a játékos helyén; alszanak
+static bool are_initial_monsters_valid(void)
+{
+    bool room_has_monster[ROOM_COUNT];
+    memset(room_has_monster, 0, sizeof(room_has_monster));
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        uint8_t x = monster->x;
+        uint8_t y = monster->y;
+
+        if (monster->type < 'A' || monster->type > 'Z') return false;
+        if (monster->flags & MONSTER_RUNNING) return false;
+        if (x == game.player.x && y == game.player.y) return false;
+        if (!(get_map_flags(x, y) & TILE_REAL)) return false;
+        if (!is_walkable_character(get_map_character(x, y))) return false;
+        if (!is_inside_room(x, y)) return false;
+
+        uint8_t room_index = monster->room;
+        if (room_index >= ROOM_COUNT || room_index != get_room_at(x, y)) return false;
+        if (room_has_monster[room_index]) return false;
+        room_has_monster[room_index] = true;
+    }
+    return true;
+}
+
 // a mezők szobája: a normál szoba teljes területe (fal, ajtó, padló, lépcső) és a labirintus minden cellája az övé, a fantom szoba pontja
 // folyosón van, folyosó-mező csak labirintusé lehet, és a játékos egy nem fantom szobában kezd
 static bool are_room_lookups_valid(void)
@@ -452,6 +479,7 @@ int test_level_generation(uint16_t i)
     if (!are_room_lookups_valid()) return false;
     if (!are_map_tiles_valid()) return false;
     if (!are_monster_tiles_valid()) return false;
+    if (!are_initial_monsters_valid()) return false;
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         const struct Room *room = &game.rooms[room_index];

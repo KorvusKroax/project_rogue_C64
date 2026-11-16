@@ -12,8 +12,9 @@
 #include "view.h"
 
 // mire keresünk mezőt
-#define FIND_FOR_ITEM    0                      // üres padló, labirintusban üres járat
-#define FIND_FOR_PLAYER  1                      // járható jel, szörny nélkül
+#define FIND_FOR_ITEM     0                     // üres padló, labirintusban üres járat
+#define FIND_FOR_PLAYER   1                     // járható jel, szörny nélkül
+#define FIND_FOR_MONSTER  2                     // járható jel, szörny nélkül, és nem a játékos helye
 
 // a legnagyobb szoba a szektor utolsó oszlopa és sora nélkül, a falai nélkül ennyi mezője van (default: 23 × 5 = 115)
 #define MAX_ROOM_INNER_TILES  ((SECTOR_WIDTH - 3) * (SECTOR_HEIGHT - 3))
@@ -34,6 +35,7 @@ static bool is_tile_suitable(const struct Room *room, uint8_t x, uint8_t y, uint
     }
 
     if (get_map_flags(x, y) & TILE_MONSTER) return false;
+    if (purpose == FIND_FOR_MONSTER && x == game.player.x && y == game.player.y) return false;
     return is_walkable_character(character);
 }
 
@@ -139,6 +141,40 @@ bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
     return find_tile(room_index, FIND_FOR_PLAYER, x, y);
 }
 
+// járható mező szörny nélkül, nem a játékos helye: szörnynek
+static bool find_monster_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
+{
+    return find_tile(room_index, FIND_FOR_MONSTER, x, y);
+}
+
+#define GOLD_CHANCE_DIVISOR           2         // a szobában 1 / GOLD_CHANCE_DIVISOR eséllyel van arany
+#define MONSTER_CHANCE_WITH_GOLD      80        // százalék: az aranyat gyakran szörny őrzi
+#define MONSTER_CHANCE_WITHOUT_GOLD   25
+
+// szobánként: arany 1/2 eséllyel, ha van neki üres padló; utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
+static void place_gold_and_monsters(void)
+{
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        if (game.rooms[room_index].flags & ROOM_PHANTOM) continue;
+
+        uint8_t x;
+        uint8_t y;
+        bool has_gold = false;
+
+        // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) lehet arany; a dobás ettől függetlenül lefut
+        if (rnd(GOLD_CHANCE_DIVISOR) == 0 && find_empty_floor(room_index, &x, &y)) {
+            // ide jön: az arany mennyisége és lerakása (x, y)
+            has_gold = true;
+        }
+
+        uint8_t monster_chance = has_gold ? MONSTER_CHANCE_WITH_GOLD : MONSTER_CHANCE_WITHOUT_GOLD;
+        if (rnd(100) < monster_chance && find_monster_tile(room_index, &x, &y)) {
+            generate_monster(false, x, y);
+            // ide jön: a szörny kezdő tárgya (give_item)
+        }
+    }
+}
+
 // a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra)
 static void place_stairs(void)
 {
@@ -175,11 +211,10 @@ void generate_level(void)
     choose_player_position();
     hide_passages(game.player.x, game.player.y);
 
-    // ide jön: szobánként arany és kezdő szörny
+    place_gold_and_monsters();
     // ide jön: a szintek számlálója az étel nélküli tárgygeneráláshoz (no_food) eggyel nő
     // ide jön: tárgyak (kincses szoba, 9 próba, amulett)
     // ide jön: csapdák
-    // ide jön: minden szörnynél a szoba, amelyikben áll
 }
 
 void new_level(void)

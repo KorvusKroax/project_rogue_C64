@@ -7,6 +7,7 @@
 #include "../level.h"
 #include "../map.h"
 #include "../message.h"
+#include "../monsters.h"
 #include "../state.h"
 #include "../view.h"
 
@@ -38,6 +39,14 @@ const uint8_t *build_full_map_row(uint8_t y)
 
     for (uint8_t column = 0; column < VIEW_WINDOW_WIDTH; column++) {
         full_map_row[column] = choose_full_map_character(characters[column], flags[column]);
+    }
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        uint8_t monster_column = monster->x - game.view_window_x;
+        if (monster->y == y && monster_column < VIEW_WINDOW_WIDTH) {
+            full_map_row[monster_column] = monster->type;
+        }
     }
 
     uint8_t player_column = game.player.x - game.view_window_x;
