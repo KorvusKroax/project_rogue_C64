@@ -247,7 +247,7 @@ restore_game():   // címképernyő, R
   "file name: " (előtöltve a file opcióval); ESC: vissza a címképernyőre
   megnyitás; lemezhiba (pl. 62,FILE NOT FOUND): "disk error: <kód>,<szöveg>", vissza a címképernyőre
   fejléc ellenőrzése; ha nem ennek a verziónak a mentése, vagy rövidebb a vártnál: "Sorry, saved game is out of date.", vissza
-  az állapotblokk beolvasása; az F_MONST flagek újraépítése a szörnylistából (1.4.5)
+  az állapotblokk beolvasása; az F_MONST flagek újraépítése a szörnytáblából (1.4.5)
   a fájl törlése a lemezről                     // a "halott"-ellenőrzés ELŐTT, mint az eredetiben
   ha hpt <= 0: "\"He's dead, Jim\"", vissza a címképernyőre
   center_view_window(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik

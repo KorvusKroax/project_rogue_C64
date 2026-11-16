@@ -183,7 +183,7 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 | F_REAL | nem rejtett („amit látsz, az van ott”); ha hiányzik, a mező rejtett (lásd lent) |
 | F_PNUM | a folyosórendszer sorszáma (alsó 4 bit), folyosó-mezőn; a B változatban nincs használatban, csak a drain life kitöltése jelöl vele ideiglenesen ([1.4.7](#147-kijáratok-és-folyosók)) |
 | F_TMASK | a csapda típusa (alsó 3 bit), csapda-mezőn ([9.1](09_csapdak.md#91-rálépés)) |
-| F_MONST | a mezőn szörny áll; hogy melyik, azt a szörnylista adja meg ([1.4.5](#145-térképrétegek)) |
+| F_MONST | a mezőn szörny áll; hogy melyik, azt a szörnytábla adja meg ([1.4.5](#145-térképrétegek)) |
 
 *Megjegyzés:* az F_PNUM és az F_TMASK ugyanazokat a biteket használja, ezért egy mező nem lehet egyszerre folyosó és csapda. Emiatt nem kerül csapda labirintusba ([2.9](02_szintgeneralas.md#29-csapdák)). Egy mezőflag-bájt elég: F_PASS, F_SEEN, F_REAL, F_MONST és 4 bit F_PNUM/F_TMASK, ezzel mind a 8 bit foglalt.
 
@@ -205,7 +205,7 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 | MAP_COLUMNS × MAP_ROWS | 80 × 22 – **logikai** méret |
 | Térkép-mezők | x = 0..79, y = 1..22 (a 0. sor az üzenetsáv, a 23. a státuszsor) |
 
-A térkép két rétegű: a **MAP** a valódi szint (karakter és flagek mezőnként; hogy melyik szörny áll egy mezőn, azt az F_MONST flag és a szörnylista adja meg), a **SCREEN** az, amit a játékos lát és amire emlékszik. Megjelenítéskor a MAP-ből másolunk a SCREEN-re. A SCREEN teljes, 80×22-es réteg a memóriában; a képernyőre ebből csak a nézőablak kerül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
+A térkép két rétegű: a **MAP** a valódi szint (karakter és flagek mezőnként; hogy melyik szörny áll egy mezőn, azt az F_MONST flag és a szörnytábla adja meg), a **SCREEN** az, amit a játékos lát és amire emlékszik. Megjelenítéskor a MAP-ből másolunk a SCREEN-re. A SCREEN teljes, 80×22-es réteg a memóriában; a képernyőre ebből csak a nézőablak kerül ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 
 ### 1.3.2 Fizikai képernyő
 
@@ -244,11 +244,16 @@ A jelek **ASCII-kódok**: a saját karakterkészletben a karakter indexe az ASCI
 > **C64-eltérés (E10, E12):** az eredeti dinamikus listái és tetszőleges hosszú szövegei helyett fix méretű táblák és korlátos hosszak.
 
 ### 1.4.1 Táblák és listák
-Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájtos **index** hivatkozik (0 = nincs). A listák (szörnylista, padlón lévő tárgyak, csomag, egy szörny csomagja) egyszeresen láncoltak a rekordok `next` indexmezőjén át, így a sorrendjük pontosan az eredetié (pl. az új szörny a lista **elejére** kerül, [6.2](06_szornyek.md#62-generálás)) – ez a dobássorrend és a determinizmus miatt kötelező.
+Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájtos **index** hivatkozik (0 = nincs). A tárgylisták (padlón lévő tárgyak, csomag, egy szörny csomagja) egyszeresen láncoltak a rekordok `next` indexmezőjén át, így a sorrendjük az eredetié.
+
+**A szörnytábla tömör, szörnylista nincs.** A szörnyek az 1..`monster_count` indexeken állnak, a létrehozás sorrendjében; az új szörny a tábla végére kerül. A szörnyek hátulról előre járódnak be, így a sorrend ugyanaz, mint az eredeti szörnylistáé, amelynek az elejére került az új szörny ([6.2](06_szornyek.md#62-generálás)): a legújabb cselekszik először.
+- **Kivétel:** a kivett szörny mögött állók egy hellyel előrecsúsznak, a `monster_count` eggyel csökken.
+- **Az indexek eltolódnak**, ezért szörnyindexet semmi nem tárol tartósan; a szörny célja ([6.5](06_szornyek.md#65-célpont)) tárgy vagy a játékos, más szörny soha.
+- **Halál a szörnyek köre közben:** a `runners` ([6.6](06_szornyek.md#66-mozgás)) bejárásának indexe egy globális változóban van, amíg a kör tart (különben 0). Ha egy kisebb indexű, még nem cselekedett szörny kerül ki (pl. a sárkány lángja megöli, [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)), a kivevő függvény ezt az indexet is eggyel csökkenti, különben a soron lévő szörny kétszer cselekedne. Ha maga a soron lévő vagy egy nagyobb indexű szörny kerül ki, nincs teendő. A szabály így egy helyen van, a hívónak nem kell vele törődnie; halott szörny nem marad a táblában, ezért jelölés és kihagyás sem kell a többi bejárásban.
 
 | tábla | méret | megjegyzés |
 |---|---|---|
-| szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 19 bájt ([1.4.8](#148-szörnyrekord)) |
+| szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 18 bájt ([1.4.8](#148-szörnyrekord)) |
 | tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető |
 | nevek (`guess`, `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusonkénti `guess` és a tárgy `label` mezője 1 bájtos index ide (0 = nincs) |
 | szobák | 9 + MAX_PASSAGES (13) | a folyosórendszerek csak az A változatban ([1.4.7](#147-kijáratok-és-folyosók)) |
@@ -300,10 +305,10 @@ A beviteli mezőkben a korlát elérésekor további karakter nem írható be. A
 
 A rétegek indexe `(y − 1) × 80 + x`. A **teljes perzisztens játékállapot** (GameState, táblák, a MAP karakter-, a MAP flag- és a SCREEN réteg, seed) egyetlen összefüggő memóriaterületen van, mert a mentés ezt egy darabban írja ki ([10.7](10_platform.md#107-lemezkezelés)). Becsült mérete kb. 8,5 KB. A beállítások külön blokkban vannak, a mentés azt is kiírja ([10.10](10_platform.md#1010-képernyőmodul)).
 
-A **„szörny a mezőn?”** kérdésre az F_MONST flag felel: ha nincs beállítva, azonnal „nincs”; ha be van állítva, a mezőn álló szörnyet a szörnylistából keressük ki (legfeljebb 40 elem). Ez csak ott fordul elő, ahol tényleg szörny áll. Külön szörnyréteg nincs.
+A **„szörny a mezőn?”** kérdésre az F_MONST flag felel: ha nincs beállítva, azonnal „nincs”; ha be van állítva, a mezőn álló szörnyet a szörnytáblából keressük ki (legfeljebb 40 elem). Ez csak ott fordul elő, ahol tényleg szörny áll. Külön szörnyréteg nincs.
 - **Karbantartás:** minden szörny-létrehozás, -mozgás (`relocate`, teleport) és -törlés beállítja, illetve törli a régi és az új mezőn. A polymorph nem változtat rajta, mert a szörny helyben marad.
-- **Invariáns (M11-02):** az F_MONST bitnek mindig egyeznie kell a szörnylistával: pontosan azokon a mezőkön van beállítva, ahol egy szörny áll.
-- **Betöltés:** a bit a flagekkel együtt a mentésbe kerül, de betöltés után a biztonság kedvéért újraépül: minden mezőn törlődik, majd a szörnylista minden elemének mezőjén beállítódik.
+- **Invariáns (M11-02):** az F_MONST bitnek mindig egyeznie kell a szörnytáblával: pontosan azokon a mezőkön van beállítva, ahol egy szörny áll.
+- **Betöltés:** a bit a flagekkel együtt a mentésbe kerül, de betöltés után a biztonság kedvéért újraépül: minden mezőn törlődik, majd a szörnytábla minden szörnyének mezőjén beállítódik.
 
 ### 1.4.6 Tárgyrekord
 A logikai Item ([1.1.3](#113-item)) mezői közül csak az tárolódik, ami tárgyanként eltérhet; ami a típusból jön, azt a kód a típustáblából veszi. Egy rekord 11 bájt:
@@ -354,7 +359,7 @@ Két változat van, a szörnymozgás megírásakor döntünk, melyik marad.
 - Méret: 9 rekord × 9 bájt + 26 × 3 bájt = **159 bájt**, szörnyenként 1 bájt iránnyal **199 bájt**.
 
 ### 1.4.8 Szörnyrekord
-A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) szörnyre vonatkozó mezői közül csak az tárolódik, ami szörnyenként eltérhet. A játékos rekordja külön van, mert a mezők szélessége (pl. az `exp`: a játékosé 32, a szörnyé 16 bit) és köre eltér. Egy szörnyrekord 19 bájt:
+A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) szörnyre vonatkozó mezői közül csak az tárolódik, ami szörnyenként eltérhet. A játékos rekordja külön van, mert a mezők szélessége (pl. az `exp`: a játékosé 32, a szörnyé 16 bit) és köre eltér. Egy szörnyrekord 18 bájt:
 
 | mező | bájt | tartalom |
 |---|---|---|
@@ -370,6 +375,5 @@ A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord))
 | `disguise` | 1 | a kirajzolt jel |
 | `dest` | 1 | a padlón fekvő céltárgy indexe; 0 = a játékos |
 | `pack` | 1 | a szörny tárgylistájának eleje (0 = nincs) |
-| `next` | 1 | a szörnylista következő rekordja (0 = vége) |
 
 Nem tárolódik: az `str` (mindig 10), a `dmg`, a név és a carry érték, mert ezek a típustáblából jönnek ([6.1](06_szornyek.md#61-típusok)). A B változatban ([1.4.7](#147-kijáratok-és-folyosók)) a folyosón haladás iránya még 1 bájt.

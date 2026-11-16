@@ -57,7 +57,7 @@ new_monster(depth, type_list):  // depth: a dungeon-szint; type_list: INITIAL va
   if depth > 29: monster.flags |= ISHASTE
   monster.turn = true                         // lassítva az első körben lép
   monster.oldch = a mező jelenlegi képernyőjele
-  monster a szörnylista ELEJÉRE kerül         // a runners így a legújabbal kezd
+  monster a szörnytábla VÉGÉRE kerül          // a runners hátulról jár, így a legújabbal kezd (1.4.1)
   if aggravate ring worn: runto(monster)      // ISRUN, ISHELD le, dest = find_dest
   monster.disguise = type.letter
   if type.letter == 'X': monster.disguise = rnd_thing()
@@ -148,7 +148,7 @@ find_dest(monster):
   return player
 ```
 
-> **C64-javítás (J3):** a „más szörny célja-e” ellenőrzés külön változóval járja be a szörnylistát, így a vizsgált szörny nem változik. *Eredetileg* ugyanazt a változót használta: ha egy tárgy foglaltnak bizonyult, a további tárgyakat már a foglaló szörny szobájához hasonlította (a `carry` esély az eredeti szörnyé maradt).
+> **C64-javítás (J3):** a „más szörny célja-e” ellenőrzés külön változóval járja be a szörnytáblát, így a vizsgált szörny nem változik. *Eredetileg* ugyanazt a változót használta: ha egy tárgy foglaltnak bizonyult, a további tárgyakat már a foglaló szörny szobájához hasonlította (a `carry` esély az eredeti szörnyé maradt).
 - `dest`-et a `runto` ([6.4](#64-ébresztés)) és a tárgyfelvétel állítja be; szobaváltáskor nem számolódik újra.
 - Ha a játékos felveszi a célzott tárgyat, a szörny `dest`-je a játékos lesz ([8.9](08_targyak.md#89-csomag)).
 - Kapzsi szörny: ha a szobájában már nincs arany (`gold_val == 0`), a `dest` minden lépésben a játékos lesz.
@@ -156,7 +156,7 @@ find_dest(monster):
 ## 6.6 Mozgás
 ```
 runners():  // az AFTER fázisban, egyszer körönként
-  for each monster (a szörnylista sorrendjében):
+  for each monster (a szörnytábla hátulról, a legújabbal kezdve; az index globális, a kör közbeni halált a kivevő függvény igazítja: 1.4.1):
     if monster.ISHELD or !monster.ISRUN: continue
     old_pos = monster.pos
     if move_monst(monster) == MEGHALT: continue  // pl. a játékost támadva eltűnt (nimfa, leprechaun)
