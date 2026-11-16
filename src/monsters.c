@@ -30,9 +30,6 @@ const struct MonsterType monster_types[MONSTER_TYPE_COUNT] = {
     /* Z */ {   0, MONSTER_MEAN,                       2,   8,    6, 1, { { 1, 8 } } },
 };
 
-// a szabad hely type mezője 0, mert a foglalt helyeké mindig 'A'..'Z'
-#define FREE_MONSTER_TYPE  0
-
 struct Monster *get_monster(uint8_t index)
 {
     return &game.monsters[index - 1];
@@ -40,19 +37,14 @@ struct Monster *get_monster(uint8_t index)
 
 uint8_t allocate_monster(uint8_t type)
 {
-    for (uint8_t index = 1; index <= MAX_MONSTERS; index++) {
-        struct Monster *monster = get_monster(index);
-        if (monster->type == FREE_MONSTER_TYPE) {
-            monster->type = type;
-            return index;
-        }
-    }
-    return NO_MONSTER;
+    if (game.monster_count == MAX_MONSTERS) return NO_MONSTER;
+
+    game.monster_count++;
+    get_monster(game.monster_count)->type = type;
+    return game.monster_count;
 }
 
 void clear_monsters(void)
 {
-    for (uint8_t index = 1; index <= MAX_MONSTERS; index++) {
-        get_monster(index)->type = FREE_MONSTER_TYPE;
-    }
+    game.monster_count = 0;
 }

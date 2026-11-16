@@ -56,8 +56,11 @@ extern const struct MonsterType monster_types[MONSTER_TYPE_COUNT];
 
 #define NO_MONSTER  0                           // szörnyindex helyett: nincs szörny
 
-struct Monster *get_monster(uint8_t index);     // index: 1..MAX_MONSTERS
-uint8_t allocate_monster(uint8_t type);         // egy szabad hely a szörnytáblában, a típussal ('A'..'Z'); NO_MONSTER, ha betelt
-void clear_monsters(void);                      // a szörnytábla minden helye szabad: új szintnél
+// a szörnytábla tömör: a szörnyek az 1..game.monster_count indexeken, a létrehozás sorrendjében
+// egy szörny kivételekor a mögötte állók előrecsúsznak, ezért szörnyindexet semmi nem tárolhat tartósan
+// a szörnyek a legújabbtól a legrégebbiig cselekszenek: for (uint8_t index = game.monster_count; index != NO_MONSTER; index--)
+struct Monster *get_monster(uint8_t index);     // index: 1..game.monster_count
+uint8_t allocate_monster(uint8_t type);         // új szörny a tábla végére, a típussal ('A'..'Z'); NO_MONSTER, ha betelt
+void clear_monsters(void);                      // a szörnytábla üres: új szintnél
 
 #endif

@@ -42,12 +42,44 @@ int test_monster_table(uint16_t i)
             ok = false;
         }
     }
-    if (allocate_monster('A') != NO_MONSTER) {
+    if (allocate_monster('A') != NO_MONSTER || game.monster_count != MAX_MONSTERS) {
         ok = false;
     }
 
     clear_monsters();
+    if (game.monster_count != 0) {
+        ok = false;
+    }
     if (allocate_monster('B') != 1 || get_monster(1)->type != 'B') {
+        ok = false;
+    }
+
+    clear_monsters();
+    return ok;
+}
+
+#define ORDER_TEST_MONSTERS  3
+
+// a cselekvés sorrendjében bejárva a szörnyek a létrehozás fordított sorrendjében jönnek
+int test_monster_order(uint16_t i)
+{
+    bool ok = true;
+
+    clear_monsters();
+    for (uint8_t count = 0; count < ORDER_TEST_MONSTERS; count++) {
+        allocate_monster('A' + count);
+    }
+
+    uint8_t expected_type = 'A' + ORDER_TEST_MONSTERS - 1;
+    uint8_t visited = 0;
+    for (uint8_t index = game.monster_count; index != NO_MONSTER; index--) {
+        if (get_monster(index)->type != expected_type) {
+            ok = false;
+        }
+        expected_type--;
+        visited++;
+    }
+    if (visited != ORDER_TEST_MONSTERS) {
         ok = false;
     }
 

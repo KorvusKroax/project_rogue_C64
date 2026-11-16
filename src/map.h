@@ -29,7 +29,7 @@
 #define TILE_PASSAGE         0x80      // folyosó vagy labirintus mező (F_PASS)
 #define TILE_SEEN            0x40      // a játékos már látta (F_SEEN)
 #define TILE_REAL            0x20      // nem rejtett: ami látszik, az van ott (F_REAL)
-#define TILE_MONSTER         0x10      // szörny áll rajta, hogy melyik, azt a szörnylista adja meg (F_MONST)
+#define TILE_MONSTER         0x10      // szörny áll rajta, hogy melyik, azt a szörnytábla adja meg (F_MONST)
 #define TILE_PASSAGE_NUMBER  0x0f      // folyosó-mezőn a folyosórendszer sorszáma (F_PNUM)
 #define TILE_TRAP_TYPE       0x07      // csapda-mezőn a csapda típusa (F_TMASK)
 

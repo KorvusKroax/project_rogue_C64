@@ -47,14 +47,13 @@ struct Monster {
     uint8_t  disguise;                          // ezzel a jellel rajzolódik ki: a saját betűje, a xeroc egy tárgyjel
     uint8_t  destination_item;                  // a padlón fekvő tárgy indexe, amely felé tart, vagy DESTINATION_PLAYER
     uint8_t  first_pack_item;                   // a nála lévő tárgyak listájának eleje (0 = nincs)
-    uint8_t  next;                              // a szörnylista következő elemének indexe (0 = vége)
 };
 
 // a szörnytábla mérete; a szörnyekre 1..MAX_MONSTERS index hivatkozik, a 0 a „nincs”
 #define MAX_MONSTERS  40                        // default: 40
 
-// a szörnyindex 8 bites, a 0 foglalt, és a táblát bejáró ciklusok uint8_t számlálója 255-nél nem állna meg
-#if MAX_MONSTERS > 254
+// a szörnyindex 8 bites, és a 0 foglalt
+#if MAX_MONSTERS > 255
     #error "túl sok szörny: a szörnyindex 8 bites"
 #endif
 
@@ -96,7 +95,8 @@ struct GameState {
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
 
     struct Room rooms[ROOM_COUNT];
-    struct Monster monsters[MAX_MONSTERS];      // a szörnytábla; a szabad hely type mezője 0 (monsters.h)
+    struct Monster monsters[MAX_MONSTERS];      // a szörnytábla: tömör, a szörnyek a létrehozás sorrendjében (monsters.h)
+    uint8_t  monster_count;                     // a szörnyek száma: az 1..monster_count indexek foglaltak
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
     uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)
