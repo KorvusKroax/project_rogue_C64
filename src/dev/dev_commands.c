@@ -3,13 +3,16 @@
 #include "../platform/charset.h"
 #include "../platform/key.h"
 #include "../platform/screen.h"
+#include "../explore.h"
 #include "../input.h"
 #include "../level.h"
 #include "../map.h"
 #include "../message.h"
 #include "../monsters.h"
+#include "../num.h"
 #include "../state.h"
 #include "../view.h"
+#include "tests.h"
 
 #define DEPTH_DIGITS_MAX  3         // 1..255
 
@@ -91,11 +94,74 @@ static void jump_to_depth(void)
     }
 }
 
+// a játékos körüli első szabad mező (soronként, balról jobbra): járható, látszik a játékos mezőjéről, és nem áll rajta szörny
+static bool find_free_neighbor(uint8_t *x, uint8_t *y)
+{
+    uint8_t player_x = game.player.x;
+    uint8_t player_y = game.player.y;
+
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t tile_x = player_x + offset_x;
+            uint8_t tile_y = player_y + offset_y;
+            if (!is_on_map(tile_x, tile_y)) continue;
+            if (tile_x == player_x && tile_y == player_y) continue;
+            if (!is_walkable_character(get_map_character(tile_x, tile_y))) continue;
+            if (!is_neighbor_visible(player_x, player_y, tile_x, tile_y)) continue;
+            if (get_map_flags(tile_x, tile_y) & TILE_MONSTER) continue;
+
+            *x = tile_x;
+            *y = tile_y;
+            return true;
+        }
+    }
+    return false;
+}
+
+// a szörny betűjének bekérése, és létrehozása a játékos mellett; ESC-re vagy nem betűre nem történik semmi
+// utána a szörnytábla foglaltsága, előtte a hiba, ha nem jött létre; a kirajzolást a következő look_around végzi
+static void create_monster_by_letter(void)
+{
+    char answer[2];
+    bool answered = ask_text("monster (A-Z): ", answer, 1);
+    message_clear();
+    if (!answered) return;
+
+    uint8_t type = answer[0];
+    if (type >= 'a' && type <= 'z') {
+        type -= 'a' - 'A';
+    }
+    if (type < 'A' || type > 'Z') return;
+
+    const char *failure = "";
+    uint8_t x;
+    uint8_t y;
+
+    if (game.monster_count == MAX_MONSTERS) {
+        failure = "the monster table is full, ";
+    } else if (!find_free_neighbor(&x, &y)) {
+        failure = "no free tile, ";
+    } else {
+        create_monster(type, x, y);
+        if (!are_monster_tiles_valid()) {
+            failure = "monster tiles invalid, ";
+        }
+    }
+
+    char max_monsters_text[FORMAT_BUFFER_SIZE];
+    format_int(max_monsters_text, MAX_MONSTERS, 0);
+    message_format_without_recall("\1monsters: \3/\2", failure, max_monsters_text, game.monster_count);
+}
+
 bool dev_execute_command(uint8_t code)
 {
     switch (code) {
         case KEY_F1:
             new_level();
+            break;
+        case KEY_F2:
+            create_monster_by_letter();
             break;
         case KEY_F3:
             jump_to_depth();

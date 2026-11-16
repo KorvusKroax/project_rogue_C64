@@ -12,7 +12,7 @@
     void put_failed_test_names(const char *prefix);   // az utolsó tesztfutás hibás tesztjei soronként, a prefix után
     bool dev_run_level_tests(void);     // szint-önteszt: sok véletlen szint rögzített magokkal; hosszú, VICE-ben warp módban
     void dev_run_screens(void);         // seed, gyors öntesztek és alattuk menü: a szint-önteszt és a tesztképernyők billentyűre, ESC-re vissza; RETURN-re visszatér
-    bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint, F3 ugrás mélységre, F5 teljes térkép, F7 a jump_to_run_end, F8 a follow_passages be- és kikapcsolása; igaz, ha időt vitt (egyik sem)
+    bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint, F2 szörny a játékos mellé betű alapján, F3 ugrás mélységre, F5 teljes térkép, F7 a jump_to_run_end, F8 a follow_passages be- és kikapcsolása; igaz, ha időt vitt (egyik sem)
 
     // a teljes térkép (F5): a MAP jele, a titkos folyosó-mező inverz folyosóként, a titkos ajtó inverz ajtóként, a szörnyek a betűjükkel
     bool is_full_map_shown(void);
