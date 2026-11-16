@@ -451,6 +451,7 @@ int test_level_generation(uint16_t i)
     if (!is_player_position_valid()) return false;
     if (!are_room_lookups_valid()) return false;
     if (!are_map_tiles_valid()) return false;
+    if (!are_monster_tiles_valid()) return false;
 
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         const struct Room *room = &game.rooms[room_index];

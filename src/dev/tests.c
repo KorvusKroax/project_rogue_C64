@@ -37,6 +37,7 @@ static const struct DevTest dev_tests[] = {
     { "MONST-TABLE", test_monster_table, 1 },
     { "MONST-ORDER", test_monster_order, 1 },
     { "MONST-GENERATE", test_monster_generation, 1 },
+    { "MONST-TILES", test_monster_tiles, 1 },
 };
 
 // szint-önteszt: billentyűre

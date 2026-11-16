@@ -150,6 +150,7 @@ uint8_t create_monster(uint8_t type, uint8_t x, uint8_t y)
     monster->first_pack_item = 0;
     monster->disguise = type == 'X' ? choose_disguise_character() : type;
 
+    add_map_flags(x, y, TILE_MONSTER);
     return index;
 }
 

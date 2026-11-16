@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "../map.h"
 #include "../monsters.h"
 #include "../texts.h"
 
@@ -160,7 +161,8 @@ static bool dragon_valid(uint8_t depth, uint8_t depth_bonus, int8_t armor, bool 
         (dragon->flags & MONSTER_MEAN) &&
         (dragon->flags & MONSTER_SLOW_TURN) &&
         ((dragon->flags & MONSTER_HASTED) != 0) == hasted &&
-        dragon->destination_item == DESTINATION_PLAYER;
+        dragon->destination_item == DESTINATION_PLAYER &&
+        (get_map_flags(GENERATION_TEST_X, GENERATION_TEST_Y) & TILE_MONSTER);
 }
 
 // a xeroc álcája tárgyjel; az amulett jele csak az amulett szintjétől
@@ -203,7 +205,64 @@ int test_monster_generation(uint16_t i)
         full_table_generation_valid();
 
     clear_monsters();
+    remove_map_flags(GENERATION_TEST_X, GENERATION_TEST_Y, TILE_MONSTER);
     game.dungeon_level = saved_dungeon_level;
+    return ok;
+}
+
+bool are_monster_tiles_valid(void)
+{
+    uint16_t flagged_tile_count = 0;
+
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            if (get_map_flags(x, y) & TILE_MONSTER) {
+                flagged_tile_count++;
+            }
+        }
+    }
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        if (!(get_map_flags(monster->x, monster->y) & TILE_MONSTER)) return false;
+    }
+
+    // ha két szörny egy mezőn állna, kevesebb jelölt mező lenne, mint szörny
+    return flagged_tile_count == game.monster_count;
+}
+
+#define TILES_TEST_Y  (MAP_TOP_ROW + 1)
+
+// az ellenőrzés jó táblára igazat ad, kóbor bitre és egy mezőn álló két szörnyre hamisat
+int test_monster_tiles(uint16_t i)
+{
+    bool ok = true;
+
+    clear_map();
+    clear_monsters();
+    if (!are_monster_tiles_valid()) {
+        ok = false;
+    }
+
+    create_monster('B', 1, TILES_TEST_Y);
+    create_monster('K', 2, TILES_TEST_Y);
+    if (!are_monster_tiles_valid()) {
+        ok = false;
+    }
+
+    add_map_flags(3, TILES_TEST_Y, TILE_MONSTER);
+    if (are_monster_tiles_valid()) {
+        ok = false;
+    }
+    remove_map_flags(3, TILES_TEST_Y, TILE_MONSTER);
+
+    create_monster('E', 2, TILES_TEST_Y);
+    if (are_monster_tiles_valid()) {
+        ok = false;
+    }
+
+    clear_monsters();
+    clear_map();
     return ok;
 }
 

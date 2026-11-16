@@ -67,7 +67,8 @@ void clear_monsters(void);                      // a szörnytábla üres: új sz
 // a game.dungeon_level mélységhez illő típus ('A'..'Z'), a kezdő vagy a vándorló sorrendből
 uint8_t choose_monster_type(bool wandering);
 
-// új szörny a megadott típussal az (x, y) mezőre, a mélység szerinti statokkal; NO_MONSTER, ha betelt a tábla
+// új szörny a megadott típussal az (x, y) mezőre, a mélység szerinti statokkal, a mezőn a TILE_MONSTER bittel; NO_MONSTER, ha betelt a tábla
+// a mezőn nem állhat másik szörny
 uint8_t create_monster(uint8_t type, uint8_t x, uint8_t y);
 
 // új szörny a mélységhez illő véletlen típussal; betelt táblánál nincs dobás, NO_MONSTER
