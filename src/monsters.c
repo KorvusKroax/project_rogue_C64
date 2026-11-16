@@ -54,6 +54,17 @@ void clear_monsters(void)
     game.monster_count = 0;
 }
 
+uint8_t find_monster_at(uint8_t x, uint8_t y)
+{
+    if (!(get_map_flags(x, y) & TILE_MONSTER)) return NO_MONSTER;
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        if (monster->x == x && monster->y == y) return index;
+    }
+    return NO_MONSTER;
+}
+
 // a típusok a mélységgel nehezedő sorrendben; a mélység körüli véletlen pozíció választ közülük
 #define MONSTER_TYPE_ORDER_LENGTH  26
 #define NOT_WANDERING              '0'          // a vándorló sorrendben: ezen a helyen nincs vándorló szörny

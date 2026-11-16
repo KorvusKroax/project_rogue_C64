@@ -35,6 +35,14 @@ look(wakeup):  // minden akció előtt
 erase_lamp(pos, room):  // csak sötét, nem fantom szobában, nem vak
   a pos körüli 3×3-ban a SCREEN FLOOR jelei ' '-re (a játékos mezője kivételével)
 
+see_monst(monster):  // a játékos látja-e a szörnyet
+  if ISBLIND: return false
+  if monster.ISINVIS and !CANSEE: return false
+  if dist2(monster.pos, player.pos) < 3:                     // szomszédos (lámpafény)
+     átlósan: ha a sarok egyik mezője sem léphető (MAP-jel ' ', '|', '-'): return false
+     return true
+  return monster.room == player.room and a szoba világos     // a labirintus és a folyosó sötét
+
 floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport): ez kerül a régi helyére
   ch = a MAP karaktere a játékos mezőjén
   if ch == FLOOR and PHANTOM(player.room): ch = PASSAGE
@@ -51,6 +59,7 @@ floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport
 - **Tárgyak:** a látott tárgy emlékként a helyén marad akkor is, ha már nincs fény/rálátás. Az emlék nem frissül: ha közben egy szörny felveszi vagy elmozdítja, a képernyőn a régi jel marad, amíg a játékos újra nem látja a mezőt. Sötét szobában az új tárgy csak akkor jelenik meg, ha a 3×3-as környezetbe kerül; világos szobában belépéskor az összes látszik.
 - **A játékos jele** a SCREEN-be is bekerül, mint bármely más jel, így görgetéskor ([3.5](#35-nézőablak-görgetés)) is a helyén van. Alatta nincs eltárolt emlék (`oldch`, mint a szörnyeknél): a játékos mindig látja a saját mezőjét, ezért távozáskor a `floor_at` a MAP-ból adja a visszarajzolandó jelet.
 - **Szörnyek:** sosem maradnak emlékként. Csak akkor látszanak, ha *éppen* láthatók: világos szobában a játékossal azonos szobában, sötét szobában és folyosón csak a 3×3-ban (dist2 < 3), egyébként SEEMONST/CANSEE szabályai szerint. Ha nem látható, a helyén az alatta lévő emlékezett mező (`oldch`) jelenik meg.
+  - **Ami mégis a képernyőn marad (mint az eredetiben):** az `erase_lamp` csak a FLOOR jeleket törli, ezért sötét szobában a lámpafényben látott szörny betűje a helyén marad, amikor a játékos továbblép; a szörny elmozdulásáig vagy a szoba elhagyásáig látszik. A `leave_room` a képernyőn látott nagybetűk alapján törli a szörnyeket, így a tárgyjellel álcázott xeroc jele a szoba elhagyása után is a helyén marad.
 - Rejtett (F_REAL nélküli) mezők a rejtett alakjukban jelennek meg, amíg fel nem fedezik őket.
 - A láthatóság logikai fogalom: egy szörny akkor is „látható”, ha a mezője éppen kívül esik a nézőablakon ([3.5](#35-nézőablak-görgetés)). A nézőablak csak a kirajzolást vágja, a játékszabályokat nem befolyásolja.
 

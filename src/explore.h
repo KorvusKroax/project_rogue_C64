@@ -4,8 +4,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void enter_room(uint8_t x, uint8_t y);          // a játékos az x, y mező szobájába lép: világos szobánál az egész szoba kirajzolódik
-void leave_room(uint8_t x, uint8_t y);          // a játékos ajtóról az x, y folyosó-mezőre lép: sötét szobánál a szoba padlója törlődik
+#include "state.h"
+
+// a játékos látja-e a szörnyet: a láthatatlant nem; a szomszédosat (átlósan sarkon át nem), a távolabbit csak a saját világos szobájában (see_monst)
+bool is_monster_visible(const struct Monster *monster);
+
+// a mező jele, ahogy a játékos látja: a látható szörny álcája, különben a MAP jele
+uint8_t get_visible_character(uint8_t x, uint8_t y);
+
+void enter_room(uint8_t x, uint8_t y);          // a játékos az x, y mező szobájába lép: világos szobánál az egész szoba kirajzolódik, a látható szörnyekkel
+void leave_room(uint8_t x, uint8_t y);          // a játékos ajtóról az x, y folyosó-mezőre lép: sötét szobánál a szoba padlója törlődik, a szörnyek jele helyére padló (ajtó) kerül
 
 void look_around(void);                         // minden akció előtt: a játékos körüli 3×3 kirajzolása, végül a játékos jele
 void forget_previous_position(void);            // új szinten, az enter_room után: a look_around nem töröl a régi szint helyén (J20)

@@ -63,6 +63,7 @@ extern const struct MonsterType monster_types[MONSTER_TYPE_COUNT];
 struct Monster *get_monster(uint8_t index);     // index: 1..game.monster_count
 uint8_t allocate_monster(void);                 // új, kitöltetlen hely a tábla végén; NO_MONSTER, ha betelt
 void clear_monsters(void);                      // a szörnytábla üres: új szintnél
+uint8_t find_monster_at(uint8_t x, uint8_t y);  // az x, y mezőn álló szörny indexe, vagy NO_MONSTER; a táblát csak TILE_MONSTER bitnél nézi végig
 
 // a game.dungeon_level mélységhez illő típus ('A'..'Z'), a kezdő vagy a vándorló sorrendből
 uint8_t choose_monster_type(bool wandering);

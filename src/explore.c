@@ -3,6 +3,7 @@
 #include "game.h"
 #include "map.h"
 #include "message.h"
+#include "monsters.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -21,6 +22,37 @@ static bool is_room_lit(uint8_t room_index)
     return !(game.rooms[room_index].flags & (ROOM_DARK | ROOM_MAZE));
 }
 
+bool is_monster_visible(const struct Monster *monster)
+{
+    // ide jön: vakon egyik sem látszik
+    // ide jön: láthatatlan-látással (CANSEE) a láthatatlan is
+    if (monster->flags & MONSTER_INVISIBLE) return false;
+
+    int8_t offset_x = monster->x - game.player.x;
+    int8_t offset_y = monster->y - game.player.y;
+    bool is_adjacent = offset_x >= -1 && offset_x <= 1 && offset_y >= -1 && offset_y <= 1;
+
+    // a szomszédos szörny a lámpafényben látszik, átlósan csak akkor, ha a sarok legalább egyik mezője járható
+    if (is_adjacent) {
+        if (offset_x == 0 || offset_y == 0) return true;
+        return is_walkable_character(get_map_character(game.player.x, monster->y))
+            || is_walkable_character(get_map_character(monster->x, game.player.y));
+    }
+
+    return monster->room == game.player.room && is_room_lit(monster->room);
+}
+
+uint8_t get_visible_character(uint8_t x, uint8_t y)
+{
+    uint8_t monster_index = find_monster_at(x, y);
+    if (monster_index != NO_MONSTER) {
+        const struct Monster *monster = get_monster(monster_index);
+        // ide jön: hallucinálva véletlen nagybetű
+        if (is_monster_visible(monster)) return monster->disguise;
+    }
+    return get_map_character(x, y);
+}
+
 void enter_room(uint8_t x, uint8_t y)
 {
     game.player.room = get_room_at(x, y);
@@ -29,36 +61,48 @@ void enter_room(uint8_t x, uint8_t y)
     // ide jön: vakon nem rajzol
     if (!is_room_lit(game.player.room)) return;
 
-    // az egész szoba a falakkal együtt
+    // az egész szoba a falakkal együtt; a szörnyek alatt a mező jele lesz az emlék
     const struct Room *room = &game.rooms[game.player.room];
     for (uint8_t tile_y = room->y; tile_y < room->y + room->height; tile_y++) {
         for (uint8_t tile_x = room->x; tile_x < room->x + room->width; tile_x++) {
-            // ide jön: a szörnyek helyén a látható szörnyek
-            draw_tile(tile_x, tile_y, get_map_character(tile_x, tile_y));
+            uint8_t monster_index = find_monster_at(tile_x, tile_y);
+            if (monster_index != NO_MONSTER) {
+                get_monster(monster_index)->character_below = get_map_character(tile_x, tile_y);
+            }
+            // ide jön: szörnyészleléssel (SEEMONST) a nem látható szörny inverzen
+            draw_tile(tile_x, tile_y, get_visible_character(tile_x, tile_y));
         }
     }
 }
 
 // a játékos ajtóról lép ki, és ajtaja csak normál szobának van, ezért a régi szoba sem fantom, sem labirintus
+// a szörny a képernyőn látott betűje alapján tűnik el, így a tárgyjellel álcázott xeroc jele marad
 void leave_room(uint8_t x, uint8_t y)
 {
     const struct Room *room = &game.rooms[game.player.room];
     bool is_dark = (room->flags & ROOM_DARK) != 0;
+    // ide jön: vakon a padló marad
+    uint8_t floor_character = is_dark ? CHAR_SOLID_ROCK : CHAR_FLOOR;
 
     game.player.room = get_room_at(x, y);
 
-    // ide jön: vakon a padló marad
-    if (is_dark) {
-        for (uint8_t tile_y = room->y; tile_y < room->y + room->height; tile_y++) {
-            for (uint8_t tile_x = room->x; tile_x < room->x + room->width; tile_x++) {
-                if (get_seen_character(tile_x, tile_y) == CHAR_FLOOR) {
+    for (uint8_t tile_y = room->y; tile_y < room->y + room->height; tile_y++) {
+        for (uint8_t tile_x = room->x; tile_x < room->x + room->width; tile_x++) {
+            uint8_t seen_character = get_seen_character(tile_x, tile_y);
+
+            if (seen_character == CHAR_FLOOR) {
+                if (is_dark) {
                     draw_tile(tile_x, tile_y, CHAR_SOLID_ROCK);
                 }
+            } else if (seen_character >= 'A' && seen_character <= 'Z') {
+                // ide jön: szörnyészleléssel (SEEMONST) a szörny jele inverzen marad
+                bool is_door = get_map_character(tile_x, tile_y) == CHAR_DOOR;
+                draw_tile(tile_x, tile_y, is_door ? CHAR_DOOR : floor_character);
             }
         }
     }
 
-    // ide jön: a szörnyek jele helyére a padló (ajtón az ajtó), és a régi szoba szörnyeinek ébresztése (door_open)
+    // ide jön: a régi szoba szörnyeinek ébresztése (door_open)
 }
 
 // sötét szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével
@@ -125,8 +169,10 @@ void look_around(void)
             if (x == player_x && y == player_y) continue;
             if (!is_neighbor_visible(player_x, player_y, x, y)) continue;
 
-            // ide jön: szörny a mezőn (ébresztés, a jele, ha látszik), hallucinálva véletlen tárgyjel
-            draw_tile(x, y, get_map_character(x, y));
+            // ide jön: szörnyészleléssel (SEEMONST) a láthatatlan szörny mezője kimarad, és a futás megáll
+            // ide jön: a szörny ébresztése (wake_monster)
+            // ide jön: szörny nélküli mezőn hallucinálva véletlen tárgyjel (trip_ch)
+            draw_tile(x, y, get_visible_character(x, y));
         }
     }
 

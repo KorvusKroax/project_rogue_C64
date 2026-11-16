@@ -29,6 +29,7 @@ int test_monster_table(uint16_t i);
 int test_monster_order(uint16_t i);
 int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
+int test_monster_visibility(uint16_t i);
 
 // a TILE_MONSTER bit pontosan a szörnytábla szörnyeinek mezőin van, és egy mezőn legfeljebb egy szörny áll
 bool are_monster_tiles_valid(void);

@@ -1,11 +1,14 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "../explore.h"
 #include "../map.h"
+#include "../monsters.h"
 #include "../move.h"
 #include "../state.h"
+#include "../view.h"
 
 // az esetek a térkép közepén, a BASE_X, BASE_Y mezőtől jobbra lefelé épülnek
 #define BASE_X  (MAP_COLUMNS / 2)
@@ -236,6 +239,137 @@ int test_passage_turn(uint16_t i)
 
     clear_map();
     return true;
+}
+
+// a tesztszoba: a 0. szoba a BASE_X, BASE_Y sarokkal, falakkal együtt 9 × 5; a bal falán, a 2. sorban ajtó, előtte folyosó-mező
+#define SEE_ROOM_WIDTH   9
+#define SEE_ROOM_HEIGHT  5
+#define SEE_DOOR_Y       2
+
+// a többi szoba fantom, hogy a get_room_at csak a tesztszobát találja
+static void put_see_test_room(uint8_t flags)
+{
+    clear_map();
+    clear_monsters();
+    clear_seen_map();
+
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        game.rooms[room_index].flags = ROOM_PHANTOM;
+    }
+    struct Room *room = &game.rooms[0];
+    room->x = BASE_X;
+    room->y = BASE_Y;
+    room->width = SEE_ROOM_WIDTH;
+    room->height = SEE_ROOM_HEIGHT;
+    room->flags = flags;
+
+    for (uint8_t y = 0; y < SEE_ROOM_HEIGHT; y++) {
+        for (uint8_t x = 0; x < SEE_ROOM_WIDTH; x++) {
+            uint8_t character = CHAR_FLOOR;
+            if (y == 0 || y == SEE_ROOM_HEIGHT - 1) {
+                character = CHAR_WALL_HORIZONTAL;
+            } else if (x == 0 || x == SEE_ROOM_WIDTH - 1) {
+                character = CHAR_WALL_VERTICAL;
+            }
+            put_test_tile(x, y, character);
+        }
+    }
+    put_test_tile(0, SEE_DOOR_Y, CHAR_DOOR);
+    set_map_character(BASE_X - 1, BASE_Y + SEE_DOOR_Y, CHAR_PASSAGE);
+    add_map_flags(BASE_X - 1, BASE_Y + SEE_DOOR_Y, TILE_PASSAGE);
+
+    game.player.x = BASE_X + 2;
+    game.player.y = BASE_Y + 2;
+    game.player.room = 0;
+}
+
+static struct Monster *put_see_test_monster(uint8_t type, uint8_t offset_x, uint8_t offset_y)
+{
+    return get_monster(create_monster(type, BASE_X + offset_x, BASE_Y + offset_y));
+}
+
+static uint8_t get_test_seen_character(uint8_t offset_x, uint8_t offset_y)
+{
+    return get_seen_character(BASE_X + offset_x, BASE_Y + offset_y);
+}
+
+// világos szoba: a szoba minden szörnye látszik, a phantom nem; belépéskor kirajzolódnak, kilépéskor a helyükre padló (ajtón ajtó) kerül
+static bool is_lit_room_drawing_valid(void)
+{
+    put_see_test_room(0);
+    struct Monster *bat = put_see_test_monster('B', 6, 2);
+    struct Monster *phantom = put_see_test_monster('P', 6, 3);
+    put_see_test_monster('K', 0, SEE_DOOR_Y);
+
+    if (!is_monster_visible(bat) || is_monster_visible(phantom)) return false;
+
+    enter_room(game.player.x, game.player.y);
+    if (get_test_seen_character(6, 2) != 'B') return false;
+    if (get_test_seen_character(6, 3) != CHAR_FLOOR) return false;
+    if (get_test_seen_character(0, SEE_DOOR_Y) != 'K') return false;
+    if (bat->character_below != CHAR_FLOOR) return false;
+
+    leave_room(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
+    if (game.player.room != IN_PASSAGE) return false;
+    if (get_test_seen_character(6, 2) != CHAR_FLOOR) return false;
+    return get_test_seen_character(0, SEE_DOOR_Y) == CHAR_DOOR;
+}
+
+// sötét szoba: csak a szomszédos szörny látszik, átlósan sarkon át nem; kilépéskor a jele helyére üres mező kerül
+static bool is_dark_room_drawing_valid(void)
+{
+    put_see_test_room(ROOM_DARK);
+    struct Monster *bat = put_see_test_monster('B', 6, 2);
+    struct Monster *emu = put_see_test_monster('E', 3, 2);
+    struct Monster *snake = put_see_test_monster('S', 3, 3);
+
+    if (is_monster_visible(bat) || !is_monster_visible(emu) || !is_monster_visible(snake)) return false;
+
+    look_around();
+    if (get_test_seen_character(3, 2) != 'E') return false;
+    if (get_test_seen_character(6, 2) != CHAR_SOLID_ROCK) return false;
+
+    leave_room(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
+    if (get_test_seen_character(3, 2) != CHAR_SOLID_ROCK) return false;
+
+    // a sarok mindkét mezője fal: átlósan nem látszik
+    put_test_tile(2, 3, CHAR_WALL_HORIZONTAL);
+    put_test_tile(3, 2, CHAR_WALL_VERTICAL);
+    game.player.room = 0;
+    return !is_monster_visible(snake);
+}
+
+// folyosón csak a szomszédos szörny látszik
+static bool is_passage_drawing_valid(void)
+{
+    put_see_test_room(0);
+    put_test_passage(0, 6);
+    put_test_passage(1, 6);
+    put_test_passage(2, 6);
+    game.player.x = BASE_X;
+    game.player.y = BASE_Y + 6;
+    game.player.room = IN_PASSAGE;
+
+    struct Monster *near = put_see_test_monster('H', 1, 6);
+    struct Monster *far = put_see_test_monster('Z', 2, 6);
+    return is_monster_visible(near) && !is_monster_visible(far);
+}
+
+int test_monster_visibility(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_COUNT];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_lit_room_drawing_valid() &&
+        is_dark_room_drawing_valid() &&
+        is_passage_drawing_valid();
+
+    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
+    clear_monsters();
+    clear_map();
+    clear_seen_map();
+    return ok;
 }
 
 // a rejtett mező a próbálkozások során előkerül; legfeljebb ennyi próbát vár (az esély 1/5 vagy 1/3)

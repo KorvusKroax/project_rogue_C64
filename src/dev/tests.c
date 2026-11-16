@@ -38,6 +38,7 @@ static const struct DevTest dev_tests[] = {
     { "MONST-ORDER", test_monster_order, 1 },
     { "MONST-GENERATE", test_monster_generation, 1 },
     { "MONST-TILES", test_monster_tiles, 1 },
+    { "MONST-SEE", test_monster_visibility, 1 },
 };
 
 // szint-önteszt: billentyűre

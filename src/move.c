@@ -169,8 +169,8 @@ bool is_something_interesting_beside(uint8_t x, uint8_t y, int8_t step_x, int8_t
             if (!is_neighbor_visible(x, y, tile_x, tile_y)) continue;
 
             bool is_orthogonal = offset_x == 0 || offset_y == 0;
-            // ide jön: a látható szörny
-            uint8_t character = get_map_character(tile_x, tile_y);
+            // ide jön: szörnyészleléssel (SEEMONST) a láthatatlan szörny mezőjénél a futás megáll
+            uint8_t character = get_visible_character(tile_x, tile_y);
             if (character == CHAR_DOOR) {
                 if (is_orthogonal) return true;
             } else if (character == CHAR_PASSAGE) {
