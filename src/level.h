@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define AMULET_LEVEL  26                        // ezen a mélységen van az amulett; ez alatt a szörnyek erősebbek (default: 26)
+
 // a keresés egy véletlen nem fantom szobában kezd, és ha ott nincs alkalmas mező, másikban folytatja;
 // nem lehet szobaindex, mert legfeljebb 254 szoba van (state.h), így a legnagyobb index 253
 #define ANY_ROOM  0xff

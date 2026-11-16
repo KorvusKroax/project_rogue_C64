@@ -27,6 +27,7 @@ int test_search(uint16_t i);
 int test_monster_types(uint16_t i);
 int test_monster_table(uint16_t i);
 int test_monster_order(uint16_t i);
+int test_monster_generation(uint16_t i);
 
 // szint-önteszt: billentyűre indul, mert hosszú (VICE-ben warp módban)
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

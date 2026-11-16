@@ -2,6 +2,7 @@
 #define MONSTERS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "state.h"
 
@@ -60,7 +61,16 @@ extern const struct MonsterType monster_types[MONSTER_TYPE_COUNT];
 // egy szörny kivételekor a mögötte állók előrecsúsznak, ezért szörnyindexet semmi nem tárolhat tartósan
 // a szörnyek a legújabbtól a legrégebbiig cselekszenek: for (uint8_t index = game.monster_count; index != NO_MONSTER; index--)
 struct Monster *get_monster(uint8_t index);     // index: 1..game.monster_count
-uint8_t allocate_monster(uint8_t type);         // új szörny a tábla végére, a típussal ('A'..'Z'); NO_MONSTER, ha betelt
+uint8_t allocate_monster(void);                 // új, kitöltetlen hely a tábla végén; NO_MONSTER, ha betelt
 void clear_monsters(void);                      // a szörnytábla üres: új szintnél
+
+// a game.dungeon_level mélységhez illő típus ('A'..'Z'), a kezdő vagy a vándorló sorrendből
+uint8_t choose_monster_type(bool wandering);
+
+// új szörny a megadott típussal az (x, y) mezőre, a mélység szerinti statokkal; NO_MONSTER, ha betelt a tábla
+uint8_t create_monster(uint8_t type, uint8_t x, uint8_t y);
+
+// új szörny a mélységhez illő véletlen típussal; betelt táblánál nincs dobás, NO_MONSTER
+uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y);
 
 #endif
