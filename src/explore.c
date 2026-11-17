@@ -15,11 +15,10 @@ static uint8_t previous_x;
 static uint8_t previous_y;
 static uint8_t previous_room;
 
-// világos az a szoba, amelyik nem sötét és nem labirintus; folyosón sötét van
+// világos az a szoba, amelyik nem sötét; a folyosórendszer sötét, és a labirintus mezőin is az a lény szobája
 static bool is_room_lit(uint8_t room_index)
 {
-    if (room_index == IN_PASSAGE) return false;
-    return !(game.rooms[room_index].flags & (ROOM_DARK | ROOM_MAZE));
+    return !(game.rooms[room_index].flags & ROOM_DARK);
 }
 
 bool is_monster_visible(const struct Monster *monster)
@@ -105,11 +104,11 @@ void leave_room(uint8_t x, uint8_t y)
     // ide jön: a régi szoba szörnyeinek ébresztése (door_open)
 }
 
-// sötét szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével
+// sötét, nem fantom szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével; folyosón nem
 static void erase_lamp_light(uint8_t x, uint8_t y, uint8_t room_index)
 {
     // ide jön: vakon nem töröl
-    if (room_index == IN_PASSAGE || !(game.rooms[room_index].flags & ROOM_DARK)) return;
+    if ((game.rooms[room_index].flags & (ROOM_PHANTOM | ROOM_DARK)) != ROOM_DARK) return;
 
     for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
         for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
@@ -232,12 +231,12 @@ void forget_previous_position(void)
     previous_room = game.player.room;
 }
 
-// a játékos mindig látja a saját mezőjét, ezért a MAP jele kerül vissza; a folyosón álló padlóból folyosójel lesz
+// a játékos mindig látja a saját mezőjét, ezért a MAP jele kerül vissza; fantom szobában (folyosón) a padlóból folyosójel lesz
 uint8_t calculate_character_left_behind(void)
 {
     uint8_t character = get_map_character(game.player.x, game.player.y);
 
-    if (character == CHAR_FLOOR && game.player.room == IN_PASSAGE) {
+    if (character == CHAR_FLOOR && (game.rooms[game.player.room].flags & ROOM_PHANTOM)) {
         character = CHAR_PASSAGE;
     }
     return character;

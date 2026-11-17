@@ -19,10 +19,13 @@ static void put_test_tile(uint8_t offset_x, uint8_t offset_y, uint8_t character)
     set_map_character(BASE_X + offset_x, BASE_Y + offset_y, character);
 }
 
+// a tesztek folyosó-mezői mind ehhez a folyosórendszerhez tartoznak
+#define TEST_PASSAGE_NUMBER  1
+
 static void put_test_passage(uint8_t offset_x, uint8_t offset_y)
 {
     put_test_tile(offset_x, offset_y, CHAR_PASSAGE);
-    add_map_flags(BASE_X + offset_x, BASE_Y + offset_y, TILE_PASSAGE);
+    add_map_flags(BASE_X + offset_x, BASE_Y + offset_y, TILE_PASSAGE | TEST_PASSAGE_NUMBER);
 }
 
 static bool is_test_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint8_t to_y)
@@ -246,7 +249,7 @@ int test_passage_turn(uint16_t i)
 #define SEE_ROOM_HEIGHT  5
 #define SEE_DOOR_Y       2
 
-// a többi szoba fantom, hogy a get_room_at csak a tesztszobát találja
+// a többi szoba fantom, hogy a get_room_at csak a tesztszobát találja; a folyosó-mezők folyosórendszere sötét, mint a generált szinten
 static void put_see_test_room(uint8_t flags)
 {
     clear_map();
@@ -256,6 +259,7 @@ static void put_see_test_room(uint8_t flags)
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         game.rooms[room_index].flags = ROOM_PHANTOM;
     }
+    game.rooms[PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER)].flags = ROOM_PHANTOM | ROOM_DARK;
     struct Room *room = &game.rooms[0];
     room->x = BASE_X;
     room->y = BASE_Y;
@@ -276,7 +280,7 @@ static void put_see_test_room(uint8_t flags)
     }
     put_test_tile(0, SEE_DOOR_Y, CHAR_DOOR);
     set_map_character(BASE_X - 1, BASE_Y + SEE_DOOR_Y, CHAR_PASSAGE);
-    add_map_flags(BASE_X - 1, BASE_Y + SEE_DOOR_Y, TILE_PASSAGE);
+    add_map_flags(BASE_X - 1, BASE_Y + SEE_DOOR_Y, TILE_PASSAGE | TEST_PASSAGE_NUMBER);
 
     game.player.x = BASE_X + 2;
     game.player.y = BASE_Y + 2;
@@ -310,7 +314,7 @@ static bool is_lit_room_drawing_valid(void)
     if (bat->character_below != CHAR_FLOOR) return false;
 
     leave_room(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
-    if (game.player.room != IN_PASSAGE) return false;
+    if (game.player.room != PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER)) return false;
     if (get_test_seen_character(6, 2) != CHAR_FLOOR) return false;
     return get_test_seen_character(0, SEE_DOOR_Y) == CHAR_DOOR;
 }
@@ -348,7 +352,7 @@ static bool is_passage_drawing_valid(void)
     put_test_passage(2, 6);
     game.player.x = BASE_X;
     game.player.y = BASE_Y + 6;
-    game.player.room = IN_PASSAGE;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
 
     struct Monster *near = put_see_test_monster('H', 1, 6);
     struct Monster *far = put_see_test_monster('Z', 2, 6);
@@ -357,7 +361,7 @@ static bool is_passage_drawing_valid(void)
 
 int test_monster_visibility(uint16_t i)
 {
-    struct Room saved_rooms[ROOM_COUNT];
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
     memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
 
     bool ok =

@@ -16,12 +16,10 @@
 // a logikai képernyő: a térkép fölött az üzenetsor, alatta a státuszsor
 #define LOGICAL_SCREEN_ROWS  (MAP_TOP_ROW + MAP_ROWS + 1)     // default: 24
 
-#define IN_PASSAGE  0xfe                        // a lény nem szobában, hanem folyosón áll; a labirintus szobának számít
-
 struct Player {
     uint8_t  x;                                 // a pozíció a térképen
     uint8_t  y;
-    uint8_t  room;                              // a szoba indexe, amelyben áll, vagy IN_PASSAGE
+    uint8_t  room;                              // a szobatábla indexe: a szoba, vagy folyosó- és labirintusmezőn a folyosórendszer
     uint8_t  strength;                          // 3..31
     uint8_t  experience_level;
     int16_t  hit_points;
@@ -35,7 +33,7 @@ struct Player {
 struct Monster {
     uint8_t  x;                                 // a pozíció a térképen
     uint8_t  y;
-    uint8_t  room;                              // a szoba indexe, amelyben áll, vagy IN_PASSAGE
+    uint8_t  room;                              // a szobatábla indexe: a szoba, vagy folyosó- és labirintusmezőn a folyosórendszer
     uint8_t  type;                              // 'A'..'Z'; a típustábla indexe a betű − 'A'
     uint8_t  experience_level;
     int8_t   armor;
@@ -84,8 +82,11 @@ struct Monster {
 // a szobatábla: a szobák, utánuk a folyosórendszerek rekordjai
 #define ROOM_TABLE_SIZE  (ROOM_COUNT + MAX_PASSAGES)       // default: 21
 
-// a szobaindex 8 bites: a szobatábla ciklusai uint8_t számlálóval mennek, és a 0xfe és a 0xff szabad marad (IN_PASSAGE, ANY_ROOM)
-#if ROOM_TABLE_SIZE > 254
+// a folyosórendszer indexe a szobatáblában a sorszámából (1..MAX_PASSAGES)
+#define PASSAGE_ROOM_INDEX(passage_number)  (ROOM_COUNT + (passage_number) - 1)
+
+// a szobaindex 8 bites: a szobatábla ciklusai uint8_t számlálóval mennek, és a 0xff szabad marad (ANY_ROOM)
+#if ROOM_TABLE_SIZE > 255
     #error "túl sok szoba: a szobaindex 8 bites"
 #endif
 

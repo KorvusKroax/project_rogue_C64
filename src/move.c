@@ -49,7 +49,7 @@ bool move_player(int8_t step_x, int8_t step_y)
     } else if (is_target_passage && is_player_on_door) {
         leave_room(target_x, target_y);
     } else if (is_target_passage) {
-        // folyosón belül, vagy labirintusba be, illetve onnan ki
+        // folyosón és labirintusban: a folyosórendszer
         game.player.room = get_room_at(target_x, target_y);
     }
 

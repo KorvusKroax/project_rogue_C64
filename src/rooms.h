@@ -16,8 +16,9 @@
 void generate_rooms(void);              // a 9 szoba a 3×3 szektorba, a szint mélysége szerint, és a rajzuk a MAP-ba; a MAP-ot előtte törölni kell (clear_map)
 uint8_t choose_random_room(void);       // egy véletlen, nem fantom szoba indexe
 
-// a járható mezőhöz tartozó szoba indexe, vagy IN_PASSAGE: folyosó-mezőn a labirintus, amelyben van, különben IN_PASSAGE;
-// más mezőn a nem fantom szoba, amelynek a területén van (a fallal együtt, így az ajtóé is)
+// a mező szobája a szobatáblában: folyosó-mezőn (a labirintusban is) a folyosórendszer, ezért a folyosórendszerek számozása
+// (assign_passage_numbers) után használható; más mezőn a nem fantom szoba, amelynek a területén van (a fallal együtt, így az ajtóé is);
+// a mező folyosó-mező vagy egy szoba területén van: a járható mező mindig ilyen
 uint8_t get_room_at(uint8_t x, uint8_t y);
 
 #endif

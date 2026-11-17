@@ -326,8 +326,8 @@ static bool is_walkable_tile(uint8_t x, uint8_t y)
     return character == CHAR_FLOOR || character == CHAR_DOOR || character == CHAR_STAIRS;
 }
 
-// a mező egy nem fantom szoba falain belül van
-static bool is_inside_room(uint8_t x, uint8_t y)
+// a nem fantom szoba indexe, amelynek a falain belül a mező van, vagy ROOM_COUNT, ha nincs ilyen
+static uint8_t get_room_around(uint8_t x, uint8_t y)
 {
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         const struct Room *room = &game.rooms[room_index];
@@ -335,7 +335,27 @@ static bool is_inside_room(uint8_t x, uint8_t y)
 
         bool is_inside_x = x > room->x && x < room->x + room->width - 1;
         bool is_inside_y = y > room->y && y < room->y + room->height - 1;
-        if (is_inside_x && is_inside_y) return true;
+        if (is_inside_x && is_inside_y) return room_index;
+    }
+    return ROOM_COUNT;
+}
+
+// a mező egy nem fantom szoba falain belül van
+static bool is_inside_room(uint8_t x, uint8_t y)
+{
+    return get_room_around(x, y) < ROOM_COUNT;
+}
+
+// a mező egy normál szoba területén van, a fallal együtt
+static bool is_in_normal_room_area(uint8_t x, uint8_t y)
+{
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        const struct Room *room = &game.rooms[room_index];
+        if (room->flags & (ROOM_PHANTOM | ROOM_MAZE)) continue;
+
+        bool is_in_x = x >= room->x && x < room->x + room->width;
+        bool is_in_y = y >= room->y && y < room->y + room->height;
+        if (is_in_x && is_in_y) return true;
     }
     return false;
 }
@@ -373,7 +393,8 @@ static bool is_player_position_valid(void)
     return is_inside_room(x, y);
 }
 
-// a kezdő szörnyek: szobánként legfeljebb egy, a saját szobája falain belül, nem rejtett, járható mezőn, nem a játékos helyén; alszanak
+// a kezdő szörnyek: szobánként legfeljebb egy, egy nem fantom szoba falain belül, nem rejtett, járható mezőn, nem a játékos helyén; alszanak;
+// a room mezőjük a mező szobája (labirintusban a folyosórendszer)
 static bool are_initial_monsters_valid(void)
 {
     bool room_has_monster[ROOM_COUNT];
@@ -389,54 +410,44 @@ static bool are_initial_monsters_valid(void)
         if (x == game.player.x && y == game.player.y) return false;
         if (!(get_map_flags(x, y) & TILE_REAL)) return false;
         if (!is_walkable_character(get_map_character(x, y))) return false;
-        if (!is_inside_room(x, y)) return false;
+        if (monster->room != get_room_at(x, y)) return false;
 
-        uint8_t room_index = monster->room;
-        if (room_index >= ROOM_COUNT || room_index != get_room_at(x, y)) return false;
+        uint8_t room_index = get_room_around(x, y);
+        if (room_index >= ROOM_COUNT) return false;
         if (room_has_monster[room_index]) return false;
         room_has_monster[room_index] = true;
     }
     return true;
 }
 
-// a mezők szobája: a normál szoba teljes területe (fal, ajtó, padló, lépcső) és a labirintus minden cellája az övé, a fantom szoba pontja
-// folyosón van, folyosó-mező csak labirintusé lehet, és a játékos egy nem fantom szobában kezd
+// a mezők szobája: minden folyosó-mezőé (a fantom szoba pontja és a labirintus mezői is) a sorszáma szerinti folyosórendszer;
+// a normál szoba teljes területe (fal, ajtó, padló, lépcső) az övé; a többi járható mező is egy normál szoba területén van,
+// ezért a get_room_at minden járható mezőn talál szobát
 static bool are_room_lookups_valid(void)
 {
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         const struct Room *room = &game.rooms[room_index];
+        if (room->flags & (ROOM_PHANTOM | ROOM_MAZE)) continue;
 
-        if (room->flags & ROOM_PHANTOM) {
-            if (get_room_at(room->x, room->y) != IN_PASSAGE) return false;
-        } else if (room->flags & ROOM_MAZE) {
-            uint8_t last_x = room->x + room->width / 2 * 2;
-            uint8_t last_y = room->y + room->height / 2 * 2;
-            for (uint8_t y = room->y; y <= last_y; y += 2) {
-                for (uint8_t x = room->x; x <= last_x; x += 2) {
-                    if (get_room_at(x, y) != room_index) return false;
-                }
-            }
-        } else {
-            for (uint8_t y = room->y; y < room->y + room->height; y++) {
-                for (uint8_t x = room->x; x < room->x + room->width; x++) {
-                    if (get_room_at(x, y) != room_index) return false;
-                }
+        for (uint8_t y = room->y; y < room->y + room->height; y++) {
+            for (uint8_t x = room->x; x < room->x + room->width; x++) {
+                if (get_room_at(x, y) != room_index) return false;
             }
         }
     }
 
     for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
         for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
-            if (!(get_map_flags(x, y) & TILE_PASSAGE)) continue;
+            uint8_t flags = get_map_flags(x, y);
 
-            uint8_t room_index = get_room_at(x, y);
-            if (room_index == IN_PASSAGE) continue;
-            if (room_index >= ROOM_COUNT || !(game.rooms[room_index].flags & ROOM_MAZE)) return false;
+            if (flags & TILE_PASSAGE) {
+                if (get_room_at(x, y) != PASSAGE_ROOM_INDEX(flags & TILE_PASSAGE_NUMBER)) return false;
+            } else if (is_walkable_tile(x, y)) {
+                if (!is_in_normal_room_area(x, y)) return false;
+            }
         }
     }
-
-    uint8_t player_room = get_room_at(game.player.x, game.player.y);
-    return player_room < ROOM_COUNT && !(game.rooms[player_room].flags & ROOM_PHANTOM);
+    return true;
 }
 
 // az elárasztás verme: minden mező legfeljebb egyszer kerül bele, mert a berakáskor megjelölődik
