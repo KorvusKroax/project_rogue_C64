@@ -8,6 +8,10 @@
 
 #define TEST_RESULT_COLUMN  21                  // az eredmény ebben az oszlopban kezdődik
 
+// a VICE -debugcart kapcsolójával az ide írt bájttal kilép, és ez lesz a kilépési kódja;
+// valódi gépen egy nem használt SID-regiszter tükre, az írás hatástalan
+#define DEBUG_CART_EXIT  (*(volatile uint8_t *)0xd7ff)
+
 // a hibás tesztek neve a lista utáni kiíráshoz, mert a lista eleje kigörgethet; ennél többet nem jegyez meg
 #define FAILED_TEST_NAMES_MAX  8
 
@@ -24,11 +28,16 @@ void init_test_program(void)
     set_screen_cursor(0, 0);
 }
 
-void end_test_program(void)
+void end_test_program(bool all_ok)
 {
     set_screen_cursor(0, SCREEN_HEIGHT - 1);
     put_text("Done");
     clear_to_row_end();
+
+    // a kilépéskori képernyőképre már a végeredmény kerüljön
+    wait_for_next_frame();
+    wait_for_next_frame();
+    DEBUG_CART_EXIT = all_ok ? 0 : 1;
 
     // megállás: a képernyő és a memória marad, a VICE monitorában megnézhető
     while (true) {}

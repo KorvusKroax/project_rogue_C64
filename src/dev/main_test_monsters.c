@@ -18,9 +18,10 @@ int main(void)
 
     put_text("Monster tests:");
     move_screen_cursor_to_next_row();
-    if (!run_test_table(monster_tests, TEST_COUNT(monster_tests))) {
+    bool all_ok = run_test_table(monster_tests, TEST_COUNT(monster_tests));
+    if (!all_ok) {
         put_failed_test_names("Test failed: ");
     }
 
-    end_test_program();
+    end_test_program(all_ok);
 }

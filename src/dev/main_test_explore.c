@@ -17,9 +17,10 @@ int main(void)
 
     put_text("Explore tests:");
     move_screen_cursor_to_next_row();
-    if (!run_test_table(explore_tests, TEST_COUNT(explore_tests))) {
+    bool all_ok = run_test_table(explore_tests, TEST_COUNT(explore_tests));
+    if (!all_ok) {
         put_failed_test_names("Test failed: ");
     }
 
-    end_test_program();
+    end_test_program(all_ok);
 }

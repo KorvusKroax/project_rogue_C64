@@ -24,9 +24,10 @@ int main(void)
     move_screen_cursor_to_next_row();
     bool times_ok = show_level_generation_times();
 
-    if (!(generation_ok && ratios_ok && times_ok)) {
+    bool all_ok = generation_ok && ratios_ok && times_ok;
+    if (!all_ok) {
         put_text("Level test failed");
     }
 
-    end_test_program();
+    end_test_program(all_ok);
 }

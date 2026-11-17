@@ -2,8 +2,8 @@
 rem Forditas, majd a jatek inditasa VICE-ban a lemezkeprol (autostart).
 rem "run.bat dev": ugyanez a fejlesztoi builddel
 rem "run.bat dev 12345": a fejlesztoi builddel, rogzitett seeddel
-rem "run.bat test core": a src\dev\main_test_core.c tesztprogrammal
-rem "full" barhol az argumentumok kozott: teljes kepernyon (pl. "run.bat full", "run.bat dev full 12345", "run.bat test level full")
+rem "full" barhol az argumentumok kozott: teljes kepernyon (pl. "run.bat full", "run.bat dev full 12345")
+rem (a tesztprogramokat a test.bat forditja es futtatja)
 rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreolvassa)
 
 rem --- az emulator helye: masik gepen eleg itt atirni ---
@@ -16,23 +16,14 @@ rem az argumentumok: a "full" csak a VICE-nek szol, a tobbi sorrendben megy a bu
 set NAME=rogue
 set FULLSCREEN=+VICIIfull
 set BUILD_ARGS=
-rem a "test" utani argumentum a tesztprogram neve
-set TEST_NAME_NEXT=
 :next_argument
 if "%~1"=="" goto arguments_done
 if /i "%~1"=="full" (
     set FULLSCREEN=-VICIIfull
-    goto shift_argument
-)
-if defined TEST_NAME_NEXT (
-    set NAME=test_%~1
-    set TEST_NAME_NEXT=
 ) else (
     if /i "%~1"=="dev" set NAME=rogue_dev
-    if /i "%~1"=="test" set TEST_NAME_NEXT=1
+    set BUILD_ARGS=%BUILD_ARGS% %1
 )
-set BUILD_ARGS=%BUILD_ARGS% %1
-:shift_argument
 shift
 goto next_argument
 :arguments_done
