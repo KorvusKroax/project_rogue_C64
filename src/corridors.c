@@ -138,12 +138,28 @@ static uint8_t choose_maze_exit(uint8_t first_x, uint8_t first_y, uint8_t step_x
     return 0;
 }
 
-// a folyosó vége: a fantom szobánál maga a csomópont folyosó-mező, máskor ajtó
-static void put_corridor_end(const struct Room *room, uint8_t x, uint8_t y)
+// a kijárat az ajtótábla végére; a tábla nem telhet be, mert egy szinten legfeljebb MAX_CORRIDORS folyosó van, és mindegyiknek két vége (state.h);
+// a folyosórendszer sorszámát később a számozás írja be
+static void add_exit(uint8_t room_index, uint8_t x, uint8_t y)
 {
+    struct Exit *new_exit = &game.exits[game.exit_count];
+
+    new_exit->x = x;
+    new_exit->y = y;
+    new_exit->room = room_index;
+    new_exit->passage_number = NO_PASSAGE_NUMBER;
+    game.exit_count++;
+}
+
+// a folyosó vége: a fantom szobánál maga a csomópont folyosó-mező, máskor ajtó (labirintusnál a kijárat folyosó-mezője), és az ajtótáblába kerül
+static void put_corridor_end(uint8_t room_index, uint8_t x, uint8_t y)
+{
+    const struct Room *room = &game.rooms[room_index];
+
     if (room->flags & ROOM_PHANTOM) {
         put_passage(x, y);
     } else {
+        add_exit(room_index, x, y);
         put_door(room, x, y);
     }
 }
@@ -152,8 +168,9 @@ static void put_corridor_end(const struct Room *room, uint8_t x, uint8_t y)
 // egy véletlen helyen oldalra fordul, amíg a célajtó vonalába nem ér, aztán megy tovább a fő irányban
 static void dig_corridor(uint8_t from_index, uint8_t direction)
 {
+    uint8_t to_index = get_neighbor_room(from_index, direction);
     const struct Room *from = &game.rooms[from_index];
-    const struct Room *to = &game.rooms[get_neighbor_room(from_index, direction)];
+    const struct Room *to = &game.rooms[to_index];
 
     // a fantom szobánál a végpont maga a csomópont
     uint8_t start_x = from->x;
@@ -215,8 +232,8 @@ static void dig_corridor(uint8_t from_index, uint8_t direction)
     // hol fordul a folyosó, a hátralévő hossz szerint
     uint8_t turn_at = rnd(length - 1) + 1;
 
-    put_corridor_end(from, start_x, start_y);
-    put_corridor_end(to, end_x, end_y);
+    put_corridor_end(from_index, start_x, start_y);
+    put_corridor_end(to_index, end_x, end_y);
 
     uint8_t x = start_x;
     uint8_t y = start_y;
@@ -258,6 +275,8 @@ static void connect_neighbor_rooms(uint8_t room_index, uint8_t direction)
 
 void connect_rooms(void)
 {
+    game.exit_count = 0;
+
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         connected_directions[room_index] = 0;
         rooms_in_tree[room_index] = false;

@@ -204,6 +204,57 @@ static bool is_maze_without_doors(const struct Room *room)
     return true;
 }
 
+// a mező a labirintus területén van: a helyétől a mérete páros részéig
+static bool is_inside_maze(const struct Room *room, uint8_t x, uint8_t y)
+{
+    uint8_t last_x = room->x + room->width / 2 * 2;
+    uint8_t last_y = room->y + room->height / 2 * 2;
+    return x >= room->x && x <= last_x && y >= room->y && y <= last_y;
+}
+
+// hány bejegyzés áll az ajtótáblában az x, y mezőn
+static uint8_t count_exits_at(uint8_t x, uint8_t y)
+{
+    uint8_t count = 0;
+    for (uint8_t i = 0; i < game.exit_count; i++) {
+        if (game.exits[i].x == x && game.exits[i].y == y) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// az ajtótábla: minden bejegyzés egy nem fantom szobáé; normál szobánál a szoba ajtaja (a titkos is), labirintusnál a labirintus folyosó-mezője;
+// a folyosórendszer sorszáma még üres; a térkép minden ajtója pontosan egy bejegyzés
+static bool is_exit_table_valid(void)
+{
+    if (game.exit_count > MAX_EXITS) return false;
+
+    for (uint8_t i = 0; i < game.exit_count; i++) {
+        const struct Exit *entry = &game.exits[i];
+        if (entry->room >= ROOM_COUNT) return false;
+        if (entry->passage_number != NO_PASSAGE_NUMBER) return false;
+
+        const struct Room *room = &game.rooms[entry->room];
+        if (room->flags & ROOM_PHANTOM) return false;
+
+        if (room->flags & ROOM_MAZE) {
+            if (!(get_map_flags(entry->x, entry->y) & TILE_PASSAGE)) return false;
+            if (!is_inside_maze(room, entry->x, entry->y)) return false;
+        } else {
+            if (!is_door_tile(entry->x, entry->y)) return false;
+            if (get_room_at(entry->x, entry->y) != entry->room) return false;
+        }
+    }
+
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            if (is_door_tile(x, y) && count_exits_at(x, y) != 1) return false;
+        }
+    }
+    return true;
+}
+
 // járható mező: padló, ajtó, lépcső, folyosó-mező, a titkosakkal együtt
 static bool is_walkable_tile(uint8_t x, uint8_t y)
 {
@@ -479,6 +530,7 @@ int test_level_generation(uint16_t i)
     if (!is_player_position_valid()) return false;
     if (!are_room_lookups_valid()) return false;
     if (!are_map_tiles_valid()) return false;
+    if (!is_exit_table_valid()) return false;
     if (!are_monster_tiles_valid()) return false;
     if (!are_initial_monsters_valid()) return false;
 
