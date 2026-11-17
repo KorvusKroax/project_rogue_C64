@@ -226,6 +226,21 @@ for (uint16_t d = 1; d < 40; d += 13) { … }
 ```
 A játék nem használ `printf`-et; próbaprogramban számít.
 
+**7. Feltételes kifejezésláncot visszaadó függvény inline-olva egy ciklusba** – futáskor, csendben; VICE-ben és a generált kódban ellenőrizve. `-O2`-n a ciklusba inline-olt függvény egyes ágai rossz értéket adnak: az elsőből kimaradt a `'0'` hozzáadása, a második a hívó egy másik változóját (a sor számát) adta vissza a maradék helyett; a harmadik ág helyes volt. A függvény saját, nem inline-olt kódja helyes. Az, hogy előjön-e, a fordító inline-olási döntésén múlik: a fejlesztői build tesztprogramokra bontása után jelent meg.
+```c
+// rossz: a 22×80-as ciklusba inline-olva az első két sor hibás
+static uint8_t view_pattern(uint8_t x, uint8_t y)
+{
+    if (y == MAP_TOP_ROW) return '0' + x / 10;          // x / 10 lett
+    if (y == MAP_TOP_ROW + 1) return '0' + x % 10;      // y lett
+    return x % 10 == 0 ? '|' : 'a' + x / 10;
+}
+
+// jó
+static __noinline uint8_t view_pattern(uint8_t x, uint8_t y) { … }
+```
+Hol: `src/dev/test_screens.c`.
+
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c
 // a BASIC ROM visszalapozása után a $B000 fölötti C-verem helyén ROM látszott

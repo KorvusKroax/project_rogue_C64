@@ -87,7 +87,8 @@ static void dev_charset_screen(void)
 }
 
 // a térkép első két sora az oszlop száma, a többi betűje tízesenként vált
-static uint8_t view_pattern(uint8_t x, uint8_t y)
+// __noinline: a view_draw_pattern ciklusába inline-olva az Oscar64 -O2 rossz kódot ad (README, Oscar64-hibák 7.)
+static __noinline uint8_t view_pattern(uint8_t x, uint8_t y)
 {
     if (y == MAP_TOP_ROW) return '0' + x / 10;
     if (y == MAP_TOP_ROW + 1) return '0' + x % 10;
@@ -103,6 +104,7 @@ static void view_draw_pattern(void)
             draw_tile(column, y, view_pattern(column, y));
         }
     }
+    redraw_map();
 }
 
 #define TEST_FIELD_LENGTH  20
