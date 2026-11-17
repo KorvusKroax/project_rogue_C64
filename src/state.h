@@ -63,11 +63,6 @@ struct Monster {
 // a szobák száma: szektoronként egy, a szoba indexe a szektor indexe
 #define ROOM_COUNT  (SECTOR_GRID_SIZE * SECTOR_GRID_SIZE)      // default: 9
 
-// a szobaindex 8 bites: a szobák ciklusai uint8_t számlálóval mennek, és a 0xfe és a 0xff szabad marad (IN_PASSAGE, ANY_ROOM)
-#if ROOM_COUNT > 254
-    #error "túl sok szoba: a szobaindex 8 bites"
-#endif
-
 #define MAX_EXTRA_CORRIDORS  4                  // a feszítőfa után legfeljebb ennyi extra folyosó-próbálkozás (default: 4)
 
 // a folyosók legnagyobb száma egy szinten: a szomszédos szektorpárok száma, illetve a feszítőfa és az extra folyosók száma közül a kisebb
@@ -83,15 +78,26 @@ struct Monster {
     #error "túl sok kijárat: az ajtótábla számlálója 8 bites"
 #endif
 
+// a folyosórendszerek legnagyobb száma: mindegyikben van legalább egy folyosó
+#define MAX_PASSAGES  MAX_CORRIDORS             // default: 12
+
+// a szobatábla: a szobák, utánuk a folyosórendszerek rekordjai
+#define ROOM_TABLE_SIZE  (ROOM_COUNT + MAX_PASSAGES)       // default: 21
+
+// a szobaindex 8 bites: a szobatábla ciklusai uint8_t számlálóval mennek, és a 0xfe és a 0xff szabad marad (IN_PASSAGE, ANY_ROOM)
+#if ROOM_TABLE_SIZE > 254
+    #error "túl sok szoba: a szobaindex 8 bites"
+#endif
+
 // szobaflagek
-#define ROOM_PHANTOM  0x01                      // nem igazi szoba, csak egy folyosó-csomópont
+#define ROOM_PHANTOM  0x01                      // nem igazi szoba: folyosó-csomópont vagy folyosórendszer
 #define ROOM_DARK     0x02                      // sötét szoba
 #define ROOM_MAZE     0x04                      // labirintus
 
 struct Room {
-    uint8_t x;                                  // a bal felső sarok, fallal együtt; fantom szobánál maga a folyosó-csomópont
+    uint8_t x;                                  // a bal felső sarok, fallal együtt; fantom szobánál maga a folyosó-csomópont, folyosórendszernél 0
     uint8_t y;
-    uint8_t width;                              // a méret falakkal együtt; fantom szobánál 0
+    uint8_t width;                              // a méret falakkal együtt; fantom szobánál és folyosórendszernél 0
     uint8_t height;
     uint8_t flags;
 };
@@ -119,7 +125,7 @@ struct GameState {
     uint8_t  max_strength;                      // a legnagyobb elért erő, gyűrűk nélkül
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
 
-    struct Room rooms[ROOM_COUNT];
+    struct Room rooms[ROOM_TABLE_SIZE];         // a szobák, utánuk a folyosórendszerek: az n. rendszer indexe ROOM_COUNT + n - 1
     struct Exit exits[MAX_EXITS];               // az ajtótábla: a szint összes kijárata, a felvétel sorrendjében
     uint8_t  exit_count;
     struct Monster monsters[MAX_MONSTERS];      // a szörnytábla: tömör, a szörnyek a létrehozás sorrendjében (monsters.h)

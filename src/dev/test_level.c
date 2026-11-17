@@ -225,7 +225,7 @@ static uint8_t count_exits_at(uint8_t x, uint8_t y)
 }
 
 // az ajtótábla: minden bejegyzés egy nem fantom szobáé; normál szobánál a szoba ajtaja (a titkos is), labirintusnál a labirintus folyosó-mezője;
-// a folyosórendszer sorszáma még üres; a térkép minden ajtója pontosan egy bejegyzés
+// a térkép minden ajtója pontosan egy bejegyzés
 static bool is_exit_table_valid(void)
 {
     if (game.exit_count > MAX_EXITS) return false;
@@ -233,7 +233,6 @@ static bool is_exit_table_valid(void)
     for (uint8_t i = 0; i < game.exit_count; i++) {
         const struct Exit *entry = &game.exits[i];
         if (entry->room >= ROOM_COUNT) return false;
-        if (entry->passage_number != NO_PASSAGE_NUMBER) return false;
 
         const struct Room *room = &game.rooms[entry->room];
         if (room->flags & ROOM_PHANTOM) return false;
@@ -251,6 +250,67 @@ static bool is_exit_table_valid(void)
         for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
             if (is_door_tile(x, y) && count_exits_at(x, y) != 1) return false;
         }
+    }
+    return true;
+}
+
+// a mező egy folyosórendszer része: folyosó-mező (a titkos és a labirintusé is) vagy ajtó (a titkos is)
+static bool is_passage_system_tile(uint8_t x, uint8_t y)
+{
+    return (get_map_flags(x, y) & TILE_PASSAGE) || is_door_tile(x, y);
+}
+
+static uint8_t get_passage_number_at(uint8_t x, uint8_t y)
+{
+    return get_map_flags(x, y) & TILE_PASSAGE_NUMBER;
+}
+
+// a folyosórendszerek: minden folyosó-mező és ajtó sorszámot kap (1..MAX_PASSAGES), más mező nem; az ortogonális szomszédoké egyezik;
+// a sorszámok 1-től hézag nélkül követik egymást; az ajtó bejegyzésében az ajtó sorszáma áll, a labirintus kijáratáéban semmi;
+// a rendszerek rekordja fantom és sötét; a kitöltés munkaterülete, a látott térkép, a bejárt mezőkön újra üres
+static bool are_passage_numbers_valid(void)
+{
+    uint16_t used_numbers = 0;                  // sorszámonként egy bit
+    uint8_t highest_number = 0;
+
+    for (uint8_t y = MAP_TOP_ROW; y < MAP_TOP_ROW + MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            uint8_t number = get_passage_number_at(x, y);
+
+            if (!is_passage_system_tile(x, y)) {
+                if (number != NO_PASSAGE_NUMBER) return false;
+                continue;
+            }
+
+            if (number == NO_PASSAGE_NUMBER || number > MAX_PASSAGES) return false;
+            if (game.seen_map[y - MAP_TOP_ROW][x] != CHAR_SOLID_ROCK) return false;
+
+            used_numbers |= (uint16_t)1 << number;
+            if (number > highest_number) {
+                highest_number = number;
+            }
+
+            // a jobb és az alsó szomszéd: így minden szomszédos pár egyszer kerül sorra
+            if (x < MAP_COLUMNS - 1 && is_passage_system_tile(x + 1, y) && get_passage_number_at(x + 1, y) != number) return false;
+            if (y < MAP_TOP_ROW + MAP_ROWS - 1 && is_passage_system_tile(x, y + 1) && get_passage_number_at(x, y + 1) != number) return false;
+        }
+    }
+
+    // az 1..highest_number bitek mind be vannak kapcsolva, a 0. nem
+    uint16_t expected_numbers = (uint16_t)(((uint16_t)1 << highest_number) - 1) << 1;
+    if (used_numbers != expected_numbers) return false;
+
+    for (uint8_t i = 0; i < game.exit_count; i++) {
+        const struct Exit *entry = &game.exits[i];
+        uint8_t expected_number = get_passage_number_at(entry->x, entry->y);
+        if (game.rooms[entry->room].flags & ROOM_MAZE) {
+            expected_number = NO_PASSAGE_NUMBER;
+        }
+        if (entry->passage_number != expected_number) return false;
+    }
+
+    for (uint8_t room_index = ROOM_COUNT; room_index < ROOM_TABLE_SIZE; room_index++) {
+        if (game.rooms[room_index].flags != (ROOM_PHANTOM | ROOM_DARK)) return false;
     }
     return true;
 }
@@ -531,6 +591,7 @@ int test_level_generation(uint16_t i)
     if (!are_room_lookups_valid()) return false;
     if (!are_map_tiles_valid()) return false;
     if (!is_exit_table_valid()) return false;
+    if (!are_passage_numbers_valid()) return false;
     if (!are_monster_tiles_valid()) return false;
     if (!are_initial_monsters_valid()) return false;
 

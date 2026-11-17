@@ -205,6 +205,7 @@ void generate_level(void)
 
     generate_rooms();
     connect_rooms();
+    assign_passage_numbers();
 
     // a lépcső és a játékos még az üres szobákba kerül, minden járat látható: mindkettő mindig talál helyet
     place_stairs();

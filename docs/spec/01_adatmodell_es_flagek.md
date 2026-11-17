@@ -107,7 +107,7 @@ GameState {
   names[type][which]     // azonosítatlan nevek ebben a játékban: színek, kövek, anyagok (8.8)
   scroll_title_seed      // ebből állnak elő a tekercsfeliratok minden kiíráskor; a feliratok nem tárolódnak (8.8)
   stick_is_staff[which]  // az adott pálcatípus ebben a játékban bot (staff) vagy pálca (wand) (8.8)
-  rooms[9], passages[]   // a 9 szoba és a folyosórendszerek (1.1.1, 1.4.7)
+  rooms[9], passages[]   // a 9 szoba és a folyosórendszerek; C64-en egy tábla, a rendszerek a szobák után (1.1.1, 1.4.7)
   exits                  // a közös ajtótábla (1.4.7)
   monsters               // a szinten lévő szörnyek listája
   floor_items            // a padlón lévő tárgyak listája
@@ -334,7 +334,7 @@ Nem tárolódik: a `launch`, a `damage`, a `hurldmg`, valamint az ISMISL és az 
 - Egy szoba kijáratai azok a bejegyzések, amelyeknek a `room` mezője ez a szoba.
 
 **Folyosórendszerek**
-- A generálás végén az `assign_passage_numbers` (eredetileg `passnum`) megszámozza az összefüggő folyosóhálózatokat, a labirintusokkal együtt (F_PNUM, 1-től; [2.4](02_szintgeneralas.md#24-összekötés)). Minden hálózat egy „szoba” rekord a `passages[]` táblában, PHANTOM és DARK flaggel. Legfeljebb MAX_PASSAGES = MAX_CORRIDORS van, mert mindegyikben van legalább egy folyosó. Fordítási feltétel: a MAX_PASSAGES elfér az F_PNUM 4 bitjén (≤ 15).
+- A generálás végén az `assign_passage_numbers` (eredetileg `passnum`) megszámozza az összefüggő folyosóhálózatokat, a labirintusokkal együtt (F_PNUM, 1-től; [2.4](02_szintgeneralas.md#24-összekötés)). Minden hálózat egy „szoba” rekord PHANTOM és DARK flaggel (az eredetiben a `passages[]` tábla). C64-en ezek a szobatábla végén vannak: az n. hálózat indexe ROOM_COUNT + n − 1, így a lény `room` mezője szobára és folyosórendszerre is ugyanabba a táblába mutat. Fordítási feltétel: a szobatábla (ROOM_COUNT + MAX_PASSAGES) indexe elfér 8 biten, a 0xfe és a 0xff nélkül. Legfeljebb MAX_PASSAGES = MAX_CORRIDORS van, mert mindegyikben van legalább egy folyosó. Fordítási feltétel: a MAX_PASSAGES elfér az F_PNUM 4 bitjén (≤ 15).
 - Bejegyzés: `position` (2 bájt), `room` (1), `passage` (1), azaz a hálózat, amelyhez az ajtó csatlakozik. A labirintus kijáratánál a `passage` üres (0): a kijárat maga is a hálózat része, nem a hálózat kijárata. Egy hálózat kijáratai azok a bejegyzések, amelyeknek a `passage` mezője ez a hálózat.
 - A szörnymozgás ([6.6](06_szornyek.md#66-mozgás)), a sötétség ([3.1](03_latoter_es_megjelenites.md#31-felderítés)) és a drain life ([8.7](08_targyak.md#87-pálcákbotok-z)) úgy működik, ahogy ott le van írva.
 - Méret: (9 + 12) rekord × 9 bájt + 24 × 4 bájt = **285 bájt**.

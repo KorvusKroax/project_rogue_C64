@@ -185,7 +185,7 @@ fill(mező):  // a mezőből ortogonálisan terjed
   else: return
   fill a négy ortogonális szomszédra
 ```
-A kitöltés nem lehet rekurzív, mert a 6502 hardveres verme 256 bájtos; az eredmény ugyanaz, mint a rekurzív bejárásé. A labirintus kijárata folyosó-mező, ezért a bejegyzésének `passage` mezője üres marad ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
+A kitöltés nem lehet rekurzív, mert a 6502 hardveres verme 256 bájtos. Saját verem helyett minden bejárt mező a SCREEN rétegben ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)) tartja számon, melyik irányból érkezett a bejárás. Ha a mező mind a négy irányát kipróbálta, arra lép vissza, és a SCREEN-ben a mező újra üres lesz. Az új szint SCREEN rétege üres, és a generálás alatt másra nem kell, ezért nem kell hozzá külön memória, és a futásidő a mezők számával arányos. Az eredmény ugyanaz, mint a rekurzív bejárásé, mert a sorszám csak attól függ, mely mezők összefüggők, a bejárás sorrendjétől nem. A szomszédok vizsgálata egy szinten több ezerszer fut (a labirintusos szinteken ez a generálás idejének kb. ötöde), ezért a kód a rétegeket egyetlen mezőindexszel éri el, és a vizsgálatban nincs függvényhívás. A labirintus kijárata folyosó-mező, ezért a bejegyzésének `passage` mezője üres marad ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
 
 **Eltérés az eredetitől:** az eredeti a folyosórendszer kijáratait a bejárás sorrendjében gyűjtötte, a C64-es változatban a sorrendjük az ajtótábla sorrendje. Ha két kijárat egyforma távolságra van a céltól, a szörny a másikat választhatja.
 

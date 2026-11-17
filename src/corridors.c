@@ -16,6 +16,17 @@
 
 #define OPPOSITE_DIRECTION(direction)  (DIRECTION_COUNT - 1 - (direction))     // fel <-> le, balra <-> jobbra
 
+// a lépés irányonként, a fenti sorrendben
+static const int8_t direction_steps_x[DIRECTION_COUNT] = { 0, -1, 1, 0 };
+static const int8_t direction_steps_y[DIRECTION_COUNT] = { -1, 0, 0, 1 };
+
+// a folyosórendszer sorszáma a mezőflagek alsó bitjeibe kerül
+#if MAX_PASSAGES > TILE_PASSAGE_NUMBER
+    #error "túl sok folyosórendszer: a sorszám nem fér el a TILE_PASSAGE_NUMBER bitjein"
+#endif
+
+#define FILL_START  DIRECTION_COUNT             // a kitöltés kezdőmezője: innen nincs hová visszalépni
+
 #define NO_NEIGHBOR  0xff                       // a rács szélén abban az irányban nincs szoba
 
 #define SECRET_PASSAGE_DEPTH_DIVISOR   10       // a folyosó-mező titkos lehet, ha rnd(SECRET_PASSAGE_DEPTH_DIVISOR) + 1 < mélység (default: 10)
@@ -330,6 +341,111 @@ void connect_rooms(void)
 
         if (candidate_count > 0) {
             connect_neighbor_rooms(from_room, choose_candidate(candidates, candidate_count));
+        }
+    }
+}
+
+// a folyosórendszerek kitöltése a három réteget (MAP karakter, MAP flag, SCREEN) egyetlen mezőindexszel éri el: (y - MAP_TOP_ROW) * MAP_COLUMNS + x;
+// így a szomszéd vizsgálatában nincs sorszorzás és függvényhívás
+static uint8_t *const character_tiles = &game.map_characters[0][0];
+static uint8_t *const flag_tiles = &game.map_flags[0][0];
+static uint8_t *const seen_tiles = &game.seen_map[0][0];
+
+// a mezőindex változása irányonként
+static const int16_t direction_tile_steps[DIRECTION_COUNT] = { -MAP_COLUMNS, -1, 1, MAP_COLUMNS };
+
+// az ajtó bejegyzése az ajtótáblában megkapja a folyosórendszer sorszámát; minden ajtó benne van, mert csak folyosóvégen van ajtó (put_corridor_end)
+static void set_exit_passage_number(uint8_t x, uint8_t y, uint8_t passage_number)
+{
+    for (uint8_t i = 0; i < game.exit_count; i++) {
+        struct Exit *entry = &game.exits[i];
+        if (entry->x == x && entry->y == y) {
+            entry->passage_number = passage_number;
+            return;
+        }
+    }
+}
+
+// a folyosórendszer kitöltése a kezdőmezőtől (egy kijárattól, amely már megkapta a sorszámot), ortogonálisan, verem nélkül:
+// minden bejárt mező a látott térképen tartja számon, melyik irányból érkezett; ha minden irányát kipróbálta, arra lép vissza,
+// és a látott térképen a mező újra üres lesz; a generálás alatt a látott térkép másra nem kell;
+// a szomszéd vizsgálata egy szinten több ezerszer fut, ezért nincs benne függvényhívás, csak az ajtónál
+static void fill_passage(uint8_t x, uint8_t y, uint8_t passage_number)
+{
+    uint16_t tile = (uint16_t)(y - MAP_TOP_ROW) * MAP_COLUMNS + x;
+    seen_tiles[tile] = FILL_START;
+    uint8_t direction = 0;                      // a mezőn a következő kipróbálandó irány
+
+    while (true) {
+        if (direction < DIRECTION_COUNT) {
+            uint8_t next_x = x + direction_steps_x[direction];
+            uint8_t next_y = y + direction_steps_y[direction];
+            uint16_t next_tile = tile + direction_tile_steps[direction];
+            direction++;
+
+            // a térképen kívül: a 0. oszlop (sor) előtti 255 is
+            if (next_x >= MAP_COLUMNS || (uint8_t)(next_y - MAP_TOP_ROW) >= MAP_ROWS) continue;
+
+            // már sorszámozott (ahonnan érkezett, az is)
+            uint8_t flags = flag_tiles[next_tile];
+            if (flags & TILE_PASSAGE_NUMBER) continue;
+
+            // a folyosó-mező (a titkos és a labirintusé is) bekerül; más mező csak akkor, ha ajtó: látható, vagy titkos,
+            // ekkor a fal jele látszik, és a mező rejtett
+            if (!(flags & TILE_PASSAGE)) {
+                uint8_t character = character_tiles[next_tile];
+                bool is_door = character == CHAR_DOOR
+                    || (!(flags & TILE_REAL) && (character == CHAR_WALL_HORIZONTAL || character == CHAR_WALL_VERTICAL));
+                if (!is_door) continue;
+                set_exit_passage_number(next_x, next_y, passage_number);
+            }
+
+            flag_tiles[next_tile] = flags | passage_number;
+            x = next_x;
+            y = next_y;
+            tile = next_tile;
+            seen_tiles[tile] = OPPOSITE_DIRECTION(direction - 1);
+            direction = 0;
+        } else {
+            uint8_t back_direction = seen_tiles[tile];
+            seen_tiles[tile] = CHAR_SOLID_ROCK;
+            if (back_direction == FILL_START) return;
+
+            // az előző mezőn az az irány jön, amely a most befejezett mező után következik
+            x += direction_steps_x[back_direction];
+            y += direction_steps_y[back_direction];
+            tile += direction_tile_steps[back_direction];
+            direction = OPPOSITE_DIRECTION(back_direction) + 1;
+        }
+    }
+}
+
+void assign_passage_numbers(void)
+{
+    for (uint8_t room_index = ROOM_COUNT; room_index < ROOM_TABLE_SIZE; room_index++) {
+        struct Room *passage = &game.rooms[room_index];
+        passage->x = 0;
+        passage->y = 0;
+        passage->width = 0;
+        passage->height = 0;
+        passage->flags = ROOM_PHANTOM | ROOM_DARK;
+    }
+
+    // legfeljebb MAX_PASSAGES rendszer lesz: mindegyik egy folyosó végétől indul, és minden folyosó teljesen egy rendszerbe kerül
+    uint8_t passage_number = 0;
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        for (uint8_t i = 0; i < game.exit_count; i++) {
+            struct Exit *entry = &game.exits[i];
+            if (entry->room != room_index) continue;
+            if (get_map_flags(entry->x, entry->y) & TILE_PASSAGE_NUMBER) continue;
+
+            // a kijárat ajtó, vagy a labirintus folyosó-mezője, ennek a bejegyzésében nincs sorszám
+            passage_number++;
+            add_map_flags(entry->x, entry->y, passage_number);
+            if (!(game.rooms[room_index].flags & ROOM_MAZE)) {
+                entry->passage_number = passage_number;
+            }
+            fill_passage(entry->x, entry->y, passage_number);
         }
     }
 }
