@@ -8,7 +8,7 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának újraírása *
 
 ### A játék fordítása és indítása
 
-Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`). Ha máshol vannak, a `build.bat` (`OSCAR64`) és a `run.bat` (`VICE`) elején kell átírni az utat.
+Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`). Ha máshol vannak, a `build.bat` (`OSCAR64`), a `run.bat` és a `test.bat` (`VICE`) elején kell átírni az utat.
 
 | parancs | mit csinál |
 |---|---|
@@ -17,18 +17,41 @@ Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`).
 | `build.bat dev` | a fejlesztői build: `build\rogue_dev.prg` és `build\rogue_dev.d64` |
 | `build.bat dev 12345` | a fejlesztői build rögzített seeddel (itt 12345) |
 | `run.bat dev`, `run.bat dev 12345` | ugyanez, és elindítja VICE-ban |
+| `run.bat full`, `run.bat dev full` | bármelyik `run.bat` teljes képernyőn |
+| `test.bat` | lefordítja az összes tesztprogramot, és a nem interaktívakat lefuttatja ([Tesztprogramok](#tesztprogramok)) |
+| `test.bat core`, `test.bat core monsters` | csak a felsorolt tesztprogramokat; az interaktívat (`screens`) megnyitja VICE-ban |
+| `test.bat skip level` | mindet, a felsoroltakat csak lefordítja |
+| `test.bat help` | a használat és a tesztprogramok nevei |
+| `build.bat test core` | csak lefordít egy tesztprogramot: `build\test_core.prg` és `build\test_core.d64` |
 
-Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
+Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`, `.\test.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
 
 ### Fejlesztői build
 
-A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A kiadási buildbe ezekből semmi nem kerül:
+A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A fejlesztői build a játék, és mellette csak ennyi; a kiadási buildbe ezekből semmi nem kerül:
 - **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A kiadási buildben nincs ilyen makró, ezért játékfájlban csak `#ifdef DEVMODE` alatt használható (jelenleg csak a `map.c` térképírás-ellenőrzése, ideiglenesen).
-- **Öntesztek** (`src/dev/`, a teszteket a `dev_tests` lista sorolja fel a `tests.c`-ben): induláskor lefutnak, az eredményük a képernyőre kerül (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`).
-- **Seed:** induláskor kiíródik; a menüben az `E` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető.
-- **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot): **F1** új szint ugyanazon a mélységen, **F3** ugrás tetszőleges mélységre (1..255). Egyik sem visz el időt.
+- **Seed:** induláskor kiíródik; az `S` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető. RETURN-re indul a játék.
+- **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot), pl. új szint, ugrás mélységre, szörny létrehozása, teljes térkép. A lista: [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus). Egyik sem visz el időt.
 
-A hosszú öntesztek (pl. sok ezer szint generálása) VICE-ben gyorsított módban futtathatók: **Alt+W** ki-be kapcsolja a warp módot (vagy indításkor a `-warp` kapcsoló).
+Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem külön tesztprogramokban ([M05-05](https://github.com/KorvusKroax/project_rogue_C64/issues/55)), így a fejlesztői build memóriáját nem terhelik.
+
+### Tesztprogramok
+
+Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja.
+
+| név | mit tesztel | szabad hely (2026-11-17) |
+|---|---|---|
+| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 552 bájt |
+| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 584 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; utána mélységenként a sötét szobák és labirintusok aránya és a leglassabb generálás ideje; warp módban is kb. 4 perc | 22 232 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje és láthatósága | 30 280 bájt |
+| `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 656 bájt |
+
+Összehasonlításul: a játék (`build.bat`) 26 024, a fejlesztői build (`build.bat dev`) 22 912 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+
+A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
+
+Egy tesztprogram kézzel is elindítható, pl. a `build\test_level.d64` VICE-ba húzásával: az eredmény a képernyőn marad (`OK`, `1000/1000`, hibánál `FAIL AT <sorszám>`, alul `Done`). A hosszú tesztek **Alt+W**-vel gyorsíthatók (warp mód), és ESC-re leállnak; ilyenkor az addigi próbákból jön az eredmény.
 
 ### A két fordító összevetése
 
@@ -40,6 +63,7 @@ src/          a játék forrása
 build/        a fordítás kimenete (nincs a repóban)
 build.bat     fordítás
 run.bat       fordítás + indítás VICE-ban
+test.bat      a tesztprogramok fordítása és futtatása
 compare.bat   a két fordító összevetése a szintgenerálón
 ```
 
@@ -78,7 +102,7 @@ Ez a VICE beállításán múlik, nem a játékon, ezért a repó nem ad saját 
 
 Egyszerűbb, de kevésbé tartós megoldás a három sort közvetlenül a `gtk3_sym.vkm`-ben átírni: ekkor a `vice.ini`-hez nem kell nyúlni, viszont a VICE újratelepítése visszaállítja a fájlt.
 
-**Ellenőrzés:** `run.bat dev`, két billentyű a `Keyboard matrix` képernyőig. A `Last press` sorban a Shift+6 47-et, a Shift+7 61-et, az AltGr+W 124-et, a Shift+, (`?`) 63-at kell mutasson. SHIFT alatt ez a képernyő szándékosan nem olvas, ezért a szám a SHIFT felengedése után frissül.
+**Ellenőrzés:** `test.bat screens`, majd a menüben `K` (`Keyboard matrix`). A `Last press` sorban a Shift+6 47-et, a Shift+7 61-et, az AltGr+W 124-et, a Shift+, (`?`) 63-at kell mutasson. SHIFT alatt ez a képernyő szándékosan nem olvas, ezért a szám a SHIFT felengedése után frissül.
 
 ### Eszközlánc
 
@@ -258,7 +282,7 @@ return 0;                           // a BASIC-ben néhány parancs után ?FORMU
 
 ## Mérföldkövek és issue-k
 
-Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec” (a vonatkozó fejezetek), „Tartalom” és „Kész, ha” (elfogadási feltételek). Az M4-től kezdve minden mérföldkő végén a program elindul, és az addig kész rész kipróbálható. A belső ellenőrzések és az öntesztek a fejlesztői buildben futnak (M00-04).
+Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec” (a vonatkozó fejezetek), „Tartalom” és „Kész, ha” (elfogadási feltételek). Az M4-től kezdve minden mérföldkő végén a program elindul, és az addig kész rész kipróbálható. A belső ellenőrzések a fejlesztői buildben (M00-04), az öntesztek a tesztprogramokban futnak (M05-05).
 
 | mérföldkő | issue-k |
 |---|---|
@@ -267,7 +291,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | **M2 – Képernyő és bevitel** | [M02-01](https://github.com/KorvusKroax/project_rogue_C64/issues/9) karakterkészlet · [M02-02](https://github.com/KorvusKroax/project_rogue_C64/issues/10) billentyűzet · [M02-03](https://github.com/KorvusKroax/project_rogue_C64/issues/11) nézőablak · [M02-04](https://github.com/KorvusKroax/project_rogue_C64/issues/12) üzenetsáv · [M02-05](https://github.com/KorvusKroax/project_rogue_C64/issues/13) státuszsor |
 | **M3 – Szintgenerálás** | [M03-01](https://github.com/KorvusKroax/project_rogue_C64/issues/14) szobák, labirintus · [M03-02](https://github.com/KorvusKroax/project_rogue_C64/issues/15) folyosók · [M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16) elhelyezés · [M03-04](https://github.com/KorvusKroax/project_rogue_C64/issues/17) fejlesztői mód · [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54) eszközlánc-ellenőrzés |
 | **M4 – Mozgás, látótér, futás** | [M04-01](https://github.com/KorvusKroax/project_rogue_C64/issues/18) főciklus · [M04-02](https://github.com/KorvusKroax/project_rogue_C64/issues/19) mozgás, látótér · [M04-03](https://github.com/KorvusKroax/project_rogue_C64/issues/20) futás · [M04-04](https://github.com/KorvusKroax/project_rogue_C64/issues/21) keresés, lépcső, ismétlés |
-| **M5 – Szörnyek és harc** | [M05-01](https://github.com/KorvusKroax/project_rogue_C64/issues/22) generálás · [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23) ébresztés, mozgás · [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) közelharc · [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) speciális támadások |
+| **M5 – Szörnyek és harc** | [M05-01](https://github.com/KorvusKroax/project_rogue_C64/issues/22) generálás · [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23) ébresztés, mozgás · [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) közelharc · [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) speciális támadások · [M05-05](https://github.com/KorvusKroax/project_rogue_C64/issues/55) tesztprogramok |
 | **M6 – Tárgyak és csomag** | [M06-01](https://github.com/KorvusKroax/project_rogue_C64/issues/26) generálás · [M06-02](https://github.com/KorvusKroax/project_rogue_C64/issues/27) fegyverek, nevek · [M06-03](https://github.com/KorvusKroax/project_rogue_C64/issues/28) csomag, listák · [M06-04](https://github.com/KorvusKroax/project_rogue_C64/issues/29) felszerelés · [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) szörnyek és tárgyak |
 | **M7 – Bájitalok és tekercsek** | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31) bájitalok, időzítők · [M07-02](https://github.com/KorvusKroax/project_rogue_C64/issues/32) kijelzési hatások · [M07-03](https://github.com/KorvusKroax/project_rogue_C64/issues/33) tekercsek · [M07-04](https://github.com/KorvusKroax/project_rogue_C64/issues/53) szövegkatalógus generálása |
 | **M8 – Gyűrűk, pálcák, hajítás** | [M08-01](https://github.com/KorvusKroax/project_rogue_C64/issues/34) gyűrűk · [M08-02](https://github.com/KorvusKroax/project_rogue_C64/issues/35) hajítás · [M08-03](https://github.com/KorvusKroax/project_rogue_C64/issues/36) pálcák, sugarak |
