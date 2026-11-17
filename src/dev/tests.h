@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool dev_run_tests(void);           // öntesztek: mindegyik lefut, az eredmény a képernyőre kerül, igazat ad, ha mind sikerült
-bool dev_run_level_tests(void);     // szint-önteszt: sok véletlen szint rögzített magokkal; hosszú, VICE-ben warp módban
-void dev_run_screens(void);         // gyors öntesztek és alattuk menü: a szint-önteszt és a tesztképernyők billentyűre, ESC-re vissza; RETURN-re visszatér
+void run_test_screens(void);        // a tesztképernyők menüje: mindegyik billentyűre indul, ESC-re vissza a menübe; nem tér vissza
 
 // egy önteszt: az i. próbát futtatja, igaz = sikerült
 // int, nem bool: az Oscar64 1.32.273 a függvénymutatón át hívott 8 bites visszatérési értéket rossz helyről olvassa
@@ -35,7 +33,7 @@ int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
 
-// szint-önteszt: billentyűre indul, mert hosszú (VICE-ben warp módban)
+// szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
 #define LEVEL_TEST_DEPTH_COUNT  4               // ennyi mélységen, felváltva (test_level.c)
 

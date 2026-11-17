@@ -1,6 +1,4 @@
-#include "dev.h"
 #include "tests.h"
-#include "test_runner.h"
 
 #include <stddef.h>
 
@@ -228,58 +226,23 @@ static void dev_status_screen(void)
     }
 }
 
-// a szint-önteszt hosszú (normál sebességen percekig), ezért csak a menüből indul
-static void dev_level_test_screen(void)
-{
-    screen_clear();
-    set_screen_cursor(0, SCREEN_HEIGHT - 1);
-    put_text("ESC: stop");
-    set_screen_cursor(0, 0);
-    put_text("Level tests:");
-    move_screen_cursor_to_next_row();
-    if (!dev_run_level_tests()) {
-        put_text("Level test failed");
-    }
-    set_screen_cursor(0, SCREEN_HEIGHT - 1);
-    put_text("ESC: end");
-    clear_to_row_end();
-    wait_for_escape();
-}
-
-// a gyors öntesztek (minden alkalommal újra lefutnak, gyorsak) és a menü;
-// ami nem fér ki, az a képernyő tetején kigörget
-static void draw_tests_and_menu(void)
+static void draw_menu(void)
 {
     screen_clear();
 
     set_screen_cursor(0, 0);
-    put_text("Tests:");
-    move_screen_cursor_to_next_row();
-    if (!dev_run_tests()) {
-        put_failed_test_names("Selftest failed: ");
-    }
-    move_screen_cursor_to_next_row();
-
-    put_text("L: level tests  C: charset  M: message");
-    move_screen_cursor_to_next_row();
-    put_text("S: status");
+    put_text("Test screens:");
     move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
-    put_text("RETURN: start the game");
+    put_text("C: charset  M: message  S: status");
 }
 
-void dev_run_screens(void)
+void run_test_screens(void)
 {
-    uint8_t code = 0;
+    while (true) {
+        draw_menu();
 
-    enable_function_keys();     // a fejlesztői parancsokhoz
-
-    while (code != KEY_RETURN) {
-        draw_tests_and_menu();
-        code = wait_for_key();
-
-        switch (code) {
-            case 'l': dev_level_test_screen(); break;
+        switch (wait_for_key()) {
             case 'c': dev_charset_screen(); break;
             case 'm': dev_message_screen(); break;
             case 's': dev_status_screen(); break;

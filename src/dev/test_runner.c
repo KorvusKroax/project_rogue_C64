@@ -1,7 +1,9 @@
 #include "test_runner.h"
 
 #include "../platform/key.h"
+#include "../platform/platform.h"
 #include "../platform/screen.h"
+#include "../rng.h"
 #include "../state.h"
 
 #define TEST_RESULT_COLUMN  21                  // az eredmény ebben az oszlopban kezdődik
@@ -11,6 +13,26 @@
 
 static const char *failed_test_names[FAILED_TEST_NAMES_MAX];
 static uint8_t failed_test_count;
+
+void init_test_program(void)
+{
+    platform_init();
+    rng_init();
+    game.seed = calculate_seed();
+
+    screen_clear();
+    set_screen_cursor(0, 0);
+}
+
+void end_test_program(void)
+{
+    set_screen_cursor(0, SCREEN_HEIGHT - 1);
+    put_text("Done");
+    clear_to_row_end();
+
+    // megállás: a képernyő és a memória marad, a VICE monitorában megnézhető
+    while (true) {}
+}
 
 bool run_test_table(const struct DevTest *tests, uint8_t test_count)
 {
