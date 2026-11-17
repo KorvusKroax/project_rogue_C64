@@ -175,8 +175,7 @@ do_chase(monster):
   loop:
     if current_room != target_room:                               // más szobában van a cél: a legjobb kijárat felé
        goal = current_room kijáratai (ajtótábla, 1.4.7) közül a dest-hez (dist2) legközelebbi
-       if on_door: current_room = monster.pos folyosórendszere; on_door = false; ismét a ciklus elejére
-       // a B változatban nincs folyosórendszer: folyosón a szörny előre halad (1.4.7)
+       if on_door: current_room = monster.pos folyosórendszere (az ajtó F_PNUM-ja); on_door = false; ismét a ciklus elejére
     else:
        goal = monster.dest
        if monster.type == 'D' and !ISCANC and egy vonalban (vízszintes/függőleges/átló) a játékossal
@@ -205,9 +204,8 @@ chase(monster, goal):  // → (best, megérkezett?); best: ahová lépni fog
      best = monster.pos; best_dist = dist2(monster.pos, goal); ties = 1  // ties: hány egyformán jó mezőt láttunk
      for each cell in monster 3×3 környezete (a 0. és 23. sor kivételével), x szerint, azon belül y szerint:
         if !diag_ok(monster.pos, cell): continue
-        if !step_ok(MAP/SCREEN jel cell-en): continue                    // fal, kő, szörny nem jó
+        if !step_ok(MAP jel cell-en) or F_MONST(cell): continue          // fal, kő, szörny (az álcázott Xeroc is) nem jó
         if cell-en scare monster tekercs: continue
-        if cell-en Xeroc áll: continue
         dist = dist2(cell, goal)
         if dist < best_dist:  best = cell; best_dist = dist; ties = 1
         else if dist == best_dist and rnd(++ties) == 0: best = cell      // egyenletes választás az egyenlők közül

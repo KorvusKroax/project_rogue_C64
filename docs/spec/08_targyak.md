@@ -162,7 +162,7 @@ Két kéz (bal/jobb). Átkozott nem vehető le.
 | 6 | magic missile | 10 | 170 | lövedék, a dobott tárgy mozgásával (falig/szörnyig, J12); ha szörnyet ér és az !save_throw_magic: dobott támadás +100 találattal (gyakorlatilag mindig talál), sebzés 1d4 + 1 + add_dam[str] + kézben lévő fegyver dplus (a fegyver hplus-a is hozzáadódik); kézben tartott fegyver nélkül 1d4 + 1 + add_dam[str] (J9). Egyébként „the missile vanishes with a puff of smoke” (J17) |
 | 7 | haste monster | 10 | 5 | ISRUN; ha ISSLOW: le, különben ISHASTE |
 | 8 | slow monster | 11 | 350 | ISRUN; ha ISHASTE: le, különben ISSLOW |
-| 9 | drain life | 9 | 300 | ha hpt < 2: „you are too weak to use it”, nincs töltésfogyás. Célpontok: szobában a szoba összes szörnye; folyosón az **egész összefüggő folyosórendszer** szörnyei és az ahhoz tartozó ajtókon állók (a B változatban ezt a varázslás pillanatában egy kitöltés adja, [1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); ajtón állva a szoba és a folyosó is. Ha nincs célpont: „you have a tingling feeling” (a töltés fogy). Ha van: `hpt /= 2`; minden célpont `hpt / n`-t veszít (a *maradék* hp-ból számolva), aki túléli, runto |
+| 9 | drain life | 9 | 300 | ha hpt < 2: „you are too weak to use it”, nincs töltésfogyás. Célpontok: szobában a szoba összes szörnye; folyosón az **egész összefüggő folyosórendszer** szörnyei és az ahhoz tartozó ajtókon állók ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); ajtón állva a szoba és a folyosó is. Ha nincs célpont: „you have a tingling feeling” (a töltés fogy). Ha van: `hpt /= 2`; minden célpont `hpt / n`-t veszít (a *maradék* hp-ból számolva), aki túléli, runto |
 | 10 | nothing | 1 | 5 | – |
 | 11 | teleport away | 6 | 340 | első szörny: find_floor(null, monster), de nem a játékos mezője; ISRUN, dest = játékos |
 | 12 | teleport to | 6 | 50 | első szörny: a játékos melletti mezőre a lövés irányában (ez mindig szabad, mert a sugár azon át haladt, vagy maga a szörny áll ott); ISRUN, dest = játékos |
@@ -253,7 +253,7 @@ pick_up(item):
   minden szörny, amelyik erre a tárgyra tartott: dest = player
   if AMULET: has_amulet = true
 ```
-A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja, és a kijáratok és folyosók mindkét változatában ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)) működik. Ha a csomag tele van, a tárgy és a jele a helyén marad.
+A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
 
 Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 

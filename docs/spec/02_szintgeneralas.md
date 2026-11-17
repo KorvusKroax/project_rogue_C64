@@ -8,6 +8,7 @@ new_level():
   clear MAP, SCREEN, monsters (és csomagjaik), floor items  // a táblák helyei felszabadulnak (1.4.1)
   do_rooms()                    // 2.2–2.5: szobák
   connect_rooms()               // 2.4, 2.6: összekötés és folyosók; minden folyosó-mező látható
+  assign_passage_numbers()      // 2.4: a folyosórendszerek sorszáma (F_PNUM)
   place_stairs()                // 2.10; seenstairs = false; a szobák még üresek
   choose_player_position()      // 2.11; a szobákban még csak a lépcső van
   hide_passages()               // 2.6: titkos folyosó-mezők, a játékos mezője nélkül
@@ -166,7 +167,27 @@ A kiinduló szoba addig marad ugyanaz, amíg van fán kívüli szomszédja; csak
 
 **Eltérés az eredetitől (dobássorrend):** az eredeti a `rnd(++candidates) == 0` mintával választ, ez minden jelöltnél dob (az első jelöltet 1/1, a másodikat 1/2, a harmadikat 1/3 eséllyel veszi át). A C64-es változat, mint a labirintus (2.5), előbb összegyűjti a jelölteket, aztán egyetlen `rnd(count)`-tal választ, egy jelöltnél nem dob. Az esélyek ugyanazok, a szintek mások.
 
-Az eredeti a generálás végén a `passnum`-mal megszámozza a folyosóhálózatokat. Ez csak az A változatban kell ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörnymozgással együtt dől el, és akkor kerül ide.
+Egy szinten legfeljebb MAX_CORRIDORS folyosó van: a szomszédos szektorpárok száma (`2 × SECTOR_GRID_SIZE × (SECTOR_GRID_SIZE − 1)`) és a `ROOM_COUNT − 1 + MAX_EXTRA_CORRIDORS` közül a kisebb, alapértékekkel mindkettő 12. Ebből számolódik az ajtótábla mérete és a folyosórendszerek legnagyobb száma ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
+
+**Folyosórendszerek számozása** (a folyosók után; a titkos ajtó és a titkos folyosó-mező is számozódik):
+```
+assign_passage_numbers():  // eredetileg passnum
+  passage_number = 0
+  for each szoba (index szerint), for each kijárata (az ajtótábla sorrendjében):
+    if F_PNUM(kijárat) == 0:
+       passage_number++
+       fill(kijárat)
+
+fill(mező):  // a mezőből ortogonálisan terjed
+  if a mező a térképen kívül van, vagy F_PNUM(mező) != 0: return
+  if a mező ajtó (a titkos is): F_PNUM = passage_number; az ajtótáblában a bejegyzésének passage = passage_number
+  else if F_PASS(mező) (folyosó, labirintus, a titkos folyosó-mező is): F_PNUM = passage_number
+  else: return
+  fill a négy ortogonális szomszédra
+```
+A kitöltés nem lehet rekurzív, mert a 6502 hardveres verme 256 bájtos; az eredmény ugyanaz, mint a rekurzív bejárásé. A labirintus kijárata folyosó-mező, ezért a bejegyzésének `passage` mezője üres marad ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
+
+**Eltérés az eredetitől:** az eredeti a folyosórendszer kijáratait a bejárás sorrendjében gyűjtötte, a C64-es változatban a sorrendjük az ajtótábla sorrendje. Ha két kijárat egyforma távolságra van a céltól, a szörny a másikat választhatja.
 
 Átlós lépés ajtóra vagy ajtóról külön tiltás nélkül is lehetetlen: az ajtó két oldalán fal áll, és az átlós lépéshez mindkét ortogonális szomszédnak járhatónak kell lennie.
 

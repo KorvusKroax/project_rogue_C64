@@ -14,7 +14,7 @@ leave_room(pos):  // szobából ajtón át folyosóra lépéskor
   floor_char = PHANTOM ? PASSAGE : (!DARK or ISBLIND) ? FLOOR : ' '  // amivé a szörnyek helye válik
   a szoba SCREEN-jén: sötét szobában a FLOOR jelek ' '-re törlődnek;
   a szörnyek jele helyére floor_char (ajtón DOOR) kerül – SEEMONST alatt inverzen maradnak
-  player.room = a folyosórendszer (a B változatban: „folyosón”, 1.4.7); door_open(régi szoba)
+  player.room = a folyosórendszer (1.4.7); door_open(régi szoba)
 
 look(wakeup):  // minden akció előtt
   ha elmozdult: erase_lamp(régi pozíció, régi szoba)   // új szinten és betöltés után a régi = a játékosé (J20)
@@ -48,7 +48,7 @@ floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport
   if ch == FLOOR and PHANTOM(player.room): ch = PASSAGE
   return ch
 ```
-- **Folyosón:** a folyosórendszer az A változatban PHANTOM és DARK szoba ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); a B változatban a „folyosón” állapot ugyanígy számít a fenti vizsgálatokban (PHANTOM, DARK).
+- **Folyosón és labirintusban:** a folyosórendszer PHANTOM és DARK szobának számít a fenti vizsgálatokban ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)); a labirintus a folyosórendszer része, ezért ott is sötét van.
 - **Lámpafény:** sötét szobában a játékos körüli 3×3 padlója mindig látszik, és lépéskor mögötte törlődik (`erase_lamp`).
 
   > **C64-javítás (J20):** új szinten és betöltés után a `look` előző pozíciója és szobája a játékosé, így az első `look` nem fut `erase_lamp`-ra. *Eredetileg* csak a játék indulásakor állítódtak be: új szinten az első `look` a régi szint pozíciója körül futtatta az `erase_lamp`-ot, a régi szoba sorszámával, amely már az új szint ugyanilyen sorszámú szobáját jelentette. Ha az sötét volt, a frissen kirajzolt világos kezdőszoba padlójába lyukakat törölhetett.

@@ -118,7 +118,7 @@ move(dir):
      draw_tile(player.pos, floor_at())                               // 3.1
      if target DOOR and a régi mező F_PASS: enter_room(target)       // folyosóról ajtón át be (3.1, 6.4)
      else if target F_PASS and a régi mező DOOR: leave_room(target)  // ajtóról folyosóra ki (3.1, 6.4)
-     else if target F_PASS: player.room = room(target)               // folyosón belül, labirintusba be vagy ki
+     else if target F_PASS: player.room = room(target)               // folyosón és labirintusban: a folyosórendszer
      player.pos = target; follow_view_window() (3.5)
      if TRAP: trigger (9)
      if item and not 'm' and not ISLEVIT: pick_up
@@ -126,7 +126,7 @@ move(dir):
 ```
 A zavarodott véletlen lépés soha nem támad szörnyre (a szörny jele nem járható), és Scare monster tekercsre sem lép. A „pálya széle” a logikai 80×22-es térkép széle, nem a nézőablaké.
 
-A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ott ugyanazt adta, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki. A B változatban ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)) a labirintus szoba, ezért a labirintusba lépés és az onnan kilépés csak a célmezőből számolva helyes.
+A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ugyanazt adja, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
 
 **Futás:** a futás ugyanazt a lépést ismétli minden akcióban, amíg valami le nem állítja. A SHIFT vagy CTRL + irány leütése maga nem visz időt, a futás minden lépése egy akció; ha már az első lépés falba ütközik, a futás időt sem visz. Futás közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak, és a futás után hajtódnak végre.
 
@@ -252,7 +252,7 @@ restore_game():   // címképernyő, R
   ha hpt <= 0: "\"He's dead, Jim\"", vissza a címképernyőre
   center_view_window(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik
 ```
-- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek, a szobák, a folyosórendszerek (csak az A változatban) és az ajtótábla ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
+- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek, a szobák, a folyosórendszerek és az ajtótábla ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
 - A bájtok XOR-ral el vannak rejtve (egyszerű elrejtés, nem biztonsági titkosítás), [10.7](10_platform.md#107-lemezkezelés).
 - A betöltés után a fájl törlődik, így ugyanonnan nem lehet újrakezdeni (a lemez másolásától ez nem véd).
 

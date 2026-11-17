@@ -18,8 +18,7 @@ Room {
 }
 // összekötéshez (csak generálás közben): conn[9][9] szomszédsági tábla, isconn[9][9], ingraph[9]
 // folyosórendszerek: passages[] – minden összefüggő folyosóhálózat külön "szobaként" szerepel
-//   (flags = PHANTOM|DARK), ez kell a drain life-hoz és a szörnyek útkereséséhez; legfeljebb MAX_PASSAGES
-//   – csak az A változatban, a B változatban nincs ilyen (1.4.7)
+//   (flags = PHANTOM|DARK), ez kell a drain life-hoz és a szörnyek útkereséséhez; legfeljebb MAX_PASSAGES (1.4.7)
 ```
 
 ### 1.1.2 Creature (játékos és szörny közös rekord)
@@ -33,7 +32,7 @@ Creature {
   hpt       // aktuális életerő
   maxhp     // maximális életerő
   pos       // pozíció a térképen
-  room      // a szoba vagy folyosórendszer, amelyben áll (1.1.1); a B változatban a szoba vagy „folyosón” (1.4.7)
+  room      // a szoba vagy folyosórendszer, amelyben áll (1.1.1, 1.4.7)
   flags     // állapotflagek (1.2.1 játékos, 1.2.2 szörny)
   pack      // list<Item>: játékosnál a csomag, szörnynél a nála lévő tárgyak
   // csak szörny:
@@ -108,7 +107,7 @@ GameState {
   names[type][which]     // azonosítatlan nevek ebben a játékban: színek, kövek, anyagok (8.8)
   scroll_title_seed      // ebből állnak elő a tekercsfeliratok minden kiíráskor; a feliratok nem tárolódnak (8.8)
   stick_is_staff[which]  // az adott pálcatípus ebben a játékban bot (staff) vagy pálca (wand) (8.8)
-  rooms[9], passages[]   // a 9 szoba és a folyosórendszerek (1.1.1; passages[] csak az A változatban, 1.4.7)
+  rooms[9], passages[]   // a 9 szoba és a folyosórendszerek (1.1.1, 1.4.7)
   exits                  // a közös ajtótábla (1.4.7)
   monsters               // a szinten lévő szörnyek listája
   floor_items            // a padlón lévő tárgyak listája
@@ -181,7 +180,7 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 | F_PASS | folyosó vagy labirintus mező |
 | F_SEEN | a játékos már látta a mezőt |
 | F_REAL | nem rejtett („amit látsz, az van ott”); ha hiányzik, a mező rejtett (lásd lent) |
-| F_PNUM | a folyosórendszer sorszáma (alsó 4 bit), folyosó-mezőn; a B változatban nincs használatban, csak a drain life kitöltése jelöl vele ideiglenesen ([1.4.7](#147-kijáratok-és-folyosók)) |
+| F_PNUM | a folyosórendszer sorszáma (alsó 4 bit, 1-től), folyosó-, labirintus- és ajtómezőn ([1.4.7](#147-kijáratok-és-folyosók)) |
 | F_TMASK | a csapda típusa (alsó 3 bit), csapda-mezőn ([9.1](09_csapdak.md#91-rálépés)) |
 | F_MONST | a mezőn szörny áll; hogy melyik, azt a szörnytábla adja meg ([1.4.5](#145-térképrétegek)) |
 
@@ -256,8 +255,8 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 18 bájt ([1.4.8](#148-szörnyrekord)) |
 | tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető |
 | nevek (`guess`, `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusonkénti `guess` és a tárgy `label` mezője 1 bájtos index ide (0 = nincs) |
-| szobák | 9 + MAX_PASSAGES (13) | a folyosórendszerek csak az A változatban ([1.4.7](#147-kijáratok-és-folyosók)) |
-| kijáratok | 26 | közös ajtótábla a szint összes kijáratáról ([1.4.7](#147-kijáratok-és-folyosók)); nem telhet be |
+| szobák | 9 + MAX_PASSAGES (12) | a szobák és a folyosórendszerek ([1.4.7](#147-kijáratok-és-folyosók)) |
+| kijáratok | MAX_EXITS = 2 × MAX_CORRIDORS = 24 | közös ajtótábla a szint összes kijáratáról ([1.4.7](#147-kijáratok-és-folyosók)); nem telhet be |
 
 **Betelt tábla:**
 - *Szörny:* ha nincs szabad hely, az új szörny nem jön létre. A vándorló szörny démon ilyenkor úgy viselkedik, mintha létrehozta volna (az időzítő újraindul); a create monster tekercs „you hear a faint cry of anguish in the distance”; a kincses szoba a további szörnyeket kihagyja. A polymorph a meglévő rekordot használja, nem foglal újat.
@@ -328,35 +327,17 @@ A logikai Item ([1.1.3](#113-item)) mezői közül csak az tárolódik, ami tár
 Nem tárolódik: a `launch`, a `damage`, a `hurldmg`, valamint az ISMISL és az ISMANY flag, mert ezek a típusból adódnak.
 
 ### 1.4.7 Kijáratok és folyosók
-Két változat van, a szörnymozgás megírásakor döntünk, melyik marad.
-
-**Mindkettőben közös: ajtótábla.** A szobánkénti fix kijáratlisták helyett egyetlen tábla van a szint összes kijáratáról.
+**Ajtótábla.** A szobánkénti fix kijáratlisták helyett egyetlen tábla van a szint összes kijáratáról.
 - Minden folyosóvég egy bejegyzés, amikor a `door()` lefut ([2.6](02_szintgeneralas.md#26-folyosók)). Labirintusnál is, ahol a kijárat folyosómező, nem ajtó. A fantom szoba végén nincs bejegyzés.
-- Egy szinten legfeljebb 13 folyosó van (8 a feszítőfában és legfeljebb 5 extra, [2.4](02_szintgeneralas.md#24-összekötés)), így legfeljebb 26 bejegyzés.
+- Egy szinten legfeljebb MAX_CORRIDORS folyosó van: a szomszédos szektorpárok száma (`2 × SECTOR_GRID_SIZE × (SECTOR_GRID_SIZE − 1)`) és a feszítőfa meg az extra folyosók száma (`ROOM_COUNT − 1 + MAX_EXTRA_CORRIDORS`, [2.4](02_szintgeneralas.md#24-összekötés)) közül a kisebb, így legfeljebb MAX_EXITS = 2 × MAX_CORRIDORS bejegyzés. Alapértékekkel 12 és 24.
 - A sorrend a felvétel sorrendje. Ha két kijárat egyforma távolságra van a céltól, az első nyer.
 - Egy szoba kijáratai azok a bejegyzések, amelyeknek a `room` mezője ez a szoba.
 
-**A változat: folyosórendszerekkel (az eredeti szabály)**
-- A generálás végén a `passnum` megszámozza az összefüggő folyosóhálózatokat (F_PNUM). Minden hálózat egy „szoba” rekord a `passages[]` táblában, PHANTOM és DARK flaggel, legfeljebb MAX_PASSAGES = 13.
-- Bejegyzés: `position` (2 bájt), `room` (1), `passage` (1), azaz a hálózat, amelyhez a kijárat csatlakozik. Egy hálózat kijáratai azok a bejegyzések, amelyeknek a `passage` mezője ez a hálózat.
+**Folyosórendszerek**
+- A generálás végén az `assign_passage_numbers` (eredetileg `passnum`) megszámozza az összefüggő folyosóhálózatokat, a labirintusokkal együtt (F_PNUM, 1-től; [2.4](02_szintgeneralas.md#24-összekötés)). Minden hálózat egy „szoba” rekord a `passages[]` táblában, PHANTOM és DARK flaggel. Legfeljebb MAX_PASSAGES = MAX_CORRIDORS van, mert mindegyikben van legalább egy folyosó. Fordítási feltétel: a MAX_PASSAGES elfér az F_PNUM 4 bitjén (≤ 15).
+- Bejegyzés: `position` (2 bájt), `room` (1), `passage` (1), azaz a hálózat, amelyhez az ajtó csatlakozik. A labirintus kijáratánál a `passage` üres (0): a kijárat maga is a hálózat része, nem a hálózat kijárata. Egy hálózat kijáratai azok a bejegyzések, amelyeknek a `passage` mezője ez a hálózat.
 - A szörnymozgás ([6.6](06_szornyek.md#66-mozgás)), a sötétség ([3.1](03_latoter_es_megjelenites.md#31-felderítés)) és a drain life ([8.7](08_targyak.md#87-pálcákbotok-z)) úgy működik, ahogy ott le van írva.
-- Méret: 22 rekord × 9 bájt + 26 × 4 bájt = **302 bájt**.
-
-**B változat: folyosórendszerek nélkül**
-- Nincs `passages[]` és nincs `passnum`. Folyosómezőn az F_PNUM bitjei nincsenek használatban.
-- Bejegyzés: `position` (2 bájt) és `room` (1).
-- A lény `room` mezője a szoba indexe, vagy „folyosón”. Folyosón az áll, aki F_PASS mezőn van, és az nem labirintus.
-- **A szörny mozgása folyosón:**
-  - *Ha a cél a játékos, és ő is folyosón áll:* a szokásos `chase` a játékos felé, visszafordulni is szabad. Ha a játékos egy másik folyosón van, a szörny beragadhat, ez belefér.
-  - *Különben előre halad.* Jelöltek a szomszédos folyosó- és ajtómezők, amelyek a `diag_ok` és a `step_ok` szerint léphetők, kivéve azt, amelyről a szörny most jött. Ha több jelölt van (elágazás, érintkező folyosók), a célhoz `dist2` szerint legközelebbit választja; egyenlőségnél egyenletesen, `rnd(++ties)`. Ha egy jelölt sem léphető, például mert szörny áll ott, helyben marad.
-  - *Ha nincs eltárolt irány* (folyosón született, teleportált), minden szomszéd jelölt.
-  - *Ajtóra érve* belép a szobába, onnan a szobaszabály érvényes: a célhoz legközelebbi kijárat.
-  - Ehhez szörnyenként el kell tárolni az utolsó lépés irányát. Ez 3 bit, ha elfér a szörny flagjei között, különben 1 bájt.
-- **Labirintusban** a szobaszabály érvényes, a labirintus kijárataival. Ha a szörny beragad, az belefér.
-- **Sötétség:** folyosón a játékos csak a 3×3 környezetét látja, ahogy most is. Ehhez elég a „folyosón” állapot. A labirintus szoba, de DARK flag nélkül jön létre (2.2), ezért a láthatóságnál sötétnek kell számítani, mint a folyosót; az A változatban ez magától adódik, mert ott a labirintus a folyosóhálózat része.
-- **Drain life folyosón:** a varázslás pillanatában egy kitöltés a játékos mezőjéről az összefüggő F_PASS mezőkön, a labirintussal együtt. A bejárt mezők jelölésére a folyosómezők szabad F_PNUM bitjei szolgálnak, a végén törlődnek. A célpontok: a bejárt mezőkön állók és a szomszédos ajtókon állók. Ez ugyanaz a kör, mint az A változatban.
-- Az eredetitől ebben tér el: folyosón a szörnyek akkor sem ragadnak be, ha a hálózat elágazik, vagy kerülővel vezet. A játék emiatt kicsit nehezebb lehet. Ha ez a változat marad, C64-eltérésként felkerül az eltérések jegyzékébe ([0.3](00_attekintes.md#03-eltérések-és-javítások-jegyzéke)).
-- Méret: 9 rekord × 9 bájt + 26 × 3 bájt = **159 bájt**, szörnyenként 1 bájt iránnyal **199 bájt**.
+- Méret: (9 + 12) rekord × 9 bájt + 24 × 4 bájt = **285 bájt**.
 
 ### 1.4.8 Szörnyrekord
 A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) szörnyre vonatkozó mezői közül csak az tárolódik, ami szörnyenként eltérhet. A játékos rekordja külön van, mert a mezők szélessége (pl. az `exp`: a játékosé 32, a szörnyé 16 bit) és köre eltér. Egy szörnyrekord 18 bájt:
@@ -364,7 +345,7 @@ A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord))
 | mező | bájt | tartalom |
 |---|---|---|
 | `x`, `y` | 2 | pozíció |
-| `room` | 1 | a szoba indexe, vagy „folyosón” |
+| `room` | 1 | a szoba vagy a folyosórendszer ([1.4.7](#147-kijáratok-és-folyosók)) |
 | `type` | 1 | a típus betűje, `'A'..'Z'` |
 | `lvl` | 1 | |
 | `arm` | 1 | előjeles |
@@ -376,4 +357,4 @@ A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord))
 | `dest` | 1 | a padlón fekvő céltárgy indexe; 0 = a játékos |
 | `pack` | 1 | a szörny tárgylistájának eleje (0 = nincs) |
 
-Nem tárolódik: az `str` (mindig 10), a `dmg`, a név és a carry érték, mert ezek a típustáblából jönnek ([6.1](06_szornyek.md#61-típusok)). A B változatban ([1.4.7](#147-kijáratok-és-folyosók)) a folyosón haladás iránya még 1 bájt.
+Nem tárolódik: az `str` (mindig 10), a `dmg`, a név és a carry érték, mert ezek a típustáblából jönnek ([6.1](06_szornyek.md#61-típusok)).
