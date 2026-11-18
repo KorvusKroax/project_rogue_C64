@@ -186,6 +186,57 @@ static bool is_exit_chase_valid(void)
     return is_monster_at(zombie, 3, 3);
 }
 
+#define BAT_TEST_SEED       2468
+#define BAT_TEST_TRIALS     100
+// a (20, 9) mezőről a (11, 9) mezőn álló játékos felé az egyenes lépés a (19, 9): a lépések fele ez, a véletlen fél 1/9-e is,
+// így 5/9 eséllyel; a véletlen fél 5/9-e a többi járható szomszéd (két-két padló fölötte és alatta, és a jobb ajtó), így 5/18;
+// a többi esetben fal vagy a saját mező, ott helyben marad
+#define BAT_TEST_STRAIGHT_EXPECTED  (BAT_TEST_TRIALS * 5 / 9)
+#define BAT_TEST_SIDEWAYS_EXPECTED  (BAT_TEST_TRIALS * 5 / 18)
+#define BAT_TEST_TOLERANCE          (BAT_TEST_TRIALS * 15 / 100)
+
+#if BAT_TEST_TRIALS > 255
+    #error "a BAT_TEST_TRIALS számlálója 8 bites"
+#endif
+
+// a szörny vissza a megadott mezőre, a TILE_MONSTER bittel együtt
+static void put_monster_back(struct Monster *monster, uint8_t offset_x, uint8_t offset_y)
+{
+    remove_map_flags(monster->x, monster->y, TILE_MONSTER);
+    monster->x = CHASE_BASE_X + offset_x;
+    monster->y = CHASE_BASE_Y + offset_y;
+    monster->room = get_room_at(monster->x, monster->y);
+    add_map_flags(monster->x, monster->y, TILE_MONSTER);
+}
+
+// a denevér kaotikusan mozog: a lépései fele véletlen irányba megy; rögzített maggal, mindig ugyanarról a mezőről, repülés nélkül
+static bool is_bat_movement_chaotic(void)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    struct Monster *bat = put_chase_monster('B', 20, 9);
+    bat->flags &= ~MONSTER_FLYING;
+    game.seed = BAT_TEST_SEED;
+
+    uint8_t straight_count = 0;
+    uint8_t sideways_count = 0;
+    for (uint8_t trial = 0; trial < BAT_TEST_TRIALS; trial++) {
+        run_monster_turns(1);
+        if (is_monster_at(bat, 19, 9)) {
+            straight_count++;
+        } else if (!is_monster_at(bat, 20, 9)) {
+            sideways_count++;
+        }
+        put_monster_back(bat, 20, 9);
+    }
+
+    bool is_straight_count_valid = straight_count >= BAT_TEST_STRAIGHT_EXPECTED - BAT_TEST_TOLERANCE
+                                && straight_count <= BAT_TEST_STRAIGHT_EXPECTED + BAT_TEST_TOLERANCE;
+    bool is_sideways_count_valid = sideways_count >= BAT_TEST_SIDEWAYS_EXPECTED - BAT_TEST_TOLERANCE
+                                && sideways_count <= BAT_TEST_SIDEWAYS_EXPECTED + BAT_TEST_TOLERANCE;
+    return is_straight_count_valid && is_sideways_count_valid;
+}
+
 int test_monster_chase(uint16_t i)
 {
     struct Room saved_rooms[ROOM_TABLE_SIZE];
@@ -194,7 +245,8 @@ int test_monster_chase(uint16_t i)
     bool ok =
         is_same_room_chase_valid() &&
         are_monster_speeds_valid() &&
-        is_exit_chase_valid();
+        is_exit_chase_valid() &&
+        is_bat_movement_chaotic();
 
     memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
     game.exit_count = 0;
