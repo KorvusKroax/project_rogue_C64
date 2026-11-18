@@ -305,7 +305,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 |---|---|
 | J1 éhség és ISRUN | [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
 | J2 Wraith | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) |
-| J3 `find_dest` | [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23), [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |
+| J3 `find_dest` | [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |
 | J4 flytrap | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) |
 | J5 see invisible | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31), [M08-01](https://github.com/KorvusKroax/project_rogue_C64/issues/34) |
 | J6 sárkányláng | [M08-03](https://github.com/KorvusKroax/project_rogue_C64/issues/36) |
@@ -315,7 +315,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J10 csapda és páncél | [M09-01](https://github.com/KorvusKroax/project_rogue_C64/issues/37) |
 | J11 státuszsor Arm | [M02-05](https://github.com/KorvusKroax/project_rogue_C64/issues/13), [M06-04](https://github.com/KorvusKroax/project_rogue_C64/issues/29), [M08-01](https://github.com/KorvusKroax/project_rogue_C64/issues/34) |
 | J12 Xeroc és repülés | [M08-02](https://github.com/KorvusKroax/project_rogue_C64/issues/35), [M08-03](https://github.com/KorvusKroax/project_rogue_C64/issues/36) |
-| J13 Medusa | [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23) |
+| J13 Medusa | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31) |
 | J14 haste self | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31) |
 | J15 `f` átlósan | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |
 | J16 lépcső csapdán | [M03-03](https://github.com/KorvusKroax/project_rogue_C64/issues/16), [M09-01](https://github.com/KorvusKroax/project_rogue_C64/issues/37) |
