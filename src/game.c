@@ -320,6 +320,7 @@ static void play_turn(void)
 
     // AFTER fázis
     move_monsters();
+    // ide jön: az éhség; az állapotváltása (Hungry, Weak, Faint) a futást, az ismétlést és az f-harcot is megszakítja
 }
 
 void run_game(void)
