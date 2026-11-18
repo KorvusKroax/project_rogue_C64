@@ -171,3 +171,21 @@ uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y)
 
     return create_monster(choose_monster_type(wandering), x, y);
 }
+
+void wake_monster(struct Monster *monster)
+{
+    // ide jön: lopakodás-gyűrűvel (R_STEALTH) vagy lebegve (ISLEVIT) az aljas szörny nem ébred
+    if (!(monster->flags & (MONSTER_RUNNING | MONSTER_HELD)) && (monster->flags & MONSTER_MEAN) && rnd(3) != 0) {
+        monster->destination_item = DESTINATION_PLAYER;
+        monster->flags |= MONSTER_RUNNING;
+    }
+
+    // ide jön: a már ébren lévő Medusa pillantása (ISFOUND)
+
+    // a kapzsi szörnyet nem véletlen ébreszti, és a fogva tartás (MONSTER_HELD) sem tartja vissza
+    if ((monster->flags & MONSTER_GREEDY) && !(monster->flags & MONSTER_RUNNING)) {
+        monster->flags |= MONSTER_RUNNING;
+        // ide jön: ha a játékos szobájában arany van, az a célpont
+        monster->destination_item = DESTINATION_PLAYER;
+    }
+}

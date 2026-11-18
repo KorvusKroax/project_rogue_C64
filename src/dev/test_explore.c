@@ -376,6 +376,103 @@ int test_monster_visibility(uint16_t i)
     return ok;
 }
 
+#define WAKE_TEST_SEED       12345
+#define WAKE_TEST_ROUNDS     150                // ennyiszer lép be a játékos az aljas szörny szobájába
+#define WAKE_TEST_EXPECTED   (WAKE_TEST_ROUNDS * 2 / 3)
+#define WAKE_TEST_TOLERANCE  (WAKE_TEST_ROUNDS / 10)
+
+#if WAKE_TEST_ROUNDS > 255
+    #error "a WAKE_TEST_ROUNDS számlálója 8 bites"
+#endif
+
+// az aljas szörny (hobgoblin) a szobájába lépve kb. 2/3 eséllyel ébred, rögzített maggal; sötét szobában is
+static bool is_mean_monster_waking_valid(void)
+{
+    put_see_test_room(ROOM_DARK);
+    struct Monster *hobgoblin = put_see_test_monster('H', 6, 2);
+    game.seed = WAKE_TEST_SEED;
+
+    uint8_t woken_count = 0;
+    for (uint8_t round = 0; round < WAKE_TEST_ROUNDS; round++) {
+        hobgoblin->flags &= ~MONSTER_RUNNING;
+        enter_room(game.player.x, game.player.y);
+        if (hobgoblin->flags & MONSTER_RUNNING) {
+            woken_count++;
+        }
+    }
+    return woken_count >= WAKE_TEST_EXPECTED - WAKE_TEST_TOLERANCE && woken_count <= WAKE_TEST_EXPECTED + WAKE_TEST_TOLERANCE;
+}
+
+// a nem aljas, nem kapzsi szörny (kentaur), és a fogva tartott aljas sem ébred, sem belépéskor, sem a játékos mellett
+static bool is_sleeping_monster_waking_valid(void)
+{
+    put_see_test_room(ROOM_DARK);
+    struct Monster *centaur = put_see_test_monster('C', 3, 2);
+    struct Monster *hobgoblin = put_see_test_monster('H', 2, 3);
+    hobgoblin->flags |= MONSTER_HELD;
+
+    for (uint8_t round = 0; round < WAKE_TEST_ROUNDS; round++) {
+        enter_room(game.player.x, game.player.y);
+        look_around();
+    }
+    return !(centaur->flags & MONSTER_RUNNING) && !(hobgoblin->flags & MONSTER_RUNNING);
+}
+
+// a kapzsi szörny (ork) mindig ébred: belépéskor, kilépéskor és a játékos mellett, a célpontja a játékos;
+// a look_around csak a szomszédosat ébreszti
+static bool is_greedy_monster_waking_valid(void)
+{
+    put_see_test_room(0);
+    struct Monster *orc = put_see_test_monster('O', 6, 2);
+    orc->destination_item = 1;
+
+    enter_room(game.player.x, game.player.y);
+    if (!(orc->flags & MONSTER_RUNNING) || orc->destination_item != DESTINATION_PLAYER) return false;
+
+    orc->flags &= ~MONSTER_RUNNING;
+    leave_room(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
+    if (!(orc->flags & MONSTER_RUNNING)) return false;
+
+    orc->flags &= ~MONSTER_RUNNING;
+    game.player.room = 0;
+    struct Monster *neighbor_orc = put_see_test_monster('O', 3, 3);
+    look_around();
+    return !(orc->flags & MONSTER_RUNNING) && (neighbor_orc->flags & MONSTER_RUNNING);
+}
+
+// folyosón (új szint kezdetén) az enter_room a folyosórendszer szörnyeit nem ébreszti
+static bool is_passage_entry_waking_valid(void)
+{
+    put_see_test_room(0);
+    uint8_t passage_x = BASE_X - 2;
+    uint8_t passage_y = BASE_Y + SEE_DOOR_Y;
+    set_map_character(passage_x, passage_y, CHAR_PASSAGE);
+    add_map_flags(passage_x, passage_y, TILE_PASSAGE | TEST_PASSAGE_NUMBER);
+    struct Monster *orc = get_monster(create_monster('O', passage_x, passage_y));
+
+    game.player.x = BASE_X - 1;
+    enter_room(game.player.x, game.player.y);
+    return !(orc->flags & MONSTER_RUNNING);
+}
+
+int test_monster_waking(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_mean_monster_waking_valid() &&
+        is_sleeping_monster_waking_valid() &&
+        is_greedy_monster_waking_valid() &&
+        is_passage_entry_waking_valid();
+
+    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
+    clear_monsters();
+    clear_map();
+    clear_seen_map();
+    return ok;
+}
+
 // a rejtett mező a próbálkozások során előkerül; legfeljebb ennyi próbát vár (az esély 1/5 vagy 1/3)
 #define SEARCH_TRIES_MAX  200
 

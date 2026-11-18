@@ -32,6 +32,7 @@ int test_monster_order(uint16_t i);
 int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
+int test_monster_waking(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

@@ -52,10 +52,23 @@ uint8_t get_visible_character(uint8_t x, uint8_t y)
     return get_map_character(x, y);
 }
 
+// a szoba minden szörnye felébredhet, világos és sötét szobában is; fantom szobában (folyosórendszerben) egyik sem
+static void wake_room_monsters(uint8_t room_index)
+{
+    if (game.rooms[room_index].flags & ROOM_PHANTOM) return;
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        struct Monster *monster = get_monster(index);
+        if (monster->room == room_index) {
+            wake_monster(monster);
+        }
+    }
+}
+
 void enter_room(uint8_t x, uint8_t y)
 {
     game.player.room = get_room_at(x, y);
-    // ide jön: a szoba szörnyeinek ébresztése (door_open)
+    wake_room_monsters(game.player.room);
 
     // ide jön: vakon nem rajzol
     if (!is_room_lit(game.player.room)) return;
@@ -78,7 +91,8 @@ void enter_room(uint8_t x, uint8_t y)
 // a szörny a képernyőn látott betűje alapján tűnik el, így a tárgyjellel álcázott xeroc jele marad
 void leave_room(uint8_t x, uint8_t y)
 {
-    const struct Room *room = &game.rooms[game.player.room];
+    uint8_t left_room_index = game.player.room;
+    const struct Room *room = &game.rooms[left_room_index];
     bool is_dark = (room->flags & ROOM_DARK) != 0;
     // ide jön: vakon a padló marad
     uint8_t floor_character = is_dark ? CHAR_SOLID_ROCK : CHAR_FLOOR;
@@ -101,7 +115,7 @@ void leave_room(uint8_t x, uint8_t y)
         }
     }
 
-    // ide jön: a régi szoba szörnyeinek ébresztése (door_open)
+    wake_room_monsters(left_room_index);
 }
 
 // sötét, nem fantom szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével; folyosón nem
@@ -169,7 +183,10 @@ void look_around(void)
             if (!is_neighbor_visible(player_x, player_y, x, y)) continue;
 
             // ide jön: szörnyészleléssel (SEEMONST) a láthatatlan szörny mezője kimarad, és a futás megáll
-            // ide jön: a szörny ébresztése (wake_monster)
+            uint8_t monster_index = find_monster_at(x, y);
+            if (monster_index != NO_MONSTER) {
+                wake_monster(get_monster(monster_index));
+            }
             // ide jön: szörny nélküli mezőn hallucinálva véletlen tárgyjel (trip_ch)
             draw_tile(x, y, get_visible_character(x, y));
         }
