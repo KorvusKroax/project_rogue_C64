@@ -6,6 +6,8 @@ const char text_no_way_down[] = "I see no way down";
 const char text_no_way_up[] = "I see no way up";
 const char text_way_magically_blocked[] = "your way is magically blocked";
 const char text_no_command_yet[] = "you haven't typed a command yet";
+const char text_which_direction[] = "which direction?";
+const char text_no_monster_there[] = "I see no monster there";
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
 

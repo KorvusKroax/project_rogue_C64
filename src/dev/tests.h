@@ -39,6 +39,10 @@ int test_player_hit_rate(uint16_t i);
 int test_monster_hit_rate(uint16_t i);
 int test_move_attack(uint16_t i);
 int test_monster_attack(uint16_t i);
+int test_fight_diagonal(uint16_t i);
+int test_fight_hit_limit(uint16_t i);
+int test_fight_other_attack(uint16_t i);
+int test_fight_target_moves(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

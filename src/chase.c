@@ -225,12 +225,20 @@ void move_monsters(void)
         struct Monster *monster = get_monster(index);
         if ((monster->flags & (MONSTER_RUNNING | MONSTER_HELD)) != MONSTER_RUNNING) continue;
 
+        bool is_fight_target = (monster->flags & MONSTER_TARGET) != 0;
+        uint8_t old_x = monster->x;
+        uint8_t old_y = monster->y;
+
         // ide jön: ha a szörny meghalt (pl. a játékost megtámadva eltűnt), a következő jön
         take_monster_turn(monster);
         // a repülő a játékostól távol kétszer lép
         if ((monster->flags & MONSTER_FLYING) && !is_beside_player(monster->x, monster->y)) {
             take_monster_turn(monster);
         }
-        // ide jön: ha az f-harc célpontja (MONSTER_TARGET) elmozdult, az f-harc véget ér
+
+        // az f-harc célpontja elmozdult
+        if (is_fight_target && (monster->x != old_x || monster->y != old_y)) {
+            stop_fight();
+        }
     }
 }

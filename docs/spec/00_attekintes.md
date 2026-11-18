@@ -130,3 +130,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J21 | a kanyarkövetés csak a futás első lépése után fordít, így a fal felé indított futás nem szalad vissza | [4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás) |
 | J22 | a véletlenül lépő szörny nem lép az álcázott Xeroc mezőjére | [6.6](06_szornyek.md#66-mozgás) |
 | J23 | az `f`-harc végén a célpont jelölése mindig törlődik | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
+| J24 | a kamikaze csak az adott `F`-harcra szól, a következő `f` nem örökli | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |

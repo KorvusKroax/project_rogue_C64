@@ -1,10 +1,15 @@
 #include "combat.h"
 
+#include "explore.h"
 #include "game.h"
+#include "map.h"
+#include "message.h"
 #include "monsters.h"
+#include "move.h"
 #include "player.h"
 #include "rng.h"
 #include "state.h"
+#include "texts.h"
 
 #if MONSTER_STRENGTH > STRENGTH_MAX
     #error "a szörnyek ereje nagyobb a legnagyobb erőnél"
@@ -19,6 +24,14 @@ const int8_t strength_damage_bonus[STRENGTH_MAX + 1] = {
 };
 
 static const struct DamageSegment unarmed_damage = { UNARMED_DAMAGE_DICE, UNARMED_DAMAGE_SIDES };
+
+// az f-harc állapota: tart-e, merre, kamikaze-e (HP-határ nélkül), és a harc legnagyobb egyszeri sebzése a játékoson;
+// a harc alatt nincs parancsolvasás, így mentés sem, ezért nem a játékállapotban van
+static bool is_fight_active;
+static int8_t fight_step_x;
+static int8_t fight_step_y;
+static bool is_fight_kamikaze;
+static int16_t max_hit_this_fight;
 
 // a támadás szegmensenként dob a találatra, és a találó szegmensek sebzése (a kockák és a sebzésbónusz, legalább 0)
 // levonódik a védő HP-jából; igaz, ha legalább egy szegmens talált (roll_em)
@@ -64,16 +77,77 @@ bool attack_monster(struct Monster *monster)
 bool attack_player(struct Monster *monster)
 {
     stop_running_and_repeating();
-    // ide jön: a regen-számláló nullázása; az f-harc vége, ha nem ez a szörny a célpontja; az álcázott xeroc leleplezése
+    // ide jön: a regen-számláló nullázása
+    if (is_fight_active && !(monster->flags & MONSTER_TARGET)) {
+        stop_fight();
+    }
+    // ide jön: az álcázott xeroc leleplezése
 
     const struct MonsterType *type_data = &monster_types[monster->type - 'A'];
     int16_t hit_bonus = strength_hit_bonus[MONSTER_STRENGTH];
     int16_t damage_bonus = strength_damage_bonus[MONSTER_STRENGTH];
     // ide jön: ha a játékos nincs ébren (alszik, ájult, fagyott), a szörny +4-et kap
 
+    int16_t hit_points_before = game.player.hit_points;
     bool did_hit = roll_attack(monster->experience_level, hit_bonus, damage_bonus, calculate_player_armor(),
                                type_data->damage, type_data->damage_segment_count, &game.player.hit_points);
 
-    // ide jön: a hit/miss üzenet, a játékos halála, a speciális támadás
+    // ide jön: a hit/miss üzenet, a játékos halála
+    if (did_hit && is_fight_active && !is_fight_kamikaze) {
+        int16_t damage = hit_points_before - game.player.hit_points;
+        if (damage > max_hit_this_fight) {
+            max_hit_this_fight = damage;
+        }
+        if (game.player.hit_points <= max_hit_this_fight) {
+            stop_fight();
+        }
+    }
+    // ide jön: a speciális támadás
     return did_hit;
+}
+
+bool start_fight(int8_t step_x, int8_t step_y, bool is_kamikaze)
+{
+    // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+    uint8_t target_x = game.player.x + step_x;
+    uint8_t target_y = game.player.y + step_y;
+    uint8_t monster_index = is_on_map(target_x, target_y) ? find_monster_at(target_x, target_y) : NO_MONSTER;
+
+    // ide jön: szörnyérzékeléssel (SEEMONST) a nem látott szörny is lehet célpont
+    if (monster_index == NO_MONSTER || !is_monster_visible(get_monster(monster_index))) {
+        message(text_no_monster_there);
+        return false;
+    }
+    // szabálytalan átlónál semmi nem történik (J15)
+    if (!is_diagonal_step_allowed(game.player.x, game.player.y, target_x, target_y)) return false;
+
+    get_monster(monster_index)->flags |= MONSTER_TARGET;
+    is_fight_active = true;
+    fight_step_x = step_x;
+    fight_step_y = step_y;
+    is_fight_kamikaze = is_kamikaze;
+    max_hit_this_fight = 0;
+    return take_fight_step();
+}
+
+void stop_fight(void)
+{
+    is_fight_active = false;
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        get_monster(index)->flags &= ~MONSTER_TARGET;
+    }
+}
+
+bool is_fighting(void)
+{
+    return is_fight_active;
+}
+
+bool take_fight_step(void)
+{
+    if (!move_player(fight_step_x, fight_step_y)) {
+        stop_fight();
+        return false;
+    }
+    return true;
 }

@@ -21,4 +21,14 @@ bool attack_monster(struct Monster *monster);
 // a szörny megtámadja a játékost (attack); igaz, ha talált
 bool attack_player(struct Monster *monster);
 
+// az f-harc (f, F) a step_x, step_y irányban álló, látott szörny ellen: az első ütés azonnal, utána minden akcióban újabb,
+// amíg a célpont el nem mozdul, más szörny nem támad, vagy (kamikaze nélkül) a játékos HP-ja a harc legnagyobb egyszeri
+// sebzésére vagy az alá nem esik; igaz, ha időt vitt (nem visz időt: nincs ott látott szörny, vagy szabálytalan az átló, J15)
+bool start_fight(int8_t step_x, int8_t step_y, bool is_kamikaze);
+void stop_fight(void);          // az f-harc vége; a célpont jelölése (MONSTER_TARGET) törlődik (J23)
+bool is_fighting(void);
+
+// az f-harc következő ütése; ha nem sikerül, a harc véget ér; igaz, ha időt vitt
+bool take_fight_step(void);
+
 #endif

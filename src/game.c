@@ -6,6 +6,7 @@
 
 #include "platform/key.h"
 #include "chase.h"
+#include "combat.h"
 #include "explore.h"
 #include "level.h"
 #include "message.h"
@@ -30,6 +31,10 @@ static uint8_t repeat_code;
 
 // az `a` ezt ismétli; 0: még nem volt parancs
 static uint8_t last_code;
+// az előtte beolvasott parancs: ha az utolsó parancs iránykérdése ESC-vel elmarad, ez lesz megint az utolsó
+static uint8_t previous_last_code;
+// az utolsó irányt kérő parancs iránya: az `a` ezt használja, nem kérdez újra
+static uint8_t last_direction_index;
 
 void stop_running_and_repeating(void)
 {
@@ -173,19 +178,65 @@ static uint8_t read_command(void)
     #ifdef DEVMODE
         if (is_function_key(code)) return code;
     #endif
+    previous_last_code = last_code;
     last_code = code;
     return code;
+}
+
+// az irány bekérése: csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad;
+// az irány sorszáma, ESC-re DIRECTION_COUNT
+static uint8_t ask_direction(void)
+{
+    message_prompt(text_which_direction);
+
+    uint8_t direction_index = DIRECTION_COUNT;
+    while (direction_index == DIRECTION_COUNT) {
+        uint8_t code = wait_for_key();
+        if (code == KEY_ESCAPE) break;
+        if (!is_ctrl_letter_key(code)) {
+            direction_index = get_direction_index(code);
+        }
+    }
+    message_clear();
+    return direction_index;
+}
+
+// az irányt kérő parancs iránya: az `a` ismétlésnél a tárolt, különben a bekért; DIRECTION_COUNT, ha a kérdés ESC-vel elmaradt,
+// és ilyenkor az utolsó parancs az előző marad
+static uint8_t get_command_direction(bool is_repeat)
+{
+    if (!is_repeat) {
+        uint8_t direction_index = ask_direction();
+        if (direction_index == DIRECTION_COUNT) {
+            last_code = previous_last_code;
+            return DIRECTION_COUNT;
+        }
+        last_direction_index = direction_index;
+    }
+    // ide jön: zavarodottan 20% eséllyel véletlen irány
+    return last_direction_index;
+}
+
+// f (F: kamikaze) + irány: harc a szörnnyel; igaz, ha időt vitt
+static bool execute_fight_command(uint8_t code, bool is_repeat)
+{
+    uint8_t direction_index = get_command_direction(is_repeat);
+    if (direction_index == DIRECTION_COUNT) return false;
+
+    return start_fight(direction_steps_x[direction_index], direction_steps_y[direction_index], code == 'F');
 }
 
 // a parancs végrehajtása; igaz, ha időt vitt
 static bool execute_command(uint8_t code)
 {
+    bool is_repeat = false;
     if (code == 'a') {
         if (last_code == 0) {
             message(text_no_command_yet);
             return false;
         }
         code = last_code;
+        is_repeat = true;
     }
 
     uint8_t direction_index = get_direction_index(code);
@@ -199,6 +250,9 @@ static bool execute_command(uint8_t code)
         case 's':
             search_around();
             return true;
+        case 'f':
+        case 'F':
+            return execute_fight_command(code, is_repeat);
         case '>':
             go_down_stairs();
             return false;
@@ -240,16 +294,18 @@ static void play_turn(void)
     uint8_t actions = 1;
     while (actions) {
         look_around();
-        // futás és ismétlés közben jump_to_run_end mellett a képernyő csak a végén frissül
+        // futás és ismétlés közben jump_to_run_end mellett a képernyő csak a végén frissül; az f-harc minden köre kirajzolódik
         bool is_repeating = is_running() || repeat_count > 0;
         if (!(is_repeating && (options.flags & OPTION_JUMP_TO_RUN_END))) {
             show_map_changes();
             draw_status();
         }
 
-        // futás és ismétlés közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak
+        // f-harc, futás és ismétlés közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak
         bool took_time;
-        if (is_running()) {
+        if (is_fighting()) {
+            took_time = take_fight_step();
+        } else if (is_running()) {
             took_time = take_run_step();
         } else if (repeat_count > 0) {
             repeat_count--;

@@ -114,7 +114,7 @@ GameState {
   last_command           // az előző parancs, az 'a' ismétléshez (4.2.5)
   count_prefix           // a parancs előtti számprefix (pl. "5s") (4.2.5)
   can_huh                // CANHUH: a következő sikeres ütés összezavarja a szörnyet (8.3)
-  max_hit_this_fight     // az aktuális harc legnagyobb egyszeri sebzése, az 'f' leállásához (7.2)
+  // az 'f'-harc állapota (iránya, kamikaze-e, max_hit_this_fight, 7.2) nincs itt: a harc alatt nincs parancsolvasás, így mentés sem
   view_window_x                 // a nézőablak bal szélének logikai oszlopa, 0..40 (3.5)
   options                // a beállítások (4.2.5); a GameState-en kívül, külön blokkban, mert a képernyőmodul is használja, de a mentésbe bekerül (10.10)
   seed                   // az RN állapota (0.2)

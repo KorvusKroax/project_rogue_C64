@@ -155,7 +155,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | parancs | leírás |
 |---|---|
 | f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
-| SHIFT-f + irány | ugyanez, HP-ellenőrzés nélkül („kamikaze”) |
+| SHIFT-f + irány | ugyanez, HP-ellenőrzés nélkül („kamikaze”); a kamikaze csak erre a harcra szól, minden `f` és `F` újra eldönti (J24) |
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
 
@@ -164,6 +164,8 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 > **C64-javítás (J15):** *eredetileg* a szabálytalan átlós irányba indított `f` nem csinált semmit, de a kör elment.
 
 > **C64-javítás (J23):** az `f`-harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik. *Eredetileg* csak a célpont elmozdulása vagy halála törölte, így a HP-határ miatt leállt harc után a szörny jelölve maradt, és egy későbbi, másik szörny elleni `f`-harcot a támadása nem szakította meg.
+
+> **C64-javítás (J24):** a kamikaze csak az adott harcra szól: minden `f` és `F` újra eldönti. *Eredetileg* a jelzőt (`kamikaze`) csak más szörny támadása vagy a célpont halála törölte, így ha egy `F`-harc a célpont elmozdulása vagy éhség-állapotváltás miatt ért véget, vagy az `F` iránykérdése ESC-vel elmaradt, a következő `f` is kamikaze lett, és nem állt le a HP-határnál.
 
 ### 4.2.3 Tárgyak
 | parancs | leírás |

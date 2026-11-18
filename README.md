@@ -41,14 +41,14 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 
 | név | mit tesztel | szabad hely (2026-11-18) |
 |---|---|---|
-| `combat` | az erő harci táblái; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad | 29 864 bájt |
+| `combat` | az erő harci táblái; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására és a célpont elmozdulásakor | 26 792 bájt |
 | `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 464 bájt |
 | `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 424 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 15 064 bájt |
-| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 25 768 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 14 864 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 25 512 bájt |
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 528 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 23 080, a fejlesztői build (`build.bat dev`) 19 584 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 22 440, a fejlesztői build (`build.bat dev`) 18 968 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -278,7 +278,7 @@ return 0;                           // a BASIC-ben néhány parancs után ?FORMU
 
 ## Dokumentáció
 
-- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E22) és az eredeti hibáinak javításai (J1–J23) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
+- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E22) és az eredeti hibáinak javításai (J1–J24) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
 - [Mérföldkövek](https://github.com/KorvusKroax/project_rogue_C64/milestones) és [issue-k](https://github.com/KorvusKroax/project_rogue_C64/issues) – a megvalósítás mérföldkövenként (M0–M12), issue-nként tartalommal és „Kész, ha” feltételekkel (áttekintés lent).
 
 ## Mérföldkövek és issue-k
@@ -301,7 +301,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | **M11 – Véglegesítés** | [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) szövegek, képernyők · [M11-02](https://github.com/KorvusKroax/project_rogue_C64/issues/46) robot, invariánsok · [M11-03](https://github.com/KorvusKroax/project_rogue_C64/issues/47) végigjátszás · [M11-04](https://github.com/KorvusKroax/project_rogue_C64/issues/48) erőforrások, kiadás |
 | **M12 – Opcionális kiegészítések** | [M12-01](https://github.com/KorvusKroax/project_rogue_C64/issues/49) színek · [M12-02](https://github.com/KorvusKroax/project_rogue_C64/issues/50) hangok · [M12-03](https://github.com/KorvusKroax/project_rogue_C64/issues/51) botkormány · [M12-04](https://github.com/KorvusKroax/project_rogue_C64/issues/52) gyorsabb lemez |
 
-## A javítások (J1–J23) helye
+## A javítások (J1–J24) helye
 | javítás | issue |
 |---|---|
 | J1 éhség és ISRUN | [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
@@ -327,3 +327,4 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J21 a kanyarkövetés az indulásnál | [M04-03](https://github.com/KorvusKroax/project_rogue_C64/issues/20) |
 | J22 véletlen lépés és Xeroc | [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23) |
 | J23 az `f` célpontjának jelölése | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |
+| J24 a kamikaze csak egy harcra szól | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |

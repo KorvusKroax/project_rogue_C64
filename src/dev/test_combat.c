@@ -5,6 +5,7 @@
 
 #include "../chase.h"
 #include "../combat.h"
+#include "../explore.h"
 #include "../map.h"
 #include "../monsters.h"
 #include "../move.h"
@@ -30,8 +31,8 @@ static void put_combat_tile(uint8_t x, uint8_t y)
     add_map_flags(x, y, TILE_PASSAGE | COMBAT_PASSAGE_NUMBER);
 }
 
-// az 1. mélységen a kezdőértékű játékos és mellette egy alvó kestrel; a kestrel rekordja
-static struct Monster *put_combat_scene(void)
+// az 1. mélységen a kezdőértékű játékos a tesztmezőjén, szörnyek nélkül
+static void put_combat_player(void)
 {
     clear_map();
     clear_monsters();
@@ -39,12 +40,23 @@ static struct Monster *put_combat_scene(void)
     init_player();
 
     put_combat_tile(COMBAT_PLAYER_X, COMBAT_PLAYER_Y);
-    put_combat_tile(COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
     game.player.x = COMBAT_PLAYER_X;
     game.player.y = COMBAT_PLAYER_Y;
     game.player.room = get_room_at(COMBAT_PLAYER_X, COMBAT_PLAYER_Y);
+}
 
-    return get_monster(create_monster(COMBAT_TEST_MONSTER, COMBAT_MONSTER_X, COMBAT_MONSTER_Y));
+// alvó szörny az x, y mezőn; a rekordja
+static struct Monster *put_combat_monster(uint8_t type, uint8_t x, uint8_t y)
+{
+    put_combat_tile(x, y);
+    return get_monster(create_monster(type, x, y));
+}
+
+// a kezdőértékű játékos és mellette egy alvó kestrel; a kestrel rekordja
+static struct Monster *put_combat_scene(void)
+{
+    put_combat_player();
+    return put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
 }
 
 static void clear_combat_scene(void)
@@ -225,6 +237,143 @@ int test_monster_attack(uint16_t i)
         monster->x == COMBAT_MONSTER_X &&
         monster->y == COMBAT_MONSTER_Y &&
         game.player.hit_points < MONSTER_ATTACK_TEST_HIT_POINTS;
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define FIGHT_TEST_ROUNDS_MAX  50               // a HP-határ ennyi körön belül leállítja a harcot (rögzített maggal)
+#define FIGHT_TEST_HIT_POINTS  1000             // ennyi HP mellett a HP-határ nem állítja le a harcot, és a célpont sem fogy el
+
+#define FIGHT_STEP_X  (COMBAT_MONSTER_X - COMBAT_PLAYER_X)
+#define FIGHT_STEP_Y  (COMBAT_MONSTER_Y - COMBAT_PLAYER_Y)
+
+static bool has_fight_target(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        if (get_monster(index)->flags & MONSTER_TARGET) return true;
+    }
+    return false;
+}
+
+// szabálytalan átlónál a látott szörny ellen sem indul harc, és nem telik idő (J15)
+int test_fight_diagonal(uint16_t i)
+{
+    put_combat_player();
+    // a sarok egyik mezője járható, így a szörny látszik, a másik kő, így az átló szabálytalan
+    put_combat_tile(COMBAT_PLAYER_X + 1, COMBAT_PLAYER_Y);
+    struct Monster *monster = put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_PLAYER_X + 1, COMBAT_PLAYER_Y + 1);
+
+    bool took_time = start_fight(1, 1, false);
+    bool ok =
+        is_monster_visible(monster) &&
+        !took_time &&
+        !is_fighting() &&
+        !has_fight_target() &&
+        !(monster->flags & MONSTER_RUNNING);
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a harc addig tart, amíg a játékos HP-ja a harc legnagyobb egyszeri sebzése fölött van, utána véget ér, és nem marad jelölt célpont (J23);
+// kamikaze harcban a HP-határ nem számít
+static bool fight_hit_limit_valid(bool is_kamikaze)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    monster->hit_points = FIGHT_TEST_HIT_POINTS;
+
+    bool ok = start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, is_kamikaze) && is_fighting() && (monster->flags & MONSTER_TARGET);
+    bool has_reached_limit = false;
+    int16_t max_hit = 0;
+    uint8_t round = 0;
+
+    while (is_fighting() && round < FIGHT_TEST_ROUNDS_MAX) {
+        if (game.player.hit_points <= max_hit) {
+            has_reached_limit = true;
+        }
+        int16_t hit_points_before = game.player.hit_points;
+        move_monsters();
+        int16_t damage = hit_points_before - game.player.hit_points;
+        if (damage > max_hit) {
+            max_hit = damage;
+        }
+        if (is_fighting()) {
+            take_fight_step();
+        }
+        round++;
+    }
+
+    if (is_kamikaze) {
+        ok = ok && has_reached_limit && is_fighting() && (monster->flags & MONSTER_TARGET);
+        stop_fight();
+    } else {
+        ok = ok && !has_reached_limit && !is_fighting() && game.player.hit_points <= max_hit;
+    }
+    ok = ok && !has_fight_target();
+
+    clear_combat_scene();
+    return ok;
+}
+
+int test_fight_hit_limit(uint16_t i)
+{
+    return fight_hit_limit_valid(false) && fight_hit_limit_valid(true);
+}
+
+// más szörny támadása véget vet a harcnak
+int test_fight_other_attack(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *target = put_combat_scene();
+    target->hit_points = FIGHT_TEST_HIT_POINTS;
+    game.player.max_hit_points = FIGHT_TEST_HIT_POINTS;
+    game.player.hit_points = FIGHT_TEST_HIT_POINTS;
+    // a másik szörny a játékos bal oldalán; később jött létre, így a célpont előtt cselekszik
+    struct Monster *other = put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_PLAYER_X - 1, COMBAT_PLAYER_Y);
+    start_monster_running(other);
+
+    bool ok = start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, false) && is_fighting();
+    move_monsters();
+    ok = ok && !is_fighting() && !has_fight_target();
+
+    clear_combat_scene();
+    return ok;
+}
+
+// az elmozduló célpont véget vet a harcnak: a zavarodott kestrel előbb-utóbb ellép a játékos mellől
+int test_fight_target_moves(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    monster->hit_points = FIGHT_TEST_HIT_POINTS;
+    monster->flags |= MONSTER_CONFUSED;
+    game.player.max_hit_points = FIGHT_TEST_HIT_POINTS;
+    game.player.hit_points = FIGHT_TEST_HIT_POINTS;
+    // szabad mezők a kestrel körül, hogy elléphessen
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            put_combat_tile(COMBAT_MONSTER_X + offset_x, COMBAT_MONSTER_Y + offset_y);
+        }
+    }
+
+    bool ok = start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, false);
+    bool has_moved = false;
+    uint8_t round = 0;
+    while (!has_moved && round < FIGHT_TEST_ROUNDS_MAX) {
+        // amíg a célpont a helyén van, a harc tart
+        if (!is_fighting()) {
+            ok = false;
+        }
+        move_monsters();
+        has_moved = monster->x != COMBAT_MONSTER_X || monster->y != COMBAT_MONSTER_Y;
+        if (is_fighting()) {
+            take_fight_step();
+        }
+        round++;
+    }
+    ok = ok && has_moved && !is_fighting() && !has_fight_target();
 
     clear_combat_scene();
     return ok;
