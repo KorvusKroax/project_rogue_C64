@@ -50,7 +50,12 @@ static bool roll_attack(uint8_t attacker_level, int16_t hit_bonus, int16_t damag
     for (uint8_t segment_index = 0; segment_index < segment_count; segment_index++) {
         if ((int16_t)rnd(HIT_ROLL_SIDES) + hit_bonus >= required) {
             const struct DamageSegment *segment = &segments[segment_index];
-            int16_t damage = (int16_t)ROLL(segment->dice, segment->sides) + damage_bonus;
+            uint8_t dice = segment->dice;
+            // ideiglenes: a Venus flytrap 0 kockával sebez; ide jön: a kockák száma a vf_hit (M05-04)
+            if (dice == DAMAGE_DICE_FLYTRAP) {
+                dice = 0;
+            }
+            int16_t damage = (int16_t)ROLL(dice, segment->sides) + damage_bonus;
             if (damage > 0) {
                 *defender_hit_points -= damage;
             }

@@ -529,3 +529,29 @@ int test_experience_levels(uint16_t i)
     init_player();
     return ok;
 }
+
+#define FLYTRAP_TEST_SWINGS  200                // ennyi támadásból a flytrap biztosan talál is (rögzített maggal)
+
+// a Venus flytrap egyelőre 0 kockával sebez: a támadásai találhatnak, de a játékos HP-ja nem csökken
+int test_flytrap_damage(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_combat_player();
+    put_combat_monster('F', COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    bool ok = true;
+    uint16_t hits = 0;
+
+    for (uint16_t swing = 0; swing < FLYTRAP_TEST_SWINGS; swing++) {
+        // a rekord címe a táblából (README, Oscar64-hibák, 8.)
+        if (roll_monster_attack(&game.monsters[0])) {
+            hits++;
+        }
+        if (game.player.hit_points != game.player.max_hit_points) {
+            ok = false;
+        }
+    }
+    ok = ok && hits > 0;
+
+    clear_combat_scene();
+    return ok;
+}
