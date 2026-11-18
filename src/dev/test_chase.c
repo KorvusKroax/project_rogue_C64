@@ -6,6 +6,7 @@
 #include "../chase.h"
 #include "../map.h"
 #include "../monsters.h"
+#include "../player.h"
 #include "../rooms.h"
 #include "../state.h"
 #include "../view.h"
@@ -101,8 +102,12 @@ static void put_chase_level(void)
     }
 }
 
+#define CHASE_TEST_HIT_POINTS  1000             // a mellé érő szörnyek támadásai alatt se haljon meg: halála után a szörnyek nem lépnek
+
 static void put_chase_player(uint8_t offset_x, uint8_t offset_y)
 {
+    init_player();
+    game.player.hit_points = CHASE_TEST_HIT_POINTS;
     game.player.x = CHASE_BASE_X + offset_x;
     game.player.y = CHASE_BASE_Y + offset_y;
     game.player.room = get_room_at(game.player.x, game.player.y);

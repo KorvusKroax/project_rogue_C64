@@ -683,12 +683,16 @@ static void choose_test_player_step(int8_t *step_x, int8_t *step_y)
     }
 }
 
+#define LEVEL_TEST_PLAYER_HIT_POINTS  10000     // egy kör alatt ennyit a legtöbb gyorsított szörny sem sebez
+
 // egy kör, ahogy a játékban: a játékos lépése (vagy pihenése), a körülnézés és a szörnyek lépése; az ideje raszter-sorban,
 // a képernyőre másolás (show_map_changes) nélkül, de a szörnyek támadásainak üzenetével
 static uint16_t take_timed_turn(void)
 {
     // mint a játékban a parancs beolvasásakor
     message_clear();
+    // a szörnyek támadásai alatt se haljon meg: halála után a szörnyek már nem lépnének
+    game.player.hit_points = LEVEL_TEST_PLAYER_HIT_POINTS;
 
     int8_t step_x;
     int8_t step_y;

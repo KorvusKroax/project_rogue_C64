@@ -308,7 +308,7 @@ int test_fight_diagonal(uint16_t i)
 }
 
 // a harc addig tart, amíg a játékos HP-ja a harc legnagyobb egyszeri sebzése fölött van, utána véget ér, és nem marad jelölt célpont (J23);
-// kamikaze harcban a HP-határ nem számít
+// kamikaze harcban a HP-határ nem számít: a harc a határ elérése után is tart (a teszt itt megáll, mielőtt a játékos meghalna)
 static bool fight_hit_limit_valid(bool is_kamikaze)
 {
     game.seed = COMBAT_TEST_SEED;
@@ -323,6 +323,7 @@ static bool fight_hit_limit_valid(bool is_kamikaze)
     while (is_fighting() && round < FIGHT_TEST_ROUNDS_MAX) {
         if (game.player.hit_points <= max_hit) {
             has_reached_limit = true;
+            break;
         }
         int16_t hit_points_before = game.player.hit_points;
         move_monsters();
@@ -342,7 +343,8 @@ static bool fight_hit_limit_valid(bool is_kamikaze)
     } else {
         ok = ok && !has_reached_limit && !is_fighting() && game.player.hit_points <= max_hit;
     }
-    ok = ok && !has_fight_target();
+    // a harcot a HP-határ állította le (vagy a kamikaze még tart), nem a játékos halála
+    ok = ok && !is_player_dead() && !has_fight_target();
 
     clear_combat_scene();
     return ok;
@@ -551,6 +553,54 @@ int test_flytrap_damage(uint16_t i)
         }
     }
     ok = ok && hits > 0;
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define DEATH_TEST_EXPERIENCE        100        // a halál előtti állapot, amelyet az új játék visszaállít
+#define DEATH_TEST_EXPERIENCE_LEVEL  5
+#define DEATH_TEST_GOLD              50
+
+// a kamikaze f-harcban 1 HP-val a kestrel megöli a játékost: a halál oka a kestrel, a harc véget ér, és utána a szörny már nem támad;
+// új játéknál (init_player) a játékos él, és a kezdőértékekkel indul
+int test_player_death(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    monster->hit_points = FIGHT_TEST_HIT_POINTS;
+    game.player.hit_points = 1;
+
+    bool ok = start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, true) && !is_player_dead();
+    uint8_t round = 0;
+    while (!is_player_dead() && round < FIGHT_TEST_ROUNDS_MAX) {
+        move_monsters();
+        if (is_fighting()) {
+            take_fight_step();
+        }
+        round++;
+    }
+
+    int16_t hit_points_at_death = game.player.hit_points;
+    move_monsters();
+    ok = ok &&
+        is_player_dead() &&
+        get_death_cause() == COMBAT_TEST_MONSTER &&
+        !is_fighting() &&
+        hit_points_at_death <= 0 &&
+        game.player.hit_points == hit_points_at_death;
+
+    game.player.experience = DEATH_TEST_EXPERIENCE;
+    game.player.experience_level = DEATH_TEST_EXPERIENCE_LEVEL;
+    game.gold = DEATH_TEST_GOLD;
+    init_player();
+    ok = ok &&
+        !is_player_dead() &&
+        game.player.hit_points == INITIAL_HIT_POINTS &&
+        game.player.max_hit_points == INITIAL_HIT_POINTS &&
+        game.player.experience_level == 1 &&
+        game.player.experience == 0 &&
+        game.gold == 0;
 
     clear_combat_scene();
     return ok;

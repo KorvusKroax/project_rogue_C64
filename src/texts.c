@@ -21,6 +21,7 @@ const char text_something[] = "something";
 const char text_monster_article[] = "the ";
 const char text_defeated[] = "you have defeated \1";
 const char text_welcome_to_level[] = "welcome to level \3";
+const char text_killed_by[] = "killed by the \1";
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
 

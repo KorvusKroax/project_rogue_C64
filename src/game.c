@@ -325,10 +325,17 @@ static void play_turn(void)
 void run_game(void)
 {
     init_player();
+    last_code = 0;
     game.dungeon_level = 1;
     new_level();
 
-    while (true) {
+    while (!is_player_dead()) {
         play_turn();
     }
+
+    // ideiglenes, a játék végéig (M10-01): a halál oka az üzenetsávban, a képernyő a halál pillanatában, és billentyűre vár
+    show_map_changes();
+    draw_status();
+    message_format(text_killed_by, text_monster_names[get_death_cause() - 'A'], NULL, 0);
+    wait_for_key_and_clear_message();
 }

@@ -9,6 +9,7 @@
 #include "monsters.h"
 #include "move.h"
 #include "num.h"
+#include "player.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -183,6 +184,9 @@ static void relocate_monster(struct Monster *monster, uint8_t x, uint8_t y)
 // egy lépés a célpont felé; a játékos mellé érve megáll (do_chase)
 static void take_chase_step(struct Monster *monster)
 {
+    // a játékos halála után a kör hátralévő részében már egy szörny sem lép (a gyorsított és a repülő második lépése sem)
+    if (is_player_dead()) return;
+
     // ide jön: a kapzsi szörny célpontja a játékos, ha a szobájában már nincs arany
     uint8_t goal_x;
     uint8_t goal_y;

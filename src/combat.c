@@ -155,7 +155,12 @@ bool attack_player(struct Monster *monster)
     bool did_hit = roll_monster_attack(monster);
     report_attack(text_monster_hits, text_monster_misses, did_hit, monster_name, text_you);
 
-    // ide jön: a játékos halála
+    // a halállal minden véget ér: az f-harc sem folytatódik, a speciális támadás elmarad
+    if (game.player.hit_points <= 0) {
+        kill_player(monster->type);
+        stop_fight();
+        return did_hit;
+    }
     if (did_hit && is_fight_active && !is_fight_kamikaze) {
         int16_t damage = hit_points_before - game.player.hit_points;
         if (damage > max_hit_this_fight) {

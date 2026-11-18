@@ -12,8 +12,14 @@ const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT] = {
     50000, 100000, 200000, 400000, 800000, 2000000, 4000000, 8000000
 };
 
+#define NO_DEATH_CAUSE  0                       // a játékos él
+
+// a halál oka; halott játékossal nincs parancsolvasás, így mentés sem, ezért nem a játékállapotban van
+static uint8_t death_cause;
+
 void init_player(void)
 {
+    death_cause = NO_DEATH_CAUSE;
     game.player.strength = INITIAL_STRENGTH;
     game.max_strength = INITIAL_STRENGTH;
     game.player.hit_points = INITIAL_HIT_POINTS;
@@ -21,6 +27,21 @@ void init_player(void)
     game.player.experience_level = 1;
     game.player.experience = 0;
     game.gold = 0;
+}
+
+void kill_player(uint8_t cause)
+{
+    death_cause = cause;
+}
+
+bool is_player_dead(void)
+{
+    return death_cause != NO_DEATH_CAUSE;
+}
+
+uint8_t get_death_cause(void)
+{
+    return death_cause;
 }
 
 // ideiglenes, a felszerelés issue-ig (M06-04): mindig a kezdő gyűrűs ing; ide jön: a védelem-gyűrűk

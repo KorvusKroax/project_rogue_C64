@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define BASE_ARMOR  10                  // páncél nélkül ennyi a védelem (default: 10)
 
@@ -28,7 +29,12 @@
 
 extern const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT];
 
-void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0
+void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0, él
+
+// a játékos halála; az ok egyelőre a szörny típusa ('A'..'Z'); a játék a kör végén ér véget (run_game)
+void kill_player(uint8_t cause);
+bool is_player_dead(void);
+uint8_t get_death_cause(void);          // a kill_player oka; csak halál után értelmes
 
 int8_t calculate_player_armor(void);    // a viselt páncél (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
 

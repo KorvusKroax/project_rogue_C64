@@ -28,6 +28,8 @@ int main(void)
     screen_clear();
     set_screen_colors(0, 0, 15);
 
-    // ideiglenes: a címképernyő elkészültéig a játék közvetlenül indul
-    run_game();
+    // ideiglenes: a címképernyő és a játék vége (M10-01, M10-05) elkészültéig a játék közvetlenül indul, és halál után újra
+    while (true) {
+        run_game();
+    }
 }
