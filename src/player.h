@@ -18,8 +18,19 @@
 #define UNARMED_DAMAGE_DICE   1         // (default: 1)
 #define UNARMED_DAMAGE_SIDES  4         // (default: 4)
 
+// a szint 1 + az XP-vel elért küszöbök száma (xp_next)
+#define EXPERIENCE_THRESHOLD_COUNT  20                                  // (default: 20)
+#define EXPERIENCE_LEVEL_MAX        (EXPERIENCE_THRESHOLD_COUNT + 1)    // default: 21
+#define LEVEL_UP_HIT_DIE_SIDES      10  // szintenként egy ilyen kocka a max. HP-hoz és a HP-hoz (default: 10)
+
+extern const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT];
+
 void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0
 
 int8_t calculate_player_armor(void);    // a viselt páncél (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
+
+// a szint az XP-hez igazodik: ha magasabb jár, a szintkülönbségnyi kocka a max. HP-hoz és a HP-hoz adódik,
+// és „welcome to level <n>”; lejjebb nem visz (check_level)
+void update_experience_level(void);
 
 #endif

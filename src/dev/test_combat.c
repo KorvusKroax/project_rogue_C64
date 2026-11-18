@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "checks.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -14,8 +15,9 @@
 #include "../rooms.h"
 #include "../state.h"
 #include "../texts.h"
+#include "../view.h"
 
-#define COMBAT_TEST_SEED    1                   // rögzített mag: a dobássorozat minden futásban ugyanaz
+#define COMBAT_TEST_SEED   1                   // rögzített mag: a dobássorozat minden futásban ugyanaz
 #define COMBAT_TEST_SWINGS  20000               // ennyi csapás oldalanként a találati arányhoz
 
 // a tesztmezők: a játékos és jobbra mellette a szörny, ugyanannak a folyosórendszernek a mezőin
@@ -404,5 +406,125 @@ int test_fight_target_moves(uint16_t i)
     ok = ok && has_moved && !is_fighting() && !has_fight_target();
 
     clear_combat_scene();
+    return ok;
+}
+
+#define KILL_TEST_TRIES_MAX      100            // ennyi ütésen belül a játékos biztosan eltalálja a szörnyet (rögzített maggal)
+#define EXPERIENCE_CAP           16777215UL     // az XP telítési határa (num.c, capped_add)
+
+// a szörnyre lépő játékos addig üt, amíg a szörny meg nem hal: a szörny kikerül a táblából, a mezőjén nincs TILE_MONSTER bit,
+// és az alatta lévő jel látszik; a játékos helyben marad, és megkapja az XP-t, amely a határon telítődik, és a legnagyobb szintet adja
+int test_monster_kill(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    monster->hit_points = 1;
+    uint8_t character_below = monster->character_below;
+    game.player.experience = EXPERIENCE_CAP - 1;
+
+    uint8_t tries = 0;
+    while (game.monster_count > 0 && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+
+    bool ok =
+        game.monster_count == 0 &&
+        !(get_map_flags(COMBAT_MONSTER_X, COMBAT_MONSTER_Y) & TILE_MONSTER) &&
+        get_seen_character(COMBAT_MONSTER_X, COMBAT_MONSTER_Y) == character_below &&
+        game.player.x == COMBAT_PLAYER_X &&
+        game.player.y == COMBAT_PLAYER_Y &&
+        game.player.experience == EXPERIENCE_CAP &&
+        game.player.experience_level == EXPERIENCE_LEVEL_MAX;
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a középső szörny kivétele után a többi sorrendje marad, a kivett mezőjén nincs TILE_MONSTER bit, és a bitek a táblával egyeznek
+int test_monster_removal(uint16_t i)
+{
+    put_combat_player();
+    put_combat_monster('A', COMBAT_PLAYER_X + 2, COMBAT_PLAYER_Y);
+    put_combat_monster('B', COMBAT_PLAYER_X + 3, COMBAT_PLAYER_Y);
+    put_combat_monster('C', COMBAT_PLAYER_X + 4, COMBAT_PLAYER_Y);
+
+    // a rekord címe a táblából (README, Oscar64-hibák, 8.)
+    remove_monster(&game.monsters[1]);
+
+    bool ok =
+        game.monster_count == 2 &&
+        get_monster(1)->type == 'A' &&
+        get_monster(2)->type == 'C' &&
+        get_monster(2)->x == COMBAT_PLAYER_X + 4 &&
+        !(get_map_flags(COMBAT_PLAYER_X + 3, COMBAT_PLAYER_Y) & TILE_MONSTER) &&
+        are_monster_tiles_valid();
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a kamikaze f-harc a célpont halálával véget ér
+int test_fight_target_death(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    monster->hit_points = 1;
+    game.player.max_hit_points = FIGHT_TEST_HIT_POINTS;
+    game.player.hit_points = FIGHT_TEST_HIT_POINTS;
+
+    start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, true);
+    uint8_t round = 0;
+    while (is_fighting() && round < FIGHT_TEST_ROUNDS_MAX) {
+        move_monsters();
+        if (is_fighting()) {
+            take_fight_step();
+        }
+        round++;
+    }
+    bool ok = !is_fighting() && game.monster_count == 0;
+
+    clear_combat_scene();
+    return ok;
+}
+
+// az XP-hez igazított szint a várt, és a max. HP és a HP ugyanannyival nő: szintenként egy kockányival
+static bool experience_level_valid(uint8_t start_level, uint32_t experience, uint8_t expected_level)
+{
+    init_player();
+    game.player.experience_level = start_level;
+    game.player.experience = experience;
+    int16_t max_hit_points_before = game.player.max_hit_points;
+    int16_t hit_points_before = game.player.hit_points;
+
+    update_experience_level();
+
+    uint8_t gained_levels = expected_level - start_level;
+    int16_t gain = game.player.max_hit_points - max_hit_points_before;
+    return
+        game.player.experience_level == expected_level &&
+        game.player.hit_points - hit_points_before == gain &&
+        gain >= gained_levels &&
+        gain <= gained_levels * LEVEL_UP_HIT_DIE_SIDES;
+}
+
+// a küszöbök (xp_next) és a szintlépés: a küszöb alatt marad, a küszöbön lép; 45 XP-vel az 1.-ről a 4.-re;
+// a legnagyobb szint 21; lejjebb nem visz
+int test_experience_levels(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+
+    bool ok =
+        experience_thresholds[0] == 10 &&
+        experience_thresholds[EXPERIENCE_THRESHOLD_COUNT - 1] == 8000000 &&
+        experience_level_valid(1, 9, 1) &&
+        experience_level_valid(1, 10, 2) &&
+        experience_level_valid(1, 45, 4) &&
+        experience_level_valid(1, experience_thresholds[EXPERIENCE_THRESHOLD_COUNT - 1] - 1, EXPERIENCE_LEVEL_MAX - 1) &&
+        experience_level_valid(1, experience_thresholds[EXPERIENCE_THRESHOLD_COUNT - 1], EXPERIENCE_LEVEL_MAX) &&
+        experience_level_valid(1, EXPERIENCE_CAP, EXPERIENCE_LEVEL_MAX) &&
+        experience_level_valid(4, 5, 4);
+
+    init_player();
     return ok;
 }

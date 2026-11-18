@@ -27,6 +27,8 @@ extern const char *const text_monster_misses[ATTACK_TEXT_VARIANT_COUNT];
 extern const char text_you[];
 extern const char text_something[];                 // a nem látott szörny neve
 extern const char text_monster_article[];           // a látott szörny neve elé
+extern const char text_defeated[];
+extern const char text_welcome_to_level[];
 extern const char *const text_hunger_states[];     // a hunger_state szerint: 0 rendben (üres), 1 Hungry, 2 Weak, 3 Faint
 extern const char *const text_monster_names[MONSTER_TYPE_COUNT];   // a szörnytípusok neve, a betűjük sorrendjében ('A'..'Z')
 

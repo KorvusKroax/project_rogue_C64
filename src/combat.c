@@ -1,5 +1,6 @@
 #include "combat.h"
 
+#include <stddef.h>
 #include <string.h>
 
 #include "explore.h"
@@ -8,6 +9,7 @@
 #include "message.h"
 #include "monsters.h"
 #include "move.h"
+#include "num.h"
 #include "player.h"
 #include "rng.h"
 #include "state.h"
@@ -101,6 +103,20 @@ bool roll_monster_attack(const struct Monster *monster)
                        type_data->damage, type_data->damage_segment_count, &game.player.hit_points);
 }
 
+// a szörny halála (killed): a játékos megkapja az XP-jét, a szörny kikerül a táblából, „you have defeated <név>”, és jöhet a szintlépés
+static void kill_monster(struct Monster *monster)
+{
+    game.player.experience = capped_add(game.player.experience, monster->experience);
+    // ide jön: a flytrap halálával a játékos kiszabadul, és a vf_hit nullázódik
+    // ide jön: a leprechaun aranya a csomagjába kerül; a csomagja a környező mezőkre esik
+
+    // a név a kivétel előtt, amíg a szörny még a helyén van
+    const char *monster_name = prepare_monster_name(monster);
+    remove_monster(monster);
+    message_format(text_defeated, monster_name, NULL, 0);
+    update_experience_level();
+}
+
 bool attack_monster(struct Monster *monster)
 {
     stop_running_and_repeating();
@@ -112,7 +128,10 @@ bool attack_monster(struct Monster *monster)
     bool did_hit = roll_player_attack(monster);
     report_attack(text_player_hits, text_player_misses, did_hit, text_you, monster_name);
 
-    // ide jön: CANHUH, a szörny halála
+    // ide jön: CANHUH
+    if (did_hit && monster->hit_points <= 0) {
+        kill_monster(monster);
+    }
     return did_hit;
 }
 

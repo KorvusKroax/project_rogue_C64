@@ -20,7 +20,7 @@ extern const int8_t strength_damage_bonus[STRENGTH_MAX + 1];
 const char *prepare_monster_name(const struct Monster *monster);
 
 // a játékos megtámadja a szörnyet (fight): a szörny felébred és üldöz, a támadás dob, és f-harcon kívül
-// kiíródik a hit/miss üzenet; igaz, ha talált
+// kiíródik a hit/miss üzenet; ha a szörny meghal, kikerül a táblából (a mutató utána a következőre mutat); igaz, ha talált
 bool attack_monster(struct Monster *monster);
 
 // a szörny megtámadja a játékost (attack): a támadás dob, és f-harcon kívül kiíródik a hit/miss üzenet; igaz, ha talált

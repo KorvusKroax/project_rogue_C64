@@ -15,6 +15,10 @@ static const struct DevTest combat_tests[] = {
     { "FIGHT-HIT LIMIT", test_fight_hit_limit, 1 },
     { "FIGHT-OTHER ATTACK", test_fight_other_attack, 1 },
     { "FIGHT-TARGET MOVES", test_fight_target_moves, 1 },
+    { "FIGHT-TARGET DIES", test_fight_target_death, 1 },
+    { "COMBAT-KILL", test_monster_kill, 1 },
+    { "COMBAT-REMOVAL", test_monster_removal, 1 },
+    { "XP-LEVELS", test_experience_levels, 1 },
 };
 
 int main(void)

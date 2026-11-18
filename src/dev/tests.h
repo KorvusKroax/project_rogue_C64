@@ -44,6 +44,10 @@ int test_fight_diagonal(uint16_t i);
 int test_fight_hit_limit(uint16_t i);
 int test_fight_other_attack(uint16_t i);
 int test_fight_target_moves(uint16_t i);
+int test_monster_kill(uint16_t i);
+int test_monster_removal(uint16_t i);
+int test_fight_target_death(uint16_t i);
+int test_experience_levels(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

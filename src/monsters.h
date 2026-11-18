@@ -65,6 +65,10 @@ uint8_t allocate_monster(void);                 // új, kitöltetlen hely a táb
 void clear_monsters(void);                      // a szörnytábla üres: új szintnél
 uint8_t find_monster_at(uint8_t x, uint8_t y);  // az x, y mezőn álló szörny indexe, vagy NO_MONSTER; a táblát csak TILE_MONSTER bitnél nézi végig
 
+// a szörny kivétele a táblából (remove_mon): a mezőjén törlődik a TILE_MONSTER bit, és kirajzolódik az alatta lévő jel;
+// ha ő volt az f-harc célpontja, a harc véget ér; a mögötte állók egy hellyel előrecsúsznak, így a mutató utána a következőre mutat
+void remove_monster(struct Monster *monster);
+
 // a game.dungeon_level mélységhez illő típus ('A'..'Z'), a kezdő vagy a vándorló sorrendből
 uint8_t choose_monster_type(bool wandering);
 

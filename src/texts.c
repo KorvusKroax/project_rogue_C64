@@ -19,6 +19,8 @@ const char *const text_monster_misses[ATTACK_TEXT_VARIANT_COUNT] = { "\1 misses 
 const char text_you[] = "you";
 const char text_something[] = "something";
 const char text_monster_article[] = "the ";
+const char text_defeated[] = "you have defeated \1";
+const char text_welcome_to_level[] = "welcome to level \3";
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
 

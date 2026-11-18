@@ -1,5 +1,8 @@
 #include "monsters.h"
 
+#include <string.h>
+
+#include "combat.h"
 #include "level.h"
 #include "map.h"
 #include "rng.h"
@@ -63,6 +66,20 @@ uint8_t find_monster_at(uint8_t x, uint8_t y)
         if (monster->x == x && monster->y == y) return index;
     }
     return NO_MONSTER;
+}
+
+void remove_monster(struct Monster *monster)
+{
+    if (monster->flags & MONSTER_TARGET) {
+        stop_fight();
+    }
+    remove_map_flags(monster->x, monster->y, TILE_MONSTER);
+    draw_tile(monster->x, monster->y, monster->character_below);
+
+    // a mögötte állók hossza bájtban, így nincs osztás a rekordmérettel
+    const struct Monster *table_end = &game.monsters[game.monster_count];
+    memmove(monster, monster + 1, (const uint8_t *)table_end - (const uint8_t *)(monster + 1));
+    game.monster_count--;
 }
 
 // a típusok a mélységgel nehezedő sorrendben; a mélység körüli véletlen pozíció választ közülük
