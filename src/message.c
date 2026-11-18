@@ -203,6 +203,9 @@ static void show_more_and_wait(void)
     put_text(TEXT_MORE);
     clear_to_row_end();
 
+    // a várakozás alatt a friss értékek látszanak (pl. a szörnyek támadásai után a HP); a kurzort a --More-- után mozgatja
+    draw_status();
+
     while (wait_for_key() != ' ') {}
 
     message_clear();

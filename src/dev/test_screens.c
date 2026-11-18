@@ -256,14 +256,15 @@ static void dev_message_and_view_screen(void)
     uint8_t code = 0, x = VIEW_WINDOW_WIDTH / 2, frames = 0;
 
     screen_clear();
-    set_screen_cursor(0, STATUS_ROW + 1);
-    put_text("1-9:msg A,D,Q,E:step Z,X,C:view F:time");
-
     view_draw_pattern(x);
     redraw_map();
 
     while (code != KEY_ESCAPE) {
+        // a --More-- a két sorba a státuszsort rajzolja, ezért minden billentyű előtt újra
         put_view_state(x, frames);
+        set_screen_cursor(0, STATUS_ROW + 1);
+        put_text("1-9:msg A,D,Q,E:step Z,X,C:view F:time");
+        clear_to_row_end();
         code = wait_for_key_and_clear_message();
 
         switch (code) {
