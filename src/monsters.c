@@ -189,3 +189,11 @@ void wake_monster(struct Monster *monster)
         monster->destination_item = DESTINATION_PLAYER;
     }
 }
+
+void start_monster_running(struct Monster *monster)
+{
+    monster->flags |= MONSTER_RUNNING;
+    monster->flags &= ~MONSTER_HELD;
+    // ide jön: tárgyat gyűjtő szörnynél a szobájában fekvő tárgy is lehet a célpont (find_dest)
+    monster->destination_item = DESTINATION_PLAYER;
+}

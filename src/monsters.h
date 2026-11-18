@@ -76,7 +76,10 @@ uint8_t create_monster(uint8_t type, uint8_t x, uint8_t y);
 uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y);
 
 // a játékos meglátja (look_around), vagy belép a szobájába, illetve kilép onnan (enter_room, leave_room):
-// az alvó aljas szörny 2/3 eséllyel felébred, a kapzsi mindig; a többit csak a runto indítja el
+// az alvó aljas szörny 2/3 eséllyel felébred, a kapzsi mindig; a többit csak a start_monster_running indítja el
 void wake_monster(struct Monster *monster);
+
+// a szörny mindenképp felébred és üldöz (runto), a fogva tartás (MONSTER_HELD) is megszűnik: pl. ha a játékos megtámadja
+void start_monster_running(struct Monster *monster);
 
 #endif

@@ -455,6 +455,19 @@ static bool is_passage_entry_waking_valid(void)
     return !(orc->flags & MONSTER_RUNNING);
 }
 
+// a start_monster_running a nem aljas, fogva tartott szörnyet (kentaur) is elindítja, a fogva tartás megszűnik, a célpont a játékos
+static bool is_forced_waking_valid(void)
+{
+    put_see_test_room(0);
+    struct Monster *centaur = put_see_test_monster('C', 6, 2);
+    centaur->flags |= MONSTER_HELD;
+    centaur->destination_item = 1;
+
+    start_monster_running(centaur);
+    if ((centaur->flags & (MONSTER_RUNNING | MONSTER_HELD)) != MONSTER_RUNNING) return false;
+    return centaur->destination_item == DESTINATION_PLAYER;
+}
+
 int test_monster_waking(uint16_t i)
 {
     struct Room saved_rooms[ROOM_TABLE_SIZE];
@@ -464,7 +477,8 @@ int test_monster_waking(uint16_t i)
         is_mean_monster_waking_valid() &&
         is_sleeping_monster_waking_valid() &&
         is_greedy_monster_waking_valid() &&
-        is_passage_entry_waking_valid();
+        is_passage_entry_waking_valid() &&
+        is_forced_waking_valid();
 
     memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
     clear_monsters();
