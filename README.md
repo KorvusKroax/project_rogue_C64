@@ -39,15 +39,16 @@ Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem k�
 
 Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja.
 
-| név | mit tesztel | szabad hely (2026-11-17) |
+| név | mit tesztel | szabad hely (2026-11-18) |
 |---|---|---|
-| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 552 bájt |
-| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 584 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 22 232 bájt |
-| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 30 280 bájt |
-| `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 656 bájt |
+| `combat` | az erő harci táblái; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad | 29 864 bájt |
+| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 464 bájt |
+| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 424 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 15 064 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 25 768 bájt |
+| `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 528 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 26 024, a fejlesztői build (`build.bat dev`) 22 912 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 23 080, a fejlesztői build (`build.bat dev`) 19 584 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 

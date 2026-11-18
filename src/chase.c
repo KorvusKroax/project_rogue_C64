@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "combat.h"
 #include "explore.h"
 #include "map.h"
 #include "monsters.h"
@@ -193,7 +194,7 @@ static void take_chase_step(struct Monster *monster)
     uint8_t step_y;
     if (choose_chase_step(monster, goal_x, goal_y, &step_x, &step_y)) {
         if (goal_x == game.player.x && goal_y == game.player.y) {
-            // ide jön: a játékos megtámadása (attack); addig helyben marad
+            attack_player(monster);
             return;
         }
         // ide jön: ha a cél a célpont tárgy, felveszi, és a Venus flytrap kivételével a lépés után nem fut tovább (ISRUN le)

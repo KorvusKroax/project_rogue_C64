@@ -1,7 +1,9 @@
 #include "move.h"
 
+#include "combat.h"
 #include "explore.h"
 #include "map.h"
+#include "monsters.h"
 #include "rooms.h"
 #include "state.h"
 #include "view.h"
@@ -33,7 +35,14 @@ bool move_player(int8_t step_x, int8_t step_y)
     if (!is_on_map(target_x, target_y)) return false;
     if (!is_diagonal_step_allowed(player_x, player_y, target_x, target_y)) return false;
 
-    // ide jön: a rejtett csapda felfedése, fogva tartás (ISHELD), szörny a célmezőn: támadás
+    // ide jön: a rejtett csapda felfedése, fogva tartás (ISHELD)
+
+    // szörny a célmezőn: támadás, a játékos helyben marad
+    uint8_t monster_index = find_monster_at(target_x, target_y);
+    if (monster_index != NO_MONSTER) {
+        attack_monster(get_monster(monster_index));
+        return true;
+    }
 
     uint8_t target_character = get_map_character(target_x, target_y);
     if (!is_walkable_character(target_character)) return false;
