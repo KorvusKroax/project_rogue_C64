@@ -27,7 +27,8 @@ const int8_t strength_damage_bonus[STRENGTH_MAX + 1] = {
     -7, -6, -5, -4, -3, -2, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6
 };
 
-static const struct DamageSegment unarmed_damage = { UNARMED_DAMAGE_DICE, UNARMED_DAMAGE_SIDES };
+// ideiglenes, a felszerelés issue-ig (M06-04): a kézben mindig a kezdő buzogány
+static const struct DamageSegment starting_weapon_damage = { STARTING_WEAPON_DAMAGE_DICE, STARTING_WEAPON_DAMAGE_SIDES };
 
 // az f-harc állapota: tart-e, merre, kamikaze-e (HP-határ nélkül), és a harc legnagyobb egyszeri sebzése a játékoson;
 // a harc alatt nincs parancsolvasás, így mentés sem, ezért nem a játékállapotban van
@@ -84,12 +85,12 @@ static void report_attack(const char *const *hit_texts, const char *const *miss_
 
 bool roll_player_attack(struct Monster *monster)
 {
-    // fegyver nélkül; ide jön: a dexterity és az increase damage gyűrű bónusza
-    int16_t hit_bonus = strength_hit_bonus[game.player.strength];
-    int16_t damage_bonus = strength_damage_bonus[game.player.strength];
+    // a fegyver és az erő bónusza; ide jön: a dexterity és az increase damage gyűrű bónusza
+    int16_t hit_bonus = STARTING_WEAPON_HIT_BONUS + strength_hit_bonus[game.player.strength];
+    int16_t damage_bonus = STARTING_WEAPON_DAMAGE_BONUS + strength_damage_bonus[game.player.strength];
 
     return roll_attack(game.player.experience_level, hit_bonus, damage_bonus, monster->armor,
-                       &unarmed_damage, 1, &monster->hit_points);
+                       &starting_weapon_damage, 1, &monster->hit_points);
 }
 
 bool roll_monster_attack(const struct Monster *monster)

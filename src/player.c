@@ -23,10 +23,10 @@ void init_player(void)
     game.gold = 0;
 }
 
-// amíg nincs páncél és gyűrű, az alap
+// ideiglenes, a felszerelés issue-ig (M06-04): mindig a kezdő gyűrűs ing; ide jön: a védelem-gyűrűk
 int8_t calculate_player_armor(void)
 {
-    return BASE_ARMOR;
+    return STARTING_ARMOR_CLASS;
 }
 
 void update_experience_level(void)

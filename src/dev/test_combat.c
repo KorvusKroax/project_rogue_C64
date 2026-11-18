@@ -149,15 +149,16 @@ int test_monster_names(uint16_t i)
     return ok;
 }
 
-// a kezdőértékű, fegyver nélküli játékos a kestrelt a képletből számolt eséllyel találja el (most 8/20);
-// találatnál a sebzés a fegyver nélküli kocka és az erő sebzésbónusza, hibánál nincs sebzés
+// az 1. szintű, kezdőfelszerelésű játékos (buzogány) a kestrelt a képletből számolt eséllyel találja el (most 9/20);
+// találatnál a sebzés a buzogány kockái, a sebzésbónusza és az erő sebzésbónusza, hibánál nincs sebzés
 int test_player_hit_rate(uint16_t i)
 {
     game.seed = COMBAT_TEST_SEED;
     struct Monster *monster = put_combat_scene();
-    int16_t damage_bonus = strength_damage_bonus[INITIAL_STRENGTH];
-    int16_t damage_min = calculate_damage_limit(UNARMED_DAMAGE_DICE + damage_bonus);
-    int16_t damage_max = calculate_damage_limit(UNARMED_DAMAGE_DICE * UNARMED_DAMAGE_SIDES + damage_bonus);
+    int16_t hit_bonus = STARTING_WEAPON_HIT_BONUS + strength_hit_bonus[INITIAL_STRENGTH];
+    int16_t damage_bonus = STARTING_WEAPON_DAMAGE_BONUS + strength_damage_bonus[INITIAL_STRENGTH];
+    int16_t damage_min = calculate_damage_limit(STARTING_WEAPON_DAMAGE_DICE + damage_bonus);
+    int16_t damage_max = calculate_damage_limit(STARTING_WEAPON_DAMAGE_DICE * STARTING_WEAPON_DAMAGE_SIDES + damage_bonus);
     bool ok = true;
     uint16_t hits = 0;
 
@@ -175,7 +176,7 @@ int test_player_hit_rate(uint16_t i)
         }
     }
 
-    uint16_t expected = calculate_expected_hits(COMBAT_TEST_SWINGS, strength_hit_bonus[INITIAL_STRENGTH], game.player.experience_level, monster->armor);
+    uint16_t expected = calculate_expected_hits(COMBAT_TEST_SWINGS, hit_bonus, game.player.experience_level, monster->armor);
     if (!is_hit_count_close(hits, expected, COMBAT_TEST_SWINGS)) {
         ok = false;
     }
@@ -184,7 +185,7 @@ int test_player_hit_rate(uint16_t i)
     return ok;
 }
 
-// a kestrel a páncél nélküli játékost a képletből számolt eséllyel találja el (most 11/20);
+// a kestrel a gyűrűs inges játékost a képletből számolt eséllyel találja el (most 7/20);
 // találatnál a sebzés a típus egyetlen szegmense (a szörny erejének sebzésbónusza 0), hibánál nincs sebzés
 int test_monster_hit_rate(uint16_t i)
 {

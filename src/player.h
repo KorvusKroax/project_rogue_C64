@@ -14,9 +14,12 @@
     #error "a kezdő erő nagyobb a legnagyobb erőnél"
 #endif
 
-// fegyver nélkül a játékos ütése egy ilyen sebzés-szegmens
-#define UNARMED_DAMAGE_DICE   1         // (default: 1)
-#define UNARMED_DAMAGE_SIDES  4         // (default: 4)
+// ideiglenes, a felszerelés issue-ig (M06-04): a kezdőfelszerelés rögzített adatként, a kézben a buzogány, viselve a gyűrűs ing
+#define STARTING_WEAPON_DAMAGE_DICE   2 // buzogány: 2x4 (default: 2)
+#define STARTING_WEAPON_DAMAGE_SIDES  4 // (default: 4)
+#define STARTING_WEAPON_HIT_BONUS     1 // +1 (default: 1)
+#define STARTING_WEAPON_DAMAGE_BONUS  1 // +1 (default: 1)
+#define STARTING_ARMOR_CLASS          6 // gyűrűs ing: 7 − 1 (default: 6)
 
 // a szint 1 + az XP-vel elért küszöbök száma (xp_next)
 #define EXPERIENCE_THRESHOLD_COUNT  20                                  // (default: 20)
