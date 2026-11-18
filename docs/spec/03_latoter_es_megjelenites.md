@@ -121,12 +121,13 @@ Fordítási feltételek: a sáv legalább egy sor, és nem érhet a státuszsori
 
 ## 3.5 Nézőablak (görgetés)
 
-> **C64-eltérés (E1):** a 80 oszlopos logikai térképből a képernyőn egyszerre 40 oszlop látszik. Az ablak a játékost követi, holt zónával.
+> **C64-eltérés (E1):** a 80 oszlopos logikai térképből a képernyőn egyszerre 40 oszlop látszik. Az ablak a játékost követi, holt zónával, és kézzel is görgethető (E22, lent).
 
 ```
 VIEW_WINDOW_WIDTH         = min(SCREEN_WIDTH, MAP_COLUMNS)    // a nézőablak szélessége: 40; keskenyebb térképnél a térképé, és nem görget
 VIEW_WINDOW_X_MAX         = MAP_COLUMNS - VIEW_WINDOW_WIDTH   // 40
 VIEW_WINDOW_EDGE_DISTANCE = 8                                 // ennyi oszlopnál közelebb a széléhez görget
+VIEW_WINDOW_SCROLL_STEP   = 8                                 // a kézi görgetés lépése
 view_window_x ∈ 0..VIEW_WINDOW_X_MAX                          // a képernyő 0. oszlopában látszó logikai oszlop
 
 center_view_window():
@@ -142,6 +143,10 @@ follow_view_window():  // minden olyan lépés után, amely a játékos pozíci�
   ha a view_window_x változott: a térkép újrarajzolása a következő show_map_changes-nél   // lent: Rajzolás
 ```
 - `center_view_window` hívódik új szinten ([2](02_szintgeneralas.md)), és betöltés után; `follow_view_window` minden lépés után. Az ablak oszloponként követi a játékost, nem ugrik középre: egy lépésnél egy oszlopot mozdul, futás végén vagy teleportnál annyit, hogy a játékos a holt zóna szélére kerüljön. Görgetéskor a teljes térképterület újrarajzolódik (22 × 40 karakter), finom (pixeles) görgetés nem kell.
+- **Kézi görgetés:**
+  > **C64-eltérés (E22):** a CRSR ⇔ jobbra, SHIFT-tel balra `VIEW_WINDOW_SCROLL_STEP` oszloppal görgeti a nézőablakot, legfeljebb a térkép széléig; a CLR/HOME a játékost a nézet közepére állítja (`center_view_window`). Így a 40 oszlopos képernyőn a felfedezett terület másik fele is megnézhető, amely az eredeti 80 oszlopos képernyőjén mindig látszott.
+
+  Egyik sem visz el időt, és nem parancs: az `a` nem ismétli, a számprefix elvész. A görgetés a következő `show_map_changes`-nél jelenik meg. A nézőablak a játékos következő lépése után a `follow_view_window` szerint áll vissza: ha a játékos a holt zónán kívül van, akkora ugrással, hogy a holt zóna szélére kerüljön.
 - **Futás `jump_to_run_end` mellett:** a lépések ugyanúgy futnak (`look`, `follow_view_window`, a SCREEN réteg frissül), csak a `show_map_changes` és a státuszsor marad ki, amíg a futás tart; ugyanígy a számprefixes ismétlés alatt ([4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)). A futás (ismétlés) végén minden változás, a görgetéssel együtt, egyszerre jelenik meg. A nézőablak közben is követi a játékost, ezért a végén ugyanott áll, mint `jump_to_run_end` nélkül. Kivétel a kanyarkövetés első bejárású kanyarja ([4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás)): ott a képernyő egyszer frissül.
 - **Rajzolás:** minden SCREEN-írás (`draw_tile(x, y, ch)`) csak a SCREEN rétegbe kerül, és megjegyzi a változott sorokat. A videomemóriába a `show_map_changes` viszi, a játékos akciója után (a `look` után, a parancsbeolvasás előtt): egy képkocka elején a változott sorokat, görgetés után a teljes térképterületet, a nézőablak oszlopaival (`x − view_window_x`). Így egy lépés minden változása (a régi mező, a lámpafény, az új 3×3, a játékos jele) egyszerre jelenik meg, köztes kép nélkül; amíg semmi nem változik, nincs várakozás sem. Az üzenetsáv által foglalt felső sorok ([3.4](#34-üzenetsor)) kimaradnak, és felszabaduláskor a SCREEN-ből rajzolódnak vissza, így görgetés sem írja felül az üzenetet.
 - **Animációk** (dobott tárgy, sugár, [7.4](07_harc.md#74-hajítás-t), [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)): a nézőablakon kívül eső lépések nem rajzolódnak, és nincs utánuk várakozás sem.

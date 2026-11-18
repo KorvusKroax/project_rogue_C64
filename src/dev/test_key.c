@@ -45,8 +45,11 @@ static const struct KeyCase key_cases[] = {
     { 0, 4, 0, KEY_F1 }, { 0, 4, KEY_MODIFIER_SHIFT, KEY_F2 },
     { 0, 3, 0, KEY_F7 }, { 0, 3, KEY_MODIFIER_SHIFT, KEY_F8 },
     { 0, 4, KEY_MODIFIER_CTRL, 0 },
-    // kód nélkül
-    { 0, 2, 0, 0 }, { 0, 7, 0, 0 }, { 6, 3, 0, 0 },
+    // a nézőablak billentyűi
+    { 0, 2, 0, KEY_CURSOR_RIGHT }, { 0, 2, KEY_MODIFIER_SHIFT, KEY_CURSOR_LEFT },
+    { 6, 3, 0, KEY_HOME },
+    // kód nélkül: függőleges kurzor, CLR
+    { 0, 7, 0, 0 }, { 6, 3, KEY_MODIFIER_SHIFT, 0 },
     { 4, 3, KEY_MODIFIER_SHIFT, 0 }, { 5, 6, KEY_MODIFIER_SHIFT, 0 },
 };
 

@@ -137,6 +137,12 @@ static bool is_digit_key(uint8_t code)
     return code >= '0' && code <= '9';
 }
 
+// a nézőablak görgetése és a játékosra állítása nem parancs: az `a` nem ismétli
+static bool is_view_window_key(uint8_t code)
+{
+    return code == KEY_CURSOR_LEFT || code == KEY_CURSOR_RIGHT || code == KEY_HOME;
+}
+
 // a következő parancs a billentyűzetről, az esetleges számprefixszel együtt
 static uint8_t read_command(void)
 {
@@ -163,7 +169,7 @@ static uint8_t read_command(void)
     }
     set_key_repeat(false);
 
-    if (code == 'a' || code == KEY_ESCAPE) return code;
+    if (code == 'a' || code == KEY_ESCAPE || is_view_window_key(code)) return code;
     #ifdef DEVMODE
         if (is_function_key(code)) return code;
     #endif
@@ -204,6 +210,15 @@ static bool execute_command(uint8_t code)
             return false;
         case KEY_CTRL('p'):
             repeat_last_message();
+            return false;
+        case KEY_CURSOR_LEFT:
+            scroll_view_window(-VIEW_WINDOW_SCROLL_STEP);
+            return false;
+        case KEY_CURSOR_RIGHT:
+            scroll_view_window(VIEW_WINDOW_SCROLL_STEP);
+            return false;
+        case KEY_HOME:
+            center_view_window(game.player.x);
             return false;
         default:
             #ifdef DEVMODE

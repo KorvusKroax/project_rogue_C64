@@ -1,5 +1,7 @@
 #include "dev.h"
 
+#include <stddef.h>
+
 #include "../platform/charset.h"
 #include "../platform/key.h"
 #include "../platform/screen.h"
@@ -49,6 +51,9 @@ const uint8_t *build_full_map_row(uint8_t y)
         uint8_t monster_column = monster->x - game.view_window_x;
         if (monster->y == y && monster_column < VIEW_WINDOW_WIDTH) {
             full_map_row[monster_column] = monster->type;
+            if (monster->flags & MONSTER_RUNNING) {
+                full_map_row[monster_column] += INVERSE_OFFSET;
+            }
         }
     }
 
@@ -154,6 +159,36 @@ static void create_monster_by_letter(void)
     message_format_without_recall("\1monsters: \3/\2", failure, max_monsters_text, game.monster_count);
 }
 
+// a szint összes szörnye felébred és üldöz; utána a számuk az üzenetsorba
+static void start_all_monsters_running(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        start_monster_running(get_monster(index));
+    }
+    message_format_without_recall("running monsters: \3", NULL, NULL, game.monster_count);
+}
+
+// ha van nem lassított szörny, mindegyik lassított lesz, különben egyik sem; az új állapot az üzenetsorba
+static void toggle_all_monsters_slow(void)
+{
+    bool has_unslowed_monster = false;
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        if (!(get_monster(index)->flags & MONSTER_SLOW)) {
+            has_unslowed_monster = true;
+        }
+    }
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        struct Monster *monster = get_monster(index);
+        if (has_unslowed_monster) {
+            monster->flags |= MONSTER_SLOW;
+        } else {
+            monster->flags &= ~MONSTER_SLOW;
+        }
+    }
+    message_format_without_recall("slow monsters: \1", has_unslowed_monster ? "on" : "off", NULL, 0);
+}
+
 bool dev_execute_command(uint8_t code)
 {
     switch (code) {
@@ -166,8 +201,14 @@ bool dev_execute_command(uint8_t code)
         case KEY_F3:
             jump_to_depth();
             break;
+        case KEY_F4:
+            start_all_monsters_running();
+            break;
         case KEY_F5:
             toggle_full_map();
+            break;
+        case KEY_F6:
+            toggle_all_monsters_slow();
             break;
         case KEY_F7:
             toggle_option(OPTION_JUMP_TO_RUN_END, "jump to run end");

@@ -102,6 +102,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E19 | tekercsfeliratok: legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 | E20 | `CTRL-P`: a kérdések nem számítanak utolsó üzenetnek, és az utolsó üzenet nem kerül a mentésbe | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
 | E21 | nincs `seefloor` opció: sötét szobában a lámpafény (a 3×3 padlója) mindig látszik | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
+| E22 | a nézőablak kézzel is görgethető (CRSR ⇔), a CLR/HOME a játékosra állítja | [3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |

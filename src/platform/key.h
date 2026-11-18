@@ -21,6 +21,11 @@
 #define KEY_F8  140
 #define is_function_key(code)  ((code) >= KEY_F1 && (code) <= KEY_F8)
 
+// a nézőablak billentyűi: a kurzoré a PETSCII-kód; a HOME PETSCII-kódja (19) a CTRL-S-é, ezért a CLR-é (147)
+#define KEY_CURSOR_RIGHT  29
+#define KEY_CURSOR_LEFT   157
+#define KEY_HOME          147
+
 #define KEY_COLUMNS    8            // a billentyűmátrix oszlopai
 #define KEY_ROWS       8            // és sorai: egy oszlop egy bájt
 #define KEY_MODIFIER_SHIFT  0x01    // bal vagy jobb SHIFT, SHIFT LOCK

@@ -87,6 +87,14 @@ void show_map_changes(void)
         return;
     }
 
+    #ifdef DEVMODE
+        // a teljes térképen a szörnyek a látott térkép változása nélkül is lépnek és ébrednek
+        if (is_full_map_shown()) {
+            redraw_map();
+            return;
+        }
+    #endif
+
     // az üzenetsáv alatti sorok kimaradnak: a set_map_first_visible_row rajzolja vissza őket, amikor felszabadulnak
     uint8_t first_row = changed_first_row;
     uint8_t last_row = changed_last_row;
@@ -153,6 +161,26 @@ void center_view_window(uint8_t map_x)
 void follow_view_window(uint8_t map_x)
 {
     uint8_t view_window_x = calculate_view_window_x_after_step(map_x, game.view_window_x);
+
+    if (view_window_x != game.view_window_x) {
+        game.view_window_x = view_window_x;
+        is_scroll_pending = true;
+    }
+}
+
+// a lépés előjeles 8 bites paraméterként jön
+#if VIEW_WINDOW_SCROLL_STEP < 1 || VIEW_WINDOW_SCROLL_STEP > 127
+    #error "a VIEW_WINDOW_SCROLL_STEP 1 és 127 között legyen"
+#endif
+
+void scroll_view_window(int8_t columns)
+{
+    int16_t view_window_x = (int16_t)game.view_window_x + columns;
+    if (view_window_x < 0) {
+        view_window_x = 0;
+    } else if (view_window_x > VIEW_WINDOW_X_MAX) {
+        view_window_x = VIEW_WINDOW_X_MAX;
+    }
 
     if (view_window_x != game.view_window_x) {
         game.view_window_x = view_window_x;

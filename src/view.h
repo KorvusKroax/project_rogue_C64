@@ -16,6 +16,7 @@
 
 #define VIEW_WINDOW_X_MAX          (MAP_COLUMNS - VIEW_WINDOW_WIDTH)   // a nézőablak bal szélének legnagyobb oszlopa
 #define VIEW_WINDOW_EDGE_DISTANCE  8                                   // görgetés, ha a követett oszlop ennél közelebb ér a széléhez
+#define VIEW_WINDOW_SCROLL_STEP    8                                   // a kézi görgetés lépése oszlopban (default: 8)
 
 void clear_seen_map(void);                              // a látott térkép szóközzel feltöltése, nem rajzol
 
@@ -32,6 +33,7 @@ void set_map_first_visible_row(uint8_t row);            // a térkép csak a row
 
 void center_view_window(uint8_t map_x);                 // a nézőablak a map_x oszlopra áll, újrarajzolással
 void follow_view_window(uint8_t map_x);                 // görget, ha a map_x oszlop a holt zónán kívül van; az újrarajzolás a show_map_changes-ben
+void scroll_view_window(int8_t columns);                // kézi görgetés a játékos mozgása nélkül, legfeljebb a térkép széléig; az újrarajzolás a show_map_changes-ben
 
 uint8_t calculate_view_window_x_after_step(uint8_t map_x, uint8_t view_window_x);   // a nézőablak új helye, ha a követett oszlop map_x lett; nem rajzol
 

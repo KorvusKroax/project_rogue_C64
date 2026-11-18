@@ -86,7 +86,7 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 
 - **Kódok:** a betűk és az írásjelek ASCII-kódot adnak, az ESC 27, a RETURN 13, a törlés 127, a CTRL + betű 1..26. A RETURN nem 10 és a törlés nem 8, mert ezek a `CTRL-j` és a `CTRL-h` kódjai (óvatos futás). A `CTRL-m` kódja a RETURN-nel azonos, ilyen parancs nincs.
 - **Módosítók:** az ESC, a RETURN, a szóköz és a törlés SHIFT-tel (SHIFT LOCK mellett is) ugyanazt adja. A C= minden tekintetben azonos a CTRL-lel: CTRL + SHIFT + betű a CTRL-kódot adja, CTRL + nem betű nem ad kódot. A táblázatban nem szereplő SHIFT-kombináció nem ad kódot.
-- A kurzorbillentyűk, az F-billentyűk, a CLR/HOME és a RESTORE nem csinál semmit (a RESTORE által kiváltott NMI nem szakítja meg a programot). A fejlesztői buildben az F-billentyűk a fejlesztői parancsok ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)).
+- A CRSR ⇔ (SHIFT-tel is) és a CLR/HOME a nézőablakot görgeti, illetve a játékosra állítja ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)); a kódjuk a PETSCII-é (jobbra 29, balra 157), a HOME-é a CLR-é (147), mert a 19 a `CTRL-s` kódja. A függőleges kurzorbillentyű, a SHIFT + CLR/HOME, az F-billentyűk és a RESTORE nem csinál semmit (a RESTORE által kiváltott NMI nem szakítja meg a programot). A fejlesztői buildben az F-billentyűk a fejlesztői parancsok ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)).
 - **Ismétlés:** a parancsra váró állapotban egy nyomva tartott billentyű 16 képkocka után ismétel, utána 4 képkockánként. Az ismételt kód csak üres pufferbe kerül, így felengedés után nem fut tovább a parancs. A kérdéseknél (`--More--`, igen/nem, irány, tárgybetű, menük) csak új leütés számít.
 - **Előre leütött billentyűk:** legfeljebb 8 várakozik egy pufferben. A „billentyűpuffer ürítése” (teleport, csapda) és a `flush` opció ([4.2.5](#425-rendszer)) ezt üríti.
 - A beviteli mezőkben a fenti táblázat billentyűi gépelhetők.
@@ -206,6 +206,7 @@ waste_time():
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
 | SHIFT-q * | kilépés: „really quit?” – `y`-ra „You quit with <n> gold pieces”, pontszám = arany (levonás nélkül) |
 | szóköz * | nem csinál semmit |
+| CRSR ⇔, SHIFT + CRSR ⇔, CLR/HOME * | a nézőablak görgetése jobbra, illetve balra, és a játékosra állítása ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)); az `a` nem ismétli |
 
 > **C64-eltérés (E9):** az eredeti `!` (alshell indítása) és `CTRL-r` (a terminál képernyőjének újrarajzolása) nincs. Nincs `I` (egy tárgy kiírása) és `v` (verziószám) sem, mert a csomaglista és a címképernyő ugyanezt megmutatja. Mind a négy billentyű „illegal command”.
 
