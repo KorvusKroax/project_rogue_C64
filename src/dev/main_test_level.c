@@ -5,6 +5,7 @@
 
 static const struct DevTest level_tests[] = {
     { "LEVEL-GENERATION", test_level_generation, LEVEL_TEST_LEVEL_COUNT },
+    { "LEVEL-MONST MOVES", test_level_monster_moves, LEVEL_MOVE_TEST_LEVEL_COUNT },
 };
 
 // hosszú (normál sebességen percekig), VICE-ben warp módban; ESC-re leáll, az eredmény az addigi szintekből jön

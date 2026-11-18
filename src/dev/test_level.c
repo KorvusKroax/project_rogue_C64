@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "../chase.h"
 #include "../level.h"
 #include "../map.h"
 #include "../monsters.h"
@@ -11,6 +12,7 @@
 #include "../platform/screen.h"
 #include "../rooms.h"
 #include "../state.h"
+#include "../view.h"
 
 // a szint-önteszt mélységei (LEVEL_TEST_DEPTH_COUNT, tests.h): a próbák sorban ezeken mennek körbe
 static const uint8_t level_test_depths[LEVEL_TEST_DEPTH_COUNT] = { 1, 10, 26, 40 };
@@ -618,6 +620,43 @@ int test_level_generation(uint16_t i)
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     generate_level();
     return calculate_level_checksum() == level_checksum;
+}
+
+#define MONSTER_MOVE_TEST_TURNS  20             // ennyi körön át lépnek a szörnyek egy szinten
+
+// minden szörny járható mezőn áll, nem a játékos mezőjén, és a room mezője a mezőjének szobája
+static bool are_monster_positions_valid(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        uint8_t x = monster->x;
+        uint8_t y = monster->y;
+
+        if (!is_walkable_character(get_map_character(x, y))) return false;
+        if (x == game.player.x && y == game.player.y) return false;
+        if (monster->room != get_room_at(x, y)) return false;
+    }
+    return true;
+}
+
+int test_level_monster_moves(uint16_t i)
+{
+    game.seed = LEVEL_TEST_FIRST_SEED + i;
+    game.dungeon_level = level_test_depths[i % LEVEL_TEST_DEPTH_COUNT];
+    clear_seen_map();
+    generate_level();
+    game.player.room = get_room_at(game.player.x, game.player.y);
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        start_monster_running(get_monster(index));
+    }
+
+    for (uint8_t turn = 0; turn < MONSTER_MOVE_TEST_TURNS; turn++) {
+        move_monsters();
+        if (!are_monster_tiles_valid()) return false;
+        if (!are_monster_positions_valid()) return false;
+    }
+    return true;
 }
 
 // az arány-táblázat oszlopai: mélység, szobák, sötét szobák várt és kapott száma, labirintusok várt és kapott száma, eredmény;

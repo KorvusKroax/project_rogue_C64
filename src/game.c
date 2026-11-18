@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "platform/key.h"
+#include "chase.h"
 #include "explore.h"
 #include "level.h"
 #include "message.h"
@@ -247,6 +248,7 @@ static void play_turn(void)
     }
 
     // AFTER fázis
+    move_monsters();
 }
 
 void run_game(void)

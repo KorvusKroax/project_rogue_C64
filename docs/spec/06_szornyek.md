@@ -217,8 +217,10 @@ rndmove(who):  // zavarodott mozgás (szörny és játékos is)
   target.x = who.pos.x + rnd(3) - 1
   if target == who.pos: return target
   if !diag_ok(who.pos, target) or !step_ok(target) or target-en scare monster tekercs: return who.pos
+  if who szörny and F_MONST(target): return who.pos   // J22
   return target
 ```
+> **C64-javítás (J22):** szörnynél a véletlen lépés a szörnyes mezőt (F_MONST) is kizárja, így az álcázott Xerocét is. *Eredetileg* a `step_ok` csak a képernyőjelet nézte, ezért a zavarodott szörny, a denevér és a phantom ráléphetett az álcázott Xerocra, és két szörny került egy mezőre. A játékos zavarodott lépése nem változik: az álcázott Xerocra lépve megtámadja.
 - A szörny akkor támad, ha a legjobb lépés a játékos mezőjére vinne – vagyis ha szomszédos vele (átlósan csak `diag_ok` szerint).
 - Ha nincs közelebbi vagy azonos távolságú mező, helyben marad (`best` = saját mező).
 - A szörnyek nem lépnek egymásra (a szörny jele nem `step_ok`), tárgyra igen.

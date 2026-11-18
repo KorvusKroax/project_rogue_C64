@@ -5,12 +5,13 @@
 #define CAPPED_BYTES 3                                  // a telített érték ennyi bájton elfér (pl. a ranglistafájlban)
 #define CAPPED_MAX   ((1UL << (CAPPED_BYTES * 8)) - 1)  // 16777215
 
-uint16_t dist2(struct Position a, struct Position b)
+uint16_t calculate_distance_squared(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 {
-    int8_t dx = a.x - b.x;
-    int8_t dy = a.y - b.y;
+    // két oszlop (sor) különbsége előjelesen 8 biten is elfér (state.h)
+    int8_t offset_x = x2 - x1;
+    int8_t offset_y = y2 - y1;
 
-    return dx * dx + dy * dy;
+    return offset_x * offset_x + offset_y * offset_y;
 }
 
 uint32_t capped_add(uint32_t a, uint32_t b)

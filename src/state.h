@@ -8,7 +8,7 @@
 #define MAP_ROWS     22                         // default: 22
 #define MAP_TOP_ROW  1                          // a 0. sor az üzenetsor (default: 1)
 
-// a koordináták 8 bitesek, és két oszlop különbsége (dist2, nézőablak) előjelesen 8 biten is elfér
+// a koordináták 8 bitesek, és két oszlop különbsége (calculate_distance_squared, nézőablak) előjelesen 8 biten is elfér
 #if MAP_COLUMNS > 128 || MAP_TOP_ROW + MAP_ROWS > 128
     #error "a térkép túl nagy a 8 bites koordinátákhoz"
 #endif

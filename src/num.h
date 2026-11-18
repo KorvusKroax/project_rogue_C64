@@ -7,11 +7,8 @@
 #define FORMAT_WIDTH_MAX    (FORMAT_DIGITS_MAX + 1)     // a jegyek az előjellel; ennél szélesebb mezőt nem ír a format_int
 #define FORMAT_BUFFER_SIZE  (FORMAT_WIDTH_MAX + 1)
 
-struct Position {
-    uint8_t x, y;
-};
-
-uint16_t dist2(struct Position a, struct Position b);
+// a két mező távolságának négyzete: csak összehasonlításra kell, így nincs gyökvonás
+uint16_t calculate_distance_squared(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint32_t capped_add(uint32_t a, uint32_t b);
 uint32_t capped_sub(uint32_t a, uint32_t b);
 uint8_t format_int(char *out, int32_t number, int8_t width);

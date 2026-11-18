@@ -33,12 +33,16 @@ int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
 int test_monster_waking(uint16_t i);
+int test_monster_chase(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
 #define LEVEL_TEST_DEPTH_COUNT  4               // ennyi mélységen, felváltva (test_level.c)
 
+#define LEVEL_MOVE_TEST_LEVEL_COUNT  100        // ennyi szinten lépnek a szörnyek, ugyanazokkal a magokkal, mint a generálás tesztjében
+
 int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
+int test_level_monster_moves(uint16_t i);       // az i. szinten minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők
 bool show_level_room_ratios(void);              // mélységenként a sötét szobák és a labirintusok várt és kapott száma, a test_level_generation után; igaz, ha mind a tűrésen belül (leállított futásnál nem ítél, igazat ad)
 bool show_level_generation_times(void);         // mélységenként a leglassabb szintgenerálás képkockában, a test_level_generation után; igaz, ha mind a 2 másodperces kereten belül
 
