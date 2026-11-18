@@ -3,13 +3,17 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <c64/vic.h>
 
 #include "../chase.h"
+#include "../explore.h"
 #include "../level.h"
 #include "../map.h"
 #include "../monsters.h"
+#include "../move.h"
 #include "../platform/platform.h"
 #include "../platform/screen.h"
+#include "../rng.h"
 #include "../rooms.h"
 #include "../state.h"
 #include "../view.h"
@@ -622,7 +626,82 @@ int test_level_generation(uint16_t i)
     return calculate_level_checksum() == level_checksum;
 }
 
-#define MONSTER_MOVE_TEST_TURNS  20             // ennyi körön át lépnek a szörnyek egy szinten
+#define MONSTER_MOVE_TEST_TURNS     20          // ennyi kör TURN_TEST_RUNNING_MONSTERS ébren lévő szörnnyel, aztán ennyi mindegyikkel
+#define TURN_TEST_RUNNING_MONSTERS  5           // a spec szerint egy kör a szokásos 3–5 ébren lévő szörnnyel mérendő
+
+// az idő raszter-sorban (PAL; NTSC-n 263 sor egy képkocka)
+#define RASTER_LINES_PER_FRAME  312
+#define RASTER_UNSAFE_LINES     2               // a raszter-IRQ sorától ennyi sorig a frame_count még a régi lehet
+
+struct RasterTime {
+    uint8_t  frame;                             // a frame_count
+    uint16_t lines_since_interrupt;             // a raszter-IRQ sora óta eltelt sorok: ennél a sornál lép a frame_count
+};
+
+// a frame_count és a raszter-sor egy képkockából; ha olvasás közben jött a megszakítás, vagy éppen most jön, újra
+static void read_raster_time(struct RasterTime *time)
+{
+    while (true) {
+        uint8_t frame = frame_count;
+        uint16_t line = vic.raster | ((uint16_t)(vic.ctrl1 & 0x80) << 1);
+        if (frame != frame_count) continue;
+
+        uint16_t lines_since_interrupt = line >= RASTER_INTERRUPT_ROW ? line - RASTER_INTERRUPT_ROW : line + RASTER_LINES_PER_FRAME - RASTER_INTERRUPT_ROW;
+        if (lines_since_interrupt < RASTER_UNSAFE_LINES) continue;
+
+        time->frame = frame;
+        time->lines_since_interrupt = lines_since_interrupt;
+        return;
+    }
+}
+
+static uint16_t calculate_elapsed_lines(const struct RasterTime *start, const struct RasterTime *end)
+{
+    uint8_t frames = end->frame - start->frame;
+    return (uint16_t)frames * RASTER_LINES_PER_FRAME + end->lines_since_interrupt - start->lines_since_interrupt;
+}
+
+// mélységenként: a körök ideje TURN_TEST_RUNNING_MONSTERS ébren lévő szörnnyel (összeg, darab, legnagyobb), és a legnagyobb, ha mind ébren van
+static uint32_t turn_line_sums[LEVEL_TEST_DEPTH_COUNT];
+static uint16_t turn_counts[LEVEL_TEST_DEPTH_COUNT];
+static uint16_t turn_max_lines[LEVEL_TEST_DEPTH_COUNT];
+static uint16_t turn_max_lines_all_running[LEVEL_TEST_DEPTH_COUNT];
+
+// a játékos lépése egy véletlen irányba; (0, 0), ha pihen: ha az irány a térképen kívülre vagy szörnyre esne (a megtámadása még nincs meg)
+static void choose_test_player_step(int8_t *step_x, int8_t *step_y)
+{
+    *step_x = (int8_t)rnd(3) - 1;
+    *step_y = (int8_t)rnd(3) - 1;
+
+    // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+    uint8_t x = game.player.x + *step_x;
+    uint8_t y = game.player.y + *step_y;
+    if (!is_on_map(x, y) || (get_map_flags(x, y) & TILE_MONSTER)) {
+        *step_x = 0;
+        *step_y = 0;
+    }
+}
+
+// egy kör, ahogy a játékban: a játékos lépése (vagy pihenése), a körülnézés és a szörnyek lépése; az ideje raszter-sorban,
+// a képernyőre másolás (show_map_changes) nélkül
+static uint16_t take_timed_turn(void)
+{
+    int8_t step_x;
+    int8_t step_y;
+    choose_test_player_step(&step_x, &step_y);
+
+    struct RasterTime start;
+    struct RasterTime end;
+    read_raster_time(&start);
+    if (step_x != 0 || step_y != 0) {
+        move_player(step_x, step_y);
+    }
+    look_around();
+    move_monsters();
+    read_raster_time(&end);
+
+    return calculate_elapsed_lines(&start, &end);
+}
 
 // minden szörny járható mezőn áll, nem a játékos mezőjén, és a room mezője a mezőjének szobája
 static bool are_monster_positions_valid(void)
@@ -639,24 +718,64 @@ static bool are_monster_positions_valid(void)
     return true;
 }
 
-int test_level_monster_moves(uint16_t i)
+// MONSTER_MOVE_TEST_TURNS kör; mindegyik után a szörnymezők ellenőrzése, az idők a mélység számlálóiba
+static bool run_timed_turns(uint8_t depth_index, bool are_all_running)
 {
-    game.seed = LEVEL_TEST_FIRST_SEED + i;
-    game.dungeon_level = level_test_depths[i % LEVEL_TEST_DEPTH_COUNT];
-    clear_seen_map();
-    generate_level();
-    game.player.room = get_room_at(game.player.x, game.player.y);
-
-    for (uint8_t index = 1; index <= game.monster_count; index++) {
-        start_monster_running(get_monster(index));
-    }
-
     for (uint8_t turn = 0; turn < MONSTER_MOVE_TEST_TURNS; turn++) {
-        move_monsters();
+        uint16_t lines = take_timed_turn();
+
+        if (are_all_running) {
+            if (lines > turn_max_lines_all_running[depth_index]) {
+                turn_max_lines_all_running[depth_index] = lines;
+            }
+        } else {
+            turn_line_sums[depth_index] += lines;
+            turn_counts[depth_index]++;
+            if (lines > turn_max_lines[depth_index]) {
+                turn_max_lines[depth_index] = lines;
+            }
+        }
+
         if (!are_monster_tiles_valid()) return false;
         if (!are_monster_positions_valid()) return false;
     }
     return true;
+}
+
+int test_level_monster_moves(uint16_t i)
+{
+    uint8_t depth_index = i % LEVEL_TEST_DEPTH_COUNT;
+
+    if (i == 0) {
+        for (uint8_t d = 0; d < LEVEL_TEST_DEPTH_COUNT; d++) {
+            turn_line_sums[d] = 0;
+            turn_counts[d] = 0;
+            turn_max_lines[d] = 0;
+            turn_max_lines_all_running[d] = 0;
+        }
+    }
+
+    game.seed = LEVEL_TEST_FIRST_SEED + i;
+    game.dungeon_level = level_test_depths[depth_index];
+    clear_seen_map();
+    generate_level();
+    // mint a new_level: a kezdőszoba és a look_around kezdőpontja; hogy melyik szörny van ébren, azt lent a teszt dönti el
+    enter_room(game.player.x, game.player.y);
+    forget_previous_position();
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        struct Monster *monster = get_monster(index);
+        monster->flags &= ~MONSTER_RUNNING;
+        if (index <= TURN_TEST_RUNNING_MONSTERS) {
+            start_monster_running(monster);
+        }
+    }
+    if (!run_timed_turns(depth_index, false)) return false;
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        start_monster_running(get_monster(index));
+    }
+    return run_timed_turns(depth_index, true);
 }
 
 // az arány-táblázat oszlopai: mélység, szobák, sötét szobák várt és kapott száma, labirintusok várt és kapott száma, eredmény;
@@ -804,4 +923,34 @@ bool show_level_generation_times(void)
     }
 
     return all_ok;
+}
+
+static uint32_t convert_lines_to_frame_percent(uint32_t lines)
+{
+    return lines * 100 / RASTER_LINES_PER_FRAME;
+}
+
+// az AVG és a MAX TURN_TEST_RUNNING_MONSTERS ébren lévő szörnnyel, az ALL a legnagyobb, ha mind ébren van; nincs keret, csak mérés
+void show_level_turn_times(void)
+{
+    set_screen_cursor_x(1);
+    put_text("TURN (% OF FRAME): 5 / ALL AWAKE");
+    move_screen_cursor_to_next_row();
+
+    put_ratio_header(RATIO_DEPTH_COLUMN, "DEPTH", 5);
+    put_ratio_header(RATIO_ROOMS_COLUMN, "AVG", 3);
+    put_ratio_header(RATIO_DARK_WANT_COLUMN, "MAX", 3);
+    put_ratio_header(RATIO_DARK_GOT_COLUMN, "ALL", 3);
+    move_screen_cursor_to_next_row();
+
+    for (uint8_t depth_index = 0; depth_index < LEVEL_TEST_DEPTH_COUNT; depth_index++) {
+        uint16_t count = turn_counts[depth_index];
+        uint32_t average_lines = count == 0 ? 0 : turn_line_sums[depth_index] / count;
+
+        put_ratio_number(RATIO_DEPTH_COLUMN, level_test_depths[depth_index]);
+        put_ratio_number(RATIO_ROOMS_COLUMN, convert_lines_to_frame_percent(average_lines));
+        put_ratio_number(RATIO_DARK_WANT_COLUMN, convert_lines_to_frame_percent(turn_max_lines[depth_index]));
+        put_ratio_number(RATIO_DARK_GOT_COLUMN, convert_lines_to_frame_percent(turn_max_lines_all_running[depth_index]));
+        move_screen_cursor_to_next_row();
+    }
 }

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define RASTER_INTERRUPT_ROW  250       // a raszter-IRQ sora, a látható rész alatt: itt lép a frame_count
+
 extern volatile uint8_t frame_count;    // a raszter-IRQ lépteti, körbefut
 
 void platform_init(void);       // indítás

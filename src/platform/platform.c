@@ -26,7 +26,6 @@
 #define IRQ_VECTOR            (*(void **)0x0314)
 #define NMI_VECTOR            (*(void **)0x0318)
 #define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt
-#define RASTER_INTERRUPT_ROW  250                           // a látható rész alatt
 #define VIC_RASTER_INTERRUPT  0x01
 
 volatile uint8_t frame_count;

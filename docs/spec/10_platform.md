@@ -72,7 +72,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 
 ## 10.6 Időzítés
 - **Raszter-IRQ** képkockánként egyszer (PAL 50 Hz, NTSC 60 Hz): billentyűolvasás, képkocka-számláló, jiffy óra.
-- **Futás üteme:** futás közben (`jump_to_run_end` nélkül) minden lépés után a játék a következő ütem elejéig vár, így minden lépés ugyanannyi képkockáig tart (1 vagy 2, [10.8](#108-erőforrás-keretek)), akár van szörny a közelben, akár nincs. `jump_to_run_end` mellett nincs várakozás, mert a futás közben nincs rajzolás.
+- **Futás üteme:** futás közben (`jump_to_run_end` nélkül) minden lépés után a játék a következő ütem elejéig vár, így minden lépés ugyanannyi képkockáig tart (3 vagy 4, [10.8](#108-erőforrás-keretek)), akár van szörny a közelben, akár nincs. Ha egy lépés ennél tovább tart (pl. szobába lépés, sok gyorsított vagy repülő szörny), a következő ütemig vár, így az ütem egyszer csúszik. `jump_to_run_end` mellett nincs várakozás, mert a futás közben nincs rajzolás.
 - **Animációs késleltetés:** a dobott tárgy és a lövedék lépésenként 2 képkockát vár, a sugár (7.6) lépésenként 2-t, és a teljes sugár a visszarajzolás előtt még 10 képkockáig látszik. A nézőablakon kívüli lépések nem várnak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
 - **Seed:** a címképernyőn az `N` lenyomásakor a 32 bites seed bájtjai: CIA1 A időzítő alsó bájtja, felső bájtja, a raszter-sor (`$D012`) és a jiffy-számláló alsó bájtja, mindegyik XOR-olva a jiffy-számláló többi bájtjával ([0.2](00_attekintes.md#02-alapprimitívek)). Ha az eredmény 0, a seed 1.
 - A játéklogika soha nem függ az időtől: az időzítés csak a megjelenítést és a seed kezdőértékét érinti.
@@ -126,8 +126,8 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 | játékállapot (perzisztens blokk) | kb. 8,5 KB |
 | képernyő + karakterkészlet | 3 KB |
 | **szintgenerálás** | legfeljebb 2 másodperc |
-| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | legfeljebb a futás lépésideje (lásd lent), a szokásos 3–5 ébren lévő szörnnyel; a szörnymozgás elkészültekor mérni kell. Az alvó szörny nem mozog, nem számít bele |
-| **futás** | lépésenként mindig ugyanannyi képkocka (1 vagy 2, a mérés alapján rögzítve, [10.6](#106-időzítés)) |
+| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | átlagban legfeljebb a futás lépésideje (lásd lent), a szokásos 3–5 ébren lévő szörnnyel; egy-egy kör tovább tarthat (szobába lépés, sok gyorsított vagy repülő szörny). Az alvó szörny nem mozog, nem számít bele. A szint-önteszt minden futáskor méri ([10.9](#109-fejlesztői-build-és-determinizmus)); a szörnymozgás elkészültekor, gyorsítás előtt mélységtől függően átlagosan 2,6–5,3 képkocka volt, nagy részét a szörnyek lépése vitte el (a következő mező és a cél választása), a többit a körülnézés |
+| **futás** | lépésenként mindig ugyanannyi képkocka (3 vagy 4, a gyorsítás utáni mérés alapján rögzítve, [10.6](#106-időzítés)) |
 | **görgetés** | legfeljebb 2 képkocka |
 
 A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák foglaltságát a fejlesztői mód mutatja ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
@@ -136,7 +136,7 @@ A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák fogla
 - A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert, így a hardverközeli kód egy helyen van.
 - **Fejlesztői build:** külön fordítási beállítással készül. Benne van a játék, a belső ellenőrzések (hamis feltételnél hibaüzenet a forrásbeli hellyel, majd leállás) és a fejlesztői parancsok játék közben. Induláskor kiírja a seedet, amely itt kézzel is megadható; a RETURN indítja a játékot. A kiadott változatban egyik sincs benne.
 - **Tesztprogramok:** az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem külön programokban, a fejlesztői build beállításával fordítva. Mindegyikbe csak az kerül, amit a tesztjei hívnak, így a játék és a tesztek nem osztoznak a memórián.
-  - A nem interaktív programok a tesztjeiket egymás után lefuttatják, az eredményt a képernyőre írják, és a végén az emulátornak is jelzik (VICE: a hibakereső cartridge kilépési kódja), így egy szkript lefordíthatja, lefuttathatja és kiértékelheti mindet. A hosszú tesztek gyorsított (warp) módban futnak, és ESC-re leállnak; az eredmény ilyenkor az addigi próbákból jön. Ilyen a szint-önteszt: 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; normál sebességen percekig tart.
+  - A nem interaktív programok a tesztjeiket egymás után lefuttatják, az eredményt a képernyőre írják, és a végén az emulátornak is jelzik (VICE: a hibakereső cartridge kilépési kódja), így egy szkript lefordíthatja, lefuttathatja és kiértékelheti mindet. A hosszú tesztek gyorsított (warp) módban futnak, és ESC-re leállnak; az eredmény ilyenkor az addigi próbákból jön. Ilyen a szint-önteszt: 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen, majd 100 szinten körök a játékos lépésével és üldöző szörnyekkel, közben egy kör ideje (a képernyőre másolás nélkül); normál sebességen percekig tart.
   - A tesztképernyők egy interaktív programban vannak, menüből: karakterkészlet, billentyűzet, üzenetsáv és nézőablak, státuszsor; mindegyikből az ESC lép vissza a menübe.
 - **Fejlesztői parancsok** játék közben az F-billentyűkön (F1–F8, a párosak SHIFT-tel), így egyik játékparancsot sem takarják el. Egyik sem visz el időt.
   - **F1:** új szint ugyanazon a mélységen.

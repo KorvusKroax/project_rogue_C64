@@ -43,8 +43,8 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 |---|---|---|
 | `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 552 bájt |
 | `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 584 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; utána mélységenként a sötét szobák és labirintusok aránya és a leglassabb generálás ideje; warp módban is kb. 4 perc | 22 232 bájt |
-| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje és láthatósága | 30 280 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 22 232 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 30 280 bájt |
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 656 bájt |
 
 Összehasonlításul: a játék (`build.bat`) 26 024, a fejlesztői build (`build.bat dev`) 22 912 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.

@@ -24,6 +24,7 @@ int main(void)
     bool ratios_ok = show_level_room_ratios();
     move_screen_cursor_to_next_row();
     bool times_ok = show_level_generation_times();
+    show_level_turn_times();
 
     bool all_ok = generation_ok && ratios_ok && times_ok;
     if (!all_ok) {
