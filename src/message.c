@@ -31,6 +31,15 @@ static uint16_t message_bar_length;
 static uint8_t message_bar_end_column;
 static uint8_t message_bar_rows_in_use = 1;     // ennyi sort foglal a sáv; a többi a térképé
 
+#ifdef DEVMODE
+    static bool is_more_wait_enabled = true;
+
+    void set_message_more_wait(bool enabled)
+    {
+        is_more_wait_enabled = enabled;
+    }
+#endif
+
 static void add_character_to_message_text(char character)
 {
     if (message_text_length < MESSAGE_TEXT_SIZE - 2) {  // a záró pontnak és nullának hely kell
@@ -178,6 +187,13 @@ static void show_message_bar(void)
 
 static void show_more_and_wait(void)
 {
+    #ifdef DEVMODE
+        if (!is_more_wait_enabled) {
+            message_clear();
+            return;
+        }
+    #endif
+
     // ha az utolsó használt sorban nincs helye, a következő sor elejére kerül; a sáv utolsó sorában mindig van helye
     if (message_bar_end_column > SCREEN_WIDTH - TEXT_MORE_LENGTH) {
         set_screen_cursor(0, MESSAGE_ROW + message_bar_rows_in_use);

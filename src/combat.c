@@ -1,5 +1,7 @@
 #include "combat.h"
 
+#include <string.h>
+
 #include "explore.h"
 #include "game.h"
 #include "map.h"
@@ -55,6 +57,50 @@ static bool roll_attack(uint8_t attacker_level, int16_t hit_bonus, int16_t damag
     return did_hit;
 }
 
+static char monster_name_text[MONSTER_NAME_TEXT_SIZE];
+
+const char *prepare_monster_name(const struct Monster *monster)
+{
+    // ide jön: szörnyérzékeléssel (SEEMONST) a nem látott szörny is a nevén
+    if (!is_monster_visible(monster)) return text_something;
+
+    // ide jön: hallucinálva a képernyőn látott betűhöz tartozó név
+    strcpy(monster_name_text, text_monster_article);
+    strcat(monster_name_text, text_monster_names[monster->type - 'A']);
+    return monster_name_text;
+}
+
+// a hit/miss üzenet a támadás után, a változatok közül véletlenül; f-harc közben nincs üzenet
+static void report_attack(const char *const *hit_texts, const char *const *miss_texts, bool did_hit,
+                          const char *attacker_name, const char *defender_name)
+{
+    if (is_fight_active) return;
+
+    const char *const *texts = did_hit ? hit_texts : miss_texts;
+    message_format(texts[rnd(ATTACK_TEXT_VARIANT_COUNT)], attacker_name, defender_name, 0);
+}
+
+bool roll_player_attack(struct Monster *monster)
+{
+    // fegyver nélkül; ide jön: a dexterity és az increase damage gyűrű bónusza
+    int16_t hit_bonus = strength_hit_bonus[game.player.strength];
+    int16_t damage_bonus = strength_damage_bonus[game.player.strength];
+
+    return roll_attack(game.player.experience_level, hit_bonus, damage_bonus, monster->armor,
+                       &unarmed_damage, 1, &monster->hit_points);
+}
+
+bool roll_monster_attack(const struct Monster *monster)
+{
+    const struct MonsterType *type_data = &monster_types[monster->type - 'A'];
+    int16_t hit_bonus = strength_hit_bonus[MONSTER_STRENGTH];
+    int16_t damage_bonus = strength_damage_bonus[MONSTER_STRENGTH];
+    // ide jön: ha a játékos nincs ébren (alszik, ájult, fagyott), a szörny +4-et kap
+
+    return roll_attack(monster->experience_level, hit_bonus, damage_bonus, calculate_player_armor(),
+                       type_data->damage, type_data->damage_segment_count, &game.player.hit_points);
+}
+
 bool attack_monster(struct Monster *monster)
 {
     stop_running_and_repeating();
@@ -62,15 +108,11 @@ bool attack_monster(struct Monster *monster)
     start_monster_running(monster);
     // ide jön: az álcázott xeroc leleplezése („wait! That's a xeroc!”), a támadás ilyenkor elmarad
 
-    // fegyver nélkül; ide jön: a dexterity és az increase damage gyűrű bónusza
-    int16_t hit_bonus = strength_hit_bonus[game.player.strength];
-    int16_t damage_bonus = strength_damage_bonus[game.player.strength];
+    const char *monster_name = prepare_monster_name(monster);
+    bool did_hit = roll_player_attack(monster);
+    report_attack(text_player_hits, text_player_misses, did_hit, text_you, monster_name);
 
-    // a szörny már ébren van, így a támadó nem kap +4-et
-    bool did_hit = roll_attack(game.player.experience_level, hit_bonus, damage_bonus, monster->armor,
-                               &unarmed_damage, 1, &monster->hit_points);
-
-    // ide jön: a hit/miss üzenet, CANHUH, a szörny halála
+    // ide jön: CANHUH, a szörny halála
     return did_hit;
 }
 
@@ -83,16 +125,12 @@ bool attack_player(struct Monster *monster)
     }
     // ide jön: az álcázott xeroc leleplezése
 
-    const struct MonsterType *type_data = &monster_types[monster->type - 'A'];
-    int16_t hit_bonus = strength_hit_bonus[MONSTER_STRENGTH];
-    int16_t damage_bonus = strength_damage_bonus[MONSTER_STRENGTH];
-    // ide jön: ha a játékos nincs ébren (alszik, ájult, fagyott), a szörny +4-et kap
-
+    const char *monster_name = prepare_monster_name(monster);
     int16_t hit_points_before = game.player.hit_points;
-    bool did_hit = roll_attack(monster->experience_level, hit_bonus, damage_bonus, calculate_player_armor(),
-                               type_data->damage, type_data->damage_segment_count, &game.player.hit_points);
+    bool did_hit = roll_monster_attack(monster);
+    report_attack(text_monster_hits, text_monster_misses, did_hit, monster_name, text_you);
 
-    // ide jön: a hit/miss üzenet, a játékos halála
+    // ide jön: a játékos halála
     if (did_hit && is_fight_active && !is_fight_kamikaze) {
         int16_t damage = hit_points_before - game.player.hit_points;
         if (damage > max_hit_this_fight) {

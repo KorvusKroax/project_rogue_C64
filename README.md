@@ -37,18 +37,18 @@ Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem k�
 
 ### Tesztprogramok
 
-Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja.
+Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja. Ahol a tesztek üzenetet adó játékkódot futtatnak (pl. szörnytámadás), a program a sáv alatt kezdi a kiírást, és kikapcsolja a `--More--` várakozását (`set_message_more_wait(false)`, csak a `DEVMODE` fordításban létezik), mert a tesztben nincs, aki szóközt nyomjon.
 
 | név | mit tesztel | szabad hely (2026-11-18) |
 |---|---|---|
-| `combat` | az erő harci táblái; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására és a célpont elmozdulásakor | 26 792 bájt |
+| `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására és a célpont elmozdulásakor | 25 512 bájt |
 | `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 464 bájt |
 | `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 424 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 14 864 bájt |
-| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 25 512 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 12 328 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 23 576 bájt |
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 31 528 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 22 440, a fejlesztői build (`build.bat dev`) 18 968 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 21 416, a fejlesztői build (`build.bat dev`) 17 944 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -265,6 +265,19 @@ static uint8_t view_pattern(uint8_t x, uint8_t y)
 static __noinline uint8_t view_pattern(uint8_t x, uint8_t y) { … }
 ```
 Hol: `src/dev/test_screens.c`.
+
+**8. Előző hívás eredményét továbbadó „proxy” és egy inline-olt hívó** – futáskor, csendben, memóriakorrupcióval; VICE-ben és a generált kódban ellenőrizve. Ha egy függvényt (itt `prepare_monster_name`) több helyről is egy előző hívás eredményével hívnak meg, a fordító `@proxy` változatot készít, amely a paramétert (P4) az ACCU-ból tölti be. Egy inline-olt hívóban (`attack_monster` a `move_player`-ben) ezután a paraméter feltöltése a proxyra marad, de az inline-olt kód már előtte használja a P4-et: a `start_monster_running` a szörny helyett egy véletlen címre írt. A játék buildjében nem jött elő, csak a `combat` tesztprogramban, mert ott a teszt adta a második ilyen hívóhelyet; hogy előjön-e, a teljes program hívásain múlik.
+```c
+// rossz: két hívóhely adja tovább egy hívás eredményét, így proxy keletkezik
+struct Monster *monster = put_combat_scene();
+prepare_monster_name(monster);
+… prepare_monster_name(put_combat_monster(…)) …
+
+// jó: a rekord címe a táblából
+put_combat_scene();
+prepare_monster_name(&game.monsters[0]);
+```
+Hol: `src/dev/test_combat.c`. A generált kódban (`build/<név>.asm`) a `@proxy` nevű függvényeket és az előttük használt paraméterregisztereket érdemes megnézni, ha egy érték lehetetlennek látszik.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c

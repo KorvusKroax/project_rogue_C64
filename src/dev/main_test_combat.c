@@ -2,9 +2,11 @@
 #include "test_runner.h"
 
 #include "../platform/screen.h"
+#include "../message.h"
 
 static const struct DevTest combat_tests[] = {
     { "COMBAT-STRENGTH", test_strength_bonuses, 1 },
+    { "COMBAT-NAMES", test_monster_names, 1 },
     { "COMBAT-PLAYER HITS", test_player_hit_rate, 1 },
     { "COMBAT-MONSTER HITS", test_monster_hit_rate, 1 },
     { "COMBAT-MOVE ATTACK", test_move_attack, 1 },
@@ -19,6 +21,9 @@ int main(void)
 {
     init_test_program();
 
+    // az üzenetsáv sorait a támadások üzenetei használják; a teli sáv nem vár szóközre
+    set_message_more_wait(false);
+    set_screen_cursor(0, MESSAGE_ROW + MESSAGE_ROW_COUNT);
     put_text("Combat tests:");
     move_screen_cursor_to_next_row();
     bool all_ok = run_test_table(combat_tests, TEST_COUNT(combat_tests));

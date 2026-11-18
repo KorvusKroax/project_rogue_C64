@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "../chase.h"
 #include "../combat.h"
@@ -12,6 +13,7 @@
 #include "../player.h"
 #include "../rooms.h"
 #include "../state.h"
+#include "../texts.h"
 
 #define COMBAT_TEST_SEED    1                   // rögzített mag: a dobássorozat minden futásban ugyanaz
 #define COMBAT_TEST_SWINGS  20000               // ennyi csapás oldalanként a találati arányhoz
@@ -119,6 +121,32 @@ int test_strength_bonuses(uint16_t i)
         strength_damage_bonus[STRENGTH_MAX] == 6;
 }
 
+#define MONSTER_NAME_TEST_INVISIBLE  'P'        // phantom: láthatatlan
+
+// a látott szörny neve "the " + a típus neve, a nem látotté "something"; minden típus neve elfér a pufferben
+int test_monster_names(uint16_t i)
+{
+    // a rekord címe a táblából, nem a létrehozó függvény visszatérési értékéből: ez utóbbi Oscar64-hibát vált ki a move_player-ben
+    // (README, Oscar64-hibák, 8.)
+    put_combat_scene();
+    bool ok = strcmp(prepare_monster_name(&game.monsters[0]), "the kestrel") == 0;
+
+    put_combat_monster(MONSTER_NAME_TEST_INVISIBLE, COMBAT_PLAYER_X - 1, COMBAT_PLAYER_Y);
+    ok = ok && strcmp(prepare_monster_name(&game.monsters[1]), text_something) == 0;
+
+    for (uint8_t type_index = 0; type_index < MONSTER_TYPE_COUNT; type_index++) {
+        if (strlen(text_monster_article) + strlen(text_monster_names[type_index]) >= MONSTER_NAME_TEXT_SIZE) {
+            ok = false;
+        }
+    }
+    if (strlen(text_something) >= MONSTER_NAME_TEXT_SIZE) {
+        ok = false;
+    }
+
+    clear_combat_scene();
+    return ok;
+}
+
 // a kezdőértékű, fegyver nélküli játékos a kestrelt a képletből számolt eséllyel találja el (most 8/20);
 // találatnál a sebzés a fegyver nélküli kocka és az erő sebzésbónusza, hibánál nincs sebzés
 int test_player_hit_rate(uint16_t i)
@@ -133,7 +161,7 @@ int test_player_hit_rate(uint16_t i)
 
     for (uint16_t swing = 0; swing < COMBAT_TEST_SWINGS; swing++) {
         monster->hit_points = monster->max_hit_points;
-        bool did_hit = attack_monster(monster);
+        bool did_hit = roll_player_attack(monster);
         int16_t damage = monster->max_hit_points - monster->hit_points;
         if (did_hit) {
             hits++;
@@ -170,7 +198,7 @@ int test_monster_hit_rate(uint16_t i)
 
     for (uint16_t swing = 0; swing < COMBAT_TEST_SWINGS; swing++) {
         game.player.hit_points = game.player.max_hit_points;
-        bool did_hit = attack_player(monster);
+        bool did_hit = roll_monster_attack(monster);
         int16_t damage = game.player.max_hit_points - game.player.hit_points;
         if (did_hit) {
             hits++;

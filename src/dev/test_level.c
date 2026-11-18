@@ -9,6 +9,7 @@
 #include "../explore.h"
 #include "../level.h"
 #include "../map.h"
+#include "../message.h"
 #include "../monsters.h"
 #include "../move.h"
 #include "../platform/platform.h"
@@ -683,9 +684,12 @@ static void choose_test_player_step(int8_t *step_x, int8_t *step_y)
 }
 
 // egy kör, ahogy a játékban: a játékos lépése (vagy pihenése), a körülnézés és a szörnyek lépése; az ideje raszter-sorban,
-// a képernyőre másolás (show_map_changes) nélkül
+// a képernyőre másolás (show_map_changes) nélkül, de a szörnyek támadásainak üzenetével
 static uint16_t take_timed_turn(void)
 {
+    // mint a játékban a parancs beolvasásakor
+    message_clear();
+
     int8_t step_x;
     int8_t step_y;
     choose_test_player_step(&step_x, &step_y);
@@ -849,7 +853,6 @@ bool show_level_room_ratios(void)
 
     set_screen_cursor_x(1);
     put_text("LEVEL-ROOM RATIOS");
-    move_screen_cursor_to_next_row();
     move_screen_cursor_to_next_row();
 
     put_ratio_header(RATIO_DARK_WANT_COLUMN, "DARK", 4);

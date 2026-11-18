@@ -2,6 +2,7 @@
 #include "test_runner.h"
 
 #include "../platform/screen.h"
+#include "../message.h"
 
 static const struct DevTest monster_tests[] = {
     { "MONST-TYPES", test_monster_types, 1 },
@@ -18,6 +19,9 @@ int main(void)
 {
     init_test_program();
 
+    // az üzenetsáv sorait a szörnyek támadásainak üzenetei használják (üldözés); a teli sáv nem vár szóközre
+    set_message_more_wait(false);
+    set_screen_cursor(0, MESSAGE_ROW + MESSAGE_ROW_COUNT);
     put_text("Monster tests:");
     move_screen_cursor_to_next_row();
     bool all_ok = run_test_table(monster_tests, TEST_COUNT(monster_tests));

@@ -35,6 +35,7 @@ int test_monster_visibility(uint16_t i);
 int test_monster_waking(uint16_t i);
 int test_monster_chase(uint16_t i);
 int test_strength_bonuses(uint16_t i);
+int test_monster_names(uint16_t i);
 int test_player_hit_rate(uint16_t i);
 int test_monster_hit_rate(uint16_t i);
 int test_move_attack(uint16_t i);

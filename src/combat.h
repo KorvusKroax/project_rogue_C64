@@ -15,11 +15,20 @@
 extern const int8_t strength_hit_bonus[STRENGTH_MAX + 1];
 extern const int8_t strength_damage_bonus[STRENGTH_MAX + 1];
 
-// a játékos megtámadja a szörnyet (fight): a szörny felébred és üldöz, utána a támadás dob; igaz, ha talált
+// a szörny neve az üzenetekben: "the " + a típus neve, a nem látott szörnyé "something"; az eredmény a következő hívásig él (set_mname)
+#define MONSTER_NAME_TEXT_SIZE  18              // "the " + a leghosszabb név (13) + a lezáró nulla
+const char *prepare_monster_name(const struct Monster *monster);
+
+// a játékos megtámadja a szörnyet (fight): a szörny felébred és üldöz, a támadás dob, és f-harcon kívül
+// kiíródik a hit/miss üzenet; igaz, ha talált
 bool attack_monster(struct Monster *monster);
 
-// a szörny megtámadja a játékost (attack); igaz, ha talált
+// a szörny megtámadja a játékost (attack): a támadás dob, és f-harcon kívül kiíródik a hit/miss üzenet; igaz, ha talált
 bool attack_player(struct Monster *monster);
+
+// csak a dobás és a sebzés, üzenet és más hatás nélkül; igaz, ha talált
+bool roll_player_attack(struct Monster *monster);         // a szörnynek már ébren kell lennie: alvó szörnyre nem jár a +4
+bool roll_monster_attack(const struct Monster *monster);
 
 // az f-harc (f, F) a step_x, step_y irányban álló, látott szörny ellen: az első ütés azonnal, utána minden akcióban újabb,
 // amíg a célpont el nem mozdul, más szörny nem támad, vagy (kamikaze nélkül) a játékos HP-ja a harc legnagyobb egyszeri

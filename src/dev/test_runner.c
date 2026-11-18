@@ -55,6 +55,8 @@ bool run_test_table(const struct DevTest *tests, uint8_t test_count)
         uint16_t fails = 0;
         uint16_t first_fail = 0;
 
+        // a teszt máshová is írhat (pl. az üzenetsávba), ezért az eredmény a megjegyzett sorba kerül
+        uint8_t row = get_screen_cursor_y();
         set_screen_cursor_x(1);
         put_text(dt->name);
 
@@ -63,7 +65,7 @@ bool run_test_table(const struct DevTest *tests, uint8_t test_count)
             // a többpróbás teszt minden próba előtt kiírja, hányadiknál tart és mennyi van összesen,
             // és ESC-re abbahagyja: az eredmény az addigi próbákból jön
             if (dt->count > 1) {
-                set_screen_cursor_x(TEST_RESULT_COLUMN);
+                set_screen_cursor(TEST_RESULT_COLUMN, row);
                 put_int(tried, 0);
                 put_text("/");
                 put_int(dt->count, 0);
@@ -80,7 +82,7 @@ bool run_test_table(const struct DevTest *tests, uint8_t test_count)
             tried++;
         }
 
-        set_screen_cursor_x(TEST_RESULT_COLUMN);
+        set_screen_cursor(TEST_RESULT_COLUMN, row);
         if (fails == 0) {
             if (dt->count == 1) {
                 put_text("OK");

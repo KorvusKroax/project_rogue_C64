@@ -20,4 +20,9 @@ const char *prepare_message_text(const char *text, const char *first_text, const
 uint8_t calculate_message_chars_fitting_row(const char *text, uint8_t width);   // ennyi karakter kerül a szövegből egy width széles sorba; nem rajzol
 uint16_t calculate_message_chars_fitting_bar(const char *text);                 // ennyi karakter fér a sávba úgy, hogy a --More-- is elférjen; nem rajzol
 
+#ifdef DEVMODE
+    // a tesztprogramoknak: kikapcsolva a --More-- nem vár szóközre, a teli sáv törlődik, és az üzenetek mennek tovább (alapból bekapcsolva)
+    void set_message_more_wait(bool enabled);
+#endif
+
 #endif
