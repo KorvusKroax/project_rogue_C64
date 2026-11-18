@@ -154,12 +154,16 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 ### 4.2.2 Harc és célzás
 | parancs | leírás |
 |---|---|
-| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. |
+| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
 | SHIFT-f + irány | ugyanez, HP-ellenőrzés nélkül („kamikaze”) |
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
 
+**Irány bekérése** (`get_dir`; az `f`, `F`, `t`, `z`, `^` és `m` parancsnál): „which direction?”. Csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad. ESC-re a parancs elmarad, nem visz időt, és az utolsó parancs az előző marad ([4.2.5](#425-rendszer)). Az `a` ismétlésnél nem kérdez újra, hanem a tárolt irányt használja. ISHUH alatt 20% eséllyel véletlen irány, ismétlésnél is.
+
 > **C64-javítás (J15):** *eredetileg* a szabálytalan átlós irányba indított `f` nem csinált semmit, de a kör elment.
+
+> **C64-javítás (J23):** az `f`-harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik. *Eredetileg* csak a célpont elmozdulása vagy halála törölte, így a HP-határ miatt leállt harc után a szörny jelölve maradt, és egy későbbi, másik szörny elleni `f`-harcot a támadása nem szakította meg.
 
 ### 4.2.3 Tárgyak
 | parancs | leírás |
@@ -199,8 +203,8 @@ waste_time():
 |---|---|
 | `.` | pihenés 1 kör |
 | s | keresés ([9.2](09_csapdak.md#92-keresés-s-searching-gyűrű)) |
-| a | utolsó parancs ismétlése; „you haven't typed a command yet” |
-| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
+| a | utolsó parancs ismétlése, ugyanazzal az iránnyal és tárggyal, újrakérdezés nélkül; ha az irány vagy a tárgy bekérése ESC-vel elmaradt, az előző parancsé; „you haven't typed a command yet” |
+| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): a játékos támadása, ha szörnyhöz ér (közelharc, dobott tárgy, varázslövedék, sugár), szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
 | ESC * | megszakít |
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |

@@ -3,22 +3,24 @@
 ## 7.1 Közelharci találat
 ```
 attack(attacker, defender, weapon /*null = fegyvertelen*/, thrown):
+  hit_bonus = (weapon ? weapon.hplus : 0) + str_plus[attacker.str]   // szörnynél 0
+            + (player, weapon kézben, !thrown ? sum(dexterity rings.arm) : 0)
+  if !defender.ISRUN: hit_bonus += 4                 // alvó/fogva tartott szörny – és ISRUN nélküli játékos is (1.2.1)
+  required = (20 - attacker.lvl) - defender_armor    // ennyit kell legalább dobni a találathoz; 16 bites előjeles
+  did_hit = false
   for each segment in damage_string:
-    roll = rnd(20) + hit_bonus
-    hit_bonus = weapon ? weapon.hplus : 0
-              + str_plus[attacker.str]               // szörnynél 0
-              + (player, weapon kézben, !thrown ? sum(dexterity rings.arm) : 0)
-    if !defender.ISRUN: roll += 4                    // alvó/fogva tartott szörny – és ISRUN nélküli játékos is (1.2.1)
-    required = (20 - attacker.lvl) - defender_armor  // ennyit kell legalább dobni a találathoz
-    if roll >= required:
+    if rnd(20) + hit_bonus >= required:
        dmg = ROLL(segment) + (weapon ? weapon.dplus : 0) + add_dam[attacker.str]
              + (player, weapon kézben, !thrown ? sum(increase damage rings.arm) : 0)
-       dmg = max(dmg, 0)
-       defender.hpt -= dmg
-       on_hit effects (CANHUH, speciális támadás)
-       if defender.hpt <= 0: kill
+       defender.hpt -= max(dmg, 0)
+       did_hit = true
+  // a szegmensek után, támadásonként egyszer
+  if !did_hit: miss-üzenet (7.7); return
+  hit-üzenet (7.7)
+  játékos támad: CANHUH; if defender.hpt <= 0: kill_monster (6.8)
+  szörny támad:  if hpt <= 0: halál; különben a speciális támadás (6.7, ha nincs ISCANC)
 ```
-- A regen-számláló ([5.3](05_jatekos.md#53-hp-regeneráció)) minden harci forduló elején nullázódik, akár a játékos, akár a szörny támad, találattól függetlenül.
+- A regen-számláló ([5.3](05_jatekos.md#53-hp-regeneráció)) minden harci forduló elején nullázódik, és a számprefixes ismétlés is megszakad ([4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)), akár a játékos, akár a szörny támad, találattól függetlenül.
 - Védő páncél: játékosnál `player_armor()` ([5.5](05_jatekos.md#55-effektív-páncél-védekezéskor)), szörnynél `monster.arm`.
 - Játékos támad: a szörny azonnal ISRUN-t kap és ISHELD-je törlődik (ezért a +4 gyakorlatilag nem érvényesül).
 - Szörny támad: `weapon = null`, `str = 10` → `str_plus = 0`, `add_dam = 0`.
@@ -157,4 +159,4 @@ Példák: „You swing and hit the orc”, „The orc barely misses you”.
 - **Xeroc leleplezése:** „wait! That's a xeroc!” (hallucinálva: „heavy! That's a nasty critter!”).
 - **Monster confusion:** sikeres ütés után „your hands stop glowing red”, majd „<szörny> appears confused” (vakon nem).
 - **Halál:** „you have defeated <szörny>”.
-- Az Ice monster találata nem ír „hits you”-t, csak „you are frozen by ” + név(m), pl. „you are frozen by the ice monster” (J17; az eredetiben „by the the ice monster” volt, [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)).
+- Az Ice monster találata nem ír „hits you”-t, csak „you are frozen by ” + név(m), pl. „you are frozen by the ice monster” (J17; az eredetiben „by the the ice monster” volt, [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)). A hibázása sem ír üzenetet, és ISCANC mellett a találata sem, mert a fagyasztás elmarad.

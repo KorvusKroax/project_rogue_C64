@@ -284,6 +284,6 @@ kill_monster(monster):
   monster.pack minden tárgya: fall(item) – a szörny 3×3 környezetének egy véletlen üres
      FLOOR/PASSAGE mezőjére (a játékosé kivételével); ha nincs hely, a tárgy elvész
   eltávolítás, a mező helyére monster.oldch
-  "you have defeated the <name>" (ha látható)
+  "you have defeated " + név(monster) (7.7: nem látott szörnynél "something"); drain life-nál csak akkor, ha a szörny látható
   szintlépés-ellenőrzés (5.2)
 ```
