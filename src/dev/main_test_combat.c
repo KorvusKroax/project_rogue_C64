@@ -26,6 +26,7 @@ static const struct DevTest combat_tests[] = {
     { "PLAYER-STRENGTH", test_strength_change, 1 },
     { "SPECIAL-FLYTRAP", test_flytrap, 1 },
     { "SPECIAL-HELD", test_flytrap_hold, 1 },
+    { "SPECIAL-XEROC", test_xeroc_reveal, 1 },
     { "PLAYER-DEATH", test_player_death, 1 },
 };
 

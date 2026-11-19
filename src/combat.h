@@ -41,10 +41,12 @@ extern const int8_t strength_damage_bonus[STRENGTH_MAX + 1];
 const char *prepare_monster_name(const struct Monster *monster);
 
 // a játékos megtámadja a szörnyet (fight): a szörny felébred és üldöz, a támadás dob, és f-harcon kívül
-// kiíródik a hit/miss üzenet; ha a szörny meghal, kikerül a táblából (a mutató utána a következőre mutat); igaz, ha talált
+// kiíródik a hit/miss üzenet; ha a szörny meghal, kikerül a táblából (a mutató utána a következőre mutat); igaz, ha talált;
+// az álcázott xeroc ellen nincs dobás, csak leleplezi („wait! That's a xeroc!”)
 bool attack_monster(struct Monster *monster);
 
-// a szörny megtámadja a játékost (attack): a támadás dob, és f-harcon kívül kiíródik a hit/miss üzenet (az Ice monsternél nem);
+// a szörny megtámadja a játékost (attack): az álcázott xeroc előbb üzenet nélkül leleplezi magát; a támadás dob, és f-harcon
+// kívül kiíródik a hit/miss üzenet (az Ice monsternél nem);
 // találat után jön a különleges hatás, ha a szörnynek van és nincs kikapcsolva (MONSTER_CANCELLED); a Venus flytrap mellé ütése
 // is sebez; igaz, ha talált
 bool attack_player(struct Monster *monster);

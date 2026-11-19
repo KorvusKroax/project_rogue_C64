@@ -9,6 +9,7 @@ const char text_no_command_yet[] = "you haven't typed a command yet";
 const char text_which_direction[] = "which direction?";
 const char text_no_monster_there[] = "I see no monster there";
 const char text_being_held[] = "you are being held";
+const char text_xeroc_revealed[] = "wait! That's a xeroc!";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";
@@ -27,6 +28,7 @@ const char text_frozen_by[] = "you are frozen by \1";
 const char text_suddenly_weaker[] = "you suddenly feel weaker";
 const char text_bite_weaker[] = "you feel a bite in your leg and now feel weaker";
 const char text_killed_by[] = "killed by \1\2";
+
 const char *const text_death_causes[DEATH_CAUSE_COUNT] = { "hypothermia" };
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };

@@ -869,6 +869,42 @@ int test_flytrap_hold(uint16_t i)
     return ok;
 }
 
+// az álcázott xeroc megtámadása csak leleplezi: a jele 'X' lesz, felébred, nem sérül, a lépés időbe kerül, és a játékos helyben
+// marad; a következő lépések már támadások; a xeroc saját támadása is leleplezi
+int test_xeroc_reveal(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_combat_player();
+    put_combat_monster('X', COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    struct Monster *xeroc = &game.monsters[0];
+    xeroc->hit_points = FIGHT_TEST_HIT_POINTS;
+    xeroc->max_hit_points = FIGHT_TEST_HIT_POINTS;
+
+    bool ok =
+        xeroc->disguise != 'X' &&
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y) &&
+        xeroc->disguise == 'X' &&
+        (xeroc->flags & MONSTER_RUNNING) &&
+        xeroc->hit_points == FIGHT_TEST_HIT_POINTS &&
+        is_player_at_start();
+
+    uint8_t tries = 0;
+    while (xeroc->hit_points == FIGHT_TEST_HIT_POINTS && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+    ok = ok && xeroc->hit_points < FIGHT_TEST_HIT_POINTS;
+
+    put_combat_player();
+    put_combat_monster('X', COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    ok = ok && game.monsters[0].disguise != 'X';
+    attack_player(&game.monsters[0]);
+    ok = ok && game.monsters[0].disguise == 'X';
+
+    clear_combat_scene();
+    return ok;
+}
+
 #define DEATH_TEST_EXPERIENCE        100        // a halál előtti állapot, amelyet az új játék visszaállít
 #define DEATH_TEST_EXPERIENCE_LEVEL  5
 #define DEATH_TEST_GOLD              50

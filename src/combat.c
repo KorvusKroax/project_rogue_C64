@@ -124,12 +124,28 @@ static void kill_monster(struct Monster *monster)
     update_experience_level();
 }
 
+// az álcázott xeroc leleplezése: a jele a saját betűje lesz; igaz, ha álcázva volt
+static bool reveal_xeroc(struct Monster *monster)
+{
+    // ide jön: vakon nincs leleplezés
+    if (monster->type != 'X' || monster->disguise == 'X') return false;
+
+    monster->disguise = 'X';
+    // ide jön: hallucinálva a jele azonnal egy véletlen nagybetű
+    return true;
+}
+
 bool attack_monster(struct Monster *monster)
 {
     stop_running_and_repeating();
     // ide jön: a regen-számláló nullázása
     start_monster_running(monster);
-    // ide jön: az álcázott xeroc leleplezése („wait! That's a xeroc!”), a támadás ilyenkor elmarad
+    // az álcázott xeroc megtámadása csak leleplezi: sebzés nincs, de a kör eltelik
+    if (reveal_xeroc(monster)) {
+        // ide jön: hallucinálva „heavy! That's a nasty critter!”
+        message(text_xeroc_revealed);
+        return false;
+    }
 
     const char *monster_name = prepare_monster_name(monster);
     bool did_hit = roll_player_attack(monster);
@@ -245,7 +261,8 @@ bool attack_player(struct Monster *monster)
     if (is_fight_active && !(monster->flags & MONSTER_TARGET)) {
         stop_fight();
     }
-    // ide jön: az álcázott xeroc leleplezése
+    // az álcázott xeroc támadása üzenet nélkül leleplezi, és a támadás normálisan lefut
+    reveal_xeroc(monster);
 
     const char *monster_name = prepare_monster_name(monster);
     int16_t hit_points_before = game.player.hit_points;

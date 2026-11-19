@@ -55,6 +55,7 @@ int test_rattlesnake(uint16_t i);
 int test_strength_change(uint16_t i);
 int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
+int test_xeroc_reveal(uint16_t i);
 int test_player_death(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
