@@ -762,6 +762,52 @@ int test_flytrap(uint16_t i)
     return ok;
 }
 
+static bool is_player_at_start(void)
+{
+    return game.player.x == COMBAT_PLAYER_X && game.player.y == COMBAT_PLAYER_Y;
+}
+
+// a fogva tartott játékos (jobbra a flytrap, balra szabad mező, lent egy alvó kestrel, fent kőzet) helyben marad: a szabad mezőre,
+// a kőzetbe és a kestrelre lépés is időbe kerül, a szabálytalan átló nem; a futás és az f-harc véget ér, és a kestrel nem kap ütést (J25);
+// a flytrapra lépve megtámadja; a flytrap megölése után újra léphet
+int test_flytrap_hold(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('F');
+    put_combat_tile(COMBAT_PLAYER_X - 1, COMBAT_PLAYER_Y);
+    put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_PLAYER_X, COMBAT_PLAYER_Y + 1);
+    game.flytrap_grip = 1;
+
+    bool ok =
+        move_player(-1, 0) && is_player_at_start() &&
+        move_player(0, -1) && is_player_at_start() &&
+        !move_player(-1, -1) && is_player_at_start();
+
+    // a futás lépése a move_player; a take_run_step itt az Oscar64 figyelmeztetését váltaná ki (README, Oscar64-hibák, 9.)
+    start_running(-1, 0, false);
+    ok = ok && move_player(-1, 0) && !is_running() && is_player_at_start();
+
+    ok = ok &&
+        start_fight(0, 1, false) &&
+        !is_fighting() &&
+        !has_fight_target() &&
+        !(game.monsters[1].flags & MONSTER_RUNNING) &&
+        is_player_at_start();
+
+    ok = ok && move_player(FIGHT_STEP_X, FIGHT_STEP_Y) && (game.monsters[0].flags & MONSTER_RUNNING) && is_player_at_start();
+
+    game.monsters[0].hit_points = 1;
+    uint8_t tries = 0;
+    while (find_monster_at(COMBAT_MONSTER_X, COMBAT_MONSTER_Y) != NO_MONSTER && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+    ok = ok && game.flytrap_grip == 0 && move_player(-1, 0) && game.player.x == COMBAT_PLAYER_X - 1;
+
+    clear_combat_scene();
+    return ok;
+}
+
 #define DEATH_TEST_EXPERIENCE        100        // a halál előtti állapot, amelyet az új játék visszaállít
 #define DEATH_TEST_EXPERIENCE_LEVEL  5
 #define DEATH_TEST_GOLD              50

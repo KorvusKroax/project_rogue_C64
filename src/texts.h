@@ -18,6 +18,7 @@ extern const char text_way_magically_blocked[];
 extern const char text_no_command_yet[];
 extern const char text_which_direction[];
 extern const char text_no_monster_there[];
+extern const char text_being_held[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4

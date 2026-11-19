@@ -8,6 +8,7 @@ const char text_way_magically_blocked[] = "your way is magically blocked";
 const char text_no_command_yet[] = "you haven't typed a command yet";
 const char text_which_direction[] = "which direction?";
 const char text_no_monster_there[] = "I see no monster there";
+const char text_being_held[] = "you are being held";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

@@ -41,7 +41,7 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 
 | név | mit tesztel | szabad hely (2026-11-18) |
 |---|---|---|
-| `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 22 568 bájt |
+| `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); fogva tartva csak a flytrapra lehet lépni, a többi lépés időbe kerül, és véget vet a futásnak és az `f`-harcnak (J25); a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 22 568 bájt |
 | `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 30 464 bájt |
 | `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 32 424 bájt |
 | `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 11 160 bájt |
@@ -278,6 +278,18 @@ put_combat_scene();
 prepare_monster_name(&game.monsters[0]);
 ```
 Hol: `src/dev/test_combat.c`. A generált kódban (`build/<név>.asm`) a `@proxy` nevű függvényeket és az előttük használt paraméterregisztereket érdemes megnézni, ha egy érték lehetetlennek látszik.
+
+**9. Az optimalizáló nem jut a végére egy függvénynek** – fordításkor, figyelmeztetéssel: `warning 2007: Optimizer locked in infinite loop 'is_something_interesting_beside'`, mellette több tucat `Oops 7`, `Oops 8`, `Oops 9` sor a fordító belső kiírásaiból. A program lefordul, de nincs ellenőrizve, hogy az érintett függvény kódja helyes-e. Csak a `combat` tesztprogramban jött elő, amikor egy teszt a `take_run_step`-et hívta, és vele az `is_something_interesting_beside` is a programba került; a játékban és a fejlesztői buildben, ahol a futás is benne van, nem. Hogy előjön-e, a teljes program hívásain múlik.
+```c
+// rossz: a combat tesztprogramban
+start_running(-1, 0, false);
+take_run_step();
+
+// jó: a futás lépése a move_player, a teszt így is ugyanazt ellenőrzi
+start_running(-1, 0, false);
+move_player(-1, 0);
+```
+Hol: `src/dev/test_combat.c`. Nincs bejelentve.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c

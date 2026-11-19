@@ -2,10 +2,13 @@
 
 #include "combat.h"
 #include "explore.h"
+#include "game.h"
 #include "map.h"
+#include "message.h"
 #include "monsters.h"
 #include "rooms.h"
 #include "state.h"
+#include "texts.h"
 #include "view.h"
 
 // a futás állapota: fut-e, merre, óvatos (CTRL) futás-e, és lépett-e már
@@ -35,10 +38,19 @@ bool move_player(int8_t step_x, int8_t step_y)
     if (!is_on_map(target_x, target_y)) return false;
     if (!is_diagonal_step_allowed(player_x, player_y, target_x, target_y)) return false;
 
-    // ide jön: a rejtett csapda felfedése, fogva tartás (ISHELD)
+    // ide jön: a rejtett csapda felfedése (lebegve nem); a felfedő lépést a fogva tartás nem tartja vissza
+    uint8_t monster_index = find_monster_at(target_x, target_y);
+
+    // fogva tartva (ugyanaz, mint az ISHELD vizsgálata, J4) csak a flytrapra léphet, azaz megtámadhatja; minden más lépés
+    // időbe kerül, falnál is, és a futás, az ismétlés és az f-harc is véget ér (J25)
+    if (game.flytrap_grip > 0 && (monster_index == NO_MONSTER || get_monster(monster_index)->type != 'F')) {
+        message(text_being_held);
+        stop_running_and_repeating();
+        stop_fight();
+        return true;
+    }
 
     // szörny a célmezőn: támadás, a játékos helyben marad
-    uint8_t monster_index = find_monster_at(target_x, target_y);
     if (monster_index != NO_MONSTER) {
         attack_monster(get_monster(monster_index));
         return true;
