@@ -220,7 +220,8 @@ void generate_level(void)
 
 void new_level(void)
 {
-    // ide jön: a játékost nem tartja fogva semmi (ISHELD le)
+    // a játékost nem tartja fogva semmi
+    game.flytrap_grip = 0;
     clear_seen_map();
     generate_level();
     // ide jön: a lépcsőt a játékos még nem látta (seenstairs)

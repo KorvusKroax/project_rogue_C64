@@ -126,6 +126,7 @@ struct GameState {
     uint8_t  max_strength;                      // a legnagyobb elért erő, gyűrűk nélkül
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
     uint8_t  turns_unable_to_act;               // alvás, ájulás, fagyás: ennyi körig nem cselekedhet a játékos
+    uint8_t  flytrap_grip;                      // a Venus flytrap szorítása: ennyit sebez a mellé ütése; ha nagyobb 0-nál, a játékos fogva van
 
     struct Room rooms[ROOM_TABLE_SIZE];         // a szobák, utánuk a folyosórendszerek: az n. rendszer indexe ROOM_COUNT + n - 1
     struct Exit exits[MAX_EXITS];               // az ajtótábla: a szint összes kijárata, a felvétel sorrendjében

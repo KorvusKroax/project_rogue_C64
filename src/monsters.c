@@ -16,7 +16,7 @@ const struct MonsterType monster_types[MONSTER_TYPE_COUNT] = {
     /* C */ {  15, 0,                                  4,   4,   17, 3, { { 1, 2 }, { 1, 5 }, { 1, 5 } } },
     /* D */ { 100, MONSTER_MEAN,                      10,  -1, 5000, 3, { { 1, 8 }, { 1, 8 }, { 3, 10 } } },
     /* E */ {   0, MONSTER_MEAN,                       1,   7,    2, 1, { { 1, 2 } } },
-    /* F */ {   0, MONSTER_MEAN,                       8,   3,   80, 1, { { DAMAGE_DICE_FLYTRAP, 1 } } },
+    /* F */ {   0, MONSTER_MEAN,                       8,   3,   80, 1, { { 0, 0 } } },
     /* G */ {  20, MONSTER_MEAN | MONSTER_FLYING,     13,   2, 2000, 2, { { 4, 3 }, { 3, 5 } } },
     /* H */ {   0, MONSTER_MEAN,                       1,   5,    3, 1, { { 1, 8 } } },
     /* I */ {   0, 0,                                  1,   9,    5, 1, { { 0, 0 } } },

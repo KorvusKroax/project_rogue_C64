@@ -263,7 +263,7 @@ int test_monster_types(uint16_t i)
         segment_count_is('A', 2) &&
         segment_is('A', 0, 0, 0) &&
         segment_is('A', 1, 0, 0) &&
-        segment_is('F', 0, DAMAGE_DICE_FLYTRAP, 1) &&
+        segment_is('F', 0, 0, 0) &&
         name_is('D', "dragon") &&
         name_is('Z', "zombie");
 }

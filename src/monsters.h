@@ -33,9 +33,6 @@
 
 #define DAMAGE_SEGMENTS_MAX  3
 
-// a Venus flytrap sebzésének kockaszáma helyett: a támadás pillanatában a vf_hit
-#define DAMAGE_DICE_FLYTRAP  0xff
-
 // egy sebzés-szegmens: dice darab sides oldalú kocka; a (0, 0) is valódi szegmens, egy külön dobás a találatra
 struct DamageSegment {
     uint8_t dice;

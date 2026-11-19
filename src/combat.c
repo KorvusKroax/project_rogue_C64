@@ -50,12 +50,7 @@ static bool roll_attack(uint8_t attacker_level, int16_t hit_bonus, int16_t damag
     for (uint8_t segment_index = 0; segment_index < segment_count; segment_index++) {
         if ((int16_t)rnd(HIT_ROLL_SIDES) + hit_bonus >= required) {
             const struct DamageSegment *segment = &segments[segment_index];
-            uint8_t dice = segment->dice;
-            // ideiglenes: a Venus flytrap 0 kockával sebez; ide jön: a kockák száma a vf_hit (M05-04)
-            if (dice == DAMAGE_DICE_FLYTRAP) {
-                dice = 0;
-            }
-            int16_t damage = (int16_t)ROLL(dice, segment->sides) + damage_bonus;
+            int16_t damage = (int16_t)ROLL(segment->dice, segment->sides) + damage_bonus;
             if (damage > 0) {
                 *defender_hit_points -= damage;
             }
@@ -116,7 +111,10 @@ bool roll_monster_attack(const struct Monster *monster)
 static void kill_monster(struct Monster *monster)
 {
     game.player.experience = capped_add(game.player.experience, monster->experience);
-    // ide jön: a flytrap halálával a játékos kiszabadul, és a vf_hit nullázódik
+    // bármelyik Venus flytrap halálával a játékos kiszabadul
+    if (monster->type == 'F') {
+        game.flytrap_grip = 0;
+    }
     // ide jön: a leprechaun aranya a csomagjába kerül; a csomagja a környező mezőkre esik
 
     // a név a kivétel előtt, amíg a szörny még a helyén van
@@ -191,10 +189,25 @@ static void drain_experience_level(void)
     drain_hit_points(ROLL(1, WRAITH_DRAIN_SIDES), 'W');
 }
 
+// a Venus flytrap megfogja a játékost, vagy szorosabban fogja: a szorítás eggyel nő (255-nél megáll), és már a fogás is sebez
+static void grip_player(void)
+{
+    if (game.flytrap_grip < UINT8_MAX) {
+        game.flytrap_grip++;
+    }
+    game.player.hit_points--;
+    if (game.player.hit_points <= 0) {
+        kill_player('F');
+    }
+}
+
 // a szörny különleges hatása a sikeres találata után
 static void apply_special_attack(const struct Monster *monster, const char *monster_name)
 {
     switch (monster->type) {
+        case 'F':
+            grip_player();
+            break;
         case 'I':
             freeze_player(monster_name);
             break;
@@ -208,7 +221,7 @@ static void apply_special_attack(const struct Monster *monster, const char *mons
                 drain_experience_level();
             }
             break;
-        // ide jön: az Aquator, a Rattlesnake, a Venus flytrap, a Leprechaun és a Nymph
+        // ide jön: az Aquator, a Rattlesnake, a Leprechaun és a Nymph
     }
 }
 
@@ -224,8 +237,12 @@ bool attack_player(struct Monster *monster)
     const char *monster_name = prepare_monster_name(monster);
     int16_t hit_points_before = game.player.hit_points;
     bool did_hit = roll_monster_attack(monster);
+    // a Venus flytrap mellé ütése is sebez a szorításával, a kikapcsolt flytrapé is; ha ez öl, a miss üzenet elmarad
+    if (!did_hit && monster->type == 'F') {
+        game.player.hit_points -= game.flytrap_grip;
+    }
     // az Ice monster támadása nem ír hit/miss üzenetet: a találatáról a fagyasztás szól
-    if (monster->type != 'I') {
+    if (monster->type != 'I' && (did_hit || game.player.hit_points > 0)) {
         report_attack(text_monster_hits, text_monster_misses, did_hit, monster_name, text_you);
     }
 

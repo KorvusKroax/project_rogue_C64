@@ -27,6 +27,7 @@ void init_player(void)
     game.player.experience_level = 1;
     game.player.experience = 0;
     game.turns_unable_to_act = 0;
+    game.flytrap_grip = 0;
     game.gold = 0;
 }
 

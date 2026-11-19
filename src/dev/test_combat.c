@@ -542,32 +542,6 @@ int test_experience_levels(uint16_t i)
     return ok;
 }
 
-#define FLYTRAP_TEST_SWINGS  200                // ennyi támadásból a flytrap biztosan talál is (rögzített maggal)
-
-// a Venus flytrap egyelőre 0 kockával sebez: a támadásai találhatnak, de a játékos HP-ja nem csökken
-int test_flytrap_damage(uint16_t i)
-{
-    game.seed = COMBAT_TEST_SEED;
-    put_combat_player();
-    put_combat_monster('F', COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
-    bool ok = true;
-    uint16_t hits = 0;
-
-    for (uint16_t swing = 0; swing < FLYTRAP_TEST_SWINGS; swing++) {
-        // a rekord címe a táblából (README, Oscar64-hibák, 8.)
-        if (roll_monster_attack(&game.monsters[0])) {
-            hits++;
-        }
-        if (game.player.hit_points != game.player.max_hit_points) {
-            ok = false;
-        }
-    }
-    ok = ok && hits > 0;
-
-    clear_combat_scene();
-    return ok;
-}
-
 #define SPECIAL_TEST_HIT_POINTS     1000        // a játékos HP-ja és max. HP-ja, hogy a sebzés és a szívás ne ölje meg
 #define SPECIAL_TEST_ATTACKS_MAX    1000        // ennyi támadáson belül a várt hatás biztosan bekövetkezik (rögzített maggal)
 #define CANCELLED_TEST_ATTACKS      200         // ennyi támadásból a kikapcsolt Ice monster biztosan talál is (rögzített maggal)
@@ -720,6 +694,69 @@ int test_wraith(uint16_t i)
         drains == WRAITH_TEST_LEVEL - 1 &&
         is_player_dead() &&
         get_death_cause() == 'W';
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define FLYTRAP_TEST_ATTACKS  40                // ennyi támadásban a flytrap talál is és hibáz is, és a játékos még nem hal meg (rögzített maggal)
+
+// attacks támadás a tábla első szörnyétől, a flytraptól; igaz, ha volt találat és hiba is, és mind a szabály szerint sebzett:
+// találatnál a HP eggyel csökken, és a szorítás eggyel nő (a kikapcsolt flytrapnál egyik sem), hibánál a HP a szorításnyit csökken
+static bool flytrap_attacks_valid(uint8_t attacks, bool is_cancelled)
+{
+    bool ok = true;
+    uint8_t hits = 0;
+
+    for (uint8_t attack = 0; attack < attacks; attack++) {
+        int16_t hit_points_before = game.player.hit_points;
+        uint8_t grip_before = game.flytrap_grip;
+        bool did_hit = attack_player(&game.monsters[0]);
+        int16_t damage = hit_points_before - game.player.hit_points;
+        if (!did_hit) {
+            ok = ok && damage == grip_before && game.flytrap_grip == grip_before;
+        } else if (is_cancelled) {
+            hits++;
+            ok = ok && damage == 0 && game.flytrap_grip == grip_before;
+        } else {
+            hits++;
+            ok = ok && damage == 1 && game.flytrap_grip == grip_before + 1;
+        }
+    }
+    return ok && hits > 0 && hits < attacks;
+}
+
+// a Venus flytrap találata 0 kocka, de minden találata szorosabban fogja a játékost, és ez 1 HP-t visz; a mellé ütése
+// a szorításnyit sebez, a kikapcsolt flytrapé is; a flytrap halála elengedi a játékost; ha a mellé ütés öl, a halál oka
+// a flytrap; a szorítás 255-nél megáll
+int test_flytrap(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('F');
+    bool ok = flytrap_attacks_valid(FLYTRAP_TEST_ATTACKS, false);
+
+    game.monsters[0].flags |= MONSTER_CANCELLED;
+    ok = ok && flytrap_attacks_valid(FLYTRAP_TEST_ATTACKS, true) && !is_player_dead() && game.flytrap_grip > 0;
+
+    game.monsters[0].hit_points = 1;
+    uint8_t tries = 0;
+    while (game.monster_count > 0 && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+    ok = ok && game.monster_count == 0 && game.flytrap_grip == 0;
+
+    put_special_attack_scene('F');
+    game.flytrap_grip = UINT8_MAX;
+    uint16_t attacks = 0;
+    while (!is_player_dead() && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        attack_player(&game.monsters[0]);
+        if (game.flytrap_grip != UINT8_MAX) {
+            ok = false;
+        }
+        attacks++;
+    }
+    ok = ok && is_player_dead() && get_death_cause() == 'F';
 
     clear_combat_scene();
     return ok;
