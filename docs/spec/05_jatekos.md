@@ -52,8 +52,8 @@ hunger():  // minden körben, alvás/ájulás alatt is
   old_state = hungry_state
   if food_left <= 0:
      if food_left-- < -850: death("starvation")  // ≤0 alatt fix 1/kör fogy, a gyűrűk és az amulett nem számít
-     if no_command == 0 and rnd(5) == 0:         // 20% ájulás, ha épp nem ájult
-        no_command += rnd(8) + 4; hungry_state = 3 (FAINT)
+     if turns_unable_to_act == 0 and rnd(5) == 0:   // 20% ájulás, ha épp nem ájult
+        turns_unable_to_act += rnd(8) + 4; hungry_state = 3 (FAINT)
         player.ISRUN = false                     // ájult: a szörnyek +4-gyel találnak (J1)
         "you feel too weak from lack of food. You faint"
   else:
@@ -68,7 +68,7 @@ ring_eat(hand):  // a kézen lévő gyűrű étel/kör értéke (8.6 tábla) sze
   +k → k;  −k → (rnd(k)==0 ? 1 : 0);  0 → 0;  slow digestion → (rnd(2)==0 ? -1 : 0)
 ```
 - A „Faint” állapot csak az első ájuláskor kapcsol be, addig `food_left ≤ 0` mellett is „Weak” látszik.
-- **A player ISRUN jelentése:** a játékos cselekvőképességét a `no_command` számláló kezeli, az ISRUN-nak egyetlen hatása, hogy **ISRUN nélküli védekezőre a támadó +4 találati bónuszt kap** ([7.1](07_harc.md#71-közelharci-találat)). A játék elején be van kapcsolva, ájuláskor, alváskor és fagyáskor törlődik, a `"you can move again"`-nel áll vissza. Így pontosan akkor hiányzik, amikor `no_command > 0`, és nem kell külön tárolni.
+- **A player ISRUN jelentése:** a játékos cselekvőképességét a `turns_unable_to_act` számláló kezeli, az ISRUN-nak egyetlen hatása, hogy **ISRUN nélküli védekezőre a támadó +4 találati bónuszt kap** ([7.1](07_harc.md#71-közelharci-találat)). A játék elején be van kapcsolva, ájuláskor, alváskor és fagyáskor törlődik, a `"you can move again"`-nel áll vissza. Így pontosan akkor hiányzik, amikor `turns_unable_to_act > 0`, és nem kell külön tárolni.
 
 > **C64-javítás (J1):** a játékos ISRUN-ja csak tényleges alvás, ájulás és fagyás alatt hiányzik: a játék elején be van kapcsolva, és az éhség okozta ájulás minden alkalommal törli (az elsőnél és a későbbieknél is). Az éhség-állapotváltás csak a futást, az ismétlést és az `f`-harcot szakítja meg. *Eredetileg* három esetben is ISRUN nélkül maradt a játékos, bár nem aludt, és a szörnyek a következő alvás/ájulás/fagyás végéig +4-gyel találtak:
 > - a játékos ISRUN nélkül kezdett, mert csak a „you can move again” kapcsolta be;

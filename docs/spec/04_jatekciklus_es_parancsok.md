@@ -18,9 +18,9 @@ command():  // egy kör
   repeat actions:
     look(wakeup=true)            // látótér frissítés + szomszédok ébresztése (3.1, 6.4)
     update_status(); draw()
-    if no_command > 0:           // alszik / ájult / fagyott
+    if turns_unable_to_act > 0:  // alszik / ájult / fagyott
        next_command = '.'        // pihenésnek számít; a futás, az ismétlés és az 'f'-harc szünetel, ébredés után folytatódik
-       if --no_command == 0: player.ISRUN = true; "you can move again"
+       if --turns_unable_to_act == 0: player.ISRUN = true; "you can move again"
     else:
        next_command = futás/ismétlés/to_death esetén az előző, különben get_command()
     took_time = execute(next_command)

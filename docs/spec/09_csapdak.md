@@ -10,7 +10,7 @@ trigger_trap(pos):
   switch trap_type:
     TRAPDOOR: level = min(level + 1, 255) (E16); new_level() (max_level frissül); "you fell into a trap!"
     ARROW:    7.5 (a viselt páncél is számít, J10)
-    SLEEP:    no_command += 5; ISRUN le; "a strange white mist envelops you and you fall asleep"
+    SLEEP:    turns_unable_to_act += 5; ISRUN le; "a strange white mist envelops you and you fall asleep"
     BEAR:     bear_trap += 3; "you are caught in a bear trap"
     TELEPORT: teleport()   (a csapda jele a régi helyén megmarad)
     DART:     7.5

@@ -96,7 +96,7 @@ GameState {
     blind                // vakság (ISBLIND)
     levitating           // lebegés (ISLEVIT)
     hasted               // gyorsítás (ISHASTE)
-    no_command           // alvás/ájulás/fagyás: ennyi körig nem cselekedhet a játékos
+    turns_unable_to_act  // alvás/ájulás/fagyás: ennyi körig nem cselekedhet a játékos (eredetileg no_command)
     bear_trap            // ennyi körig nem léphet el a medvecsapdából (9.1)
     monster_detect       // szörnyérzékelés (SEEMONST)
   }
@@ -130,7 +130,7 @@ GameState {
 ### 1.2.1 Játékos
 | flag | jelentés | be | ki |
 |---|---|---|---|
-| ISRUN | „ébren van” – egyetlen hatása: ha hiányzik, a szörnyek +4-gyel találják el (a cselekvőképességet a `no_command` számláló kezeli). Pontosan akkor hiányzik, amikor `no_command > 0` (J1), ezért nem kell tárolni | a játék kezdetén; ájulás/alvás/fagyás lejártakor | alvás (tekercs, gáz), fagyás, gyorsítás-ájulás (ha legalább 1 kör), éhség-ájulás |
+| ISRUN | „ébren van” – egyetlen hatása: ha hiányzik, a szörnyek +4-gyel találják el (a cselekvőképességet a `turns_unable_to_act` számláló kezeli). Pontosan akkor hiányzik, amikor `turns_unable_to_act > 0` (J1), ezért nem kell tárolni | a játék kezdetén; ájulás/alvás/fagyás lejártakor | alvás (tekercs, gáz), fagyás, gyorsítás-ájulás (ha legalább 1 kör), éhség-ájulás |
 | ISHUH | zavarodott: mozgásnál 80% véletlen irány (`rndmove`, [6.6](06_szornyek.md#66-mozgás): előbb `dy`, aztán `dx = rnd(3)-1`; (0,0) nem visz időt), dobásnál/`^`-nál 20% véletlen irány | bájital, Medusa | időzítő; időtartamok összeadódnak |
 | CANHUH | a következő sikeres ütés összezavarja a szörnyet | Monster confusion tekercs | első sikeres ütés (közel vagy dobás) |
 | CANSEE | látja a láthatatlant; **C64-javítás (J5):** akkor áll fenn, ha a see invisible időzítő fut *vagy* see invisible gyűrű van valamelyik kézen | bájital, gyűrű | ha egyik forrás sincs már |
@@ -274,7 +274,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | a játékos `exp`-je, `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
 | a szörny `exp`-je | 16 bit előjel nélküli; csak a generálás írja ([6.2](06_szornyek.md#62-generálás)), a legnagyobb értéke kb. 13 650 (dragon a 255. szinten) |
 | `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
-| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `no_command`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
+| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `turns_unable_to_act`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
 | Creature `arm`, Item `hplus`, `dplus`, a páncél védelme és a gyűrű modja (Item `arm`) | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
 | koordináták | 8 bit (x 0..79, y 0..23) |
 

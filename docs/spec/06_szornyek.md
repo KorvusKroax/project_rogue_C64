@@ -241,8 +241,8 @@ F flytrap: (dmg 0x0, J4) player.ISHELD = true; vf_hit++; hpt -= 1; if hpt <= 0: 
            mellé ütéskor (7.1), az ISCANC-tól függetlenül: hpt -= vf_hit; if hpt <= 0: death(F)
            vf_hit egyetlen globális számláló; a fogással együtt nullázódik (J4): a flytrap halálakor (6.8), teleportkor (8.3),
            új szinten (2.) és ha pálca találja el a flytrapot (8.7)
-I ice:     (dmg 0x0) player.ISRUN le; ha épp nem dermedt: "you are frozen by " + név(monster) (7.7, J17); no_command += rnd(2)+2
-           if no_command > 50: death("hypothermia")
+I ice:     (dmg 0x0) player.ISRUN le; ha épp nem dermedt: "you are frozen by " + név(monster) (7.7, J17); turns_unable_to_act += rnd(2)+2
+           if turns_unable_to_act > 50: death("hypothermia")
 L leprech: gold -= rnd(50+10*level)+2
            if !save_magic(): gold -= 4 × (rnd(50+10*level)+2)  // négy külön dobás
            gold = max(gold, 0); "your purse feels lighter" (ha változott)
