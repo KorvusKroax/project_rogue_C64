@@ -11,6 +11,10 @@
 #define HIT_ROLL_SIDES   20                     // (default: 20)
 #define HIT_TARGET_BASE  20                     // (default: 20)
 
+// a mentődobás: egy SAVING_THROW_SIDES oldalú kocka (1-től) legalább a cél − a játékos szintje / 2 (save_throw)
+#define SAVING_THROW_SIDES  20                  // (default: 20)
+#define POISON_SAVE_TARGET  14                  // a mérgezés elleni mentődobás célja (default: 14)
+
 // a nem cselekvő védőt (alvó szörnyet, cselekvésképtelen játékost) ennyivel könnyebb eltalálni
 #define INACTIVE_DEFENDER_HIT_BONUS  4          // (default: 4)
 

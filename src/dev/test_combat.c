@@ -699,7 +699,68 @@ int test_wraith(uint16_t i)
     return ok;
 }
 
-#define FLYTRAP_TEST_ATTACKS  40                // ennyi támadásban a flytrap talál is és hibáz is, és a játékos még nem hal meg (rögzített maggal)
+#define RATTLESNAKE_TEST_ATTACKS  2000          // ennyi támadásból mérve az erőcsökkenés arányát
+#define RATTLESNAKE_TEST_LEVEL    9             // a mentődobás a 9. szinten könnyebb: a cél 4-gyel kisebb
+
+// a rattlesnake marása (találata) a level szintű játékos erejét a sikertelen mérgezés elleni mentődobásnál eggyel csökkenti:
+// a találatok (POISON_SAVE_TARGET − level / 2 − 1) / 20 részénél (±5 százalékpont); a legnagyobb erő nem változik
+static bool rattlesnake_bite_rate_valid(uint8_t level)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('R');
+    game.player.experience_level = level;
+    bool ok = true;
+    uint16_t hits = 0;
+    uint16_t weakenings = 0;
+
+    for (uint16_t attack = 0; attack < RATTLESNAKE_TEST_ATTACKS; attack++) {
+        game.player.hit_points = SPECIAL_TEST_HIT_POINTS;
+        game.player.strength = INITIAL_STRENGTH;
+        bool did_hit = attack_player(&game.monsters[0]);
+        if (did_hit) {
+            hits++;
+        }
+        if (game.player.strength != INITIAL_STRENGTH) {
+            weakenings++;
+            if (!did_hit || game.player.strength != INITIAL_STRENGTH - 1) {
+                ok = false;
+            }
+        }
+    }
+    uint16_t expected = (uint32_t)hits * (POISON_SAVE_TARGET - level / 2 - 1) / SAVING_THROW_SIDES;
+    uint16_t tolerance = hits / 20;
+    ok = ok &&
+        weakenings + tolerance >= expected &&
+        weakenings <= expected + tolerance &&
+        game.max_strength == INITIAL_STRENGTH;
+
+    clear_combat_scene();
+    return ok;
+}
+
+int test_rattlesnake(uint16_t i)
+{
+    return rattlesnake_bite_rate_valid(1) && rattlesnake_bite_rate_valid(RATTLESNAKE_TEST_LEVEL);
+}
+
+// az erő STRENGTH_MIN és STRENGTH_MAX között marad; a legnagyobb erő a növekedéssel nő, a csökkenéssel nem változik
+int test_strength_change(uint16_t i)
+{
+    init_player();
+    change_strength(2);
+    bool ok = game.player.strength == INITIAL_STRENGTH + 2 && game.max_strength == INITIAL_STRENGTH + 2;
+    change_strength(-5);
+    ok = ok && game.player.strength == INITIAL_STRENGTH - 3 && game.max_strength == INITIAL_STRENGTH + 2;
+    change_strength(-STRENGTH_MAX);
+    ok = ok && game.player.strength == STRENGTH_MIN;
+    change_strength(STRENGTH_MAX);
+    ok = ok && game.player.strength == STRENGTH_MAX && game.max_strength == STRENGTH_MAX;
+
+    init_player();
+    return ok;
+}
+
+#define FLYTRAP_TEST_ATTACKS  40               // ennyi támadásban a flytrap talál is és hibáz is, és a játékos még nem hal meg (rögzített maggal)
 
 // attacks támadás a tábla első szörnyétől, a flytraptól; igaz, ha volt találat és hiba is, és mind a szabály szerint sebzett:
 // találatnál a HP eggyel csökken, és a szorítás eggyel nő (a kikapcsolt flytrapnál egyik sem), hibánál a HP a szorításnyit csökken

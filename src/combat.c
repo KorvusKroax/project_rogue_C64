@@ -189,6 +189,12 @@ static void drain_experience_level(void)
     drain_hit_points(ROLL(1, WRAITH_DRAIN_SIDES), 'W');
 }
 
+// a mérgezés elleni mentődobás (save_poison): igaz, ha a játékos ellenáll; magasabb szinten könnyebb
+static bool roll_poison_save(void)
+{
+    return (int16_t)rnd(SAVING_THROW_SIDES) + 1 >= POISON_SAVE_TARGET - game.player.experience_level / 2;
+}
+
 // a Venus flytrap megfogja a játékost, vagy szorosabban fogja: a szorítás eggyel nő (255-nél megáll), és már a fogás is sebez
 static void grip_player(void)
 {
@@ -211,6 +217,13 @@ static void apply_special_attack(const struct Monster *monster, const char *mons
         case 'I':
             freeze_player(monster_name);
             break;
+        case 'R':
+            if (!roll_poison_save()) {
+                // ide jön: sustain strength gyűrűvel nincs erőcsökkenés, és f-harcon kívül „a bite momentarily weakens you”
+                change_strength(-1);
+                message(text_bite_weaker);
+            }
+            break;
         case 'V':
             if (rnd(100) < VAMPIRE_DRAIN_CHANCE) {
                 drain_hit_points(ROLL(1, VAMPIRE_DRAIN_SIDES), 'V');
@@ -221,7 +234,7 @@ static void apply_special_attack(const struct Monster *monster, const char *mons
                 drain_experience_level();
             }
             break;
-        // ide jön: az Aquator, a Rattlesnake, a Leprechaun és a Nymph
+        // ide jön: az Aquator, a Leprechaun és a Nymph
     }
 }
 

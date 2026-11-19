@@ -6,13 +6,14 @@
 
 #define BASE_ARMOR  10                  // páncél nélkül ennyi a védelem (default: 10)
 
+#define STRENGTH_MIN  3                 // az erő legalább ennyi (default: 3)
 #define STRENGTH_MAX  31                // az erő legfeljebb ennyi; a harci táblák ennyivel indexelnek (default: 31)
 
 #define INITIAL_STRENGTH    16          // a kezdő erő és legnagyobb erő (default: 16)
 #define INITIAL_HIT_POINTS  12          // a kezdő hp és max. hp (default: 12)
 
-#if INITIAL_STRENGTH > STRENGTH_MAX
-    #error "a kezdő erő nagyobb a legnagyobb erőnél"
+#if INITIAL_STRENGTH < STRENGTH_MIN || INITIAL_STRENGTH > STRENGTH_MAX
+    #error "a kezdő erő az erő tartományán kívül esik"
 #endif
 
 // ideiglenes, a felszerelés issue-ig (M06-04): a kezdőfelszerelés rögzített adatként, a kézben a buzogány, viselve a gyűrűs ing
@@ -45,6 +46,10 @@ bool is_player_dead(void);
 uint8_t get_death_cause(void);          // a kill_player oka; csak halál után értelmes
 
 int8_t calculate_player_armor(void);    // a viselt páncél (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
+
+// az erő változása (chg_str): STRENGTH_MIN és STRENGTH_MAX között marad, és ha a gyűrűk nélküli erő a legnagyobb
+// eddigi fölé nő, az is nő
+void change_strength(int8_t amount);
 
 // a szint az XP-hez igazodik: ha magasabb jár, a szintkülönbségnyi kocka a max. HP-hoz és a HP-hoz adódik,
 // és „welcome to level <n>”; lejjebb nem visz (check_level)

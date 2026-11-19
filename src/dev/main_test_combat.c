@@ -22,6 +22,8 @@ static const struct DevTest combat_tests[] = {
     { "SPECIAL-ICE", test_ice_monster, 1 },
     { "SPECIAL-VAMPIRE", test_vampire, 1 },
     { "SPECIAL-WRAITH", test_wraith, 1 },
+    { "SPECIAL-RATTLESNAKE", test_rattlesnake, 1 },
+    { "PLAYER-STRENGTH", test_strength_change, 1 },
     { "SPECIAL-FLYTRAP", test_flytrap, 1 },
     { "SPECIAL-HELD", test_flytrap_hold, 1 },
     { "PLAYER-DEATH", test_player_death, 1 },

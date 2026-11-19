@@ -51,6 +51,8 @@ int test_experience_levels(uint16_t i);
 int test_ice_monster(uint16_t i);
 int test_vampire(uint16_t i);
 int test_wraith(uint16_t i);
+int test_rattlesnake(uint16_t i);
+int test_strength_change(uint16_t i);
 int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_player_death(uint16_t i);

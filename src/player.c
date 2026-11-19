@@ -52,6 +52,27 @@ int8_t calculate_player_armor(void)
     return STARTING_ARMOR_CLASS;
 }
 
+// az erő növelése vagy csökkentése STRENGTH_MIN és STRENGTH_MAX között (add_str)
+static uint8_t add_strength(uint8_t strength, int8_t amount)
+{
+    int16_t result = (int16_t)strength + amount;
+    if (result < STRENGTH_MIN) return STRENGTH_MIN;
+    if (result > STRENGTH_MAX) return STRENGTH_MAX;
+    return result;
+}
+
+void change_strength(int8_t amount)
+{
+    if (amount == 0) return;
+
+    game.player.strength = add_strength(game.player.strength, amount);
+    // ide jön: a gyűrűk nélküli erő a viselt add strength gyűrűk módosítója nélkül (add_strength-tel levonva)
+    uint8_t strength_without_rings = game.player.strength;
+    if (strength_without_rings > game.max_strength) {
+        game.max_strength = strength_without_rings;
+    }
+}
+
 void update_experience_level(void)
 {
     // a küszöbök növekvők, így az első el nem értnél meg lehet állni
