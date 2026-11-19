@@ -185,12 +185,17 @@ int test_player_hit_rate(uint16_t i)
     return ok;
 }
 
-// a kestrel a gyűrűs inges játékost a képletből számolt eséllyel találja el (most 7/20);
-// találatnál a sebzés a típus egyetlen szegmense (a szörny erejének sebzésbónusza 0), hibánál nincs sebzés
-int test_monster_hit_rate(uint16_t i)
+// a kestrel a gyűrűs inges játékost a képletből számolt eséllyel találja el: a cselekvőképest most 7/20, a cselekvésképtelent
+// a +4 miatt 11/20 eséllyel; találatnál a sebzés a típus egyetlen szegmense (a szörny erejének sebzésbónusza 0), hibánál nincs sebzés
+static bool monster_hit_rate_valid(bool is_player_unable_to_act)
 {
     game.seed = COMBAT_TEST_SEED;
     struct Monster *monster = put_combat_scene();
+    int16_t hit_bonus = strength_hit_bonus[MONSTER_STRENGTH];
+    if (is_player_unable_to_act) {
+        game.turns_unable_to_act = 1;
+        hit_bonus += INACTIVE_DEFENDER_HIT_BONUS;
+    }
     const struct MonsterType *type_data = &monster_types[COMBAT_TEST_MONSTER - 'A'];
     const struct DamageSegment *segment = &type_data->damage[0];
     int16_t damage_bonus = strength_damage_bonus[MONSTER_STRENGTH];
@@ -213,13 +218,18 @@ int test_monster_hit_rate(uint16_t i)
         }
     }
 
-    uint16_t expected = calculate_expected_hits(COMBAT_TEST_SWINGS, strength_hit_bonus[MONSTER_STRENGTH], monster->experience_level, calculate_player_armor());
+    uint16_t expected = calculate_expected_hits(COMBAT_TEST_SWINGS, hit_bonus, monster->experience_level, calculate_player_armor());
     if (!is_hit_count_close(hits, expected, COMBAT_TEST_SWINGS)) {
         ok = false;
     }
 
     clear_combat_scene();
     return ok;
+}
+
+int test_monster_hit_rate(uint16_t i)
+{
+    return monster_hit_rate_valid(false) && monster_hit_rate_valid(true);
 }
 
 // a szörnyre lépő játékos helyben marad és megtámadja: a lépés időt visz, a szörny felébred, a futás megáll

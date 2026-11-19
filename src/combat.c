@@ -103,7 +103,10 @@ bool roll_monster_attack(const struct Monster *monster)
     const struct MonsterType *type_data = &monster_types[monster->type - 'A'];
     int16_t hit_bonus = strength_hit_bonus[MONSTER_STRENGTH];
     int16_t damage_bonus = strength_damage_bonus[MONSTER_STRENGTH];
-    // ide jön: ha a játékos nincs ébren (alszik, ájult, fagyott), a szörny +4-et kap
+    // ugyanaz, mint a játékos ISRUN-jának vizsgálata: az ISRUN pontosan akkor hiányzik, amikor a játékos cselekvésképtelen (J1)
+    if (game.turns_unable_to_act > 0) {
+        hit_bonus += INACTIVE_DEFENDER_HIT_BONUS;
+    }
 
     return roll_attack(monster->experience_level, hit_bonus, damage_bonus, calculate_player_armor(),
                        type_data->damage, type_data->damage_segment_count, &game.player.hit_points);

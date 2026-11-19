@@ -11,6 +11,9 @@
 #define HIT_ROLL_SIDES   20                     // (default: 20)
 #define HIT_TARGET_BASE  20                     // (default: 20)
 
+// a nem cselekvő védőt (alvó szörnyet, cselekvésképtelen játékost) ennyivel könnyebb eltalálni
+#define INACTIVE_DEFENDER_HIT_BONUS  4          // (default: 4)
+
 // az erő találati és sebzésbónusza (str_plus, add_dam), az erővel indexelve
 extern const int8_t strength_hit_bonus[STRENGTH_MAX + 1];
 extern const int8_t strength_damage_bonus[STRENGTH_MAX + 1];
@@ -28,7 +31,7 @@ bool attack_player(struct Monster *monster);
 
 // csak a dobás és a sebzés, üzenet és más hatás nélkül; igaz, ha talált
 bool roll_player_attack(struct Monster *monster);         // a szörnynek már ébren kell lennie: alvó szörnyre nem jár a +4
-bool roll_monster_attack(const struct Monster *monster);
+bool roll_monster_attack(const struct Monster *monster);  // a cselekvésképtelen játékos ellen a szörny +4-et kap
 
 // az f-harc (f, F) a step_x, step_y irányban álló, látott szörny ellen: az első ütés azonnal, utána minden akcióban újabb,
 // amíg a célpont el nem mozdul, más szörny nem támad, vagy (kamikaze nélkül) a játékos HP-ja a harc legnagyobb egyszeri
