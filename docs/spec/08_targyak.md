@@ -179,7 +179,7 @@ zap():
   hatás; stick.arm--
   "első szörny az útban": a sugár a játékostól indul dir irányba, falig/ajtóig; az első szörnyön megáll
                           (a mező F_MONST flagje szerint, így az álcázott Xeroc is megállítja, J12)
-  ha a célpont Venus flytrap (invisibility/polymorph/teleport away/to/cancellation): player.ISHELD le
+  ha a célpont Venus flytrap (invisibility/polymorph/teleport away/to/cancellation): player.ISHELD le; vf_hit = 0 (J4)
 ```
 - Nem pálcára: „you can't zap with that!” (nem visz időt).
 - Azonosítódik: light (folyosón is), magic missile, lightning/fire/cold mindig; polymorph, ha az új szörny látható. Nem azonosítódik: invisibility, haste/slow monster, drain life, nothing, teleport away/to, cancellation.

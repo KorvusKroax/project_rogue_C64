@@ -291,7 +291,7 @@ return 0;                           // a BASIC-ben néhány parancs után ?FORMU
 
 ## Dokumentáció
 
-- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E22) és az eredeti hibáinak javításai (J1–J24) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
+- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E22) és az eredeti hibáinak javításai (J1–J25) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
 - [Mérföldkövek](https://github.com/KorvusKroax/project_rogue_C64/milestones) és [issue-k](https://github.com/KorvusKroax/project_rogue_C64/issues) – a megvalósítás mérföldkövenként (M0–M12), issue-nként tartalommal és „Kész, ha” feltételekkel (áttekintés lent).
 
 ## Mérföldkövek és issue-k
@@ -314,13 +314,13 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | **M11 – Véglegesítés** | [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) szövegek, képernyők · [M11-02](https://github.com/KorvusKroax/project_rogue_C64/issues/46) robot, invariánsok · [M11-03](https://github.com/KorvusKroax/project_rogue_C64/issues/47) végigjátszás · [M11-04](https://github.com/KorvusKroax/project_rogue_C64/issues/48) erőforrások, kiadás |
 | **M12 – Opcionális kiegészítések** | [M12-01](https://github.com/KorvusKroax/project_rogue_C64/issues/49) színek · [M12-02](https://github.com/KorvusKroax/project_rogue_C64/issues/50) hangok · [M12-03](https://github.com/KorvusKroax/project_rogue_C64/issues/51) botkormány · [M12-04](https://github.com/KorvusKroax/project_rogue_C64/issues/52) gyorsabb lemez |
 
-## A javítások (J1–J24) helye
+## A javítások (J1–J25) helye
 | javítás | issue |
 |---|---|
-| J1 éhség és ISRUN | [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
+| J1 a játékos ISRUN-ja | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
 | J2 Wraith | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) |
 | J3 `find_dest` | [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |
-| J4 flytrap | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) |
+| J4 flytrap | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M08-03](https://github.com/KorvusKroax/project_rogue_C64/issues/36) |
 | J5 see invisible | [M07-01](https://github.com/KorvusKroax/project_rogue_C64/issues/31), [M08-01](https://github.com/KorvusKroax/project_rogue_C64/issues/34) |
 | J6 sárkányláng | [M08-03](https://github.com/KorvusKroax/project_rogue_C64/issues/36) |
 | J7 kincses szoba | [M06-01](https://github.com/KorvusKroax/project_rogue_C64/issues/26) |
@@ -341,3 +341,4 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J22 véletlen lépés és Xeroc | [M05-02](https://github.com/KorvusKroax/project_rogue_C64/issues/23) |
 | J23 az `f` célpontjának jelölése | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |
 | J24 a kamikaze csak egy harcra szól | [M05-03](https://github.com/KorvusKroax/project_rogue_C64/issues/24) |
+| J25 fogva tartás és futás | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25) |

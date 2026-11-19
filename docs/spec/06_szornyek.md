@@ -11,7 +11,7 @@ A 26 szörnytípus adatai. A különleges képességeket (spec) a [6.7](#67-spec
 | C | centaur | 15 | – | 4 | 4 | 17 | 1x2/1x5/1x5 | |
 | D | dragon | 100 | MEAN | 10 | −1 | 5000 | 1x8/1x8/3x10 | tűz |
 | E | emu | 0 | MEAN | 1 | 7 | 2 | 1x2 | |
-| F | venus flytrap | 0 | MEAN | 8 | 3 | 80 | vf_hit×1 (lásd 6.7) | megfog |
+| F | venus flytrap | 0 | MEAN | 8 | 3 | 80 | 0x0 (lásd 6.7) | megfog |
 | G | griffin | 20 | MEAN,FLY,REGEN | 13 | 2 | 2000 | 4x3/3x5 | |
 | H | hobgoblin | 0 | MEAN | 1 | 5 | 3 | 1x8 | |
 | I | ice monster | 0 | – | 1 | 9 | 5 | 0x0 | fagyaszt |
@@ -237,11 +237,11 @@ A aquator: (dmg 0x0) rust_armor(cur_armor)
            rust_armor: if !armor or leather or arm >= 9: nincs hatás
                        else if ISPROT or maintain armor gyűrű: "the rust vanishes instantly"
                        else: arm++; "your armor appears to be weaker now. Oh my!"
-F flytrap: sebzése a támadás pillanatában "<vf_hit>x1" (vf_hit == 0-nál "0x0", azaz 0 kocka)
-           találatkor:  player.ISHELD = true; vf_hit++; hpt -= 1
-           mellé ütéskor: hpt -= vf_hit                        // fogva tartás alatt a "mellé" is sebez
-           vf_hit egyetlen globális számláló; nullázódik a flytrap halálakor és teleportkor
-I ice:     (dmg 0x0) ISRUN le; ha épp nem dermedt: "you are frozen by " + név(monster) (7.7, J17); no_command += rnd(2)+2
+F flytrap: (dmg 0x0, J4) player.ISHELD = true; vf_hit++; hpt -= 1; if hpt <= 0: death(F)
+           mellé ütéskor (7.1), az ISCANC-tól függetlenül: hpt -= vf_hit; if hpt <= 0: death(F)
+           vf_hit egyetlen globális számláló; a fogással együtt nullázódik (J4): a flytrap halálakor (6.8), teleportkor (8.3),
+           új szinten (2.) és ha pálca találja el a flytrapot (8.7)
+I ice:     (dmg 0x0) player.ISRUN le; ha épp nem dermedt: "you are frozen by " + név(monster) (7.7, J17); no_command += rnd(2)+2
            if no_command > 50: death("hypothermia")
 L leprech: gold -= rnd(50+10*level)+2
            if !save_magic(): gold -= 4 × (rnd(50+10*level)+2)  // négy külön dobás
@@ -253,7 +253,7 @@ N nymph:   (dmg 0x0) tárgy = egyenletesen egy mágikus tárgy (8.8) a csomagban
            if van: elvesz egy darabot (kötegből egyet), a nimfa eltűnik vele; "she stole <tárgy>!"
            else: nincs hatás, a nimfa marad
 R rattle:  if !save_poison():
-             if !sustain strength gyűrű: chg_str(-1); "you feel a bite in your leg and now feel weaker"
+             if !sustain strength gyűrű: chg_str(-1) (5.6); "you feel a bite in your leg and now feel weaker"
              else if !to_death: "a bite momentarily weakens you"
 V vampire: if rnd(100) < 30: drained = ROLL(1,3); hpt -= drained; maxhp -= drained
              if hpt <= 0: hpt = 1;  if maxhp <= 0: death; "you suddenly feel weaker"
@@ -262,14 +262,20 @@ W wraith:  if rnd(100) < 15:
              lvl--; if lvl <= 1: lvl = 1, exp = 0 else exp = xp_next[lvl-2]   // az új szint alsó küszöbe (J2)
              drained = ROLL(1,10); hpt -= drained; maxhp -= drained; if hpt <= 0: hpt = 1; if maxhp <= 0: death
              "you suddenly feel weaker"
-X xeroc:   amíg álcázott: a játékos rálépési kísérlete "wait! That's a xeroc!" üzenettel
-           leleplezi (disguise = 'X', ISRUN), a közelharci lépés véget ér; a következő körtől harcol
+X xeroc:   amíg álcázott (disguise != 'X') és a játékos nem vak, bármelyik fél támadása leleplezi (disguise = 'X';
+           hallucinálva a jele egy véletlen betű, 3.2):
+           a játékos támadása: a xeroc ISRUN-t kap (runto); "wait! That's a xeroc!" (7.7);
+             közelharcnál a támadás elmarad, de a kör eltelik; dobásnál a dobott támadás lefut (7.4)
+           a xeroc támadása: üzenet nélkül leleplezi magát, a támadás normálisan lefut
+           vakon nincs leleplezés: mindkét fél támadása normálisan lefut, az álca marad
 D dragon:  lásd tűzokádás (7.6)
 ```
 
-> **C64-javítás (J2):** a szintszívás után az `exp` az új szint alsó küszöbére kerül, így a szint tartósan elveszik (a visszaszerzéséhez újra meg kell szerezni a hiányzó tapasztalatot). *Eredetileg* `exp = xp_next[lvl-1] + 1` lett, ami a régi szint küszöbe fölé esett (az `xp_next` 0-indexű, 5.2), ezért a következő XP-szerzéskor a szint azonnal visszaállt – ráadásul újabb `ROLL(1,10)` maxhp-val, így a szívás hosszú távon akár növelhette is a maxhp-t.
+> **C64-javítás (J2):** a szintszívás után az `exp` az új szint alsó küszöbére kerül, így a szint tartósan elveszik (a visszaszerzéséhez újra meg kell szerezni a hiányzó tapasztalatot). *Eredetileg* `exp = xp_next[lvl-1] + 1` lett, ami a régi szint küszöbe fölé esett (az `xp_next` 0-indexű, 5.2), ezért a következő XP-szerzéskor a szint azonnal visszaállt – ráadásul újabb `ROLL(1,10)` maxhp-val, így a szívás hosszú távon akár növelhette is a maxhp-t. A javítás mellékhatása, hogy a 2. szinttől fölfelé eggyel kevesebb szívás halálos: az *n*. szintről *n*, az eredetiben *n* + 1 kellett, mert ott még egy „1. szint, 11 XP” állapot is közbeékelődött.
 
-> **C64-javítás (J4):** a flytrap sebzése a támadás pillanatában a `vf_hit`-ből számolódik, a típustábla nem változik. *Eredetileg* a találat a flytrap **típus** sebzés-stringjét írta át (`"<vf_hit>x1"`, halál/teleport után `"000x0"`, kezdetben `"%%%x0"`), így a játék egy globális szöveges táblaelemet módosított. A játékmenet szempontjából a két változat gyakorlatilag azonos; C64-en így a típustábla maradhat állandó adat.
+> **C64-javítás (J4):** a flytrap találata mindig 0 kocka: csak a fogás (−1) és a mellé ütés (−`vf_hit`) sebez, a típustábla nem változik. *Eredetileg* a találat a flytrap **típusának** sebzés-szövegét írta át (`"<vf_hit>x1"`; kezdetben `"%%%x0"`, a flytrap halála és a fogva tartott játékos teleportja után `"000x0"`). A szörny viszont a születésekor másolatot kapott a típus sebzéséről, így ez a már élő flytrapra nem hatott: a fogva tartó flytrap találata 0 kocka maradt. Az átírt szöveget csak a később született flytrapok örökölték, tartósan. Ha például a játékos fogva tartva hagyta el a szintet, a következő szint flytrapjai `vf_hit` kockával sebeztek. A javítás ezt az öröklést szünteti meg; a szokásos játékmenet nem változik.
+>
+> A fogás bármilyen megszűnése a `vf_hit`-et is nullázza, így a játékos pontosan akkor van fogva, amikor `vf_hit > 0`. *Eredetileg* a fogás négy megszűnési módja közül csak a flytrap halála és a teleport nullázta a számlálót, az új szint és a pálca csak az ISHELD-et törölte. A megmaradt számláló miatt bármelyik flytrap mellé ütése azonnal ennyit sebzett, akkor is, ha még meg sem fogta a játékost, és a következő fogás ettől az értéktől számolt tovább.
 
 > **C64-javítás (J17):** az Ice monster üzenete „you are frozen by the ice monster”. *Eredetileg* a szöveg „you are frozen by the ” + név volt, és mivel a név maga is „the”-vel kezdődik, „you are frozen by the the ice monster” jelent meg.
 

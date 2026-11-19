@@ -4,6 +4,7 @@
 ```
 init_player():
   str = 16; str_max = 16; exp = 0; lvl = 1; arm = 10; dmg = "1x4"; hpt = maxhp = 12
+  flags = ISRUN                  // ébren kezd (J1)
   food_left = HUNGERTIME (1300)
   pack (ebben a sorrendben kerülnek a csomagba, így ezek a betűik):
     a) 1 adag étel (food ration)
@@ -67,9 +68,14 @@ ring_eat(hand):  // a kézen lévő gyűrű étel/kör értéke (8.6 tábla) sze
   +k → k;  −k → (rnd(k)==0 ? 1 : 0);  0 → 0;  slow digestion → (rnd(2)==0 ? -1 : 0)
 ```
 - A „Faint” állapot csak az első ájuláskor kapcsol be, addig `food_left ≤ 0` mellett is „Weak” látszik.
-- **A player ISRUN jelentése:** a játékos cselekvőképességét a `no_command` számláló kezeli, az ISRUN-nak egyetlen hatása, hogy **ISRUN nélküli védekezőre a támadó +4 találati bónuszt kap** ([7.1](07_harc.md#71-közelharci-találat)). Ájuláskor, alváskor és fagyáskor törlődik, a `"you can move again"`-nel áll vissza.
+- **A player ISRUN jelentése:** a játékos cselekvőképességét a `no_command` számláló kezeli, az ISRUN-nak egyetlen hatása, hogy **ISRUN nélküli védekezőre a támadó +4 találati bónuszt kap** ([7.1](07_harc.md#71-közelharci-találat)). A játék elején be van kapcsolva, ájuláskor, alváskor és fagyáskor törlődik, a `"you can move again"`-nel áll vissza. Így pontosan akkor hiányzik, amikor `no_command > 0`, és nem kell külön tárolni.
 
-> **C64-javítás (J1):** *eredetileg* minden éhség-állapotváltás (Hungry, Weak, Faint) törölte a játékos ISRUN-ját, így a szörnyek a következő alvás/ájulás/fagyás végéig +4-gyel találtak – egy „Hungry” üzenet után is. A javítás csak az éhség okozta tényleges ájuláskor törli (minden ájuláskor, az elsőnél és a későbbieknél is), az állapotváltás csak a futást, az ismétlést és az `f`-harcot szakítja meg.
+> **C64-javítás (J1):** a játékos ISRUN-ja csak tényleges alvás, ájulás és fagyás alatt hiányzik: a játék elején be van kapcsolva, és az éhség okozta ájulás minden alkalommal törli (az elsőnél és a későbbieknél is). Az éhség-állapotváltás csak a futást, az ismétlést és az `f`-harcot szakítja meg. *Eredetileg* három esetben is ISRUN nélkül maradt a játékos, bár nem aludt, és a szörnyek a következő alvás/ájulás/fagyás végéig +4-gyel találtak:
+> - a játékos ISRUN nélkül kezdett, mert csak a „you can move again” kapcsolta be;
+> - minden éhség-állapotváltás (Hungry, Weak, Faint) törölte, egy „Hungry” üzenet után is;
+> - a gyorsítás-ájulás `rnd(8)` köre 0 is lehetett: ilyenkor is törlődött, de alvás híján vissza sem kapcsolt.
+>
+> Az első kettő a játékidő nagy részét lefedte, így az eredetiben a szörnyek többnyire +4-gyel találtak. A javítás ezért érezhetően könnyít: a cselekvőképes játékost minden szörny általában 20 százalékponttal ritkábban találja el. Például az 1. szintű kestrel a kezdő páncélú játékost 55% helyett 35%-kal.
 
 ```
 eat():

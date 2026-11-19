@@ -3,7 +3,7 @@
 Sorrend:
 ```
 new_level():
-  player.ISHELD = false
+  player.ISHELD = false; vf_hit = 0   // J4
   if level > max_level: max_level = level
   clear MAP, SCREEN, monsters (és csomagjaik), floor items  // a táblák helyei felszabadulnak (1.4.1)
   do_rooms()                    // 2.2–2.5: szobák
@@ -448,7 +448,7 @@ MAP[pos] = STAIRS
 ```
 choose_player_position():           // a lépcső után, a titkos folyosó-mezők előtt (2., J19)
   player.pos = find_floor(null, player)   // bármely nem fantom szoba (labirintus is); a szobákban még csak a lépcső van, ezért mindig talál
-  player.ISHELD = false
+  player.ISHELD = false; vf_hit = 0       // J4
 
 enter_room(player.pos)              // a szint berendezése után: megvilágítás + ébresztés (6.4)
 ```

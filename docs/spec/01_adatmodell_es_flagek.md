@@ -86,7 +86,7 @@ GameState {
   hungry_state           // 0 = rendben, 1 = Hungry, 2 = Weak, 3 = Faint (5.4)
   no_food                // hány szint óta nem generálódott étel; > 3 esetén a következő tárgy étel (8.1)
   regen_counter          // HP-regeneráció számlálója (5.3)
-  vf_hit                 // Venus flytrap fogásszámláló: ennyit sebez a fogva tartás alatt (6.7)
+  vf_hit                 // Venus flytrap fogásszámláló: a flytrap mellé ütése ennyit sebez; > 0, amíg a játékos fogva van (6.7, J4)
   has_amulet             // a játékosnál van-e az amulett (8.10)
   str_max                // a játékos legnagyobb elért ereje gyűrűk nélkül; a státuszsoron "Str:cur(max)" (5.6)
   timers: {              // hátralévő körök az egyes hatásokból (4.1.1)
@@ -130,7 +130,7 @@ GameState {
 ### 1.2.1 Játékos
 | flag | jelentés | be | ki |
 |---|---|---|---|
-| ISRUN | „ébren van” – egyetlen hatása: ha hiányzik, a szörnyek +4-gyel találják el (a cselekvőképességet a `no_command` számláló kezeli) | alap; ájulás/alvás/fagyás lejártakor | alvás (tekercs, gáz), fagyás, gyorsítás-ájulás, éhség-ájulás |
+| ISRUN | „ébren van” – egyetlen hatása: ha hiányzik, a szörnyek +4-gyel találják el (a cselekvőképességet a `no_command` számláló kezeli). Pontosan akkor hiányzik, amikor `no_command > 0` (J1), ezért nem kell tárolni | a játék kezdetén; ájulás/alvás/fagyás lejártakor | alvás (tekercs, gáz), fagyás, gyorsítás-ájulás (ha legalább 1 kör), éhség-ájulás |
 | ISHUH | zavarodott: mozgásnál 80% véletlen irány (`rndmove`, [6.6](06_szornyek.md#66-mozgás): előbb `dy`, aztán `dx = rnd(3)-1`; (0,0) nem visz időt), dobásnál/`^`-nál 20% véletlen irány | bájital, Medusa | időzítő; időtartamok összeadódnak |
 | CANHUH | a következő sikeres ütés összezavarja a szörnyet | Monster confusion tekercs | első sikeres ütés (közel vagy dobás) |
 | CANSEE | látja a láthatatlant; **C64-javítás (J5):** akkor áll fenn, ha a see invisible időzítő fut *vagy* see invisible gyűrű van valamelyik kézen | bájital, gyűrű | ha egyik forrás sincs már |
@@ -139,9 +139,9 @@ GameState {
 | ISHALU | hallucinál: szörnyek/tárgyak véletlen jellel, minden körben újrarajzolva | bájital | időzítő, extra gyógyítás |
 | SEEMONST | szörnyek látszanak falon át (inverz), ISINVIS nem | bájital (20 kör) | időzítő |
 | ISHASTE | 2 akció / kör | bájital | időzítő |
-| ISHELD | nem léphet el a mezőről (harc, tárgyhasználat mehet) | Venus flytrap | flytrap halála, teleport, egyes pálcák flytrapra |
+| ISHELD | nem léphet el a mezőről, csak a flytrapot támadhatja meg lépéssel (harc, tárgyhasználat mehet). Pontosan akkor áll fenn, amikor `vf_hit > 0` (J4), ezért nem kell tárolni | Venus flytrap | flytrap halála, teleport, új szint, egyes pálcák flytrapra; mindegyik a `vf_hit`-et is nullázza |
 
-*C64-javítás (J1):* az eredetiben az éhség-állapotváltás is törölte az ISRUN-t ([5.4](05_jatekos.md#54-éhség)).
+*C64-javítás (J1):* az eredetiben a játékos ISRUN nélkül kezdett, és az éhség-állapotváltás, valamint a 0 körös gyorsítás-ájulás is törölte ([5.4](05_jatekos.md#54-éhség)).
 
 ### 1.2.2 Szörny
 | flag | jelentés |

@@ -19,7 +19,7 @@ command():  // egy kör
     look(wakeup=true)            // látótér frissítés + szomszédok ébresztése (3.1, 6.4)
     update_status(); draw()
     if no_command > 0:           // alszik / ájult / fagyott
-       next_command = '.'        // pihenésnek számít
+       next_command = '.'        // pihenésnek számít; a futás, az ismétlés és az 'f'-harc szünetel, ébredés után folytatódik
        if --no_command == 0: player.ISRUN = true; "you can move again"
     else:
        next_command = futás/ismétlés/to_death esetén az előző, különben get_command()
@@ -52,7 +52,7 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 | sleep (tekercs) | rnd(5)+4 | ISRUN vissza |
 | sleeping gas | 5 | ISRUN vissza |
 | bear trap | 3 | – |
-| ájulás (haste ütközés) | rnd(8) | ISRUN vissza |
+| ájulás (haste ütközés) | rnd(8); 0 körnél nincs ájulás, az ISRUN megmarad (J1) | ISRUN vissza |
 | ájulás (éhség) | rnd(8)+4 | ISRUN vissza |
 | fagyás (Ice monster) | rnd(2)+2 összeadódik | ISRUN vissza |
 
@@ -112,7 +112,8 @@ move(dir):
   if target a pályán kívül (0. sor, 23. sor, oszlop < 0 vagy ≥ 80): mint falnál (lent)
   átlós lépés tilos, ha bármelyik ortogonális szomszéd fal/kő (sarokvágás tilalom) – ajtón átlósan sem lehet ki/be lépni; no time
   if target rejtett csapda és !ISLEVIT: felfedődik (TRAP, F_REAL be)
-  else if ISHELD and target-en nem a flytrap jele áll: "you are being held"; uses turn
+  else if ISHELD and target-en nem a flytrap jele áll:
+     "you are being held"; futás, ismétlés, 'f'-harc vége (J25); uses turn
   if monster at target: attack(target)
   else if target walkable (FLOOR, DOOR, PASSAGE, STAIRS, TRAP, tárgy):
      draw_tile(player.pos, floor_at())                               // 3.1
@@ -128,12 +129,15 @@ A zavarodott véletlen lépés soha nem támad szörnyre (a szörny jele nem já
 
 A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ugyanazt adja, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
 
+> **C64-javítás (J25):** a „you are being held” véget vet a futásnak, az ismétlésnek és az `f`-harcnak. *Eredetileg* ezek tovább ismétlődtek. Rendszerint a flytrap következő támadása leállította őket, de ha a flytrap nem támadott (a Hold monster tekercs megdermesztette, vagy a játékos egy rejtett csapdára lépve eltávolodott tőle), a futás minden lépése csak „you are being held” volt, amíg más le nem állította (például egy másik szörny támadása vagy éhség-állapotváltás). Az `f`-harcot a célpont támadása sem állította le: a játékos egyetlen ütés nélkül harcolt a HP-határig, kamikazénál a haláláig.
+
 **Futás:** a futás ugyanazt a lépést ismétli minden akcióban, amíg valami le nem állítja. A SHIFT vagy CTRL + irány leütése maga nem visz időt, a futás minden lépése egy akció; ha már az első lépés falba ütközik, a futás időt sem visz. Futás közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak, és a futás után hajtódnak végre.
 
 *Mindkét futást megállítja:*
 - fal, kő vagy a pálya széle (kivéve a kanyarkövetést, lent), szabálytalan átlós lépés;
 - ajtóra lépés, lépcsőre, tárgyra vagy szörnyre lépés (szörnynél harc indul);
 - csapdára lépés, teleport;
+- fogva tartás: „you are being held” (J25);
 - ha egy szörny megtámadja a játékost, vagy a sárkány tüzet okád;
 - éhség-állapotváltás ([5.4](05_jatekos.md#54-éhség));
 - ha a keresés (searching gyűrű) talál valamit;
@@ -154,7 +158,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 ### 4.2.2 Harc és célzás
 | parancs | leírás |
 |---|---|
-| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
+| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, a játékos fogva tartva nem léphet oda (J25), vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
 | SHIFT-f + irány | ugyanez, HP-ellenőrzés nélkül („kamikaze”); a kamikaze csak erre a harcra szól, minden `f` és `F` újra eldönti (J24) |
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
@@ -206,7 +210,7 @@ waste_time():
 | `.` | pihenés 1 kör |
 | s | keresés ([9.2](09_csapdak.md#92-keresés-s-searching-gyűrű)) |
 | a | utolsó parancs ismétlése, ugyanazzal az iránnyal és tárggyal, újrakérdezés nélkül; ha az irány vagy a tárgy bekérése ESC-vel elmaradt, az előző parancsé; „you haven't typed a command yet” |
-| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): a játékos támadása, ha szörnyhöz ér (közelharc, dobott tárgy, varázslövedék, sugár), szörnytámadás, sárkánytűz, éhség-állapotváltás, csapda, teleport, sikeres keresés, illegális parancs |
+| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): a játékos támadása, ha szörnyhöz ér (közelharc, dobott tárgy, varázslövedék, sugár), szörnytámadás, sárkánytűz, éhség-állapotváltás, „you are being held” (J25), csapda, teleport, sikeres keresés, illegális parancs |
 | ESC * | megszakít |
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
