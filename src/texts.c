@@ -22,7 +22,10 @@ const char text_monster_article[] = "the ";
 const char text_defeated[] = "you have defeated \1";
 const char text_welcome_to_level[] = "welcome to level \3";
 const char text_you_can_move_again[] = "you can move again";
-const char text_killed_by[] = "killed by the \1";
+const char text_frozen_by[] = "you are frozen by \1";
+const char text_suddenly_weaker[] = "you suddenly feel weaker";
+const char text_killed_by[] = "killed by \1\2";
+const char *const text_death_causes[DEATH_CAUSE_COUNT] = { "hypothermia" };
 
 const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
 

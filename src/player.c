@@ -12,7 +12,7 @@ const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT] = {
     50000, 100000, 200000, 400000, 800000, 2000000, 4000000, 8000000
 };
 
-#define NO_DEATH_CAUSE  0                       // a játékos él
+#define NO_DEATH_CAUSE  0xff                    // a játékos él; se nem szörnybetű, se nem DEATH_CAUSE_ kód
 
 // a halál oka; halott játékossal nincs parancsolvasás, így mentés sem, ezért nem a játékállapotban van
 static uint8_t death_cause;

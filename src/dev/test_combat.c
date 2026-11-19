@@ -568,6 +568,163 @@ int test_flytrap_damage(uint16_t i)
     return ok;
 }
 
+#define SPECIAL_TEST_HIT_POINTS     1000        // a játékos HP-ja és max. HP-ja, hogy a sebzés és a szívás ne ölje meg
+#define SPECIAL_TEST_ATTACKS_MAX    1000        // ennyi támadáson belül a várt hatás biztosan bekövetkezik (rögzített maggal)
+#define CANCELLED_TEST_ATTACKS      200         // ennyi támadásból a kikapcsolt Ice monster biztosan talál is (rögzített maggal)
+#define VAMPIRE_TEST_ATTACKS        2000        // ennyi támadásból mérve a szívás arányát
+#define WRAITH_TEST_LEVEL           3           // a Wraith ezt a szintet szívja le lépésenként
+
+// a kezdőértékű játékos SPECIAL_TEST_HIT_POINTS HP-val, és mellette egy type típusú szörny;
+// a szörny rekordja a tesztekben a táblából jön (README, Oscar64-hibák, 8.)
+static void put_special_attack_scene(uint8_t type)
+{
+    put_combat_player();
+    game.player.hit_points = SPECIAL_TEST_HIT_POINTS;
+    game.player.max_hit_points = SPECIAL_TEST_HIT_POINTS;
+    put_combat_monster(type, COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+}
+
+// az Ice monster találata nem sebez, és FREEZE_TURNS_MIN..FREEZE_TURNS_MIN + FREEZE_TURNS_RANDOM - 1 körre megfagyasztja
+// a játékost; a fagyott körök összeadódnak, és HYPOTHERMIA_TURNS fölött a játékos megfagy; a kikapcsolt Ice monster nem fagyaszt
+int test_ice_monster(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('I');
+    bool ok = true;
+
+    uint16_t attacks = 0;
+    while (!is_player_dead() && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        uint8_t turns_before = game.turns_unable_to_act;
+        bool did_hit = attack_player(&game.monsters[0]);
+        uint8_t added_turns = game.turns_unable_to_act - turns_before;
+        if (did_hit) {
+            if (added_turns < FREEZE_TURNS_MIN || added_turns >= FREEZE_TURNS_MIN + FREEZE_TURNS_RANDOM) {
+                ok = false;
+            }
+        } else if (added_turns != 0) {
+            ok = false;
+        }
+        if (game.player.hit_points != SPECIAL_TEST_HIT_POINTS) {
+            ok = false;
+        }
+        attacks++;
+    }
+    ok = ok &&
+        is_player_dead() &&
+        get_death_cause() == DEATH_CAUSE_HYPOTHERMIA &&
+        game.turns_unable_to_act > HYPOTHERMIA_TURNS &&
+        game.turns_unable_to_act < HYPOTHERMIA_TURNS + FREEZE_TURNS_MIN + FREEZE_TURNS_RANDOM;
+
+    put_special_attack_scene('I');
+    game.monsters[0].flags |= MONSTER_CANCELLED;
+    uint16_t hits = 0;
+    for (uint16_t attack = 0; attack < CANCELLED_TEST_ATTACKS; attack++) {
+        if (attack_player(&game.monsters[0])) {
+            hits++;
+        }
+    }
+    ok = ok && hits > 0 && game.turns_unable_to_act == 0;
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a Vampire szívása csak találatnál jön, a találatok VAMPIRE_DRAIN_CHANCE százalékában (±5 százalékpont), és a max. HP-t
+// 1..VAMPIRE_DRAIN_SIDES-szal csökkenti; ha a max. HP elfogy, a szívás megöli a játékost, akkor is, ha a HP-ja még bőven van
+int test_vampire(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('V');
+    bool ok = true;
+    uint16_t hits = 0;
+    uint16_t drains = 0;
+
+    for (uint16_t attack = 0; attack < VAMPIRE_TEST_ATTACKS; attack++) {
+        game.player.hit_points = SPECIAL_TEST_HIT_POINTS;
+        game.player.max_hit_points = SPECIAL_TEST_HIT_POINTS;
+        bool did_hit = attack_player(&game.monsters[0]);
+        int16_t drained = SPECIAL_TEST_HIT_POINTS - game.player.max_hit_points;
+        if (did_hit) {
+            hits++;
+        }
+        if (drained != 0) {
+            drains++;
+            if (!did_hit || drained < 1 || drained > VAMPIRE_DRAIN_SIDES) {
+                ok = false;
+            }
+        }
+    }
+    uint16_t expected = (uint32_t)hits * VAMPIRE_DRAIN_CHANCE / 100;
+    uint16_t tolerance = hits / 20;
+    ok = ok && drains + tolerance >= expected && drains <= expected + tolerance;
+
+    game.player.hit_points = SPECIAL_TEST_HIT_POINTS;
+    game.player.max_hit_points = 1;
+    uint16_t attacks = 0;
+    while (!is_player_dead() && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        attack_player(&game.monsters[0]);
+        attacks++;
+    }
+    ok = ok &&
+        is_player_dead() &&
+        get_death_cause() == 'V' &&
+        game.player.max_hit_points <= 0 &&
+        game.player.hit_points > 0;
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a Wraith szintszívása egy szinttel lejjebb visz, az XP az új szint alsó küszöbére áll, és a max. HP 1..WRAITH_DRAIN_SIDES-szal
+// csökken; a következő kis XP-szerzés nem adja vissza a szintet (J2); az 1. szinten 0 XP-vel a következő szívás halálos
+int test_wraith(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('W');
+    game.player.experience_level = WRAITH_TEST_LEVEL;
+    game.player.experience = experience_thresholds[WRAITH_TEST_LEVEL - 2] + 5;
+    bool ok = true;
+    uint8_t drains = 0;
+
+    uint16_t attacks = 0;
+    while (!is_player_dead() && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        uint8_t level_before = game.player.experience_level;
+        game.player.hit_points = SPECIAL_TEST_HIT_POINTS;
+        game.player.max_hit_points = SPECIAL_TEST_HIT_POINTS;
+        attack_player(&game.monsters[0]);
+        attacks++;
+        if (is_player_dead()) break;
+
+        int16_t drained = SPECIAL_TEST_HIT_POINTS - game.player.max_hit_points;
+        if (game.player.experience_level == level_before) {
+            if (drained != 0) {
+                ok = false;
+            }
+            continue;
+        }
+        drains++;
+        if (drained < 1 || drained > WRAITH_DRAIN_SIDES || game.player.experience_level != level_before - 1) {
+            ok = false;
+        }
+        if (game.player.experience_level == 1) {
+            ok = ok && game.player.experience == 0;
+        } else {
+            ok = ok && game.player.experience == experience_thresholds[game.player.experience_level - 2];
+            // egy XP-vel a szint nem jön vissza (J2)
+            game.player.experience++;
+            update_experience_level();
+            ok = ok && game.player.experience_level == level_before - 1;
+        }
+    }
+    ok = ok &&
+        drains == WRAITH_TEST_LEVEL - 1 &&
+        is_player_dead() &&
+        get_death_cause() == 'W';
+
+    clear_combat_scene();
+    return ok;
+}
+
 #define DEATH_TEST_EXPERIENCE        100        // a halál előtti állapot, amelyet az új játék visszaállít
 #define DEATH_TEST_EXPERIENCE_LEVEL  5
 #define DEATH_TEST_GOLD              50

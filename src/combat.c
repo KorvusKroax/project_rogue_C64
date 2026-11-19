@@ -144,6 +144,74 @@ bool attack_monster(struct Monster *monster)
     return did_hit;
 }
 
+// az Ice monster fagyasztása: a fagyott körök összeadódnak, és ha túl sok lesz, a játékos megfagy;
+// üzenet csak akkor, ha a játékos eddig cselekvőképes volt
+static void freeze_player(const char *monster_name)
+{
+    if (game.turns_unable_to_act == 0) {
+        message_format(text_frozen_by, monster_name, NULL, 0);
+    }
+    game.turns_unable_to_act += FREEZE_TURNS_MIN + rnd(FREEZE_TURNS_RANDOM);
+    if (game.turns_unable_to_act > HYPOTHERMIA_TURNS) {
+        kill_player(DEATH_CAUSE_HYPOTHERMIA);
+    }
+}
+
+// a Vampire és a Wraith szívása: a HP és a max. HP ugyanannyival csökken, de a HP legalább 1 marad;
+// ha a max. HP elfogy, a játékos meghal
+static void drain_hit_points(uint8_t amount, uint8_t cause)
+{
+    game.player.hit_points -= amount;
+    game.player.max_hit_points -= amount;
+    if (game.player.hit_points <= 0) {
+        game.player.hit_points = 1;
+    }
+    if (game.player.max_hit_points <= 0) {
+        kill_player(cause);
+        return;
+    }
+    message(text_suddenly_weaker);
+}
+
+// a Wraith szintszívása: egy szinttel lejjebb, és az XP az új szint alsó küszöbére áll, így a következő XP-szerzés
+// nem adja vissza a szintet (J2); XP nélkül a játékos meghal
+static void drain_experience_level(void)
+{
+    if (game.player.experience == 0) {
+        kill_player('W');
+        return;
+    }
+    game.player.experience_level--;
+    if (game.player.experience_level <= 1) {
+        game.player.experience_level = 1;
+        game.player.experience = 0;
+    } else {
+        game.player.experience = experience_thresholds[game.player.experience_level - 2];
+    }
+    drain_hit_points(ROLL(1, WRAITH_DRAIN_SIDES), 'W');
+}
+
+// a szörny különleges hatása a sikeres találata után
+static void apply_special_attack(const struct Monster *monster, const char *monster_name)
+{
+    switch (monster->type) {
+        case 'I':
+            freeze_player(monster_name);
+            break;
+        case 'V':
+            if (rnd(100) < VAMPIRE_DRAIN_CHANCE) {
+                drain_hit_points(ROLL(1, VAMPIRE_DRAIN_SIDES), 'V');
+            }
+            break;
+        case 'W':
+            if (rnd(100) < WRAITH_DRAIN_CHANCE) {
+                drain_experience_level();
+            }
+            break;
+        // ide jön: az Aquator, a Rattlesnake, a Venus flytrap, a Leprechaun és a Nymph
+    }
+}
+
 bool attack_player(struct Monster *monster)
 {
     stop_running_and_repeating();
@@ -156,7 +224,10 @@ bool attack_player(struct Monster *monster)
     const char *monster_name = prepare_monster_name(monster);
     int16_t hit_points_before = game.player.hit_points;
     bool did_hit = roll_monster_attack(monster);
-    report_attack(text_monster_hits, text_monster_misses, did_hit, monster_name, text_you);
+    // az Ice monster támadása nem ír hit/miss üzenetet: a találatáról a fagyasztás szól
+    if (monster->type != 'I') {
+        report_attack(text_monster_hits, text_monster_misses, did_hit, monster_name, text_you);
+    }
 
     // a halállal minden véget ér: az f-harc sem folytatódik, a speciális támadás elmarad
     if (game.player.hit_points <= 0) {
@@ -173,7 +244,13 @@ bool attack_player(struct Monster *monster)
             stop_fight();
         }
     }
-    // ide jön: a speciális támadás
+    if (did_hit && !(monster->flags & MONSTER_CANCELLED)) {
+        apply_special_attack(monster, monster_name);
+        // a különleges hatás is ölhet: ilyenkor az f-harc sem folytatódik
+        if (is_player_dead()) {
+            stop_fight();
+        }
+    }
     return did_hit;
 }
 

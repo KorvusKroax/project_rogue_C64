@@ -350,6 +350,11 @@ void run_game(void)
     // ideiglenes, a játék végéig (M10-01): a halál oka az üzenetsávban, a képernyő a halál pillanatában, és billentyűre vár
     show_map_changes();
     draw_status();
-    message_format(text_killed_by, text_monster_names[get_death_cause() - 'A'], NULL, 0);
+    uint8_t death_cause = get_death_cause();
+    if (death_cause < DEATH_CAUSE_COUNT) {
+        message_format(text_killed_by, "", text_death_causes[death_cause], 0);
+    } else {
+        message_format(text_killed_by, text_monster_article, text_monster_names[death_cause - 'A'], 0);
+    }
     wait_for_key_and_clear_message();
 }

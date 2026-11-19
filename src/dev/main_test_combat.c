@@ -20,6 +20,9 @@ static const struct DevTest combat_tests[] = {
     { "COMBAT-REMOVAL", test_monster_removal, 1 },
     { "XP-LEVELS", test_experience_levels, 1 },
     { "COMBAT-FLYTRAP", test_flytrap_damage, 1 },
+    { "SPECIAL-ICE", test_ice_monster, 1 },
+    { "SPECIAL-VAMPIRE", test_vampire, 1 },
+    { "SPECIAL-WRAITH", test_wraith, 1 },
     { "PLAYER-DEATH", test_player_death, 1 },
 };
 

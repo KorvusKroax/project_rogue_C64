@@ -49,6 +49,9 @@ int test_monster_removal(uint16_t i);
 int test_fight_target_death(uint16_t i);
 int test_experience_levels(uint16_t i);
 int test_flytrap_damage(uint16_t i);
+int test_ice_monster(uint16_t i);
+int test_vampire(uint16_t i);
+int test_wraith(uint16_t i);
 int test_player_death(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban

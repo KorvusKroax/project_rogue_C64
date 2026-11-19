@@ -31,7 +31,15 @@ extern const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT];
 
 void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0, él
 
-// a játékos halála; az ok egyelőre a szörny típusa ('A'..'Z'); a játék a kör végén ér véget (run_game)
+// a halál oka: a szörny típusa ('A'..'Z'), vagy ha nem szörny okozta, egy DEATH_CAUSE_ kód (a text_death_causes indexe)
+#define DEATH_CAUSE_HYPOTHERMIA  0              // fagyás (az Ice monster túl sokszor fagyasztott)
+#define DEATH_CAUSE_COUNT        1
+
+#if DEATH_CAUSE_COUNT > 'A'
+    #error "a halálok-kódok ütköznek a szörnyek betűivel"
+#endif
+
+// a játékos halála; a játék a kör végén ér véget (run_game)
 void kill_player(uint8_t cause);
 bool is_player_dead(void);
 uint8_t get_death_cause(void);          // a kill_player oka; csak halál után értelmes
