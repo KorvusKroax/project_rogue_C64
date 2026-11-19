@@ -194,10 +194,13 @@ static void show_more_and_wait(void)
         }
     #endif
 
-    // ha az utolsó használt sorban nincs helye, a következő sor elejére kerül; a sáv utolsó sorában mindig van helye
+    // az utolsó használt sor végére kerül, ha nincs ott helye, a következő sor elejére; a sáv utolsó sorában mindig van helye;
+    // a kurzort mindig oda kell állítani, mert az üzenetek között máshová is kerülhetett (pl. két kör között a kirajzoláskor)
     if (message_bar_end_column > SCREEN_WIDTH - TEXT_MORE_LENGTH) {
         set_screen_cursor(0, MESSAGE_ROW + message_bar_rows_in_use);
         set_message_bar_rows_in_use(message_bar_rows_in_use + 1);
+    } else {
+        set_screen_cursor(message_bar_end_column, MESSAGE_ROW + message_bar_rows_in_use - 1);
     }
 
     put_text(TEXT_MORE);

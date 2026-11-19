@@ -263,11 +263,17 @@ static void dev_message_and_view_screen(void)
         // a --More-- a két sorba a státuszsort rajzolja, ezért minden billentyű előtt újra
         put_view_state(x, frames);
         set_screen_cursor(0, STATUS_ROW + 1);
-        put_text("1-9:msg A,D,Q,E:step Z,X,C:view F:time");
+        put_text("0-9:msg A,D,Q,E:step Z,X,C:view F:time");
         clear_to_row_end();
         code = wait_for_key_and_clear_message();
 
         switch (code) {
+            // a két üzenet között a kurzor máshová kerül, mint két kör között a kirajzoláskor: a --More-- mégis a sáv végére kerül
+            case '0':
+                message("you miss the bat");
+                put_view_state(x, frames);
+                message("you are now wearing a very long piece of armor and it fits you");
+                break;
             case '1':
                 message("you miss the bat");
                 message_format("\1 bites you", "the bat", NULL, 0);

@@ -26,6 +26,7 @@ void init_player(void)
     game.player.max_hit_points = INITIAL_HIT_POINTS;
     game.player.experience_level = 1;
     game.player.experience = 0;
+    game.turns_unable_to_act = 0;
     game.gold = 0;
 }
 

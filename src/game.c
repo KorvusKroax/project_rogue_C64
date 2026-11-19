@@ -285,6 +285,15 @@ static bool execute_command(uint8_t code)
     }
 }
 
+// alvás, ájulás, fagyás alatt az akció pihenés; az utolsó ilyen akcióban a játékos újra mozoghat
+static void rest_while_unable_to_act(void)
+{
+    game.turns_unable_to_act--;
+    if (game.turns_unable_to_act == 0) {
+        message(text_you_can_move_again);
+    }
+}
+
 // egy kör: a BEFORE fázis, a játékos akciói, majd az AFTER fázis
 static void play_turn(void)
 {
@@ -301,9 +310,13 @@ static void play_turn(void)
             draw_status();
         }
 
-        // f-harc, futás és ismétlés közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak
+        // cselekvésképtelenül, f-harc, futás és ismétlés közben nincs billentyűolvasás: az előre leütött billentyűk a pufferben várnak;
+        // a cselekvésképtelenség alatt az f-harc, a futás és az ismétlés szünetel, utána folytatódik
         bool took_time;
-        if (is_fighting()) {
+        if (game.turns_unable_to_act > 0) {
+            rest_while_unable_to_act();
+            took_time = true;
+        } else if (is_fighting()) {
             took_time = take_fight_step();
         } else if (is_running()) {
             took_time = take_run_step();
