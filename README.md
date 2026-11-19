@@ -279,7 +279,7 @@ prepare_monster_name(&game.monsters[0]);
 ```
 Hol: `src/dev/test_combat.c`. A generált kódban (`build/<név>.asm`) a `@proxy` nevű függvényeket és az előttük használt paraméterregisztereket érdemes megnézni, ha egy érték lehetetlennek látszik.
 
-**9. Az optimalizáló nem jut a végére egy függvénynek** – fordításkor, figyelmeztetéssel: `warning 2007: Optimizer locked in infinite loop 'is_something_interesting_beside'`, mellette több tucat `Oops 7`, `Oops 8`, `Oops 9` sor a fordító belső kiírásaiból. A program lefordul, de nincs ellenőrizve, hogy az érintett függvény kódja helyes-e. Csak a `combat` tesztprogramban jött elő, amikor egy teszt a `take_run_step`-et hívta, és vele az `is_something_interesting_beside` is a programba került; a játékban és a fejlesztői buildben, ahol a futás is benne van, nem. Hogy előjön-e, a teljes program hívásain múlik.
+**9. Az optimalizáló nem jut a végére egy függvénynek** – fordításkor, figyelmeztetéssel: `warning 2007: Optimizer locked in infinite loop 'is_something_interesting_beside'`, előtte lépésenként 11 `Oops 7`, `Oops 8`, `Oops 9` sor. Az optimalizáló lépései addig ismétlődnek, amíg változtatnak a kódon: az `Oops N` azt jelzi, hogy az N. lépés 190-nél többször ismétlődött, a 200. körnél pedig a fordító abbahagyja ezt a lépést, figyelmeztet, és a következővel folytatja. A félbehagyott lépés csak az optimalizálást hagyja abba; a figyelmeztetéses buildben is minden teszt átment, köztük az óvatos futásé, amely ezt a függvényt ellenőrzi. Csak a `combat` tesztprogramban jött elő, amikor egy teszt a `take_run_step`-et hívta, és vele az `is_something_interesting_beside` is a programba került; a játékban és a fejlesztői buildben, ahol a függvény a `take_run_step`-be olvad, nem. Hogy előjön-e, a teljes program hívásain múlik.
 ```c
 // rossz: a combat tesztprogramban
 start_running(-1, 0, false);
@@ -289,7 +289,7 @@ take_run_step();
 start_running(-1, 0, false);
 move_player(-1, 0);
 ```
-Hol: `src/dev/test_combat.c`. Nincs bejelentve.
+Hol: `src/dev/test_combat.c`. Ismert: [#415](https://github.com/drmortalwombat/oscar64/issues/415) ugyanezt a jelenséget írja le; javítva a fő ágban (db75ffa: egy lépés egy `LDY`/`STY` pár miatt oda-vissza mozgatta ugyanazt a kódot), a következő kiadásban várható. Hogy nálunk ugyanez az ok, az csak a javított fordítóval derül ki.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c
