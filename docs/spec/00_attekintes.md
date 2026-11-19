@@ -110,7 +110,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J1 | a játékos ISRUN-ja csak alvás, ájulás és fagyás alatt hiányzik: a játék elején be van kapcsolva, az éhség-állapotváltás és a 0 körös ájulás nem veszi el (eredetileg a szörnyek a játékidő nagy részében +4-gyel találtak) | [5.4](05_jatekos.md#54-éhség) |
 | J2 | a Wraith szintszívása tartós (eredetileg a következő XP visszaadta a szintet) | [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc) |
 | J3 | `find_dest`: a foglaltság-ellenőrzés nem írja felül a vizsgált szörnyet | [6.5](06_szornyek.md#65-célpont) |
-| J4 | a Venus flytrap találata nem írja át a típustáblát, így a később született flytrapok nem öröklik a fogás számát kockaként; a fogás bármilyen megszűnése nullázza a `vf_hit`-et | [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc) |
+| J4 | a Venus flytrap találata nem írja át a típustáblát, így a később született flytrapok nem öröklik a fogás számát kockaként; a fogás bármilyen megszűnése nullázza a `flytrap_grip`-et | [6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc) |
 | J5 | see invisible: a bájital és a gyűrű hatása független egymástól | [4.1.1](04_jatekciklus_es_parancsok.md#411-időzített-hatások-fuse-ok), [8.2](08_targyak.md#82-bájitalok-q) |
 | J6 | a sárkány lángja által sebzett szörny nem a játékos támadásaként számít | [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz) |
 | J7 | kincses szobában nem kerül két tárgy egy mezőre | [2.8](02_szintgeneralas.md#28-tárgyak-put_things) |

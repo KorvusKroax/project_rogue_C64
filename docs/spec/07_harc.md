@@ -16,7 +16,7 @@ attack(attacker, defender, weapon /*null = fegyvertelen*/, thrown):
        did_hit = true
   // a szegmensek után, támadásonként egyszer
   if !did_hit:
-     if a Venus flytrap támad: hpt -= vf_hit; if hpt <= 0: halál   // ISCANC mellett is (6.7); a max_hit_this_fight-ba nem számít
+     if a Venus flytrap támad: hpt -= flytrap_grip; if hpt <= 0: halál   // ISCANC mellett is (6.7); a max_hit_this_fight-ba nem számít
      miss-üzenet (7.7); return
   hit-üzenet (7.7)
   játékos támad: CANHUH; if defender.hpt <= 0: kill_monster (6.8)

@@ -44,7 +44,7 @@ Creature {
   turn      // bool: ISSLOW szörnynél váltogat, csak true-nál lép (6.2); a C64-en egy flagbit (1.2.2)
 }
 // a szörny neve és carry értéke a típustáblából jön (6.1), nem kell a rekordban tárolni
-// a Venus flytrap számlálója (vf_hit) nem a lényhez tartozik: globális, a GameState-ben van
+// a Venus flytrap szorítása (flytrap_grip) nem a lényhez tartozik: globális, a GameState-ben van
 ```
 Játékos-specifikus állapot a `GameState`-ben (lásd lent). A C64-en a játékos és a szörny rekordja külön van, a szörnyét az [1.4.8](#148-szörnyrekord) írja le.
 
@@ -86,7 +86,7 @@ GameState {
   hungry_state           // 0 = rendben, 1 = Hungry, 2 = Weak, 3 = Faint (5.4)
   no_food                // hány szint óta nem generálódott étel; > 3 esetén a következő tárgy étel (8.1)
   regen_counter          // HP-regeneráció számlálója (5.3)
-  vf_hit                 // Venus flytrap fogásszámláló: a flytrap mellé ütése ennyit sebez; > 0, amíg a játékos fogva van (6.7, J4)
+  flytrap_grip           // a Venus flytrap szorítása (eredetileg vf_hit): a flytrap mellé ütése ennyit sebez; > 0, amíg a játékos fogva van (6.7, J4)
   has_amulet             // a játékosnál van-e az amulett (8.10)
   str_max                // a játékos legnagyobb elért ereje gyűrűk nélkül; a státuszsoron "Str:cur(max)" (5.6)
   timers: {              // hátralévő körök az egyes hatásokból (4.1.1)
@@ -139,7 +139,7 @@ GameState {
 | ISHALU | hallucinál: szörnyek/tárgyak véletlen jellel, minden körben újrarajzolva | bájital | időzítő, extra gyógyítás |
 | SEEMONST | szörnyek látszanak falon át (inverz), ISINVIS nem | bájital (20 kör) | időzítő |
 | ISHASTE | 2 akció / kör | bájital | időzítő |
-| ISHELD | nem léphet el a mezőről, csak a flytrapot támadhatja meg lépéssel (harc, tárgyhasználat mehet). Pontosan akkor áll fenn, amikor `vf_hit > 0` (J4), ezért nem kell tárolni | Venus flytrap | flytrap halála, teleport, új szint, egyes pálcák flytrapra; mindegyik a `vf_hit`-et is nullázza |
+| ISHELD | nem léphet el a mezőről, csak a flytrapot támadhatja meg lépéssel (harc, tárgyhasználat mehet). Pontosan akkor áll fenn, amikor `flytrap_grip > 0` (J4), ezért nem kell tárolni | Venus flytrap | flytrap halála, teleport, új szint, egyes pálcák flytrapra; mindegyik a `flytrap_grip`-et is nullázza |
 
 *C64-javítás (J1):* az eredetiben a játékos ISRUN nélkül kezdett, és az éhség-állapotváltás, valamint a 0 körös gyorsítás-ájulás is törölte ([5.4](05_jatekos.md#54-éhség)).
 
@@ -274,7 +274,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | a játékos `exp`-je, `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
 | a szörny `exp`-je | 16 bit előjel nélküli; csak a generálás írja ([6.2](06_szornyek.md#62-generálás)), a legnagyobb értéke kb. 13 650 (dragon a 255. szinten) |
 | `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
-| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `turns_unable_to_act`, `vf_hit`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`vf_hit` és `no_food` 255-nél telítődik) |
+| `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `turns_unable_to_act`, `flytrap_grip`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`flytrap_grip` és `no_food` 255-nél telítődik) |
 | Creature `arm`, Item `hplus`, `dplus`, a páncél védelme és a gyűrű modja (Item `arm`) | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
 | koordináták | 8 bit (x 0..79, y 0..23) |
 

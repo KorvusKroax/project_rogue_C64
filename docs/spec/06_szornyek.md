@@ -237,9 +237,9 @@ A aquator: (dmg 0x0) rust_armor(cur_armor)
            rust_armor: if !armor or leather or arm >= 9: nincs hatás
                        else if ISPROT or maintain armor gyűrű: "the rust vanishes instantly"
                        else: arm++; "your armor appears to be weaker now. Oh my!"
-F flytrap: (dmg 0x0, J4) player.ISHELD = true; vf_hit++; hpt -= 1; if hpt <= 0: death(F)
-           mellé ütéskor (7.1), az ISCANC-tól függetlenül: hpt -= vf_hit; if hpt <= 0: death(F)
-           vf_hit egyetlen globális számláló; a fogással együtt nullázódik (J4): a flytrap halálakor (6.8), teleportkor (8.3),
+F flytrap: (dmg 0x0, J4) player.ISHELD = true; flytrap_grip++; hpt -= 1; if hpt <= 0: death(F)
+           mellé ütéskor (7.1), az ISCANC-tól függetlenül: hpt -= flytrap_grip; if hpt <= 0: death(F)
+           flytrap_grip egyetlen globális számláló; a fogással együtt nullázódik (J4): a flytrap halálakor (6.8), teleportkor (8.3),
            új szinten (2.) és ha pálca találja el a flytrapot (8.7)
 I ice:     (dmg 0x0) player.ISRUN le; ha épp nem dermedt: "you are frozen by " + név(monster) (7.7, J17); turns_unable_to_act += rnd(2)+2
            if turns_unable_to_act > 50: death("hypothermia")
@@ -273,9 +273,9 @@ D dragon:  lásd tűzokádás (7.6)
 
 > **C64-javítás (J2):** a szintszívás után az `exp` az új szint alsó küszöbére kerül, így a szint tartósan elveszik (a visszaszerzéséhez újra meg kell szerezni a hiányzó tapasztalatot). *Eredetileg* `exp = xp_next[lvl-1] + 1` lett, ami a régi szint küszöbe fölé esett (az `xp_next` 0-indexű, 5.2), ezért a következő XP-szerzéskor a szint azonnal visszaállt – ráadásul újabb `ROLL(1,10)` maxhp-val, így a szívás hosszú távon akár növelhette is a maxhp-t. A javítás mellékhatása, hogy a 2. szinttől fölfelé eggyel kevesebb szívás halálos: az *n*. szintről *n*, az eredetiben *n* + 1 kellett, mert ott még egy „1. szint, 11 XP” állapot is közbeékelődött.
 
-> **C64-javítás (J4):** a flytrap találata mindig 0 kocka: csak a fogás (−1) és a mellé ütés (−`vf_hit`) sebez, a típustábla nem változik. *Eredetileg* a találat a flytrap **típusának** sebzés-szövegét írta át (`"<vf_hit>x1"`; kezdetben `"%%%x0"`, a flytrap halála és a fogva tartott játékos teleportja után `"000x0"`). A szörny viszont a születésekor másolatot kapott a típus sebzéséről, így ez a már élő flytrapra nem hatott: a fogva tartó flytrap találata 0 kocka maradt. Az átírt szöveget csak a később született flytrapok örökölték, tartósan. Ha például a játékos fogva tartva hagyta el a szintet, a következő szint flytrapjai `vf_hit` kockával sebeztek. A javítás ezt az öröklést szünteti meg; a szokásos játékmenet nem változik.
+> **C64-javítás (J4):** a flytrap találata mindig 0 kocka: csak a fogás (−1) és a mellé ütés (−`flytrap_grip`) sebez, a típustábla nem változik. *Eredetileg* a találat a flytrap **típusának** sebzés-szövegét írta át (`"<flytrap_grip>x1"`; kezdetben `"%%%x0"`, a flytrap halála és a fogva tartott játékos teleportja után `"000x0"`). A szörny viszont a születésekor másolatot kapott a típus sebzéséről, így ez a már élő flytrapra nem hatott: a fogva tartó flytrap találata 0 kocka maradt. Az átírt szöveget csak a később született flytrapok örökölték, tartósan. Ha például a játékos fogva tartva hagyta el a szintet, a következő szint flytrapjai `flytrap_grip` kockával sebeztek. A javítás ezt az öröklést szünteti meg; a szokásos játékmenet nem változik.
 >
-> A fogás bármilyen megszűnése a `vf_hit`-et is nullázza, így a játékos pontosan akkor van fogva, amikor `vf_hit > 0`. *Eredetileg* a fogás négy megszűnési módja közül csak a flytrap halála és a teleport nullázta a számlálót, az új szint és a pálca csak az ISHELD-et törölte. A megmaradt számláló miatt bármelyik flytrap mellé ütése azonnal ennyit sebzett, akkor is, ha még meg sem fogta a játékost, és a következő fogás ettől az értéktől számolt tovább.
+> A fogás bármilyen megszűnése a `flytrap_grip`-et is nullázza, így a játékos pontosan akkor van fogva, amikor `flytrap_grip > 0`. *Eredetileg* a fogás négy megszűnési módja közül csak a flytrap halála és a teleport nullázta a számlálót, az új szint és a pálca csak az ISHELD-et törölte. A megmaradt számláló miatt bármelyik flytrap mellé ütése azonnal ennyit sebzett, akkor is, ha még meg sem fogta a játékost, és a következő fogás ettől az értéktől számolt tovább.
 
 > **C64-javítás (J17):** az Ice monster üzenete „you are frozen by the ice monster”. *Eredetileg* a szöveg „you are frozen by the ” + név volt, és mivel a név maga is „the”-vel kezdődik, „you are frozen by the the ice monster” jelent meg.
 
@@ -283,7 +283,7 @@ D dragon:  lásd tűzokádás (7.6)
 ```
 kill_monster(monster):
   exp += monster.exp
-  if F: player.ISHELD = false; vf_hit = 0
+  if F: player.ISHELD = false; flytrap_grip = 0
   if L and fallpos(monster.pos) talál helyet and level >= max_level:
      gold_amount = rnd(50+10*level)+2; if save_magic(): gold_amount += 4 × (rnd(50+10*level)+2)
      az arany a szörny csomagjába kerül (és vele együtt leesik)

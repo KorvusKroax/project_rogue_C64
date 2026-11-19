@@ -263,7 +263,7 @@ restore_game():   // címképernyő, R
   ha hpt <= 0: "\"He's dead, Jim\"", vissza a címképernyőre
   center_view_window(), teljes újrarajzolás; "file name: <fájl>"; a főciklus folytatódik
 ```
-- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `vf_hit`, `seed` …), a térképrétegek, a szobák, a folyosórendszerek és az ajtótábla ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
+- Tartalom: a teljes perzisztens játékállapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)): minden globális változó és flag, az opciók, a tárgytípusok neve/ismertsége/elnevezése, a szintek számlálói (`level`, `max_level`, `no_food`, `food_left`, `gold`, `flytrap_grip`, `seed` …), a térképrétegek, a szobák, a folyosórendszerek és az ajtótábla ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)), a szörny- és tárgytáblák a listákkal, a futó időzítők. A formátumot a [10.7](10_platform.md#107-lemezkezelés) írja le.
 - A bájtok XOR-ral el vannak rejtve (egyszerű elrejtés, nem biztonsági titkosítás), [10.7](10_platform.md#107-lemezkezelés).
 - A betöltés után a fájl törlődik, így ugyanonnan nem lehet újrakezdeni (a lemez másolásától ez nem véd).
 
