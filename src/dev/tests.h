@@ -57,6 +57,8 @@ int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_xeroc_reveal(uint16_t i);
 int test_player_death(uint16_t i);
+int test_item_chances(uint16_t i);
+int test_levels_without_food(uint16_t i);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

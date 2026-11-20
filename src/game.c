@@ -341,6 +341,7 @@ void run_game(void)
     init_player();
     last_code = 0;
     game.dungeon_level = 1;
+    game.levels_without_food = 0;
     new_level();
 
     while (!is_player_dead()) {

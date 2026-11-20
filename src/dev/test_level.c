@@ -592,6 +592,10 @@ int test_level_generation(uint16_t i)
     memcpy(checked_rooms, game.rooms, sizeof(checked_rooms));
     game.seed = LEVEL_TEST_FIRST_SEED + i;
 
+    // az étel nélküli szintek számlálója próbánként más értékről indul, így a 255-ös megállás is sorra kerül
+    uint8_t levels_without_food = (uint8_t)i;
+    game.levels_without_food = levels_without_food;
+
     uint16_t start_frame = get_frame_count_16();
     generate_level();
     uint16_t frames = get_frame_count_16() - start_frame;
@@ -600,6 +604,9 @@ int test_level_generation(uint16_t i)
     }
 
     if (memcmp(checked_rooms, game.rooms, sizeof(checked_rooms)) != 0) return false;
+
+    uint8_t expected_levels_without_food = levels_without_food == UINT8_MAX ? UINT8_MAX : levels_without_food + 1;
+    if (game.levels_without_food != expected_levels_without_food) return false;
 
     // az ujjlenyomat még az ellenőrzések előtt, mert azok a TILE_SEEN flaget írják
     uint16_t level_checksum = calculate_level_checksum();
@@ -621,8 +628,9 @@ int test_level_generation(uint16_t i)
     // az are_map_tiles_valid után, mert az törli a labirintus-ellenőrzés TILE_SEEN jelöléseit
     if (!is_level_connected()) return false;
 
-    // ugyanazzal a maggal ugyanaz a szint: harmadszor generálva az ujjlenyomatnak egyeznie kell
+    // ugyanazzal a maggal és állapottal ugyanaz a szint: harmadszor generálva az ujjlenyomatnak egyeznie kell
     game.seed = LEVEL_TEST_FIRST_SEED + i;
+    game.levels_without_food = levels_without_food;
     generate_level();
     return calculate_level_checksum() == level_checksum;
 }

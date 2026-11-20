@@ -213,7 +213,10 @@ void generate_level(void)
     hide_passages(game.player.x, game.player.y);
 
     place_gold_and_monsters();
-    // ide jön: a szintek számlálója az étel nélküli tárgygeneráláshoz (no_food) eggyel nő
+    // egy újabb szint a legutóbbi étel óta: a szobák tárgyai előtt nő, így közöttük egy étel nullázza
+    if (game.levels_without_food < UINT8_MAX) {
+        game.levels_without_food++;
+    }
     // ide jön: tárgyak (kincses szoba, 9 próba, amulett)
     // ide jön: csapdák
 }
