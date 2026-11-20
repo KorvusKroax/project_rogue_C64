@@ -250,16 +250,15 @@ pick_up(item):
   else: új bejegyzés, item.packch = legkisebb szabad betű 'a'..'z'; a többi betű nem csúszik
         a csomag típus szerint rendezett: az új tárgy az azonos típusúak mellé kerül
   item.ISFOUND = true
-  minden szörny, amelyik erre a tárgyra tartott: dest = player
   if AMULET: has_amulet = true
 ```
-A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
+A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, minden szörny, amelyik rá tartott, a játékost veszi célba ([6.5](06_szornyek.md#65-célpont)), és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
 
 Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
 A csomag a tárgytábla rekordjainak láncolt listája ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); a 23-as `MAX_PACK` korlát a darabszámra vonatkozik, nem a rekordokra. Felvételkor és összevonáskor a felvett rekord felszabadul, ha a köteghez csatolódott.
 
 ## 8.10 Arany, Amulett, Étel
-- Arany: `arm` = mennyiség; nem foglal csomaghelyet.
+- Arany: `arm` = mennyiség; nem foglal csomaghelyet. A szoba berendezésekor lerakott arany ROOMGOLD jelzőt kap ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)), ezt őrzi a kapzsi szörny ([6.4](06_szornyek.md#64-ébresztés), E23).
 - Amulett: `,`; az `AMULET_LEVEL` (26.) szinttől generálódik ([2.8](02_szintgeneralas.md#28-tárgyak-put_things)); megszerzésekor `has_amulet`; felfelé lépcsőzés engedélyezett; éhség alapfogyása 0. Lerakható, eldobható, és a nimfa is ellophatja (mágikus tárgy).
 - Étel: két fajta: food ration (90%) és gyümölcs (10%, alapnév „slime-mold”) Mindig 1 darab generálódik.

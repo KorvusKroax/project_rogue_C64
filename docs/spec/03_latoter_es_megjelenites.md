@@ -91,7 +91,7 @@ A 23. és 24. sorban:
 pl.  "Level:3 Gold:25 Hp:14(20) Hungry"
      "Str:16(16) Arm:5 Exp:2/38"
 ```
-Mindkét sor a végéig törlődik. A legszélesebb reális értékekkel (255. szint, 6 jegyű arany, 3 jegyű HP, „Hungry”) a 23. sor pontosan 40 karakter; ha egy szélsőséges érték (pl. 7 jegyű arany) miatt hosszabb lenne, a vége levágódik. Minden kör végén kirajzolódik, összehasonlítás nélkül: a sor a régi fölé íródik, és csak a vége törlődik, így nem villog.
+Mindkét sor a végéig törlődik. A legszélesebb reális értékekkel (254. szint, 6 jegyű arany, 3 jegyű HP, „Hungry”) a 23. sor pontosan 40 karakter; ha egy szélsőséges érték (pl. 7 jegyű arany) miatt hosszabb lenne, a vége levágódik. Minden kör végén kirajzolódik, összehasonlítás nélkül: a sor a régi fölé íródik, és csak a vége törlődik, így nem villog.
 
 > **C64-javítás (J11):** a kijelzett Arm a védelem-gyűrűket is tartalmazza, vagyis azt az értéket mutatja, amellyel a harc számol ([5.5](05_jatekos.md#55-effektív-páncél-védekezéskor)). *Eredetileg* a státuszsor csak a viselt páncélt (vagy az alap 10-et) mutatta, a gyűrűk nélkül.
 

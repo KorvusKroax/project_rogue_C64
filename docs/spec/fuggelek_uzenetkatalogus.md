@@ -42,7 +42,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | `m` tárgyra | you moved onto <név> | |
 | `,` üres mezőn | there is nothing here to pick up | |
 | lebegve `,` `>` `<` | You can't. You're floating off the ground! | |
-| `>` nem lépcsőn | I see no way down | |
+| `>` nem lépcsőn, vagy a 254. szinten | I see no way down | |
 | `<` nem lépcsőn | I see no way up | |
 | `<` amulett nélkül | your way is magically blocked | |
 | `<` sikeres | you feel a wrenching sensation in your gut | |

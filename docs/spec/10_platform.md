@@ -141,7 +141,7 @@ A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák fogla
 - **Fejlesztői parancsok** játék közben az F-billentyűkön (F1–F8, a párosak SHIFT-tel), így egyik játékparancsot sem takarják el. Egyik sem visz el időt.
   - **F1:** új szint ugyanazon a mélységen.
   - **F2:** szörny létrehozása betű alapján (A..Z, kis- vagy nagybetűvel; a betűt a sávban kéri be, ESC-re vagy nem betűre elmarad) a játékos melletti szabad mezőre: a mező járható, a játékosról látható, és nem áll rajta szörny. Utána az üzenetsor a szörnytábla foglaltságát mutatja (pl. „monsters: 17/40”); ha nincs szabad mező, vagy betelt a tábla, a szörny nem jön létre, és az üzenet ezzel kezdődik.
-  - **F3:** ugrás tetszőleges mélységre (1..255); a mélységet a sávban kéri be, ESC-re elmarad.
+  - **F3:** ugrás tetszőleges mélységre (1..254); a mélységet a sávban kéri be, ESC-re elmarad.
   - **F4:** a szint összes szörnye felébred és üldöz (`runto`, [6.4](06_szornyek.md#64-ébresztés)); utána az üzenetsor a szörnyek számát mutatja.
   - **F5:** a teljes térkép be- és kikapcsolása. Bekapcsolva a képernyőn a MAP látszik a játékossal és a szörnyekkel: a titkos folyosó-mező inverz `#`, a titkos ajtó inverz `+`, a szörny a betűje, az ébren lévő (ISRUN) inverzen. A térkép minden akció előtt teljesen újrarajzolódik, mert a szörnyek a látott térkép változása nélkül is lépnek és ébrednek. A nézőablak közben is a játékost követi, és új szinten is bekapcsolva marad. A SCREEN réteg közben is frissül, így kikapcsoláskor a normál nézet pontosan visszaáll. Bekapcsolt állapotban más a keret színe.
   - **F6:** a szint összes szörnyének lassítása ki és be: ha van nem lassított szörny, mindegyik lassított (ISSLOW) lesz, különben egyik sem; az új állapotot az üzenetsor mutatja.

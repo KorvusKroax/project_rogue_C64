@@ -119,7 +119,7 @@ wake_monster(monster):
   // 3. kapzsi szörny – nincs 2/3 esély, a stealth és a lebegés sem védi ki, ISHELD-et sem nézi
   if monster.ISGREED and !monster.ISRUN:
        monster.flags |= ISRUN
-       monster.dest = (a JÁTÉKOS szobájában van arany) ? annak helye : player
+       monster.dest = (a JÁTÉKOS szobájában ROOMGOLD arany fekszik) ? az az arany : player   // a padló tárgylistájából (E23)
 
 runto(monster):  // a "kényszerített" ébresztés
   monster.flags |= ISRUN; monster.flags &= ~ISHELD; monster.dest = find_dest(monster)
@@ -150,8 +150,13 @@ find_dest(monster):
 
 > **C64-javítás (J3):** a „más szörny célja-e” ellenőrzés külön változóval járja be a szörnytáblát, így a vizsgált szörny nem változik. *Eredetileg* ugyanazt a változót használta: ha egy tárgy foglaltnak bizonyult, a további tárgyakat már a foglaló szörny szobájához hasonlította (a `carry` esély az eredeti szörnyé maradt).
 - `dest`-et a `runto` ([6.4](#64-ébresztés)) és a tárgyfelvétel állítja be; szobaváltáskor nem számolódik újra.
-- Ha a játékos felveszi a célzott tárgyat, a szörny `dest`-je a játékos lesz ([8.9](08_targyak.md#89-csomag)).
-- Kapzsi szörny: ha a szobájában már nincs arany (`gold_val == 0`), a `dest` minden lépésben a játékos lesz.
+- Ha egy tárgy lekerül a padlóról (a játékos vagy egy szörny felveszi), minden szörny, amelyik rá tartott, a játékost veszi célba ([8.9](08_targyak.md#89-csomag), [6.6](#66-mozgás)). Így a `dest` mindig egy padlón fekvő tárgy vagy a játékos.
+- Kapzsi szörny: ha tárgy felé tart, de a szobájában már nem fekszik ROOMGOLD arany, a `dest` a játékos lesz; ezt minden lépés elején megnézi ([6.6](#66-mozgás)). A ROOMGOLD aranyat nem veszi fel, hanem ráül; más szörny felveheti.
+
+> **C64-eltérés (E23):** a szoba aranyát a tárgy ROOMGOLD jelzője mutatja ([1.2.3](01_adatmodell_es_flagek.md#123-tárgy)). A szobarekordban nincs aranymező, és a `dest` mindig egy padlón fekvő tárgy vagy a játékos, mert a szörnyrekord csak tárgyindexet tárol ([1.4.8](01_adatmodell_es_flagek.md#148-szörnyrekord)). *Eredetileg* a szoba tárolta az arany helyét és mennyiségét, a kapzsi szörny célja a szoba arany-koordinátája volt, nem a tárgyé (ezért nem vette fel), és a szoba arany-jelzését csak a játékos aranyfelvétele törölte. Ritka esetekben ez másképp viselkedik:
+> - ha a kapzsi szörny tárgygyűjtőként (`find_dest`) indult a szoba aranyáért, eredetileg felvette, most ráül;
+> - ha a szoba aranyát egy másik szörny veszi fel, eredetileg a szoba továbbra is aranyasnak számított, és a rá tartó kapzsi szörny az üres mezőre ment; most a játékost veszi célba;
+> - az aranyat őrző kapzsi szörny célja foglalja az aranyat, így tárgygyűjtő szörny nem választja (J3); eredetileg választhatta.
 
 ## 6.6 Mozgás
 ```
@@ -169,7 +174,8 @@ move_monst(monster):
   monster.turn = !monster.turn
 
 do_chase(monster):
-  if monster.ISGREED and monster.room.gold_val == 0: monster.dest = player
+  if monster.ISGREED and monster.dest != player and a monster.room-ban nem fekszik ROOMGOLD arany:   // a padló tárgylistájából (E23)
+     monster.dest = player
   target_room = (monster.dest == player) ? player.room : room(monster.dest)
   current_room = monster.room; on_door = (MAP[monster.pos] == DOOR)
   loop:
@@ -188,8 +194,9 @@ do_chase(monster):
   if arrived:                                                     // chase nem talált jobb mezőt
      if goal == player.pos: return attack(monster)                // 7.1, 6.7
      if goal == monster.dest:
-        if monster.dest egy padlón fekvő tárgy:
-           felveszi a csomagjába, a mező FLOOR/PASSAGE lesz; monster.dest = find_dest(monster)
+        if monster.dest egy padlón fekvő tárgy, és nem (monster.ISGREED and a tárgy ROOMGOLD):   // a szoba aranyára a kapzsi szörny ráül (E23)
+           felveszi a csomagjába, a mező FLOOR/PASSAGE lesz, a többi rá tartó szörny a játékost veszi célba (6.5)
+           monster.dest = find_dest(monster)
         if monster.type != 'F': stop = true
   else if monster.type == 'F': return                             // a Venus flytrap soha nem mozdul el
   relocate(monster, next_pos)

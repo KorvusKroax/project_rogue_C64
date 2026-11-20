@@ -96,13 +96,14 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E13 | seed a hardveres időzítőkből | [0.2](#02-alapprimitívek) |
 | E14 | a játékban hatástalan mezők (`turn`, csapdalista, `F_DROPPED`, `ISREGEN`) elhagyhatók | [1.1](01_adatmodell_es_flagek.md#11-rekordok) |
 | E15 | animációk (dobás, sugár) képkockában időzítve | [10.6](10_platform.md#106-időzítés) |
-| E16 | a mélység legfeljebb 255 | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
+| E16 | a legmélyebb szint a 254., innen nincs lefelé út | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E17 | a sírkövön nincs évszám (nincs valós idejű óra) | [4.3](04_jatekciklus_es_parancsok.md#43-szintváltás-és-játék-vége) |
 | E18 | nincs `terse` opció: csak a normál üzenetek vannak, a dobás mindig animálódik | [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) |
 | E19 | tekercsfeliratok: legfeljebb 30 karakter, egy játékon belül egyediek, nem tárolódnak | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 | E20 | `CTRL-P`: a kérdések nem számítanak utolsó üzenetnek, és az utolsó üzenet nem kerül a mentésbe | [3.4](03_latoter_es_megjelenites.md#34-üzenetsor) |
 | E21 | nincs `seefloor` opció: sötét szobában a lámpafény (a 3×3 padlója) mindig látszik | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
 | E22 | a nézőablak kézzel is görgethető (CRSR ⇔), a CLR/HOME a játékosra állítja | [3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés) |
+| E23 | a szoba aranya a tárgyon jelölve (ROOMGOLD), nem a szobarekordban; a szörny célja mindig tárgy vagy a játékos | [6.5](06_szornyek.md#65-célpont) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |

@@ -349,9 +349,9 @@ for each room (not PHANTOM):
   if rnd(2) == 0 and (not has_amulet or level >= max_level):  // a rnd(2) mindig lefut
      pos = find_floor(room, item)                             // üres padló (labirintusnál üres járat)
      if pos van:                                              // ha nincs: nincs arany (J19)
-        room.gold_val = rnd(50 + 10*level) + 2
-        room.gold_pos = pos
-        place GOLD on room.gold_pos
+        gold = new GOLD item; gold.arm = rnd(50 + 10*level) + 2  // arm: a mennyiség
+        gold.ROOMGOLD = true                                  // a szoba aranya: ezt őrzi a kapzsi szörny (6.4, E23)
+        place gold on pos
         has_gold = true
   if rnd(100) < (has_gold ? 80 : 25):
      pos = find_floor(room, monster)                          // bármely járható mező szörny és játékos nélkül – lehet aranyon is
@@ -412,7 +412,7 @@ treasure_room():
      new_item() a pos-ra
   monster_count = max(rnd(extra) + MIN, item_count + 2)
   monster_count = min(monster_count, inner_area)
-  level++                                             // a szörnyek ÉS a tárgyaik is a következő szintről
+  level++                                             // a szörnyek ÉS a tárgyaik is a következő szintről; legfeljebb 255 (E16)
   repeat monster_count:
      pos = find_floor(room, monster); ha nincs: kihagy
      monster = new_monster(level, initial_list=true); monster.flags |= ISMEAN
@@ -433,7 +433,7 @@ if rnd(10) < level:
     pos = find_floor(null, trap)                                 // csak FLOOR: labirintusba nem kerül
     if pos nincs: kimarad (J19)                                  // eredetileg itt végtelen ciklus, ha nincs FLOOR mező
     F_REAL le                                                    // rejtett: padlóként látszik
-    trap_type[pos] = rnd(8)                                      // TRAPDOOR, ARROW, SLEEP, BEAR, TELEPORT, DART, RUST, MYSTERY (F_TMASK)
+    trap_type[pos] = level == 254 ? rnd(7) + 1 : rnd(8)          // TRAPDOOR, ARROW, SLEEP, BEAR, TELEPORT, DART, RUST, MYSTERY (F_TMASK); a legmélyebb szinten nincs csapóajtó (E16)
 ```
 
 ## 2.10 Lépcső

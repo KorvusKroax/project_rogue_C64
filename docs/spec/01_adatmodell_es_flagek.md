@@ -14,7 +14,7 @@ Room {
     DARK              // a szoba sötét (ISDARK)
     MAZE              // labirintus (ISMAZE)
   // a kijáratok a közös ajtótáblában vannak (1.4.7)
-  gold_pos, gold_val  // arany a szobában (ha van)
+  // a szoba aranya tárgyként fekszik a padlón, ROOMGOLD jelzővel (1.2.3)
 }
 // összekötéshez (csak generálás közben): conn[9][9] szomszédsági tábla, isconn[9][9], ingraph[9]
 // folyosórendszerek: passages[] – minden összefüggő folyosóhálózat külön "szobaként" szerepel
@@ -62,7 +62,7 @@ Item {
   hplus    // találati bónusz (fegyvernél; átkozott fegyvernél negatív) (7.1, 8.4)
   dplus    // sebzésbónusz (fegyvernél) (7.1, 8.4)
   arm      // jelentése típusonként: páncélnál védelem (kisebb = jobb); pálcánál töltés; aranynál az összeg; gyűrűnél a mod (pl. protection +1)
-  flags    // ISCURSED, ISKNOW, ISMISL, ISMANY, ISFOUND, ISPROT (1.2.3); az ISMISL és az ISMANY nem tárolt, a típusból jön
+  flags    // ISCURSED, ISKNOW, ISMISL, ISMANY, ISFOUND, ISPROT, ROOMGOLD (1.2.3); az ISMISL és az ISMANY nem tárolt, a típusból jön
   group    // kötegazonosító: azonos which + group → egy csomaghelyen összevonódik (8.4, 8.9)
   label    // a játékos által adott egyedi név ('c'), fegyvernél, páncélnál, amulettnél (4.2.6); index a névkészletbe (1.4.1)
 }
@@ -74,7 +74,7 @@ A tárolt rekordot az [1.4.6](#146-tárgyrekord) írja le.
 ### 1.1.4 GameState
 ```
 GameState {
-  level                  // a jelenlegi dungeon-szint (mélység), 1..255 (E16)
+  level                  // a jelenlegi dungeon-szint (mélység), 1..254 (E16)
   max_level              // a legmélyebb eddig elért szint; tárgy/arany csak ott generálódik, ha nálad az amulett (2.7, 2.8)
   gold                   // a játékos aranya; ebből lesz a pontszám (4.3)
   player                 // Creature: a játékos (1.1.2)
@@ -173,6 +173,7 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 | ISMANY | kötegelt: nyíl, dobótőr, shuriken, arany |
 | ISFOUND | a tárgy már volt a csomagban (minden felvételkor beáll). A scare monster tekercs ebből tudja, hogy a következő felvételkor porrá kell válnia ([8.3](08_targyak.md#83-tekercsek-r)) |
 | ISPROT | páncél véd a rozsdától |
+| ROOMGOLD | a szoba aranya: a szoba berendezésekor lerakott arany ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)). A kapzsi szörny erre megy, és nem veszi fel, hanem ráül ([6.4](06_szornyek.md#64-ébresztés)–[6.6](06_szornyek.md#66-mozgás), E23) |
 
 ### 1.2.4 Mező
 | flag | jelentés |
@@ -253,14 +254,14 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 | tábla | méret | megjegyzés |
 |---|---|---|
 | szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 18 bájt ([1.4.8](#148-szörnyrekord)) |
-| tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető |
+| tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető. A szintgenerálás után legfeljebb 73 hely foglalt (23 a csomagban, 9 arany, 10 kincs, 9 tárgy, 1 amulett, 21 szörnytárgy); 81 alá csökkentve a generálás betöltheti a táblát, ekkor a darabolásnak tartalékot kell hagyni |
 | nevek (`guess`, `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusonkénti `guess` és a tárgy `label` mezője 1 bájtos index ide (0 = nincs) |
 | szobák | 9 + MAX_PASSAGES (12) | a szobák és a folyosórendszerek ([1.4.7](#147-kijáratok-és-folyosók)) |
 | kijáratok | MAX_EXITS = 2 × MAX_CORRIDORS = 24 | közös ajtótábla a szint összes kijáratáról ([1.4.7](#147-kijáratok-és-folyosók)); nem telhet be |
 
 **Betelt tábla:**
 - *Szörny:* ha nincs szabad hely, az új szörny nem jön létre. A vándorló szörny démon ilyenkor úgy viselkedik, mintha létrehozta volna (az időzítő újraindul); a create monster tekercs „you hear a faint cry of anguish in the distance”; a kincses szoba a további szörnyeket kihagyja. A polymorph a meglévő rekordot használja, nem foglal újat.
-- *Tárgy:* a generálás (szint tárgyai, kincses szoba, szobák aranya, szörnyek kezdő tárgya, leprechaun aranya) csak akkor hoz létre tárgyat, ha legalább ITEM_RESERVE = 8 hely szabad; a tartalék a kötegek darabolásának (dobás, lerakás) jut. Ha egyetlen hely sincs, a darabolással járó parancs nem hajtódik végre: „there's no room for that” (nem visz időt).
+- *Tárgy:* új tárgyhoz egy szabad hely kell. Ha nincs, a generálás (szint tárgyai, kincses szoba, szobák aranya, szörnyek kezdő tárgya, leprechaun aranya) kihagyja a tárgyat, a kötegek darabolásával járó parancs (dobás, lerakás) pedig nem hajtódik végre: „there's no room for that” (nem visz időt).
 - *Név:* ha nincs szabad hely, és az elnevezés új helyet foglalna, a `c` és az ismeretlen tárgy használata utáni kérdés helyett „you have no room for more names. Remove a name from something first” jelenik meg ([4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok)). Átnevezés nem foglal új helyet. Egy hely felszabadul:
   - ha a játékos üres nevet ad meg („you remove the name”);
   - a típus azonosításakor, mert ekkor a név úgyis törlődik;
@@ -272,8 +273,8 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 |---|---|
 | `seed` | 32 bit előjel nélküli; a fejlesztői menüben is előjel nélkül jelenik meg és adható meg ([10.5](10_platform.md#105-aritmetika)) |
 | a játékos `exp`-je, `gold`, pontszám, tárgyérték | 32 bit előjel nélküli; telítődik 16 777 215-nél (így a ranglistafájlban 3 bájton elfér) és 0-nál |
-| a szörny `exp`-je | 16 bit előjel nélküli; csak a generálás írja ([6.2](06_szornyek.md#62-generálás)), a legnagyobb értéke kb. 13 650 (dragon a 255. szinten) |
-| `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `gold_val`, `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
+| a szörny `exp`-je | 16 bit előjel nélküli; csak a generálás írja ([6.2](06_szornyek.md#62-generálás)), a legnagyobb értéke kb. 13 650 (dragon a 254. szint kincses szobájában, amelynek szörnyei a 255. szint szerint jönnek létre) |
+| `hpt`, `maxhp`, `food_left`, időzítők, `wander_timer`, az arany mennyisége (Item `arm`), `dist2`, `scroll_title_seed` | 16 bit (a `food_left`, a `hpt` és a `maxhp` előjeles) |
 | `str`, `str_max`, `lvl`, `level`, `max_level`, `count`, `group`, a pálca töltése (Item `arm`), `turns_unable_to_act`, `flytrap_grip`, `count_prefix`, `regen_counter`, `wander_check_tick`, `no_food`, `hungry_state` | 8 bit előjel nélküli (`flytrap_grip` és `no_food` 255-nél telítődik) |
 | Creature `arm`, Item `hplus`, `dplus`, a páncél védelme és a gyűrű modja (Item `arm`) | 8 bit előjeles (szörnynél a mélységi módosító után −128-nál telítődik) |
 | koordináták | 8 bit (x 0..79, y 0..23) |
@@ -319,7 +320,7 @@ A logikai Item ([1.1.3](#113-item)) mezői közül csak az tárolódik, ami tár
 | `location` | 2 | a `pos` és a `packch` közös helye: padlón a `floor_position` (`x`, `y`); csomagban a `pack_letter` (`'a'..'z'`); szörnynél nincs jelentése. Hogy melyik érvényes, azt az dönti el, melyik listában van a tárgy |
 | `count` | 1 | darabszám |
 | `properties` | 2 | a `hplus`, a `dplus` és az `arm` közös helye, típusonként: fegyvernél a `weapon.hit_bonus` (`hplus`) és a `weapon.damage_bonus` (`dplus`), 1 + 1 bájt, előjeles; páncélnál az `armor_class`, gyűrűnél a `ring_modifier` (1 bájt, előjeles); pálcánál a `charges` (1 bájt); aranynál a `gold_amount` (16 bit). A név azért nem `value`, mert az „érték” a játékban a tárgy eladási ára |
-| `flags` | 1 | ISCURSED, ISKNOW, ISFOUND, ISPROT |
+| `flags` | 1 | ISCURSED, ISKNOW, ISFOUND, ISPROT, ROOMGOLD |
 | `group` | 1 | kötegazonosító ([8.4](08_targyak.md#84-fegyverek)) |
 | `label` | 1 | a név indexe a névkészletben (0 = nincs) |
 | `next` | 1 | a lista következő rekordja (0 = vége) |
@@ -337,7 +338,7 @@ Nem tárolódik: a `launch`, a `damage`, a `hurldmg`, valamint az ISMISL és az 
 - A generálás végén az `assign_passage_numbers` (eredetileg `passnum`) megszámozza az összefüggő folyosóhálózatokat, a labirintusokkal együtt (F_PNUM, 1-től; [2.4](02_szintgeneralas.md#24-összekötés)). Minden hálózat egy „szoba” rekord PHANTOM és DARK flaggel (az eredetiben a `passages[]` tábla). C64-en ezek a szobatábla végén vannak: az n. hálózat indexe ROOM_COUNT + n − 1, így a lény `room` mezője szobára és folyosórendszerre is ugyanabba a táblába mutat. Fordítási feltétel: a szobatábla (ROOM_COUNT + MAX_PASSAGES) indexe elfér 8 biten, a 0xfe és a 0xff nélkül. Legfeljebb MAX_PASSAGES = MAX_CORRIDORS van, mert mindegyikben van legalább egy folyosó. Fordítási feltétel: a MAX_PASSAGES elfér az F_PNUM 4 bitjén (≤ 15).
 - Bejegyzés: `position` (2 bájt), `room` (1), `passage` (1), azaz a hálózat, amelyhez az ajtó csatlakozik. A labirintus kijáratánál a `passage` üres (0): a kijárat maga is a hálózat része, nem a hálózat kijárata. Egy hálózat kijáratai azok a bejegyzések, amelyeknek a `passage` mezője ez a hálózat.
 - A szörnymozgás ([6.6](06_szornyek.md#66-mozgás)), a sötétség ([3.1](03_latoter_es_megjelenites.md#31-felderítés)) és a drain life ([8.7](08_targyak.md#87-pálcákbotok-z)) úgy működik, ahogy ott le van írva.
-- Méret: (9 + 12) rekord × 9 bájt + 24 × 4 bájt = **285 bájt**.
+- Méret: (9 + 12) rekord × 5 bájt + 24 × 4 bájt = **201 bájt**.
 
 ### 1.4.8 Szörnyrekord
 A logikai Creature ([1.1.2](#112-creature-játékos-és-szörny-közös-rekord)) szörnyre vonatkozó mezői közül csak az tárolódik, ami szörnyenként eltérhet. A játékos rekordja külön van, mert a mezők szélessége (pl. az `exp`: a játékosé 32, a szörnyé 16 bit) és köre eltér. Egy szörnyrekord 18 bájt:

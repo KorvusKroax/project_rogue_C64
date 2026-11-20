@@ -371,8 +371,8 @@ Az egyes irányok nagybetűs és CTRL-os változatainak („run left”, „run 
 // mindkét parancs * – nem visz el időt
 descend():  // '>'
   if ISLEVIT: "you can't. You're floating off the ground!"; return
-  if not on STAIRS: "I see no way down"; return
-  level = min(level + 1, 255); new_level()    // E16
+  if not on STAIRS or level == 254: "I see no way down"; return   // a 254. a legmélyebb szint (E16)
+  level++; new_level()
 ascend():  // '<'
   if ISLEVIT: "you can't. You're floating off the ground!"; return
   if not on STAIRS: "I see no way up"; return
@@ -381,7 +381,7 @@ ascend():  // '<'
   else: new_level(); "you feel a wrenching sensation in your gut"
 ```
 
-> **C64-eltérés (E16):** a mélység 8 bites, legfeljebb 255. A 255. szinten a lépcső és a csapóajtó ([9.1](09_csapdak.md#91-rálépés)) is új 255. szintet generál. Az eredetiben a mélységnek nem volt felső korlátja.
+> **C64-eltérés (E16):** a mélység 8 bites, a legmélyebb szint a 254. Innen nincs lefelé út: a lépcsőn a `>` „I see no way down”, és csapóajtó sem keletkezik ([2.9](02_szintgeneralas.md#29-csapdák)). A lépcső megvan, mert amulettel ezen lehet felfelé indulni. A korlát azért nem 255, mert a kincses szoba szörnyei egy szinttel mélyebb szint szerint jönnek létre ([2.8](02_szintgeneralas.md#28-tárgyak-put_things)), és ennek is el kell férnie 8 biten. Az eredetiben a mélységnek nem volt felső korlátja.
 
 **Halál:** a játékos elveszíti az aranya 10%-át (`gold -= gold/10`), pontszám = a maradék arany.
 
