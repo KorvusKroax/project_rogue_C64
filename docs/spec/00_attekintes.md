@@ -134,3 +134,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J23 | az `f`-harc végén a célpont jelölése mindig törlődik | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J24 | a kamikaze csak az adott `F`-harcra szól, a következő `f` nem örökli | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J25 | a „you are being held” véget vet a futásnak, az ismétlésnek és az `f`-harcnak | [4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás) |
+| J26 | az amulett nem kap címkét (eredetileg kaphatott, de a neve sosem mutatta) | [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok) |

@@ -80,7 +80,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | `R` nincs gyűrű | you aren't wearing any rings | |
 | `R` üres kéz | not wearing such a ring | |
 | `R` siker | was wearing <név>(<b>) | |
-| `c` ételre | you can't call that anything | |
+| `c` ételre vagy az amulettre (J26) | you can't call that anything | |
 | `c` azonosítottra | that has already been identified | |
 | `c` régi név | Was called "<név>" | |
 | `c` kérdés (és ismeretlen tárgy használata után) | what do you want to call it? | |

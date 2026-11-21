@@ -64,7 +64,7 @@ Item {
   arm      // jelentése típusonként: páncélnál védelem (kisebb = jobb); pálcánál töltés; aranynál az összeg; gyűrűnél a mod (pl. protection +1)
   flags    // ISCURSED, ISKNOW, ISMISL, ISMANY, ISFOUND, ISPROT, ROOMGOLD (1.2.3); az ISMISL és az ISMANY nem tárolt, a típusból jön
   group    // kötegazonosító: azonos which + group → egy csomaghelyen összevonódik (8.4, 8.9)
-  label    // a játékos által adott egyedi név ('c'), fegyvernél, páncélnál, amulettnél (4.2.6); index a névkészletbe (1.4.1)
+  label    // a játékos által adott egyedi név ('c'), fegyvernél és páncélnál (4.2.6, J26); index a névkészletbe (1.4.1)
 }
 // az azonosítatlan név (bájitalszín, tekercsfelirat, gyűrűkő, pálcaanyag) a típushoz tartozik
 // (GameState.names), nem a tárgyhoz – nem kell tárgyanként tárolni

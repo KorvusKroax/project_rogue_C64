@@ -276,7 +276,7 @@ pick_up(item):
 ```
 A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, minden szörny, amelyik rá tartott, a játékost veszi célba ([6.5](06_szornyek.md#65-célpont)), és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
 
-Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
+Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Bájital-, tekercs- és ételkötegből egy darab kerül le, a köteg darabolódik; a fegyverköteg (nyíl, dart, shuriken, tőr) egészben kerül le. Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
 A csomag a tárgytábla rekordjainak láncolt listája ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); a 23-as `MAX_PACK` korlát a darabszámra vonatkozik, nem a rekordokra. Felvételkor és összevonáskor a felvett rekord felszabadul, ha a köteghez csatolódott.
 

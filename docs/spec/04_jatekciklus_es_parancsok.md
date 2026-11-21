@@ -175,7 +175,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | parancs | leírás |
 |---|---|
 | `,` | felvétel (lebegve nem) |
-| d | lerakás – csak üres FLOOR vagy PASSAGE mezőre; használatban lévő átkozottat nem |
+| d | lerakás – csak üres FLOOR vagy PASSAGE mezőre; használatban lévő átkozottat nem. Bájital-, tekercs- és ételkötegből egy darab kerül le, a fegyverköteg (nyíl, dart, shuriken, tőr) egészben ([8.9](08_targyak.md#89-csomag)) |
 | q | bájital ivás |
 | r | tekercs olvasás |
 | e | evés |
@@ -289,7 +289,7 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 - Egy tétel: `<betű>) <név>` ([8.8](08_targyak.md#88-azonosítás-és-nevek)). Ha 40 karakternél hosszabb, szóhatáron törik, a folytatósor 3 szóközzel beljebb kezdődik.
 - Megjelenítés az `inven` opció szerint:
   - *clear* – külön teljes képernyő, a 0. sortól. Ha a sorok nem férnek el a 0..23. sorban, a 24. sorban „--Press space to continue--”, és a lista új oldalon folytatódik.
-  - *overwrite* – a térkép fölé, a képernyő jobb felső sarkába rajzolt keretben: szélessége a leghosszabb sor (legalább a „--Press space to continue--” hossza) + 1, magassága a sorok száma + 1. Ha így nem férne el a 0..24. sorban, *clear* módban jelenik meg. Bezáráskor a képernyő visszaáll ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
+  - *overwrite* – a térkép fölé, a képernyő jobb felső sarkába, keret nélkül: egy üres terület, amely eltakarja alatta a térképet, a sorok benne balról egy üres oszloppal kezdődnek, az utolsó sora a „--Press space to continue--”. Szélessége a leghosszabb sor (legalább a „--Press space to continue--” hossza) + 1, magassága a sorok száma + 1. Ha így nem férne el a képernyőn (40 oszlop, 0..24. sor), *clear* módban jelenik meg. Bezáráskor a képernyő visszaáll ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
   - *slow* – soronként az üzenetsávban, `--More--`-val.
 - A lista végén „--Press space to continue--”; egyetlen sornál üzenetként jelenik meg. Üres csomag: „you are empty handed”.
 
@@ -301,9 +301,12 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 **Gyűrű le (`R`):** nincs gyűrű: „you aren't wearing any rings”; két gyűrűnél kérdezi a kezet. Átkozott: „you can't. It appears to be cursed”. Levételkor: add strength → `chg_str(−mod)`; see invisible → a gyűrű-forrás megszűnik, a CANSEE csak akkor kapcsol ki, ha a see invisible bájital időzítője sem fut (J5). Üzenet: „was wearing <név>(<betű>)”.
 
-**Elnevezés (`c`):** választható bármi, kivéve ételt („you can't call that anything”). Bájital/tekercs/gyűrű/pálca: a *típus* kap nevet (ha már azonosított: „that has already been identified”); minden más (fegyver, páncél, amulett): az adott tárgy saját címkét kap. Ha már volt név: „Was called "<név>"”; majd „what do you want to call it? ”. A beviteli mező a régi névvel, ha az nincs, az azonosítatlan névvel (szín, felirat, kő, anyag) van előtöltve, legfeljebb 20 karakterig. Üres mezőn RETURN: a név törlődik, a helye felszabadul, és ha volt név, „you remove the name”; ESC-re a régi név marad. A nevek egy közös, 32 helyes készletben vannak ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)): ha a készlet betelt, és a tárgynak vagy a típusnak még nincs neve, a kérdés helyett „you have no room for more names. Remove a name from something first” jelenik meg (nem visz időt).
+**Elnevezés (`c`):** választható bármi, kivéve ételt és az amulettet („you can't call that anything”, J26); a `*` lista ezeket nem is mutatja. Bájital/tekercs/gyűrű/pálca: a *típus* kap nevet (ha már azonosított: „that has already been identified”); fegyver és páncél: az adott tárgy saját címkét kap. Ha már volt név: „Was called "<név>"”; majd „what do you want to call it? ”. A beviteli mező a régi névvel, ha az nincs, az azonosítatlan névvel (szín, felirat, kő, anyag) van előtöltve, legfeljebb 20 karakterig. Üres mezőn RETURN: a név törlődik, a helye felszabadul, és ha volt név, „you remove the name”; ESC-re a régi név marad. A nevek egy közös, 32 helyes készletben vannak ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)): ha a készlet betelt, és a tárgynak vagy a típusnak még nincs neve, a kérdés helyett „you have no room for more names. Remove a name from something first” jelenik meg (nem visz időt).
 
-**Felfedezések (`D`):** „for what type of object do you want a list? (* for all)” – `!` `?` `=` `/` vagy `*` (ESC kilép; más billentyűre: „Please type one of !?=/ (ESCAPE to quit)”). Az ismert vagy elnevezett típusok listája minden hívásnál **véletlen sorrendben**, a tárgynév-formátummal ([8.8](08_targyak.md#88-azonosítás-és-nevek)); `*`-nál a négy lista üres sorral elválasztva. Ha nincs semmi: „Haven't discovered anything about any potions” (scrolls / rings / sticks).
+> **C64-javítás (J26):** az amulett nem kap címkét. *Eredetileg* kaphatott, ha a játékos a betűjét beírta (a `*` lista az eredetiben is kihagyta), de a neve mindig „The Amulet of Yendor” maradt, így a címke sehol nem látszott, csak helyet foglalt.
+
+**Felfedezések (`D`):** „for what type of object do you want a list? (* for all)” – `!` `?` `=` `/` vagy `*` (ESC kilép; más billentyűre: „Please type one of !?=/ (ESCAPE to quit)”). Az ismert vagy elnevezett típusok listája minden hívásnál **véletlen sorrendben** (különben egy elnevezett, de nem azonosított típus helye elárulná, melyik az), a tárgynév-formátummal ([8.8](08_targyak.md#88-azonosítás-és-nevek)); `*`-nál a négy lista üres sorral elválasztva. Ha nincs semmi: „Haven't discovered anything about any potions” (scrolls / rings / sticks).
+A keverés saját álvéletlen-generátorral készül, mint a tekercsfelirat ([8.8](08_targyak.md#88-azonosítás-és-nevek)), nem az RN-nel: a `D` nem visz időt, és így a dobássorozatot sem változtatja meg ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)). Az állapota hívásról hívásra megy tovább, és nem kerül a mentésbe. *Eredetileg* az RN keverte.
 
 **Jel magyarázata (`/`):** „what do you want identified? ” → „'<jel>': <leírás>” (ESC-re az üzenetsáv törlődik, nincs válasz). Nagybetű → a szörny neve. Ismert jelek: `|` `-` wall of a room, `*` gold, `%` a staircase, `+` door, `.` room floor, `@` you, `#` passage, `^` trap, `!` potion, `?` scroll, `:` food, `)` weapon, ` ` solid rock, `]` armor, `,` the Amulet of Yendor, `=` ring, `/` wand or staff. Minden más (a `$` is): „unknown character”.
 
