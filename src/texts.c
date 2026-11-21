@@ -61,3 +61,155 @@ const char *const text_monster_names[MONSTER_TYPE_COUNT] = {
     "yeti",
     "zombie",
 };
+
+const char *const text_potion_names[POTION_SUBTYPE_COUNT] = {
+    "confusion",
+    "hallucination",
+    "poison",
+    "gain strength",
+    "see invisible",
+    "healing",
+    "monster detection",
+    "magic detection",
+    "raise level",
+    "extra healing",
+    "haste self",
+    "restore strength",
+    "blindness",
+    "levitation",
+};
+
+const char *const text_scroll_names[SCROLL_SUBTYPE_COUNT] = {
+    "monster confusion",
+    "magic mapping",
+    "hold monster",
+    "sleep",
+    "enchant armor",
+    "identify potion",
+    "identify scroll",
+    "identify weapon",
+    "identify armor",
+    "identify ring, wand or staff",
+    "scare monster",
+    "food detection",
+    "teleportation",
+    "enchant weapon",
+    "create monster",
+    "remove curse",
+    "aggravate monsters",
+    "protect armor",
+};
+
+const char *const text_weapon_names[WEAPON_SUBTYPE_COUNT] = {
+    "mace",
+    "long sword",
+    "short bow",
+    "arrow",
+    "dagger",
+    "two handed sword",
+    "dart",
+    "shuriken",
+    "spear",
+};
+
+const char *const text_armor_names[ARMOR_SUBTYPE_COUNT] = {
+    "leather armor",
+    "ring mail",
+    "studded leather",
+    "scale mail",
+    "chain mail",
+    "splint mail",
+    "banded mail",
+    "plate mail",
+};
+
+const char *const text_ring_names[RING_SUBTYPE_COUNT] = {
+    "protection",
+    "add strength",
+    "sustain strength",
+    "searching",
+    "see invisible",
+    "adornment",
+    "aggravate monster",
+    "dexterity",
+    "increase damage",
+    "regeneration",
+    "slow digestion",
+    "teleportation",
+    "stealth",
+    "maintain armor",
+};
+
+const char *const text_stick_names[STICK_SUBTYPE_COUNT] = {
+    "light",
+    "invisibility",
+    "lightning",
+    "fire",
+    "cold",
+    "polymorph",
+    "magic missile",
+    "haste monster",
+    "slow monster",
+    "drain life",
+    "nothing",
+    "teleport away",
+    "teleport to",
+    "cancellation",
+};
+
+const char *const text_potion_colors[POTION_COLOR_COUNT] = {
+    "amber", "aquamarine", "black", "blue", "brown", "clear", "crimson", "cyan", "ecru",
+    "gold", "green", "grey", "magenta", "orange", "pink", "plaid", "purple", "red",
+    "silver", "tan", "tangerine", "topaz", "turquoise", "vermilion", "violet", "white", "yellow",
+};
+
+const char *const text_ring_stones[RING_STONE_COUNT] = {
+    "agate", "alexandrite", "amethyst", "carnelian", "diamond", "emerald", "germanium",
+    "granite", "garnet", "jade", "kryptonite", "lapis lazuli", "moonstone", "obsidian",
+    "onyx", "opal", "pearl", "peridot", "ruby", "sapphire", "stibotantalite",
+    "tiger eye", "topaz", "turquoise", "taaffeite", "zircon",
+};
+
+const char *const text_stick_materials[STICK_MATERIAL_COUNT] = {
+    // fémek (STICK_METAL_COUNT)
+    "aluminum", "beryllium", "bone", "brass", "bronze", "copper", "electrum", "gold",
+    "iron", "lead", "magnesium", "mercury", "nickel", "pewter", "platinum", "steel",
+    "silver", "silicon", "tin", "titanium", "tungsten", "zinc",
+    // fák (STICK_WOOD_COUNT)
+    "avocado wood", "balsa", "bamboo", "banyan", "birch", "cedar", "cherry", "cinnibar",
+    "cypress", "dogwood", "driftwood", "ebony", "elm", "eucalyptus", "fall", "hemlock",
+    "holly", "ironwood", "kukui wood", "mahogany", "manzanita", "maple", "oaken",
+    "persimmon wood", "pecan", "pine", "poplar", "redwood", "rosewood", "spruce", "teak",
+    "walnut", "zebrawood",
+};
+
+const char *const text_scroll_syllables[SCROLL_SYLLABLE_COUNT] = {
+    "a", "ab", "ag", "aks", "ala", "an", "app", "arg", "arze", "ash", "bek", "bie",
+    "bit", "bjor", "blu", "bot", "bu", "byt", "comp", "con", "cos", "cre", "dalf", "dan",
+    "den", "do", "e", "eep", "el", "eng", "er", "ere", "erk", "esh", "evs", "fa",
+    "fid", "fri", "fu", "gan", "gar", "glen", "gop", "gre", "ha", "hyd", "i", "ing",
+    "ip", "ish", "it", "ite", "iv", "jo", "kho", "kli", "klis", "la", "lech", "mar",
+    "me", "mi", "mic", "mik", "mon", "mung", "mur", "nej", "nelg", "nep", "ner", "nes",
+    "nih", "nin", "o", "od", "ood", "org", "orn", "ox", "oxy", "pay", "ple", "plu",
+    "po", "pot", "prok", "re", "rea", "rhov", "ri", "ro", "rog", "rok", "rol", "sa",
+    "san", "sat", "sef", "seh", "shu", "ski", "sna", "sne", "snik", "sno", "so", "sol",
+    "sri", "sta", "sun", "ta", "tab", "tem", "ther", "ti", "tox", "trol", "tue", "turs",
+    "u", "ulk", "um", "un", "uni", "ur", "val", "viv", "vly", "vom", "wah", "wed",
+    "werg", "wex", "whon", "wun", "xo", "y", "yot", "yu", "zant", "zeb", "zim", "zok",
+    "zon", "zum",
+};
+
+const char text_potion_kind[] = "potion";
+const char text_scroll_kind[] = "scroll";
+const char text_ring_kind[] = "ring";
+const char text_wand_kind[] = "wand";
+const char text_staff_kind[] = "staff";
+const char text_of[] = " of ";
+const char text_titled[] = " titled ";
+const char text_charges[] = " charges";
+const char text_protection[] = "protection ";
+const char text_some_food[] = "some food";
+const char text_rations_of_food[] = " rations of food";
+const char text_fruit_name[] = "slime-mold";
+const char text_gold_pieces[] = " Gold pieces";
+const char text_amulet_name[] = "the Amulet of Yendor";

@@ -230,7 +230,9 @@ init_names():  // játék elején
   // ha két különböző felirat ujjlenyomata egyezik, az újrasorsolás fölösleges, de ártalmatlan
 
 get_scroll_title(which):  // minden kiíráskor; saját álvéletlen-generátor, nem az RN
-  állapot = scroll_title_seed és which keveréke
+  állapot = scroll_title_seed XOR (which × 0x9E37)  // a szorzó páratlan, így altípusonként más kezdőállapot jön ki
+  dobás(n): az állapot 16 bites xorshifttel (<< 7, >> 9, << 8) lép, az eredmény állapot mod n
+            // a 0 állapot 0 marad: ekkor minden dobás 0, és a felirat „a a”, ez is érvényes
   rnd(3)+2 szó, mindegyik rnd(3)+1 szótagból a fenti szótagok közül
   ha a következő szótag a 30 karaktert túllépné (a szó első szótagja az előtte álló szóközzel együtt): a felirat itt véget ér
 ```

@@ -102,10 +102,11 @@ GameState {
   }
   wander_timer           // időzítő a vándorló szörny démon indulásáig (6.2)
   wander_check_tick      // a vándorló démon körszámlálója (between, 6.2)
-  know[type][which]      // a tárgytípus ismerete (8.2, 8.3): 0 = ismeretlen; 1..MAX_NAMES = ismeretlen, a játékos nevet adott neki ('c'),
+  know[type][which]      // a bájital, a tekercs, a gyűrű és a pálca altípusainak ismerete, típusonként egy tömbben (8.2, 8.3):
+                         // 0 = ismeretlen; 1..MAX_NAMES = ismeretlen, a játékos nevet adott neki ('c'),
                          // index a névkészletbe (1.4.1); 0xff = azonosítva. Egy érték elég, mert azonosításkor a név törlődik,
                          // azonosított típus pedig nem nevezhető el
-  names[type][which]     // azonosítatlan nevek ebben a játékban: színek, kövek, anyagok (8.8); a pálcánál az index a közös anyaglistába mutat,
+  names[type][which]     // azonosítatlan nevek ebben a játékban, típusonként egy tömbben: színek, kövek, anyagok (8.8); a pálcánál az index a közös anyaglistába mutat,
                          // ebből tudható, hogy bot (staff) vagy pálca (wand)
   scroll_title_seed      // ebből állnak elő a tekercsfeliratok minden kiíráskor; a feliratok nem tárolódnak (8.8)
   rooms[9], passages[]   // a 9 szoba és a folyosórendszerek; C64-en egy tábla, a rendszerek a szobák után (1.1.1, 1.4.7)

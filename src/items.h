@@ -29,12 +29,18 @@
 
 // tárgyflagek (1.2.3)
 #define ITEM_CURSED  0x01                       // átkozott: használatban nem vehető le, nem cserélhető (ISCURSED)
+#define ITEM_KNOWN   0x02                       // azonosítva: a nevében látszik a bónusza, a töltése, a gyűrűmódja (ISKNOW)
 
 // az étel altípusai
 #define FOOD_RATION  0
 #define FOOD_FRUIT   1
 
 #define FOOD_SUBTYPE_COUNT  2                   // az étel altípusainak száma
+
+// a fegyver- és a páncéltípusok száma: ennyi elemű az esélytáblájuk és a nevük listája (texts.c);
+// a bájital, a tekercs, a gyűrű és a pálca altípusainak száma a state.h-ban van, mert a GameState tömbjei is ezzel méreteződnek
+#define WEAPON_SUBTYPE_COUNT  9
+#define ARMOR_SUBTYPE_COUNT   8
 
 // a külön kezelt fegyvertípusok: a fegyverek esélytáblájának (weapon_chances) indexei; a többi neve az első használatánál jön
 #define WEAPON_ARROW     3

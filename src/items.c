@@ -21,7 +21,7 @@ static const uint8_t item_type_chances[RANDOM_ITEM_TYPE_COUNT] = {
 
 const struct ChanceTable item_type_table = { item_type_chances, RANDOM_ITEM_TYPE_COUNT };
 
-static const uint8_t potion_chances[] = {
+static const uint8_t potion_chances[POTION_SUBTYPE_COUNT] = {
      7,     // confusion
      8,     // hallucination
      8,     // poison
@@ -38,7 +38,7 @@ static const uint8_t potion_chances[] = {
      6,     // levitation
 };
 
-static const uint8_t scroll_chances[] = {
+static const uint8_t scroll_chances[SCROLL_SUBTYPE_COUNT] = {
      7,     // monster confusion
      4,     // magic mapping
      2,     // hold monster
@@ -59,7 +59,7 @@ static const uint8_t scroll_chances[] = {
      2,     // protect armor
 };
 
-static const uint8_t weapon_chances[] = {
+static const uint8_t weapon_chances[WEAPON_SUBTYPE_COUNT] = {
     11,     // mace
     11,     // long sword
     12,     // short bow
@@ -71,7 +71,7 @@ static const uint8_t weapon_chances[] = {
     12,     // spear
 };
 
-static const uint8_t armor_chances[] = {
+static const uint8_t armor_chances[ARMOR_SUBTYPE_COUNT] = {
     20,     // leather armor
     15,     // ring mail
     15,     // studded leather
@@ -83,7 +83,7 @@ static const uint8_t armor_chances[] = {
 };
 
 // a páncéltípusok védelme (8.5), az esélytábla sorrendjében; minél kisebb, annál jobb
-static const int8_t armor_base_classes[TABLE_LENGTH(armor_chances)] = {
+static const int8_t armor_base_classes[ARMOR_SUBTYPE_COUNT] = {
      8,     // leather armor
      7,     // ring mail
      7,     // studded leather
@@ -94,7 +94,7 @@ static const int8_t armor_base_classes[TABLE_LENGTH(armor_chances)] = {
      3,     // plate mail
 };
 
-static const uint8_t ring_chances[] = {
+static const uint8_t ring_chances[RING_SUBTYPE_COUNT] = {
      9,     // protection
      9,     // add strength
      5,     // sustain strength
@@ -111,7 +111,7 @@ static const uint8_t ring_chances[] = {
      5,     // maintain armor
 };
 
-static const uint8_t stick_chances[] = {
+static const uint8_t stick_chances[STICK_SUBTYPE_COUNT] = {
     12,     // light
      6,     // invisibility
      3,     // lightning

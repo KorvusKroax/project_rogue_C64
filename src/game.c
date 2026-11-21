@@ -8,6 +8,7 @@
 #include "chase.h"
 #include "combat.h"
 #include "explore.h"
+#include "item_names.h"
 #include "items.h"
 #include "level.h"
 #include "message.h"
@@ -340,6 +341,7 @@ static void play_turn(void)
 void run_game(void)
 {
     init_player();
+    init_item_names();
     last_code = 0;
     game.dungeon_level = 1;
     game.levels_without_food = 0;

@@ -9,6 +9,11 @@ static const struct DevTest item_tests[] = {
     { "ITEM-TABLE", test_item_table, 1 },
     { "ITEM-INITIAL", test_item_initial_values, 1 },
     { "ITEM-GROUPS", test_item_groups, 1 },
+    { "ITEM-NAME LISTS", test_item_name_lists, 1 },
+    { "ITEM-PSEUDONYMS", test_item_pseudonyms, 1 },
+    { "ITEM-SCROLL TITLES", test_scroll_titles, SCROLL_TITLE_TEST_SEED_COUNT },
+    { "ITEM-NAMES", test_item_names, 1 },
+    { "ITEM-LONGEST NAME", test_longest_item_name, 1 },
 };
 
 int main(void)

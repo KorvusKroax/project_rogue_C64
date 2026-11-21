@@ -183,8 +183,7 @@ static bool are_groups_unique(void)
     return true;
 }
 
-// a típus altípusainak száma; az aranynak és az amulettnek egy van (which = 0)
-static uint8_t get_tested_subtype_count(uint8_t type)
+uint8_t get_tested_subtype_count(uint8_t type)
 {
     if (type == ITEM_TYPE_FOOD) return FOOD_SUBTYPE_COUNT;
     if (type < RANDOM_ITEM_TYPE_COUNT) return item_subtype_tables[type].count;

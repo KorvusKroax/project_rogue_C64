@@ -91,6 +91,13 @@ struct Item {
     #error "túl sok tárgy: a tárgyindex 8 bites"
 #endif
 
+// az azonosítandó tárgytípusok altípusainak száma: ennyi elemű a típusismeret és az álnév tömbje a GameState-ben,
+// valamint az esélytábla (items.c) és a nevek listája (texts.c); a többi típusé az items.h-ban van
+#define POTION_SUBTYPE_COUNT  14
+#define SCROLL_SUBTYPE_COUNT  18
+#define RING_SUBTYPE_COUNT    14
+#define STICK_SUBTYPE_COUNT   14
+
 // a logikai képernyő SECTOR_GRID_SIZE × SECTOR_GRID_SIZE szektorra osztva
 #define SECTOR_GRID_SIZE  3                     // default: 3
 
@@ -165,6 +172,16 @@ struct GameState {
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
     uint8_t  turns_unable_to_act;               // alvás, ájulás, fagyás: ennyi körig nem cselekedhet a játékos
     uint8_t  flytrap_grip;                      // a Venus flytrap szorítása: ennyit sebez a mellé ütése; ha nagyobb 0-nál, a játékos fogva van
+
+    // a tárgytípusok ismerete és álneve (item_names.h); az álnév egy lista indexe (texts.h)
+    uint8_t  potion_knowledge[POTION_SUBTYPE_COUNT];    // altípusonként SUBTYPE_UNKNOWN vagy SUBTYPE_IDENTIFIED (know)
+    uint8_t  scroll_knowledge[SCROLL_SUBTYPE_COUNT];
+    uint8_t  ring_knowledge[RING_SUBTYPE_COUNT];
+    uint8_t  stick_knowledge[STICK_SUBTYPE_COUNT];
+    uint8_t  potion_colors[POTION_SUBTYPE_COUNT];       // a szín (text_potion_colors)
+    uint8_t  ring_stones[RING_SUBTYPE_COUNT];           // a kő (text_ring_stones)
+    uint8_t  stick_materials[STICK_SUBTYPE_COUNT];      // az anyag a közös listában (text_stick_materials): fémnél pálca, fánál bot
+    uint16_t scroll_title_seed;                         // a tekercsfeliratok minden kiíráskor ebből állnak elő, nem tárolódnak
 
     struct Room rooms[ROOM_TABLE_SIZE];         // a szobák, utánuk a folyosórendszerek: az n. rendszer indexe ROOM_COUNT + n - 1
     struct Exit exits[MAX_EXITS];               // az ajtótábla: a szint összes kijárata, a felvétel sorrendjében
