@@ -452,7 +452,8 @@ static bool are_initial_monsters_valid(void)
 }
 
 // a padlón lévő tárgyak: a lista legfeljebb MAX_ITEMS hosszú (nincs benne kör); minden tárgy érvényes típusú, egy nem fantom szoba
-// falain belül, nem rejtett mezőn van, a mezőjén a jele áll, és két tárgy nincs egy mezőn; a tárgytábla foglalt helyei éppen a lista tárgyai
+// falain belül, nem rejtett mezőn van, a mezőjén a jele áll, és két tárgy nincs egy mezőn; a tárgytábla foglalt helyei éppen a lista tárgyai,
+// és a game.item_count ennyi
 static bool are_floor_items_valid(void)
 {
     uint8_t floor_item_count = 0;
@@ -484,7 +485,7 @@ static bool are_floor_items_valid(void)
             occupied_count++;
         }
     }
-    return occupied_count == floor_item_count;
+    return occupied_count == floor_item_count && game.item_count == floor_item_count;
 }
 
 // az arany: szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban;

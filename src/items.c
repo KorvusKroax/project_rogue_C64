@@ -3,6 +3,10 @@
 #include "map.h"
 #include "rng.h"
 
+#ifdef DEVMODE
+    #include "dev/dev.h"
+#endif
+
 #define TABLE_LENGTH(table)  (sizeof(table) / sizeof((table)[0]))
 
 static const uint8_t item_type_chances[RANDOM_ITEM_TYPE_COUNT] = {
@@ -162,6 +166,7 @@ void clear_item_table(void)
     for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
         game.items[slot].type = ITEM_TYPE_FREE;
     }
+    game.item_count = 0;
     game.first_floor_item = NO_ITEM;
 }
 
@@ -169,7 +174,13 @@ uint8_t allocate_item(void)
 {
     // a tömb helyén számol, mert MAX_ITEMS = 255 mellett az index <= MAX_ITEMS feltétel 8 biten mindig igaz volna
     for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
-        if (game.items[slot].type == ITEM_TYPE_FREE) return slot + 1;
+        if (game.items[slot].type == ITEM_TYPE_FREE) {
+            game.item_count++;
+            #ifdef DEVMODE
+                update_item_count_peak();
+            #endif
+            return slot + 1;
+        }
     }
     return NO_ITEM;
 }
@@ -177,6 +188,7 @@ uint8_t allocate_item(void)
 void free_item(uint8_t index)
 {
     get_item(index)->type = ITEM_TYPE_FREE;
+    game.item_count--;
 }
 
 static const uint8_t item_type_characters[ITEM_TYPE_COUNT] = {
@@ -207,14 +219,10 @@ uint8_t create_item(uint8_t type, uint8_t which)
     return index;
 }
 
-uint8_t create_gold(void)
+void set_random_gold_amount(uint8_t index)
 {
-    uint8_t index = create_item(ITEM_TYPE_GOLD, 0);
-    if (index == NO_ITEM) return NO_ITEM;
-
     uint16_t amount = rnd(GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * game.dungeon_level) + GOLD_AMOUNT_MIN;
     get_item(index)->properties.gold_amount = amount;
-    return index;
 }
 
 uint8_t create_random_item(void)

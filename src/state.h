@@ -159,6 +159,7 @@ struct GameState {
     struct Monster monsters[MAX_MONSTERS];      // a szörnytábla: tömör, a szörnyek a létrehozás sorrendjében (monsters.h)
     uint8_t  monster_count;                     // a szörnyek száma: az 1..monster_count indexek foglaltak
     struct Item items[MAX_ITEMS];               // a tárgytábla: a szabad helyet a típus jelzi (items.h)
+    uint8_t  item_count;                        // a tárgytábla foglalt helyeinek száma
     uint8_t  first_floor_item;                  // a padlón lévő tárgyak listájának eleje (0 = üres)
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]

@@ -30,6 +30,8 @@
 #define FOOD_RATION  0
 #define FOOD_FRUIT   1
 
+#define FOOD_SUBTYPE_COUNT  2                   // az étel altípusainak száma
+
 #define FRUIT_CHANCE_DIVISOR  10                // az étel 1 / FRUIT_CHANCE_DIVISOR eséllyel gyümölcs, különben adag (default: 10)
 
 #define LEVELS_WITHOUT_FOOD_MAX  3              // ha ennyinél több szint óta nem jött étel, a következő tárgy étel (default: 3)
@@ -65,8 +67,8 @@ void choose_item_type_and_subtype(uint8_t *type, uint8_t *which);
 // a tárgytábla: a tárgyakra 1..MAX_ITEMS index hivatkozik (state.h)
 struct Item *get_item(uint8_t index);           // index: 1..MAX_ITEMS
 void clear_item_table(void);                    // minden hely szabad, a padló üres: a játék elején
-uint8_t allocate_item(void);                    // egy szabad hely kitöltetlenül, a type beírásától foglalt; NO_ITEM, ha betelt
-void free_item(uint8_t index);                  // a hely újra szabad; a tárgy már egyik listában sincs
+uint8_t allocate_item(void);                    // egy szabad hely kitöltetlenül, a type beírásától foglalt; a game.item_count eggyel nő; NO_ITEM, ha betelt
+void free_item(uint8_t index);                  // a hely újra szabad, a game.item_count eggyel csökken; a tárgy már egyik listában sincs
 
 uint8_t get_item_character(uint8_t type);       // a tárgy jele a térképen
 
@@ -76,8 +78,9 @@ uint8_t create_item(uint8_t type, uint8_t which);
 // új véletlen tárgy (new_item) a choose_item_type_and_subtype szerint; NO_ITEM, ha betelt a tábla: ekkor nincs dobás, és a számláló sem változik
 uint8_t create_random_item(void);
 
-// új arany a mélység szerinti véletlen mennyiséggel; NO_ITEM, ha betelt a tábla: ekkor nincs dobás
-uint8_t create_gold(void);
+// az arany (create_item(ITEM_TYPE_GOLD, 0)) mélység szerinti véletlen mennyisége;
+// nem egy 8 bites visszatérésű create_gold része, mert annak az eredményét az Oscar64 1.32.273 a hívóban rossz helyről olvasta (README, Oscar64-hibák, 10.)
+void set_random_gold_amount(uint8_t index);
 
 // a padlón lévő tárgyak listája, a legutóbb lerakottal kezdve;
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)

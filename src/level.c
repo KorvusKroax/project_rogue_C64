@@ -164,8 +164,9 @@ static void place_gold_and_monsters(void)
 
         // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) lehet arany; a dobás ettől függetlenül lefut
         if (rnd(GOLD_CHANCE_DIVISOR) == 0 && find_empty_floor(room_index, &x, &y)) {
-            uint8_t gold_index = create_gold();
+            uint8_t gold_index = create_item(ITEM_TYPE_GOLD, 0);
             if (gold_index != NO_ITEM) {
+                set_random_gold_amount(gold_index);
                 // ide jön: a szoba aranya (ROOMGOLD), ezt őrzi a kapzsi szörny
                 put_item_on_floor(gold_index, x, y);
                 has_gold = true;

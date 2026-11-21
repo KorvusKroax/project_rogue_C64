@@ -31,7 +31,7 @@ Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`, `.\t
 A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A fejlesztői build a játék, és mellette csak ennyi; a kiadási buildbe ezekből semmi nem kerül:
 - **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A kiadási buildben nincs ilyen makró, ezért játékfájlban csak `#ifdef DEVMODE` alatt használható (jelenleg csak a `map.c` térképírás-ellenőrzése, ideiglenesen).
 - **Seed:** induláskor kiíródik; az `S` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető. RETURN-re indul a játék.
-- **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot), pl. új szint, ugrás mélységre, szörny létrehozása, teljes térkép. A lista: [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus). Egyik sem visz el időt.
+- **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot), pl. új szint, ugrás mélységre, szörny és tárgy létrehozása, teljes térkép. A lista: [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus). Egyik sem visz el időt.
 
 Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem külön tesztprogramokban ([M05-05](https://github.com/KorvusKroax/project_rogue_C64/issues/55)), így a fejlesztői build memóriáját nem terhelik.
 
@@ -43,13 +43,13 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 |---|---|---|
 | `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Rattlesnake marása (a mérgezés elleni mentődobás aránya két szinten, az erőcsökkenés), az erő határai és a legnagyobb erő, a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); fogva tartva csak a flytrapra lehet lépni, a többi lépés időbe kerül, és véget vet a futásnak és az `f`-harcnak (J25); az álcázott xeroc megtámadása csak leleplezi, a saját támadása is leleplezi; a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 17 920 bájt |
 | `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 29 784 bájt |
-| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 31 752 bájt |
-| `items` | a tárgytípusok és -altípusok esélytáblái a 0..99 dobásokkal; az étel nélküli szintek után kényszerített étel (`no_food`); a tárgytábla betelése (utána nincs hely, és a véletlen tárgy nem dob) és felszabadítása | 34 824 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen: a padlón lévő tárgyak (a mezőjükön a jelük, egy mezőn legfeljebb egy, a tárgytábla foglalt helyei éppen ezek), az arany (szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban), az amulett (a 26. mélységtől pontosan egy, alatta egy sem), a kincses szoba szörnyei, és az étel nélküli szintek számlálója szintenként eggyel nő, 255-nél megáll, étel után 0; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 7 704 bájt |
+| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 31 744 bájt |
+| `items` | a tárgytípusok és -altípusok esélytáblái a 0..99 dobásokkal; az étel nélküli szintek után kényszerített étel (`no_food`); a tárgytábla betelése (utána nincs hely, és a véletlen tárgy nem dob) és felszabadítása, közben a foglaltság számlálója | 34 816 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen: a padlón lévő tárgyak (a mezőjükön a jelük, egy mezőn legfeljebb egy, a tárgytábla foglalt helyei éppen ezek), az arany (szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban), az amulett (a 26. mélységtől pontosan egy, alatta egy sem), a kincses szoba szörnyei, és az étel nélküli szintek számlálója szintenként eggyel nő, 255-nél megáll, étel után 0; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 7 688 bájt |
 | `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 21 544 bájt |
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 30 760 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 17 560, a fejlesztői build (`build.bat dev`) 14 096 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 17 560, a fejlesztői build (`build.bat dev`) 13 440 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -291,6 +291,27 @@ start_running(-1, 0, false);
 move_player(-1, 0);
 ```
 Hol: `src/dev/test_combat.c`. Ismert: [#415](https://github.com/drmortalwombat/oscar64/issues/415) ugyanezt a jelenséget írja le; javítva a fő ágban (db75ffa: egy lépés egy `LDY`/`STY` pár miatt oda-vissza mozgatta ugyanazt a kódot), a következő kiadásban várható. Hogy nálunk ugyanez az ok, az csak a javított fordítóval derül ki.
+
+**10. Közvetlen hívás 8 bites eredménye rossz helyről olvasva** – futáskor, csendben, memóriakorrupcióval; VICE-ben (pillanatképből kiolvasva) és a generált kódban ellenőrizve. Az Oscar64 egyes függvényeknél szándékosan az A regiszterben adja vissza a 8 bites eredményt, és ilyenkor a hívó is onnan veszi (pl. `find_monster_at` után `TAX`). A `create_gold` a fejlesztői buildben a sikeres ágon az A-ban tért vissza (`LDA T2; RTS`), a két hívója viszont az ACCU-ból olvasott (`JSR create_gold; LDA ACCU+0`), ahol éppen a `get_item` által visszaadott rekordcím alsó bájtja volt. Ez az „index” (pl. 203) a `put_item_on_floor`-ba került, amely a tárgytáblán túl, a térképre írt: a térképen idegen jelek jelentek meg (`;`, üres és inverz jelek), a padlólista és a foglaltság elromlott. A kiadási játékban és a tesztprogramokban a függvény a hívóba olvadt, és ott helyes kód lett belőle, ezért az öntesztek nem vették észre. Egyetlen `return`-nel ugyanígy fordult; a szétbontás segített.
+```c
+// rossz: a fejlesztői buildben az eredményt a hívó rossz helyről olvassa
+uint8_t create_gold(void)
+{
+    uint8_t index = create_item(ITEM_TYPE_GOLD, 0);
+    if (index == NO_ITEM) return NO_ITEM;
+    uint16_t amount = rnd(…) + GOLD_AMOUNT_MIN;
+    get_item(index)->properties.gold_amount = amount;
+    return index;
+}
+
+// jó: a 8 bites eredményt a create_item adja, a mennyiséget egy void függvény írja
+uint8_t gold_index = create_item(ITEM_TYPE_GOLD, 0);
+if (gold_index != NO_ITEM) {
+    set_random_gold_amount(gold_index);
+    put_item_on_floor(gold_index, x, y);
+}
+```
+Hol: `src/items.c`, `src/level.c`, `src/dev/dev_commands.c`. Hogy előjön-e, a fordító beillesztési döntésén múlik. Ellenőrzés: a `build/<név>.asm` fájlokban azok a 8 bites függvények, amelyek `LDA …` / `RTS` párral térnek vissza, és a hívójuk a `JSR` után az `ACCU + 0`-t olvassa.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c

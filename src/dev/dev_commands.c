@@ -1,12 +1,14 @@
 #include "dev.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include "../platform/charset.h"
 #include "../platform/key.h"
 #include "../platform/screen.h"
 #include "../explore.h"
 #include "../input.h"
+#include "../items.h"
 #include "../level.h"
 #include "../map.h"
 #include "../message.h"
@@ -99,8 +101,9 @@ static void jump_to_depth(void)
     }
 }
 
-// a játékos körüli első szabad mező (soronként, balról jobbra): járható, látszik a játékos mezőjéről, és nem áll rajta szörny
-static bool find_free_neighbor(uint8_t *x, uint8_t *y)
+// a játékos körüli első szabad mező (soronként, balról jobbra): járható, látszik a játékos mezőjéről, és nem áll rajta szörny;
+// tárgynak ezen felül üres padló vagy folyosó-mező
+static bool find_free_neighbor(bool is_for_item, uint8_t *x, uint8_t *y)
 {
     uint8_t player_x = game.player.x;
     uint8_t player_y = game.player.y;
@@ -112,7 +115,10 @@ static bool find_free_neighbor(uint8_t *x, uint8_t *y)
             uint8_t tile_y = player_y + offset_y;
             if (!is_on_map(tile_x, tile_y)) continue;
             if (tile_x == player_x && tile_y == player_y) continue;
-            if (!is_walkable_character(get_map_character(tile_x, tile_y))) continue;
+
+            uint8_t character = get_map_character(tile_x, tile_y);
+            if (!is_walkable_character(character)) continue;
+            if (is_for_item && character != CHAR_FLOOR && character != CHAR_PASSAGE) continue;
             if (!is_neighbor_visible(player_x, player_y, tile_x, tile_y)) continue;
             if (get_map_flags(tile_x, tile_y) & TILE_MONSTER) continue;
 
@@ -145,7 +151,7 @@ static void create_monster_by_letter(void)
 
     if (game.monster_count == MAX_MONSTERS) {
         failure = "the monster table is full, ";
-    } else if (!find_free_neighbor(&x, &y)) {
+    } else if (!find_free_neighbor(false, &x, &y)) {
         failure = "no free tile, ";
     } else {
         create_monster(type, x, y);
@@ -157,6 +163,91 @@ static void create_monster_by_letter(void)
     char max_monsters_text[FORMAT_BUFFER_SIZE];
     format_int(max_monsters_text, MAX_MONSTERS, 0);
     message_format_without_recall("\1monsters: \3/\2", failure, max_monsters_text, game.monster_count);
+}
+
+static uint8_t item_count_peak = 0;
+
+void update_item_count_peak(void)
+{
+    if (game.item_count > item_count_peak) {
+        item_count_peak = game.item_count;
+    }
+}
+
+// az altípusok száma; 0, ha a típusnak nincs altípusa (arany, amulett)
+static uint8_t get_subtype_count(uint8_t type)
+{
+    if (type == ITEM_TYPE_FOOD) return FOOD_SUBTYPE_COUNT;
+    if (type >= RANDOM_ITEM_TYPE_COUNT) return 0;
+    return item_subtype_tables[type].count;
+}
+
+#define ITEM_WHICH_DIGITS_MAX  2                // az altípus száma legfeljebb kétjegyű
+
+// az altípus számának bekérése, a tartománnyal (pl. "which (0-13): "); hamis ESC-re vagy hibás számra
+static bool ask_item_which(uint8_t subtype_count, uint8_t *which)
+{
+    static const char prompt_start[] = "which (0-";
+    char prompt[sizeof(prompt_start) + FORMAT_BUFFER_SIZE + sizeof("): ")];
+    char answer[ITEM_WHICH_DIGITS_MAX + 1];
+    uint32_t number;
+
+    uint8_t length = sizeof(prompt_start) - 1;
+    memcpy(prompt, prompt_start, length);
+    length += format_int(prompt + length, subtype_count - 1, 0);
+    strcpy(prompt + length, "): ");
+
+    bool answered = ask_text(prompt, answer, ITEM_WHICH_DIGITS_MAX);
+    message_clear();
+    if (!answered || !convert_text_to_number(answer, subtype_count - 1, &number)) return false;
+
+    *which = number;
+    return true;
+}
+
+// a tárgy jelének bekérése, altípusos típusnál a számáé is, és létrehozása a játékos melletti szabad padló- vagy folyosó-mezőre;
+// ESC-re, ismeretlen jelre vagy hibás számra nem történik semmi; utána a tárgytábla foglaltsága és csúcsértéke, előtte a hiba, ha nem jött létre;
+// az aranynak a mélység szerinti véletlen mennyisége van; a kirajzolást a következő look_around végzi
+static void create_item_by_character(void)
+{
+    char answer[2];
+    bool answered = ask_text("item (! ? : ) ] = / * ,): ", answer, 1);
+    message_clear();
+    if (!answered) return;
+
+    uint8_t type = 0;
+    while (type < ITEM_TYPE_COUNT && get_item_character(type) != answer[0]) {
+        type++;
+    }
+    if (type == ITEM_TYPE_COUNT) return;
+
+    uint8_t which = 0;
+    uint8_t subtype_count = get_subtype_count(type);
+    if (subtype_count > 0 && !ask_item_which(subtype_count, &which)) return;
+
+    const char *failure = "";
+    uint8_t x;
+    uint8_t y;
+
+    if (game.item_count == MAX_ITEMS) {
+        failure = "the item table is full, ";
+    } else if (!find_free_neighbor(true, &x, &y)) {
+        failure = "no free tile, ";
+    } else {
+        uint8_t index = create_item(type, which);
+        if (type == ITEM_TYPE_GOLD) {
+            set_random_gold_amount(index);
+        }
+        put_item_on_floor(index, x, y);
+    }
+
+    // "96, peak 52": a message_format egyetlen számot ír, a többi szövegként megy
+    char limits_text[FORMAT_BUFFER_SIZE + sizeof(", peak ") + FORMAT_BUFFER_SIZE];
+    uint8_t length = format_int(limits_text, MAX_ITEMS, 0);
+    strcpy(limits_text + length, ", peak ");
+    length += sizeof(", peak ") - 1;
+    format_int(limits_text + length, item_count_peak, 0);
+    message_format_without_recall("\1items: \3/\2", failure, limits_text, game.item_count);
 }
 
 // a szint összes szörnye felébred és üldöz; utána a számuk az üzenetsorba
@@ -211,7 +302,7 @@ bool dev_execute_command(uint8_t code)
             toggle_all_monsters_slow();
             break;
         case KEY_F7:
-            toggle_option(OPTION_JUMP_TO_RUN_END, "jump to run end");
+            create_item_by_character();
             break;
         case KEY_F8:
             toggle_option(OPTION_FOLLOW_PASSAGES, "follow passages");
