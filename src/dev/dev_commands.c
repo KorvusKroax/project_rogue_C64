@@ -8,6 +8,7 @@
 #include "../platform/screen.h"
 #include "../explore.h"
 #include "../input.h"
+#include "../item_names.h"
 #include "../items.h"
 #include "../level.h"
 #include "../map.h"
@@ -205,9 +206,10 @@ static bool ask_item_which(uint8_t subtype_count, uint8_t *which)
     return true;
 }
 
-// a tárgy jelének bekérése, altípusos típusnál a számáé is, és létrehozása a játékos melletti szabad padló- vagy folyosó-mezőre;
-// ESC-re, ismeretlen jelre vagy hibás számra nem történik semmi; utána a tárgytábla foglaltsága és csúcsértéke, előtte a hiba, ha nem jött létre;
-// az aranynak a mélység szerinti véletlen mennyisége van; a kirajzolást a következő look_around végzi
+// a tárgy jelének bekérése, altípusos típusnál a számáé is, és létrehozása a játékos melletti szabad padló- vagy folyosó-mezőre,
+// a véletlen generálással azonos kezdőértékekkel (az aranynak a mélység szerinti véletlen mennyisége van); ESC-re, ismeretlen jelre
+// vagy hibás számra nem történik semmi; utána a tárgy neve, a tárgytábla foglaltsága és csúcsértéke, vagy ha a tárgy nem jött létre,
+// a hiba és a foglaltság; a kirajzolást a következő look_around végzi
 static void create_item_by_character(void)
 {
     char answer[2];
@@ -225,7 +227,8 @@ static void create_item_by_character(void)
     uint8_t subtype_count = get_subtype_count(type);
     if (subtype_count > 0 && !ask_item_which(subtype_count, &which)) return;
 
-    const char *failure = "";
+    const char *failure = NULL;
+    uint8_t index = NO_ITEM;
     uint8_t x;
     uint8_t y;
 
@@ -234,7 +237,8 @@ static void create_item_by_character(void)
     } else if (!find_free_neighbor(true, &x, &y)) {
         failure = "no free tile, ";
     } else {
-        uint8_t index = create_item(type, which);
+        index = create_item(type, which);
+        roll_curse_or_bonus(index);
         if (type == ITEM_TYPE_GOLD) {
             set_random_gold_amount(index);
         }
@@ -247,7 +251,12 @@ static void create_item_by_character(void)
     strcpy(limits_text + length, ", peak ");
     length += sizeof(", peak ") - 1;
     format_int(limits_text + length, item_count_peak, 0);
-    message_format_without_recall("\1items: \3/\2", failure, limits_text, game.item_count);
+
+    if (failure != NULL) {
+        message_format_without_recall("\1items: \3/\2", failure, limits_text, game.item_count);
+    } else {
+        message_format_without_recall("created \1; items: \3/\2", format_item_name(get_item(index)), limits_text, game.item_count);
+    }
 }
 
 // a szint összes szörnye felébred és üldöz; utána a számuk az üzenetsorba
