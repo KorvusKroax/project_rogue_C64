@@ -381,14 +381,44 @@ uint8_t create_random_item(void)
     return index;
 }
 
+void insert_item_after(uint8_t *list_first, uint8_t previous, uint8_t index)
+{
+    struct Item *item = get_item(index);
+
+    if (previous == NO_ITEM) {
+        item->next = *list_first;
+        *list_first = index;
+    } else {
+        struct Item *previous_item = get_item(previous);
+        item->next = previous_item->next;
+        previous_item->next = index;
+    }
+}
+
+void remove_item_from_list(uint8_t *list_first, uint8_t index)
+{
+    uint8_t next = get_item(index)->next;
+
+    if (*list_first == index) {
+        *list_first = next;
+        return;
+    }
+
+    // a tárgy a listában van, ezért az előzője a lista vége előtt megkerül
+    uint8_t previous = *list_first;
+    while (get_item(previous)->next != index) {
+        previous = get_item(previous)->next;
+    }
+    get_item(previous)->next = next;
+}
+
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y)
 {
     struct Item *item = get_item(index);
 
     item->x = x;
     item->y = y;
-    item->next = game.first_floor_item;
-    game.first_floor_item = index;
+    insert_item_after(&game.first_floor_item, NO_ITEM, index);
     set_map_character(x, y, get_item_character(item->type));
 }
 

@@ -156,6 +156,11 @@ uint8_t create_random_item(void);
 // nem egy 8 bites visszatérésű create_gold része, mert annak az eredményét az Oscar64 1.32.273 a hívóban rossz helyről olvasta (README, Oscar64-hibák, 10.)
 void set_random_gold_amount(uint8_t index);
 
+// egyszeresen láncolt tárgylista (a padlón lévő tárgyak, a csomag, egy szörny csomagja): az eleje egy tárgyindex (NO_ITEM: üres),
+// a következő tárgyé a next mező; a list_first a lista elejét tároló változó
+void insert_item_after(uint8_t *list_first, uint8_t previous, uint8_t index);  // az index a previous után, NO_ITEM-nél a lista elejére kerül
+void remove_item_from_list(uint8_t *list_first, uint8_t index);                // az index kikerül a listából; a listában kell lennie
+
 // a padlón lévő tárgyak listája, a legutóbb lerakottal kezdve;
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y);  // a pozíciója (x, y), a mezőn a jele, és a lista elejére kerül

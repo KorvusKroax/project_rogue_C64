@@ -104,6 +104,69 @@ int test_item_table(uint16_t i)
     return allocate_item() == NO_ITEM && game.item_count == MAX_ITEMS;
 }
 
+// a lista elemei sorban éppen az expected első count eleme, utána vége
+static bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count)
+{
+    uint8_t index = list_first;
+    for (uint8_t position = 0; position < count; position++) {
+        if (index != expected[position]) return false;
+        index = get_item(index)->next;
+    }
+    return index == NO_ITEM;
+}
+
+int test_item_lists(uint16_t i)
+{
+    clear_item_table();
+
+    uint8_t a = allocate_item();
+    get_item(a)->type = ITEM_TYPE_POTION;
+    uint8_t b = allocate_item();
+    get_item(b)->type = ITEM_TYPE_POTION;
+    uint8_t c = allocate_item();
+    get_item(c)->type = ITEM_TYPE_POTION;
+    uint8_t d = allocate_item();
+    get_item(d)->type = ITEM_TYPE_POTION;
+
+    uint8_t list = NO_ITEM;
+
+    // beszúrás: az üres listába, a lista elejére, a végére, a közepére
+    insert_item_after(&list, NO_ITEM, a);
+    const uint8_t only_a[] = { a };
+    if (!is_item_list(list, only_a, 1)) return false;
+
+    insert_item_after(&list, NO_ITEM, b);
+    const uint8_t b_a[] = { b, a };
+    if (!is_item_list(list, b_a, 2)) return false;
+
+    insert_item_after(&list, a, c);
+    const uint8_t b_a_c[] = { b, a, c };
+    if (!is_item_list(list, b_a_c, 3)) return false;
+
+    insert_item_after(&list, b, d);
+    const uint8_t b_d_a_c[] = { b, d, a, c };
+    if (!is_item_list(list, b_d_a_c, 4)) return false;
+
+    // törlés: az elejéről, a közepéről, a végéről, végül az egyetlen elemé
+    remove_item_from_list(&list, b);
+    const uint8_t d_a_c[] = { d, a, c };
+    if (!is_item_list(list, d_a_c, 3)) return false;
+
+    remove_item_from_list(&list, a);
+    const uint8_t d_c[] = { d, c };
+    if (!is_item_list(list, d_c, 2)) return false;
+
+    remove_item_from_list(&list, c);
+    const uint8_t only_d[] = { d };
+    if (!is_item_list(list, only_d, 1)) return false;
+
+    remove_item_from_list(&list, d);
+    bool is_empty = list == NO_ITEM;
+
+    clear_item_table();
+    return is_empty;
+}
+
 // a darabszám és a kötegazonosító a fajta szerint (a kötegelt lövedéknek és a tőrnek van köteg); a találati bónusz átkozottnál
 // -RANDOM_MODIFIER_MAX..-1, különben 0..RANDOM_MODIFIER_MAX; a sebzésbónusz 0
 static bool are_weapon_initial_values_valid(const struct Item *item, bool cursed)

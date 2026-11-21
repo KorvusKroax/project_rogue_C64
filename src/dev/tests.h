@@ -60,6 +60,7 @@ int test_player_death(uint16_t i);
 int test_item_chances(uint16_t i);
 int test_levels_without_food(uint16_t i);
 int test_item_table(uint16_t i);                // a tárgytábla betelik, utána nincs hely; felszabadítás után újra van
+int test_item_lists(uint16_t i);                // tárgylista: beszúrás az üres listába, az elejére, a végére, a közepére; törlés az elejéről, a közepéről, a végéről
 int test_item_initial_values(uint16_t i);       // minden típus kezdőértéke érvényes, a véletlen rész nélkül és vele is
 int test_item_groups(uint16_t i);               // kötegekkel teli tárgytáblában is mind különböző a kötegazonosító
 int test_item_name_lists(uint16_t i);           // a nevek és az álnevek listái: minden elem kisbetűvel kezdődik, és egy listán belül mind különböző
