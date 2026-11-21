@@ -55,8 +55,18 @@ struct Monster {
     #error "túl sok szörny: a szörnyindex 8 bites"
 #endif
 
+// a fegyver bónuszai
+struct WeaponBonuses {
+    int8_t   hit_bonus;                         // találati bónusz (hplus); átkozott fegyvernél negatív
+    int8_t   damage_bonus;                      // sebzésbónusz (dplus)
+};
+
 // a tárgy típusonként más jelentésű értéke, közös helyen
 union ItemProperties {
+    struct WeaponBonuses weapon;                // fegyvernél
+    int8_t   armor_class;                       // páncélnál a védelem: minél kisebb, annál jobb
+    int8_t   ring_modifier;                     // gyűrűnél a mod, pl. protection +1
+    uint8_t  charges;                           // pálcánál a töltések száma
     uint16_t gold_amount;                       // aranynál a mennyiség
 };
 
@@ -66,7 +76,10 @@ struct Item {
     uint8_t  which;                             // az altípus a típuson belül
     uint8_t  x;                                 // a padlón: a pozíció a térképen
     uint8_t  y;
+    uint8_t  count;                             // darabszám, pl. egy nyílkötegé
     union ItemProperties properties;
+    uint8_t  flags;                             // ITEM_ flagek (items.h)
+    uint8_t  group;                             // kötegazonosító: a köteg darabjai ugyanezt viselik; 0 = nem köteg
     uint8_t  next;                              // a lista következő tárgyának indexe (0 = vége)
 };
 

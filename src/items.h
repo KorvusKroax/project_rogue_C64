@@ -1,6 +1,7 @@
 #ifndef ITEMS_H
 #define ITEMS_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "state.h"
@@ -26,11 +27,31 @@
 
 #define NO_ITEM  0                              // tárgyindex helyett: nincs tárgy, a lista vége
 
+// tárgyflagek (1.2.3)
+#define ITEM_CURSED  0x01                       // átkozott: használatban nem vehető le, nem cserélhető (ISCURSED)
+
 // az étel altípusai
 #define FOOD_RATION  0
 #define FOOD_FRUIT   1
 
 #define FOOD_SUBTYPE_COUNT  2                   // az étel altípusainak száma
+
+// a külön kezelt fegyvertípusok: a fegyverek esélytáblájának (weapon_chances) indexei; a többi neve az első használatánál jön
+#define WEAPON_ARROW     3
+#define WEAPON_DAGGER    4
+#define WEAPON_DART      6
+#define WEAPON_SHURIKEN  7
+
+// a külön kezelt gyűrűtípusok: a gyűrűk esélytáblájának (ring_chances) indexei
+#define RING_PROTECTION         0
+#define RING_ADD_STRENGTH       1
+#define RING_AGGRAVATE_MONSTER  6
+#define RING_DEXTERITY          7
+#define RING_INCREASE_DAMAGE    8
+#define RING_TELEPORTATION      11
+
+// a külön kezelt pálcatípus: a pálcák esélytáblájának (stick_chances) indexe
+#define STICK_LIGHT  0
 
 #define FRUIT_CHANCE_DIVISOR  10                // az étel 1 / FRUIT_CHANCE_DIVISOR eséllyel gyümölcs, különben adag (default: 10)
 
@@ -47,6 +68,44 @@
 #endif
 
 #define CHANCE_TOTAL  100                       // az esélyek összege minden esélytáblában; a dobás 0..CHANCE_TOTAL-1
+
+// a kezdőértékek (8.1–8.7); a darabszám 1, kivéve a kötegelt fegyvereket:
+// a kötegelt lövedéké (nyíl, dart, shuriken) rnd(MISSILE_COUNT_RANGE) + MISSILE_COUNT_MIN, a tőré rnd(DAGGER_COUNT_RANGE) + DAGGER_COUNT_MIN
+#define MISSILE_COUNT_MIN    8                  // default: 8
+#define MISSILE_COUNT_RANGE  8                  // default: 8
+#define DAGGER_COUNT_MIN     2                  // default: 2
+#define DAGGER_COUNT_RANGE   4                  // default: 4
+
+// a darabszám 8 bites, és legalább 1
+#if MISSILE_COUNT_MIN < 1 || DAGGER_COUNT_MIN < 1 || MISSILE_COUNT_MIN + MISSILE_COUNT_RANGE - 1 > 0xff || DAGGER_COUNT_MIN + DAGGER_COUNT_RANGE - 1 > 0xff
+    #error "a darabszám 1..255"
+#endif
+
+// a modos gyűrűk (protection, add strength, dexterity, increase damage) modja 1..RING_MODIFIER_MAX, vagy -1, és akkor átkozott
+#define RING_MODIFIER_MAX  2                    // default: 2
+
+// a pálca töltése: a light pálcáé rnd(LIGHT_CHARGES_RANGE) + LIGHT_CHARGES_MIN, a többié rnd(STICK_CHARGES_RANGE) + STICK_CHARGES_MIN
+#define LIGHT_CHARGES_MIN    10                 // default: 10
+#define LIGHT_CHARGES_RANGE  10                 // default: 10
+#define STICK_CHARGES_MIN    3                  // default: 3
+#define STICK_CHARGES_RANGE  5                  // default: 5
+
+// a töltés 8 bites
+#if LIGHT_CHARGES_MIN + LIGHT_CHARGES_RANGE - 1 > 0xff || STICK_CHARGES_MIN + STICK_CHARGES_RANGE - 1 > 0xff
+    #error "a töltés 8 bites"
+#endif
+
+// csak véletlen generáláskor: a fegyver CURSED_WEAPON_CHANCE eséllyel átkozott, ENCHANTED_WEAPON_CHANCE eséllyel jobb (a CHANCE_TOTAL-ból),
+// a páncél ugyanígy; az eltérés mértéke 1..RANDOM_MODIFIER_MAX
+#define CURSED_WEAPON_CHANCE     10             // default: 10
+#define ENCHANTED_WEAPON_CHANCE  5              // default: 5
+#define CURSED_ARMOR_CHANCE      20             // default: 20
+#define ENCHANTED_ARMOR_CHANCE   8              // default: 8
+#define RANDOM_MODIFIER_MAX      3              // default: 3
+
+#if CURSED_WEAPON_CHANCE + ENCHANTED_WEAPON_CHANCE > CHANCE_TOTAL || CURSED_ARMOR_CHANCE + ENCHANTED_ARMOR_CHANCE > CHANCE_TOTAL
+    #error "az átok és a bónusz esélye együtt legfeljebb CHANCE_TOTAL"
+#endif
 
 // esélytábla: az index. elemet a dobások közül chances[index] választja
 struct ChanceTable {
@@ -72,10 +131,19 @@ void free_item(uint8_t index);                  // a hely újra szabad, a game.i
 
 uint8_t get_item_character(uint8_t type);       // a tárgy jele a térképen
 
-// új tárgy a megadott típussal és altípussal; NO_ITEM, ha betelt a tábla
+bool is_many_weapon(uint8_t which);             // kötegelt lövedék (ISMANY): nyíl, dart, shuriken
+bool has_ring_modifier(uint8_t which);          // modos gyűrű: protection, add strength, dexterity, increase damage
+int8_t get_armor_base_class(uint8_t which);     // a páncéltípus védelme (8.5)
+
+// új tárgy a megadott típussal és altípussal, a minden létrehozáskor járó kezdőértékekkel (8.1): darabszám, kötegazonosító,
+// a páncél védelme, a gyűrű modja és átka, a pálca töltése; NO_ITEM, ha betelt a tábla
 uint8_t create_item(uint8_t type, uint8_t which);
 
-// új véletlen tárgy (new_item) a choose_item_type_and_subtype szerint; NO_ITEM, ha betelt a tábla: ekkor nincs dobás, és a számláló sem változik
+// csak véletlen generáláskor, a kezdőértékek után: a fegyver és a páncél átka vagy bónusza (8.4–8.5); a többi típusnál nem dob
+void roll_curse_or_bonus(uint8_t index);
+
+// új véletlen tárgy (new_item) a choose_item_type_and_subtype szerint, a kezdőértékekkel és az átok vagy bónusz dobásával;
+// NO_ITEM, ha betelt a tábla: ekkor nincs dobás, és a számláló sem változik
 uint8_t create_random_item(void);
 
 // az arany (create_item(ITEM_TYPE_GOLD, 0)) mélység szerinti véletlen mennyisége;

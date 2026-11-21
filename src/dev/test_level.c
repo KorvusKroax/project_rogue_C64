@@ -451,9 +451,9 @@ static bool are_initial_monsters_valid(void)
     return crowded_room_count <= 1;
 }
 
-// a padlón lévő tárgyak: a lista legfeljebb MAX_ITEMS hosszú (nincs benne kör); minden tárgy érvényes típusú, egy nem fantom szoba
-// falain belül, nem rejtett mezőn van, a mezőjén a jele áll, és két tárgy nincs egy mezőn; a tárgytábla foglalt helyei éppen a lista tárgyai,
-// és a game.item_count ennyi
+// a padlón lévő tárgyak: a lista legfeljebb MAX_ITEMS hosszú (nincs benne kör); minden tárgy érvényes típusú, a kezdőértékei érvényesek,
+// egy nem fantom szoba falain belül, nem rejtett mezőn van, a mezőjén a jele áll; két tárgy nincs egy mezőn, és két köteg azonosítója
+// nem egyezik; a tárgytábla foglalt helyei éppen a lista tárgyai, és a game.item_count ennyi
 static bool are_floor_items_valid(void)
 {
     uint8_t floor_item_count = 0;
@@ -469,13 +469,16 @@ static bool are_floor_items_valid(void)
         } else if (!is_item_type_and_subtype_valid(item->type, item->which)) {
             return false;
         }
+        if (!are_item_initial_values_valid(item)) return false;
         if (get_map_character(item->x, item->y) != get_item_character(item->type)) return false;
         if (!(get_map_flags(item->x, item->y) & TILE_REAL)) return false;
         if (!is_inside_room(item->x, item->y)) return false;
 
-        // a lista előtte álló tárgyai közül egyik sincs ugyanezen a mezőn
+        // a lista előtte álló tárgyai közül egyik sincs ugyanezen a mezőn, és egyiknek sem ugyanez a kötegazonosítója
         for (uint8_t other = game.first_floor_item; other != index; other = get_item(other)->next) {
-            if (get_item(other)->x == item->x && get_item(other)->y == item->y) return false;
+            const struct Item *other_item = get_item(other);
+            if (other_item->x == item->x && other_item->y == item->y) return false;
+            if (item->group != 0 && other_item->group == item->group) return false;
         }
     }
 

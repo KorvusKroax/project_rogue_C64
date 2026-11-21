@@ -60,8 +60,13 @@ int test_player_death(uint16_t i);
 int test_item_chances(uint16_t i);
 int test_levels_without_food(uint16_t i);
 int test_item_table(uint16_t i);                // a tárgytábla betelik, utána nincs hely; felszabadítás után újra van
+int test_item_initial_values(uint16_t i);       // minden típus kezdőértéke érvényes, a véletlen rész nélkül és vele is
+int test_item_groups(uint16_t i);               // kötegekkel teli tárgytáblában is mind különböző a kötegazonosító
+
+struct Item;
 
 bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which);   // a véletlen tárgy típusa és altípusa érvényes (test_items.c)
+bool are_item_initial_values_valid(const struct Item *item);        // a tárgy kezdőértékei a típusa szerint érvényesek (test_items.c)
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

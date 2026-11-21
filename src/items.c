@@ -48,7 +48,7 @@ static const uint8_t scroll_chances[] = {
     10,     // identify scroll
      6,     // identify weapon
      7,     // identify armor
-    10,     // identify ring/stick
+    10,     // identify ring, wand or staff
      3,     // scare monster
      2,     // food detection
      5,     // teleportation
@@ -80,6 +80,18 @@ static const uint8_t armor_chances[] = {
     10,     // splint mail
     10,     // banded mail
      5,     // plate mail
+};
+
+// a páncéltípusok védelme (8.5), az esélytábla sorrendjében; minél kisebb, annál jobb
+static const int8_t armor_base_classes[TABLE_LENGTH(armor_chances)] = {
+     8,     // leather armor
+     7,     // ring mail
+     7,     // studded leather
+     6,     // scale mail
+     5,     // chain mail
+     4,     // splint mail
+     4,     // banded mail
+     3,     // plate mail
 };
 
 static const uint8_t ring_chances[] = {
@@ -208,6 +220,109 @@ uint8_t get_item_character(uint8_t type)
     return item_type_characters[type];
 }
 
+bool is_many_weapon(uint8_t which)
+{
+    return which == WEAPON_ARROW || which == WEAPON_DART || which == WEAPON_SHURIKEN;
+}
+
+bool has_ring_modifier(uint8_t which)
+{
+    return which == RING_PROTECTION || which == RING_ADD_STRENGTH || which == RING_DEXTERITY || which == RING_INCREASE_DAMAGE;
+}
+
+int8_t get_armor_base_class(uint8_t which)
+{
+    return armor_base_classes[which];
+}
+
+// az utoljára kiadott kötegazonosító; nem kell menteni, mert csak az számít, hogy két köteg ne kapja ugyanazt
+static uint8_t last_group = 0;
+
+static bool is_group_used(uint8_t group)
+{
+    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
+        if (game.items[slot].type != ITEM_TYPE_FREE && game.items[slot].group == group) return true;
+    }
+    return false;
+}
+
+// új kötegazonosító: az utoljára kiadott utáni első érték (a 0 kimarad), amelyet egyetlen meglévő tárgy sem használ;
+// a ciklus véget ér, mert a többi tárgy legfeljebb MAX_ITEMS - 1 <= 254 értéket foglal (state.h), így az 1..255 közül mindig marad szabad
+static uint8_t choose_unused_group(void)
+{
+    do {
+        last_group++;
+        if (last_group == 0) {
+            last_group = 1;
+        }
+    } while (is_group_used(last_group));
+    return last_group;
+}
+
+// a bónuszok 0; a kötegelt lövedék és a tőr darabszáma véletlen, és új kötegazonosítót kap (a tőr nem ISMANY, mégis kötegel)
+static void set_initial_weapon_values(struct Item *item)
+{
+    item->properties.weapon.hit_bonus = 0;
+    item->properties.weapon.damage_bonus = 0;
+
+    if (is_many_weapon(item->which)) {
+        item->count = rnd(MISSILE_COUNT_RANGE) + MISSILE_COUNT_MIN;
+        item->group = choose_unused_group();
+    } else if (item->which == WEAPON_DAGGER) {
+        item->count = rnd(DAGGER_COUNT_RANGE) + DAGGER_COUNT_MIN;
+        item->group = choose_unused_group();
+    }
+}
+
+// a modos gyűrű modja 1..RING_MODIFIER_MAX, vagy -1, és akkor átkozott; az aggravate monster és a teleportation gyűrű mindig átkozott
+static void set_initial_ring_values(struct Item *item)
+{
+    item->properties.ring_modifier = 0;
+
+    if (has_ring_modifier(item->which)) {
+        int8_t modifier = rnd(RING_MODIFIER_MAX + 1);
+        if (modifier == 0) {
+            modifier = -1;
+            item->flags |= ITEM_CURSED;
+        }
+        item->properties.ring_modifier = modifier;
+    } else if (item->which == RING_AGGRAVATE_MONSTER || item->which == RING_TELEPORTATION) {
+        item->flags |= ITEM_CURSED;
+    }
+}
+
+static void set_initial_charges(struct Item *item)
+{
+    if (item->which == STICK_LIGHT) {
+        item->properties.charges = rnd(LIGHT_CHARGES_RANGE) + LIGHT_CHARGES_MIN;
+    } else {
+        item->properties.charges = rnd(STICK_CHARGES_RANGE) + STICK_CHARGES_MIN;
+    }
+}
+
+// a minden létrehozáskor járó kezdőértékek (8.1–8.7); a type és a which már be van írva
+static void set_initial_values(struct Item *item)
+{
+    item->count = 1;
+    item->flags = 0;
+    item->group = 0;
+
+    switch (item->type) {
+        case ITEM_TYPE_WEAPON:
+            set_initial_weapon_values(item);
+            break;
+        case ITEM_TYPE_ARMOR:
+            item->properties.armor_class = armor_base_classes[item->which];
+            break;
+        case ITEM_TYPE_RING:
+            set_initial_ring_values(item);
+            break;
+        case ITEM_TYPE_STICK:
+            set_initial_charges(item);
+            break;
+    }
+}
+
 uint8_t create_item(uint8_t type, uint8_t which)
 {
     uint8_t index = allocate_item();
@@ -216,7 +331,36 @@ uint8_t create_item(uint8_t type, uint8_t which)
     struct Item *item = get_item(index);
     item->type = type;
     item->which = which;
+    set_initial_values(item);
     return index;
+}
+
+void roll_curse_or_bonus(uint8_t index)
+{
+    struct Item *item = get_item(index);
+
+    if (item->type == ITEM_TYPE_WEAPON) {
+        uint8_t roll = rnd(CHANCE_TOTAL);
+        if (roll < CURSED_WEAPON_CHANCE) {
+            uint8_t penalty = rnd(RANDOM_MODIFIER_MAX) + 1;
+            item->flags |= ITEM_CURSED;
+            item->properties.weapon.hit_bonus -= penalty;
+        } else if (roll < CURSED_WEAPON_CHANCE + ENCHANTED_WEAPON_CHANCE) {
+            uint8_t bonus = rnd(RANDOM_MODIFIER_MAX) + 1;
+            item->properties.weapon.hit_bonus += bonus;
+        }
+    } else if (item->type == ITEM_TYPE_ARMOR) {
+        // a páncélnál a nagyobb védelem a rosszabb
+        uint8_t roll = rnd(CHANCE_TOTAL);
+        if (roll < CURSED_ARMOR_CHANCE) {
+            uint8_t penalty = rnd(RANDOM_MODIFIER_MAX) + 1;
+            item->flags |= ITEM_CURSED;
+            item->properties.armor_class += penalty;
+        } else if (roll < CURSED_ARMOR_CHANCE + ENCHANTED_ARMOR_CHANCE) {
+            uint8_t bonus = rnd(RANDOM_MODIFIER_MAX) + 1;
+            item->properties.armor_class -= bonus;
+        }
+    }
 }
 
 void set_random_gold_amount(uint8_t index)
@@ -232,7 +376,8 @@ uint8_t create_random_item(void)
 
     struct Item *item = get_item(index);
     choose_item_type_and_subtype(&item->type, &item->which);
-    // ide jön: a típusonkénti kezdőértékek (darabszám, bónuszok, töltés)
+    set_initial_values(item);
+    roll_curse_or_bonus(index);
     return index;
 }
 
