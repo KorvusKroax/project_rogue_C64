@@ -55,6 +55,23 @@ struct Monster {
     #error "túl sok szörny: a szörnyindex 8 bites"
 #endif
 
+// egy tárgy a tárgytáblában; a listákba (a padlón lévő tárgyaké) a next fűzi
+struct Item {
+    uint8_t  type;                              // ITEM_TYPE_ (items.h); szabad helyen ITEM_TYPE_FREE
+    uint8_t  which;                             // az altípus a típuson belül
+    uint8_t  x;                                 // a padlón: a pozíció a térképen
+    uint8_t  y;
+    uint8_t  next;                              // a lista következő tárgyának indexe (0 = vége)
+};
+
+// a tárgytábla mérete: a padló, a csomag és a szörnyek csomagjai együtt; a tárgyakra 1..MAX_ITEMS index hivatkozik, a 0 a „nincs”
+#define MAX_ITEMS  96                           // default: 96
+
+// a tárgyindex 8 bites, és a 0 foglalt
+#if MAX_ITEMS > 255
+    #error "túl sok tárgy: a tárgyindex 8 bites"
+#endif
+
 // a logikai képernyő SECTOR_GRID_SIZE × SECTOR_GRID_SIZE szektorra osztva
 #define SECTOR_GRID_SIZE  3                     // default: 3
 
@@ -115,7 +132,8 @@ struct Exit {
 
 // a játékállapot-blokk: a mentés és a betöltés egyben írja és olvassa (kezdőcím: &game, méret: sizeof(game))
 // csak ide kerülhet perzisztens adat; mutató nem, csak index
-#define DUNGEON_LEVEL_MAX  255                  // a mélység 8 bites; a legmélyebb szinten a lépcső új ugyanilyen mély szintet generál
+// a legmélyebb szint, innen nincs lefelé út; a mélység 8 bites, és a kincses szoba szörnyei egy szinttel mélyebb szint szerint jönnek létre
+#define DUNGEON_LEVEL_MAX  (UINT8_MAX - 1)      // 254
 
 struct GameState {
     uint32_t seed;
@@ -134,6 +152,8 @@ struct GameState {
     uint8_t  exit_count;
     struct Monster monsters[MAX_MONSTERS];      // a szörnytábla: tömör, a szörnyek a létrehozás sorrendjében (monsters.h)
     uint8_t  monster_count;                     // a szörnyek száma: az 1..monster_count indexek foglaltak
+    struct Item items[MAX_ITEMS];               // a tárgytábla: a szabad helyet a típus jelzi (items.h)
+    uint8_t  first_floor_item;                  // a padlón lévő tárgyak listájának eleje (0 = üres)
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
     uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)

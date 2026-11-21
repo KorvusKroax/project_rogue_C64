@@ -16,7 +16,7 @@
 #include "../view.h"
 #include "checks.h"
 
-#define DEPTH_DIGITS_MAX  3         // 1..255
+#define DEPTH_DIGITS_MAX  3         // 1..DUNGEON_LEVEL_MAX (254)
 
 #define FULL_MAP_BORDER_COLOR  2   // piros: a teljes térkép be van kapcsolva
 
@@ -90,7 +90,7 @@ static void jump_to_depth(void)
     char answer[DEPTH_DIGITS_MAX + 1];
     uint32_t depth;
 
-    bool answered = ask_text("depth (1-255): ", answer, DEPTH_DIGITS_MAX);
+    bool answered = ask_text("depth (1-254): ", answer, DEPTH_DIGITS_MAX);
     message_clear();
 
     if (answered && convert_text_to_number(answer, DUNGEON_LEVEL_MAX, &depth) && depth >= 1) {

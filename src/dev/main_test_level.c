@@ -2,6 +2,7 @@
 #include "test_runner.h"
 
 #include "../platform/screen.h"
+#include "../items.h"
 #include "../message.h"
 
 static const struct DevTest level_tests[] = {
@@ -18,6 +19,8 @@ int main(void)
     put_text("ESC: stop");
     // az üzenetsáv sorait a szörnyek támadásainak üzenetei használják; a teli sáv nem vár szóközre
     set_message_more_wait(false);
+    // a szintek tárgyai a tárgytáblába kerülnek, és új szintnél onnan szabadulnak fel
+    clear_item_table();
     set_screen_cursor(0, MESSAGE_ROW + MESSAGE_ROW_COUNT);
     put_text("Level tests:");
     move_screen_cursor_to_next_row();

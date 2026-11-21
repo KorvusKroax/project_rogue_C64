@@ -7,6 +7,7 @@
 
 #include "../chase.h"
 #include "../explore.h"
+#include "../items.h"
 #include "../level.h"
 #include "../map.h"
 #include "../message.h"
@@ -196,7 +197,16 @@ static bool are_map_tiles_valid(void)
     return true;
 }
 
-// a labirintusban nincs ajtó: a mezői folyosó-mezők, üresek, vagy a lépcső áll rajtuk; a kijárat is folyosó-mező marad
+// a jel egy tárgy jele
+static bool is_item_character(uint8_t character)
+{
+    for (uint8_t type = 0; type < RANDOM_ITEM_TYPE_COUNT; type++) {
+        if (get_item_character(type) == character) return true;
+    }
+    return false;
+}
+
+// a labirintusban nincs ajtó: a mezői folyosó-mezők, üresek, vagy a lépcső vagy egy tárgy áll rajtuk; a kijárat is folyosó-mező marad
 static bool is_maze_without_doors(const struct Room *room)
 {
     uint8_t last_x = room->x + room->width / 2 * 2;
@@ -205,7 +215,8 @@ static bool is_maze_without_doors(const struct Room *room)
     for (uint8_t y = room->y; y <= last_y; y++) {
         for (uint8_t x = room->x; x <= last_x; x++) {
             uint8_t character = get_map_character(x, y);
-            if (character != CHAR_PASSAGE && character != CHAR_SOLID_ROCK && character != CHAR_STAIRS) return false;
+            if (character == CHAR_PASSAGE || character == CHAR_SOLID_ROCK || character == CHAR_STAIRS) continue;
+            if (!is_item_character(character)) return false;
         }
     }
     return true;
@@ -322,7 +333,7 @@ static bool are_passage_numbers_valid(void)
     return true;
 }
 
-// járható mező: padló, ajtó, lépcső, folyosó-mező, a titkosakkal együtt
+// járható mező: padló, ajtó, lépcső, tárgy, folyosó-mező, a titkosakkal együtt
 static bool is_walkable_tile(uint8_t x, uint8_t y)
 {
     uint8_t flags = get_map_flags(x, y);
@@ -330,7 +341,7 @@ static bool is_walkable_tile(uint8_t x, uint8_t y)
     if (!(flags & TILE_REAL)) return true;
 
     uint8_t character = get_map_character(x, y);
-    return character == CHAR_FLOOR || character == CHAR_DOOR || character == CHAR_STAIRS;
+    return character == CHAR_FLOOR || character == CHAR_DOOR || character == CHAR_STAIRS || is_item_character(character);
 }
 
 // a nem fantom szoba indexe, amelynek a falain belül a mező van, vagy ROOM_COUNT, ha nincs ilyen
@@ -400,12 +411,15 @@ static bool is_player_position_valid(void)
     return is_inside_room(x, y);
 }
 
-// a kezdő szörnyek: szobánként legfeljebb egy, egy nem fantom szoba falain belül, nem rejtett, járható mezőn, nem a játékos helyén; alszanak;
-// a room mezőjük a mező szobája (labirintusban a folyosórendszer)
+// a kezdő szörnyek: egy nem fantom szoba falain belül, nem rejtett, járható mezőn, nem a játékos helyén; alszanak;
+// a room mezőjük a mező szobája (labirintusban a folyosórendszer); szobánként legfeljebb egy, kivéve a kincses szobát,
+// ahol a szoba kezdő szörnye mellett aljasak vannak: minden szobában legfeljebb egy nem aljas, és legfeljebb egy szobában több szörny
 static bool are_initial_monsters_valid(void)
 {
-    bool room_has_monster[ROOM_COUNT];
-    memset(room_has_monster, 0, sizeof(room_has_monster));
+    uint8_t room_monster_counts[ROOM_COUNT];
+    uint8_t room_not_mean_counts[ROOM_COUNT];
+    memset(room_monster_counts, 0, sizeof(room_monster_counts));
+    memset(room_not_mean_counts, 0, sizeof(room_not_mean_counts));
 
     for (uint8_t index = 1; index <= game.monster_count; index++) {
         const struct Monster *monster = get_monster(index);
@@ -421,10 +435,61 @@ static bool are_initial_monsters_valid(void)
 
         uint8_t room_index = get_room_around(x, y);
         if (room_index >= ROOM_COUNT) return false;
-        if (room_has_monster[room_index]) return false;
-        room_has_monster[room_index] = true;
+        room_monster_counts[room_index]++;
+        if (!(monster->flags & MONSTER_MEAN)) {
+            room_not_mean_counts[room_index]++;
+        }
     }
-    return true;
+
+    uint8_t crowded_room_count = 0;
+    for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
+        if (room_not_mean_counts[room_index] > 1) return false;
+        if (room_monster_counts[room_index] > 1) {
+            crowded_room_count++;
+        }
+    }
+    return crowded_room_count <= 1;
+}
+
+// a padlón lévő tárgyak: a lista legfeljebb MAX_ITEMS hosszú (nincs benne kör); minden tárgy érvényes típusú, egy nem fantom szoba
+// falain belül, nem rejtett mezőn van, a mezőjén a jele áll, és két tárgy nincs egy mezőn; a tárgytábla foglalt helyei éppen a lista tárgyai
+static bool are_floor_items_valid(void)
+{
+    uint8_t floor_item_count = 0;
+
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        if (index > MAX_ITEMS) return false;
+        if (floor_item_count == MAX_ITEMS) return false;
+        floor_item_count++;
+
+        const struct Item *item = get_item(index);
+        if (!is_item_type_and_subtype_valid(item->type, item->which)) return false;
+        if (get_map_character(item->x, item->y) != get_item_character(item->type)) return false;
+        if (!(get_map_flags(item->x, item->y) & TILE_REAL)) return false;
+        if (!is_inside_room(item->x, item->y)) return false;
+
+        // a lista előtte álló tárgyai közül egyik sincs ugyanezen a mezőn
+        for (uint8_t other = game.first_floor_item; other != index; other = get_item(other)->next) {
+            if (get_item(other)->x == item->x && get_item(other)->y == item->y) return false;
+        }
+    }
+
+    uint8_t occupied_count = 0;
+    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
+        if (game.items[slot].type != ITEM_TYPE_FREE) {
+            occupied_count++;
+        }
+    }
+    return occupied_count == floor_item_count;
+}
+
+// van étel a padlón
+static bool is_food_on_floor(void)
+{
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        if (get_item(index)->type == ITEM_TYPE_FOOD) return true;
+    }
+    return false;
 }
 
 // a mezők szobája: minden folyosó-mezőé (a fantom szoba pontja és a labirintus mezői is) a sorszáma szerinti folyosórendszer;
@@ -605,11 +670,16 @@ int test_level_generation(uint16_t i)
 
     if (memcmp(checked_rooms, game.rooms, sizeof(checked_rooms)) != 0) return false;
 
-    uint8_t expected_levels_without_food = levels_without_food == UINT8_MAX ? UINT8_MAX : levels_without_food + 1;
-    if (game.levels_without_food != expected_levels_without_food) return false;
-
     // az ujjlenyomat még az ellenőrzések előtt, mert azok a TILE_SEEN flaget írják
     uint16_t level_checksum = calculate_level_checksum();
+
+    // a szint tárgyai előtt eggyel nő, és egy generált étel nullázza: étel csak a padlóra kerülhetett
+    if (!are_floor_items_valid()) return false;
+    uint8_t expected_levels_without_food = levels_without_food == UINT8_MAX ? UINT8_MAX : levels_without_food + 1;
+    if (is_food_on_floor()) {
+        expected_levels_without_food = 0;
+    }
+    if (game.levels_without_food != expected_levels_without_food) return false;
 
     if (!is_stairs_valid()) return false;
     if (!is_player_position_valid()) return false;

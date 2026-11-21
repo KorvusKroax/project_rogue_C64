@@ -59,6 +59,9 @@ int test_xeroc_reveal(uint16_t i);
 int test_player_death(uint16_t i);
 int test_item_chances(uint16_t i);
 int test_levels_without_food(uint16_t i);
+int test_item_table(uint16_t i);                // a tárgytábla betelik, utána nincs hely; felszabadítás után újra van
+
+bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which);   // a véletlen tárgy típusa és altípusa érvényes (test_items.c)
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

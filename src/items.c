@@ -1,7 +1,7 @@
 #include "items.h"
 
+#include "map.h"
 #include "rng.h"
-#include "state.h"
 
 #define TABLE_LENGTH(table)  (sizeof(table) / sizeof((table)[0]))
 
@@ -149,5 +149,78 @@ void choose_item_type_and_subtype(uint8_t *type, uint8_t *which)
     } else {
         uint8_t subtype_roll = rnd(CHANCE_TOTAL);
         *which = choose_by_chance(&item_subtype_tables[*type], subtype_roll);
+    }
+}
+
+struct Item *get_item(uint8_t index)
+{
+    return &game.items[index - 1];
+}
+
+void clear_item_table(void)
+{
+    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
+        game.items[slot].type = ITEM_TYPE_FREE;
+    }
+    game.first_floor_item = NO_ITEM;
+}
+
+uint8_t allocate_item(void)
+{
+    // a tömb helyén számol, mert MAX_ITEMS = 255 mellett az index <= MAX_ITEMS feltétel 8 biten mindig igaz volna
+    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
+        if (game.items[slot].type == ITEM_TYPE_FREE) return slot + 1;
+    }
+    return NO_ITEM;
+}
+
+void free_item(uint8_t index)
+{
+    get_item(index)->type = ITEM_TYPE_FREE;
+}
+
+static const uint8_t item_type_characters[RANDOM_ITEM_TYPE_COUNT] = {
+    CHAR_POTION,
+    CHAR_SCROLL,
+    CHAR_FOOD,
+    CHAR_WEAPON,
+    CHAR_ARMOR,
+    CHAR_RING,
+    CHAR_STICK,
+};
+
+uint8_t get_item_character(uint8_t type)
+{
+    return item_type_characters[type];
+}
+
+uint8_t create_random_item(void)
+{
+    uint8_t index = allocate_item();
+    if (index == NO_ITEM) return NO_ITEM;
+
+    struct Item *item = get_item(index);
+    choose_item_type_and_subtype(&item->type, &item->which);
+    // ide jön: a típusonkénti kezdőértékek (darabszám, bónuszok, töltés)
+    return index;
+}
+
+void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y)
+{
+    struct Item *item = get_item(index);
+
+    item->x = x;
+    item->y = y;
+    item->next = game.first_floor_item;
+    game.first_floor_item = index;
+    set_map_character(x, y, get_item_character(item->type));
+}
+
+void free_floor_items(void)
+{
+    while (game.first_floor_item != NO_ITEM) {
+        uint8_t index = game.first_floor_item;
+        game.first_floor_item = get_item(index)->next;
+        free_item(index);
     }
 }

@@ -6,6 +6,7 @@
 static const struct DevTest item_tests[] = {
     { "ITEM-CHANCES", test_item_chances, 1 },
     { "ITEM-NO FOOD", test_levels_without_food, 1 },
+    { "ITEM-TABLE", test_item_table, 1 },
 };
 
 int main(void)

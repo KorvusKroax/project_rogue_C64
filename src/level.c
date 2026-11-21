@@ -2,6 +2,7 @@
 
 #include "corridors.h"
 #include "explore.h"
+#include "items.h"
 #include "map.h"
 #include "message.h"
 #include "monsters.h"
@@ -175,6 +176,98 @@ static void place_gold_and_monsters(void)
     }
 }
 
+#define TREASURE_ROOM_CHANCE_DIVISOR  20        // a szinten 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel van kincses szoba (default: 20)
+#define TREASURE_MIN                  2         // a kincses szoba tervezett tárgyszáma legalább ennyi (default: 2)
+#define TREASURE_MAX                  10        // és legfeljebb ennyi (default: 10)
+#define TREASURE_EXTRA_MONSTERS       2         // a kincses szobában legalább ennyivel több szörny van, mint a tervezett tárgyszám (default: 2)
+
+#if TREASURE_MIN > TREASURE_MAX
+    #error "a TREASURE_MIN nem lehet nagyobb a TREASURE_MAX-nál"
+#endif
+
+#if TREASURE_MAX + TREASURE_EXTRA_MONSTERS > 255
+    #error "a kincses szoba szörnyeinek száma 8 bites"
+#endif
+
+#define ITEM_ATTEMPTS  9                        // ennyi próba a szint tárgyaira (default: 9)
+#define ITEM_CHANCE    36                       // százalék: egy próba ennyi eséllyel hoz tárgyat (default: 36)
+
+// egy véletlen tárgy a szoba (ANY_ROOM: bármely nem fantom szoba) üres padlójára; kimarad, ha nincs hely, vagy betelt a tárgytábla
+static void place_random_item(uint8_t room_index)
+{
+    uint8_t x;
+    uint8_t y;
+
+    if (!find_empty_floor(room_index, &x, &y)) return;
+
+    uint8_t index = create_random_item();
+    if (index != NO_ITEM) {
+        put_item_on_floor(index, x, y);
+    }
+}
+
+// kincses szoba egy véletlen nem fantom szobában, labirintusban is: TREASURE_MIN..TREASURE_MAX tárgy a belső terület erejéig,
+// és legalább TREASURE_EXTRA_MONSTERS-szel több aljas szörny a következő mélység szerint; ami nem fér el, kimarad
+static void place_treasure_room(void)
+{
+    uint8_t room_index = choose_random_room();
+    const struct Room *room = &game.rooms[room_index];
+    uint16_t inner_area = (uint16_t)(room->width - 2) * (room->height - 2);
+
+    // a TREASURE_MIN feletti véletlen többlet felső határa; kis szobában 0, a terv ekkor is TREASURE_MIN
+    uint8_t extra = 0;
+    if (inner_area > TREASURE_MAX) {
+        extra = TREASURE_MAX - TREASURE_MIN;
+    } else if (inner_area > TREASURE_MIN) {
+        extra = inner_area - TREASURE_MIN;
+    }
+
+    uint8_t item_count = rnd(extra) + TREASURE_MIN;
+    for (uint8_t i = 0; i < item_count; i++) {
+        place_random_item(room_index);
+    }
+
+    uint8_t monster_count = rnd(extra) + TREASURE_MIN;
+    if (monster_count < item_count + TREASURE_EXTRA_MONSTERS) {
+        monster_count = item_count + TREASURE_EXTRA_MONSTERS;
+    }
+    if (monster_count > inner_area) {
+        monster_count = inner_area;
+    }
+
+    // legfeljebb DUNGEON_LEVEL_MAX + 1, ez 8 biten elfér
+    game.dungeon_level++;
+    for (uint8_t i = 0; i < monster_count; i++) {
+        uint8_t x;
+        uint8_t y;
+
+        // ha nincs több alkalmas mező, vagy betelt a szörnytábla, a többi szörny sem jön létre
+        if (!find_monster_tile(room_index, &x, &y)) break;
+        uint8_t index = generate_monster(false, x, y);
+        if (index == NO_MONSTER) break;
+
+        get_monster(index)->flags |= MONSTER_MEAN;
+        // ide jön: a szörny kezdő tárgya (give_item), szintén a következő mélység szerint
+    }
+    game.dungeon_level--;
+}
+
+// a szint tárgyai: 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel kincses szoba, aztán ITEM_ATTEMPTS próba bármely nem fantom szobában
+static void place_items(void)
+{
+    // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) van tárgy
+    if (rnd(TREASURE_ROOM_CHANCE_DIVISOR) == 0) {
+        place_treasure_room();
+    }
+
+    for (uint8_t attempt = 0; attempt < ITEM_ATTEMPTS; attempt++) {
+        if (rnd(100) < ITEM_CHANCE) {
+            place_random_item(ANY_ROOM);
+        }
+    }
+    // ide jön: az amulett az AMULET_LEVEL mélységtől, amíg a játékosnál nincs
+}
+
 // a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra)
 static void place_stairs(void)
 {
@@ -201,7 +294,8 @@ void generate_level(void)
     // ide jön: ha a mélység nagyobb az eddigi legnagyobbnál (max_level), az lesz az új legnagyobb
     clear_map();
     clear_monsters();
-    // ide jön: a szörnyek csomagjainak és a padlón lévő tárgyaknak a törlése, a tárgytáblában a helyük felszabadul
+    // ide jön: a szörnyek csomagjainak törlése, a tárgytáblában a helyük felszabadul
+    free_floor_items();
 
     generate_rooms();
     connect_rooms();
@@ -217,7 +311,7 @@ void generate_level(void)
     if (game.levels_without_food < UINT8_MAX) {
         game.levels_without_food++;
     }
-    // ide jön: tárgyak (kincses szoba, 9 próba, amulett)
+    place_items();
     // ide jön: csapdák
 }
 
@@ -246,14 +340,12 @@ static bool is_player_on_stairs(void)
 void go_down_stairs(void)
 {
     // ide jön: lebegve nem lehet
-    if (!is_player_on_stairs()) {
+    if (!is_player_on_stairs() || game.dungeon_level == DUNGEON_LEVEL_MAX) {
         message(text_no_way_down);
         return;
     }
 
-    if (game.dungeon_level < DUNGEON_LEVEL_MAX) {
-        game.dungeon_level++;
-    }
+    game.dungeon_level++;
     new_level();
 }
 

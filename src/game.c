@@ -8,6 +8,7 @@
 #include "chase.h"
 #include "combat.h"
 #include "explore.h"
+#include "items.h"
 #include "level.h"
 #include "message.h"
 #include "move.h"
@@ -342,6 +343,7 @@ void run_game(void)
     last_code = 0;
     game.dungeon_level = 1;
     game.levels_without_food = 0;
+    clear_item_table();
     new_level();
 
     while (!is_player_dead()) {

@@ -365,8 +365,8 @@ static void dev_status_screen(void)
         switch (code) {
             case '1': set_status_test_values(1, 0, 12, 12, 16, 16, 1, 0); break;
             case '2': set_status_test_values(3, 25, 14, 20, 16, 16, 2, 38); break;
-            case '3': set_status_test_values(255, 999999, 999, 999, 31, 31, 21, 16777215); break;
-            case '4': set_status_test_values(255, 16777215, -12, 999, 3, 31, 21, 16777215); break;  // 8 jegyű arany: a sor vége levágódik
+            case '3': set_status_test_values(DUNGEON_LEVEL_MAX, 999999, 999, 999, 31, 31, 21, 16777215); break;
+            case '4': set_status_test_values(DUNGEON_LEVEL_MAX, 16777215, -12, 999, 3, 31, 21, 16777215); break;  // 8 jegyű arany: a sor vége levágódik
             case 'h': game.hunger_state = (game.hunger_state + 1) & 3; break;
             case 'f': frames = status_measure(); break;
         }

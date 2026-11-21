@@ -35,8 +35,7 @@ int test_item_chances(uint16_t i)
 
 #define FOOD_TEST_TRIALS  100                   // ennyi tárgy számlálónként, rögzített maggal
 
-// a típus és az altípus érvényes
-static bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which)
+bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which)
 {
     if (type == ITEM_TYPE_FOOD) return which == FOOD_RATION || which == FOOD_FRUIT;
     return type < RANDOM_ITEM_TYPE_COUNT && which < item_subtype_tables[type].count;
@@ -72,4 +71,32 @@ int test_levels_without_food(uint16_t i)
         }
     }
     return other_seen;
+}
+
+#define FREED_ITEM_INDEX  (MAX_ITEMS / 2 + 1)   // a betelt táblából ez a hely szabadul fel
+
+int test_item_table(uint16_t i)
+{
+    clear_item_table();
+
+    // az üres táblában MAX_ITEMS hely foglalható, mindegyik érvényes indexű és szabad volt, utána nincs hely
+    for (uint16_t count = 0; count < MAX_ITEMS; count++) {
+        uint8_t index = allocate_item();
+        if (index == NO_ITEM || index > MAX_ITEMS) return false;
+        if (get_item(index)->type != ITEM_TYPE_FREE) return false;
+        get_item(index)->type = ITEM_TYPE_POTION;
+    }
+    if (allocate_item() != NO_ITEM) return false;
+
+    // betelt táblánál a véletlen tárgy sem jön létre, és nem dob: a mag és az étel nélküli szintek számlálója nem változik
+    game.seed = 1;
+    game.levels_without_food = LEVELS_WITHOUT_FOOD_MAX + 1;
+    if (create_random_item() != NO_ITEM) return false;
+    if (game.seed != 1 || game.levels_without_food != LEVELS_WITHOUT_FOOD_MAX + 1) return false;
+
+    // a felszabadított hely újra foglalható, utána ismét nincs hely
+    free_item(FREED_ITEM_INDEX);
+    if (allocate_item() != FREED_ITEM_INDEX) return false;
+    get_item(FREED_ITEM_INDEX)->type = ITEM_TYPE_POTION;
+    return allocate_item() == NO_ITEM;
 }
