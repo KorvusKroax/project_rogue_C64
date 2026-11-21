@@ -104,6 +104,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | E21 | nincs `seefloor` opció: sötét szobában a lámpafény (a 3×3 padlója) mindig látszik | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |
 | E22 | a nézőablak kézzel is görgethető (CRSR ⇔), a CLR/HOME a játékosra állítja | [3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés) |
 | E23 | a szoba aranya a tárgyon jelölve (ROOMGOLD), nem a szobarekordban; a szörny célja mindig tárgy vagy a játékos | [6.5](06_szornyek.md#65-célpont) |
+| E24 | a tárgynév mindig kisbetűvel kezdődik, a listákban is | [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 
 ### C64-javítások (az eredeti hibái)
 | # | röviden | hol |
@@ -124,7 +125,7 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J14 | a haste self ivása is időbe kerül | [8.2](08_targyak.md#82-bájitalok-q) |
 | J15 | `f` szabálytalan átlós irányba nem visz el időt | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J16 | lépcső nem kerül rejtett csapdára (a lépcső a csapdák előtt kerül le) | [2.10](02_szintgeneralas.md#210-lépcső) |
-| J17 | elírások javítása az üzenetekben | [függelék](fuggelek_uzenetkatalogus.md) |
+| J17 | elírások javítása az üzenetekben és a tárgynevekben (az azonosított fegyver névelője) | [függelék](fuggelek_uzenetkatalogus.md), [8.8](08_targyak.md#88-azonosítás-és-nevek) |
 | J18 | a labirintus kijáratának keresése mindig megáll (ideiglenes lehet: a labirintusok elhelyezésével együtt újragondoljuk) | [2.6](02_szintgeneralas.md#26-folyosók) |
 | J19 | a szint berendezése mindig véget ér: a `find_floor` gyűjtve választ, a lépcső és a játékos az üres szobákba kerül, a titkos folyosó-mezők utánuk dőlnek el, a hely nélküli elhelyezés kimarad | [2.](02_szintgeneralas.md#2-szintgenerálás) |
 | J20 | új szinten és betöltés után a `look` előző pozíciója a játékosé, így az `erase_lamp` nem töröl a régi szint helyén | [3.1](03_latoter_es_megjelenites.md#31-felderítés) |

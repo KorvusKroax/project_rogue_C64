@@ -56,7 +56,7 @@ Item {
   pos      // pozíció, ha a padlón van
   packch   // csomagbetű ('a'..'z'), ha a csomagban van (8.9)
   launch   // a kilövő fegyver típusa, amellyel lőni kell (nyílnál: short bow); nincs: üres (7.4) – nem tárolt, a típusból jön
-  damage   // sebzés-string közelharcban, kézben tartva ("NxM") – nem tárolt: fegyvernél a típusból (8.4), pálcánál a stick_is_staff-ból (8.7)
+  damage   // sebzés-string közelharcban, kézben tartva ("NxM") – nem tárolt: fegyvernél a típusból (8.4), pálcánál az anyagából: bot vagy pálca (8.7, 8.8)
   hurldmg  // sebzés-string dobva vagy kilőve (7.4) – nem tárolt, mint a damage
   count    // darabszám kötegelt tárgynál (nyíl, dart, shuriken, dagger, bájital, tekercs, étel)
   hplus    // találati bónusz (fegyvernél; átkozott fegyvernél negatív) (7.1, 8.4)
@@ -102,11 +102,12 @@ GameState {
   }
   wander_timer           // időzítő a vándorló szörny démon indulásáig (6.2)
   wander_check_tick      // a vándorló démon körszámlálója (between, 6.2)
-  know[type][which]      // a tárgytípus azonosítva van-e (8.2, 8.3)
-  guess[type][which]     // a játékos által a típusnak adott név ('c'), ha még nincs azonosítva; index a névkészletbe (1.4.1)
-  names[type][which]     // azonosítatlan nevek ebben a játékban: színek, kövek, anyagok (8.8)
+  know[type][which]      // a tárgytípus ismerete (8.2, 8.3): 0 = ismeretlen; 1..MAX_NAMES = ismeretlen, a játékos nevet adott neki ('c'),
+                         // index a névkészletbe (1.4.1); 0xff = azonosítva. Egy érték elég, mert azonosításkor a név törlődik,
+                         // azonosított típus pedig nem nevezhető el
+  names[type][which]     // azonosítatlan nevek ebben a játékban: színek, kövek, anyagok (8.8); a pálcánál az index a közös anyaglistába mutat,
+                         // ebből tudható, hogy bot (staff) vagy pálca (wand)
   scroll_title_seed      // ebből állnak elő a tekercsfeliratok minden kiíráskor; a feliratok nem tárolódnak (8.8)
-  stick_is_staff[which]  // az adott pálcatípus ebben a játékban bot (staff) vagy pálca (wand) (8.8)
   rooms[9], passages[]   // a 9 szoba és a folyosórendszerek; C64-en egy tábla, a rendszerek a szobák után (1.1.1, 1.4.7)
   exits                  // a közös ajtótábla (1.4.7)
   monsters               // a szinten lévő szörnyek listája
@@ -255,7 +256,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 |---|---|---|
 | szörnyek | MAX_MONSTERS = 40 | 9 kezdő + kincses szoba (≤ 12) + vándorlók és teremtett szörnyek; rekordonként 18 bájt ([1.4.8](#148-szörnyrekord)) |
 | tárgyak | MAX_ITEMS = 96 | padló, csomag és szörnycsomagok együtt; az arany is tárgy; rekordonként 11 bájt ([1.4.6](#146-tárgyrekord)); a fejlesztői mód foglaltsága alapján később csökkenthető. A szintgenerálás után legfeljebb 73 hely foglalt (23 a csomagban, 9 arany, 10 kincs, 9 tárgy, 1 amulett, 21 szörnytárgy); 81 alá csökkentve a generálás betöltheti a táblát, ekkor a darabolásnak tartalékot kell hagyni |
-| nevek (`guess`, `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusonkénti `guess` és a tárgy `label` mezője 1 bájtos index ide (0 = nincs) |
+| nevek (a típusnév és a `label`) | MAX_NAMES = 32 | közös névkészlet, egy-egy ≤ 20 karakteres szöveg (21 bájt); a típusismeret (`know`) 1..MAX_NAMES értéke és a tárgy `label` mezője 1 bájtos index ide (a `label`-nél 0 = nincs). Fordítási feltétel: MAX_NAMES ≤ 254, mert a `know`-ban a 0 és a 0xff foglalt |
 | szobák | 9 + MAX_PASSAGES (12) | a szobák és a folyosórendszerek ([1.4.7](#147-kijáratok-és-folyosók)) |
 | kijáratok | MAX_EXITS = 2 × MAX_CORRIDORS = 24 | közös ajtótábla a szint összes kijáratáról ([1.4.7](#147-kijáratok-és-folyosók)); nem telhet be |
 
@@ -286,7 +287,7 @@ Egy sebzés-string legfeljebb 3 szegmens; minden szegmens egy (N, M) bájtpár. 
 | szöveg | legfeljebb |
 |---|---|
 | játékosnév (`name`), gyümölcsnév (`fruit`) | 15 karakter |
-| elnevezés (`guess`, `label`) | 20 karakter |
+| elnevezés (típusnév, `label`) | 20 karakter |
 | mentésfájl neve (`file`) | 16 karakter (CBM DOS) |
 | tekercsfelirat | 30 karakter (az eredetiben 40, [8.8](08_targyak.md#88-azonosítás-és-nevek)) |
 

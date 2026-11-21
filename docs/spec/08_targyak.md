@@ -11,9 +11,11 @@ new_item():
      which = (rnd(10) != 0) ? FOOD_RATION : FRUIT  // 90% / 10%
   else:
      which = pick_by_prob(TABLE[type])
-  init per type (8.2..8.7)
+  init per type (8.2..8.7)  // a darabszám 1, kivéve a kötegelt fegyvereket (8.4)
 ```
 A `no_food` minden új szintnél nő (2), és csak étel *generálásakor* nullázódik; a kényszerített étel a `no_food > 3` utáni első tárgygenerálás (kincses szobában is).
+
+A típusonkénti kezdőérték két részből áll: ami minden létrehozáskor jár (a kezdőfelszerelésnél is, [5.1](05_jatekos.md#51-kezdés)), és ami csak a véletlen generáláskor: a fegyver és a páncél átka és bónusza ([8.4](#84-fegyverek)–[8.5](#85-páncélok)). Gyűrű és pálca csak véletlen generálással jön létre.
 
 ## 8.2 Bájitalok (`q`)
 | # | név | esély | érték | hatás |
@@ -53,7 +55,7 @@ Nem megfelelő tárgyra a `q`, `r` és `e` is időbe kerül („yuk! Why would y
 | 6 | identify scroll | 10 | 80 | lásd lent |
 | 7 | identify weapon | 6 | 80 | lásd lent |
 | 8 | identify armor | 7 | 100 | lásd lent |
-| 9 | identify ring/stick | 10 | 115 | lásd lent |
+| 9 | identify ring, wand or staff | 10 | 115 | lásd lent |
 | 10 | scare monster | 3 | 200 | olvasva: „you hear maniacal laughter in the distance”. Padlón: szörny nem lép rá, nem születik rá. Az **első** felvételkor ISFOUND jelet kap; ha valaha letették, a következő felvételkor „the scroll turns to dust as you pick it up” |
 | 11 | food detection | 2 | 60 | ételek helye külön képernyőn („Your nose tingles and you smell food”, utána `--More--`); ha nincs: „your nose tingles” |
 | 12 | teleportation | 5 | 165 | teleport(); csak akkor azonosítódik, ha más szobába került |
@@ -92,13 +94,17 @@ A fegyvertípusok:
 | 8 | spear | 12 | 5 | 2x3 | 1x6 | |
 
 ```
-init_weapon(weapon):
+init_weapon(weapon):  // minden létrehozáskor (8.1)
+  hplus = dplus = 0
+  count = a táblából (megjegyzés oszlop), a többinél 1
+  ISMANY tárgyaknál és a daggernél group = új azonosító (a dagger nem ISMANY, mégis kötegel)
+     // 1 bájt: olyan 1..255 közötti érték, amely egyetlen meglévő tárgynál sincs használatban, így két köteg sosem ütközik;
+     // ilyen mindig van, mert legfeljebb MAX_ITEMS − 1 másik tárgy létezik, és MAX_ITEMS ≤ 255 (1.4.1)
+
+csak véletlen generáláskor (new_item), az init_weapon után:
   roll = rnd(100)
   if roll < 10:  weapon.ISCURSED; weapon.hplus -= rnd(3)+1  // 10%: átkozott, negatív bónusz
   else if roll < 15: weapon.hplus += rnd(3)+1               // 5%: pozitív bónusz
-  // dplus = 0
-  ISMANY tárgyaknál és a daggernél group = új azonosító (a dagger nem ISMANY, mégis kötegel)
-     // 1 bájt: olyan 1..255 közötti érték, amely egyetlen meglévő tárgynál sincs használatban, így két köteg sosem ütközik
 ```
 
 ## 8.5 Páncélok
@@ -116,8 +122,10 @@ A páncéltípusok:
 | 7 | plate mail | 5 | 150 | 3 |
 
 ```
-init_armor(armor):
+init_armor(armor):  // minden létrehozáskor (8.1)
   armor.arm = base                                     // base: a típus védelme a táblából
+
+csak véletlen generáláskor (new_item), az init_armor után:
   roll = rnd(100)
   if roll < 20: armor.ISCURSED; armor.arm += rnd(3)+1  // 20%: átkozott, rosszabb
   else if roll < 28: armor.arm -= rnd(3)+1             // 8%: jobb
@@ -171,7 +179,7 @@ Két kéz (bal/jobb). Átkozott nem vehető le.
 ```
 init_stick(stick):
   stick.arm (charges) = (stick.which == light) ? rnd(10)+10 : rnd(5)+3
-  // sebzés (nem tárolt, a stick_is_staff-ból): bot közelharcban 2x3, pálca 1x1; dobva mindkettő 1x1
+  // sebzés (nem tárolt; bot vagy pálca az anyagából, 8.8): bot közelharcban 2x3, pálca 1x1; dobva mindkettő 1x1
 
 zap():
   stick = ask_item(STICK); dir = ask_direction (ha kell)
@@ -194,8 +202,10 @@ Játék indulásakor minden típus kap egy véletlen, a játék végéig rögzí
 |---|---|
 | **Bájital színek** (27, ebből 14 kell) | amber, aquamarine, black, blue, brown, clear, crimson, cyan, ecru, gold, green, grey, magenta, orange, pink, plaid, purple, red, silver, tan, tangerine, topaz, turquoise, vermilion, violet, white, yellow |
 | **Gyűrű kövek** (26, ebből 14 kell) – a kő értéke hozzáadódik a gyűrű értékéhez | agate 25, alexandrite 40, amethyst 50, carnelian 40, diamond 300, emerald 300, germanium 225, granite 5, garnet 50, jade 150, kryptonite 300, lapis lazuli 50, moonstone 50, obsidian 15, onyx 60, opal 200, pearl 220, peridot 63, ruby 350, sapphire 285, stibotantalite 200, tiger eye 50, topaz 60, turquoise 70, taaffeite 300, zircon 80 |
-| **Bot – fa** (33) | avocado wood, balsa, bamboo, banyan, birch, cedar, cherry, cinnibar, cypress, dogwood, driftwood, ebony, elm, eucalyptus, fall, hemlock, holly, ironwood, kukui wood, mahogany, manzanita, maple, oaken, persimmon wood, pecan, pine, poplar, redwood, rosewood, spruce, teak, walnut, zebrawood |
 | **Pálca – fém** (22) | aluminum, beryllium, bone, brass, bronze, copper, electrum, gold, iron, lead, magnesium, mercury, nickel, pewter, platinum, steel, silver, silicon, tin, titanium, tungsten, zinc |
+| **Bot – fa** (33) | avocado wood, balsa, bamboo, banyan, birch, cedar, cherry, cinnibar, cypress, dogwood, driftwood, ebony, elm, eucalyptus, fall, hemlock, holly, ironwood, kukui wood, mahogany, manzanita, maple, oaken, persimmon wood, pecan, pine, poplar, redwood, rosewood, spruce, teak, walnut, zebrawood |
+
+A pálcaanyagok egy közös listát alkotnak: előbb a 22 fém, utána a 33 fa. Az index mutatja, hogy az adott pálcatípus pálca (fém) vagy bot (fa).
 
 **Tekercsfelirat-szótagok** (146):
 ```
@@ -203,36 +213,46 @@ a ab ag aks ala an app arg arze ash bek bie bit bjor blu bot bu byt comp con cos
 ```
 
 ```
-init_materials():  // bot vagy pálca típusonként
+init_materials():  // pálcatípusonként egy anyag, ismétlés nélkül; index a közös anyaglistába
   for each stick type:
     loop:
-      if rnd(2) == 0: index = rnd(len(metal)); if unused: type = "wand", anyag = metal[index]; break
-      else:           index = rnd(len(wood));  if unused: type = "staff", anyag = wood[index]; break
+      if rnd(2) == 0: index = rnd(22)          // fém: pálca (wand)
+      else:           index = 22 + rnd(33)     // fa: bot (staff)
+      if unused: anyag = index; break
+  // bot (staff), ha index >= 22; ebből jön a név és a közelharci sebzés (8.7)
 
 init_names():  // játék elején
   loop:
     scroll_title_seed = RN                       // 16 bit, a GameState-ben
-    if a 18 felirat mind különböző: break        // szinte mindig elsőre
+    a 18 felirat egyszer előáll, mindegyik szövegéből egy 16 bites ujjlenyomat
+    if nincs két egyforma ujjlenyomat: break     // szinte mindig elsőre
+  // a szöveget kell vizsgálni, nem a szótagokat: két különböző szótagsor is adhat egyforma feliratot (o + od = ood);
+  // ha két különböző felirat ujjlenyomata egyezik, az újrasorsolás fölösleges, de ártalmatlan
 
 get_scroll_title(which):  // minden kiíráskor; saját álvéletlen-generátor, nem az RN
   állapot = scroll_title_seed és which keveréke
   rnd(3)+2 szó, mindegyik rnd(3)+1 szótagból a fenti szótagok közül
-  ha a következő szótag (az előtte álló szóközzel) a 30 karaktert túllépné: a felirat itt véget ér
+  ha a következő szótag a 30 karaktert túllépné (a szó első szótagja az előtte álló szóközzel együtt): a felirat itt véget ér
 ```
-A feliratok nem tárolódnak, csak a `scroll_title_seed`; ugyanabból az értékből mindig ugyanaz a 18 felirat jön ki, így a mentés után is. A feliratgenerátor saját állapottal fut, ezért a kiírás nem hívja az RN-t ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)). A színek, kövek és anyagok a táblájukba mutató indexek.
+A feliratok nem tárolódnak, csak a `scroll_title_seed`; ugyanabból az értékből mindig ugyanaz a 18 felirat jön ki, így a mentés után is. A feliratgenerátor saját állapottal fut, ezért a kiírás nem hívja az RN-t ([10.9](10_platform.md#109-fejlesztői-build-és-determinizmus)). A színek és a kövek a táblájukba, az anyagok a közös anyaglistába mutató indexek.
 
 > **C64-eltérés (E19):** a szótagok az eredetiéi (az eredeti listában a „nes” kétszer szerepel, itt egyszer, így 146). A felirat legfeljebb 30 karakter (az eredetiben 40); ha egy szótag nem fér el, az egész felirat véget ér, nem csak az adott szó, így üres szó és dupla szóköz nem keletkezik. A feliratok egy játékon belül mind különbözők (az eredeti ezt nem ellenőrizte), és nem tárolódnak.
 
-**Tárgynevek:**
+**Tárgynevek** – a név mindig kisbetűvel kezdődik, a csomaglistában is („a) a blue potion”); üzenet elején a nagybetűt az üzenetsáv adja ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)):
 | állapot | bájital / gyűrű / pálca | tekercs |
 |---|---|---|
-| ismert | `A potion of healing(blue)`, `2 potions of …`; gyűrűnél `A ring of protection [+1](ruby)`; pálcánál `A wand of light [5 charges](iron)` | `A scroll of identify potion` |
-| elnevezett (`c`) | `A potion called <név>(blue)` | `A scroll called <név>` |
-| ismeretlen | `A blue potion`, `2 blue potions` | `A scroll titled 'zok bie'` |
+| ismert | `a potion of healing(blue)`, `2 potions of …`; gyűrűnél `a ring of protection [+1](ruby)`; pálcánál `a wand of light [5 charges](iron)` | `a scroll of identify potion` |
+| elnevezett (`c`) | `a potion called <név>(blue)` | `a scroll called <név>` |
+| ismeretlen | `a blue potion`, `an amber potion`, `2 blue potions` | `a scroll titled 'zok bie'` |
 
-Fegyver: `A mace`, azonosítva `A +1,+1 mace`, köteg: `25 +0,+0 arrows`. Páncél: `ring mail`, azonosítva `+1 ring mail [protection 4]` (a szám `10 − arm`, az előjeles szám `alap − arm`). Étel: `Some food` / `3 rations of food`, gyümölcs `A slime-mold` / `2 slime-molds`. Arany: `25 Gold pieces`. Amulett: `The Amulet of Yendor`. A csomaglistában a használt tárgyak után: `(weapon in hand)`, `(being worn)`, `(on left hand)` / `(on right hand)`.
+Fegyver: `a mace`, `an arrow`, azonosítva `a +1,+1 mace`, `a +0,+0 arrow`, köteg: `25 +0,+0 arrows`; címkével (`c`) `a +1,+1 mace called <címke>`. Páncél: `ring mail`, azonosítva `+1 ring mail [protection 4]` (a szám `10 − arm`, az előjeles szám `alap − arm`); címkével `ring mail called <címke>`. Étel: `some food` / `3 rations of food`, gyümölcs (a `fruit` opció, [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)) `a slime-mold` / `2 slime-molds`. Arany: `25 Gold pieces`. Amulett: `the Amulet of Yendor`. A csomaglistában a használt tárgyak után: `(weapon in hand)`, `(being worn)`, `(on left hand)` / `(on right hand)`.
 
+- **Névelő:** `an`, ha a névelő utáni első karakter magánhangzó (`a e i o u`), különben `a`. Az ismert és az elnevezett bájital, gyűrű és pálca, valamint a tekercs ezért mindig `a`-t kap, és az azonosított fegyver is, mert a bónusza előjellel kezdődik. A páncélnak nincs névelője.
 - Fegyver/páncél bónusza, pálca töltése, gyűrű modja csak ISKNOW esetén látszik.
+
+> **C64-javítás (J17):** *eredetileg* a fegyver névelője a fegyver nevéből jött, akkor is, ha előtte a bónusz állt: „An +0,+0 arrow”.
+
+> **C64-eltérés (E24):** *eredetileg* a név a listákban és az üzenet elején nagybetűvel kezdődött („a) A blue potion”). Itt mindig kisbetűvel kezdődik: az üzenet elejét az üzenetsáv teszi nagybetűssé, a listasor a kisbetűs alakot mutatja.
 
 **Mágikus tárgy** (magic detection, nymph): potion, scroll, stick, ring, amulet mindig; páncél ha ISPROT vagy módosított (`arm != base`); fegyver ha `hplus != 0 or dplus != 0`.
 
