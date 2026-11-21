@@ -104,8 +104,7 @@ int test_item_table(uint16_t i)
     return allocate_item() == NO_ITEM && game.item_count == MAX_ITEMS;
 }
 
-// a lista elemei sorban éppen az expected első count eleme, utána vége
-static bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count)
+bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count)
 {
     uint8_t index = list_first;
     for (uint8_t position = 0; position < count; position++) {

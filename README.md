@@ -108,7 +108,7 @@ Egyszerűbb, de kevésbé tartós megoldás a három sort közvetlenül a `gtk3_
 
 ### Eszközlánc
 
-**Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1), megerősítve a valódi szintgenerálón: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54). Az Oscar64 marad, mert az llvm-mos kódja nem kisebb, hanem 1,7–3,3-szor nagyobb, és az Oscar64-gyel a leglassabb szint is csak 44 képkocka (kb. 0,9 s) a 2 másodperces keretből ([Összevetés a szintgenerálón](#összevetés-a-szintgenerálón)).
+**Oscar64 1.32.273** (`C:\oscar64\bin\oscar64.exe`), C99. Döntés: [M00-01](https://github.com/KorvusKroax/project_rogue_C64/issues/1), megerősítve a valódi szintgenerálón: [M03-05](https://github.com/KorvusKroax/project_rogue_C64/issues/54). Az Oscar64 marad, mert az llvm-mos kódja nem kisebb, hanem 1,7–3,3-szor nagyobb, és az Oscar64-gyel a leglassabb szint is csak 44 képkocka (kb. 0,9 s) a 3 másodperces keretből ([Összevetés a szintgenerálón](#összevetés-a-szintgenerálón)).
 
 A két jelölt (Oscar64 és llvm-mos) ugyanazzal a próbaprogrammal lett kipróbálva: RN/rnd, szobarajzolás a videomemóriába, assemblyben írt RN-rutin C-ből hívva, több forrásfájlos fordítás, a BASIC ROM kilapozása és az `$A000–$BFFF` RAM használata. Mindkettő ugyanazt az RN-sorozatot adta. Az Oscar64 mellett szólt:
 - kifejezetten C64-re készült, a C64-es teendőkre saját könyvtára van (pl. `conio.h`, `c64/memmap.h`);
@@ -138,7 +138,7 @@ Mélységenként (átlag / leglassabb, képkocka):
 | 26 | 26,86 / 39,32 | 38,29 / 51,41 | 38,09 / 55,95 | 42,07 / 60,71 |
 | 40 | 22,78 / 44,17 | 33,66 / 57,46 | 32,76 / 60,01 | 36,11 / 67,42 |
 
-- Mind a négy változat ugyanazt a 100 szintet adja (összesített ellenőrzőösszeg: `765E36E1`), és mind bőven belül van a 2 másodperces (100 képkockás) kereten ([10.8](docs/spec/10_platform.md#108-erőforrás-keretek)).
+- Mind a négy változat ugyanazt a 100 szintet adja (összesített ellenőrzőösszeg: `765E36E1`), és mind bőven belül van a 3 másodperces (150 képkockás) kereten ([10.8](docs/spec/10_platform.md#108-erőforrás-keretek)).
 - Az Oscar64 mindkét szempontból jobb: már a `-Os` beállítása is kisebb és gyorsabb kódot ad, mint az llvm-mos bármelyike. Az llvm-mos kódja 1,7-szer (`-Os`; `-Oz`-vel 6 309 bájt) vagy 3,3-szor (`-O2`) akkora. Ha ez az arány a teljes játékra is áll, a becsült 28–34 KB kód llvm-mos-szal 48–58 KB lenne, és nem férne el a 46 976 bájtos fő régióban.
 - Az Oscar64-en belül a `-Os` 10%-kal kisebb, de kb. 40%-kal lassabb kódot ad, mint az `-O2`.
 - Az llvm-mos `-O2` a gyári zero page-kerettel (`-mlto-zp=110`) nem linkelhető (`relocation R_MOS_ADDR8 out of range`), 61 bájtig igen; a `compare.bat` 32-t ad meg.

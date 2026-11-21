@@ -70,12 +70,23 @@ union ItemProperties {
     uint16_t gold_amount;                       // aranynál a mennyiség
 };
 
-// egy tárgy a tárgytáblában; a listákba (a padlón lévő tárgyaké) a next fűzi
+// a padlón lévő tárgy pozíciója a térképen
+struct FloorPosition {
+    uint8_t  x;
+    uint8_t  y;
+};
+
+// a tárgy helye, attól függően, melyik listában van: a padlón a pozíció, a csomagban a betű; egy szörny csomagjában nincs jelentése
+union ItemLocation {
+    struct FloorPosition floor_position;
+    uint8_t  pack_letter;                       // 'a'..'z' (pack.h)
+};
+
+// egy tárgy a tárgytáblában; a listákba (a padlón lévő tárgyaké, a csomag) a next fűzi
 struct Item {
     uint8_t  type;                              // ITEM_TYPE_ (items.h); szabad helyen ITEM_TYPE_FREE
     uint8_t  which;                             // az altípus a típuson belül
-    uint8_t  x;                                 // a padlón: a pozíció a térképen
-    uint8_t  y;
+    union ItemLocation location;
     uint8_t  count;                             // darabszám, pl. egy nyílkötegé
     union ItemProperties properties;
     uint8_t  flags;                             // ITEM_ flagek (items.h)
@@ -191,6 +202,7 @@ struct GameState {
     struct Item items[MAX_ITEMS];               // a tárgytábla: a szabad helyet a típus jelzi (items.h)
     uint8_t  item_count;                        // a tárgytábla foglalt helyeinek száma
     uint8_t  first_floor_item;                  // a padlón lévő tárgyak listájának eleje (0 = üres)
+    uint8_t  first_pack_item;                   // a csomag listájának eleje (0 = üres; pack.h)
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
     uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)

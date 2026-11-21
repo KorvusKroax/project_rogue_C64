@@ -270,7 +270,8 @@ pick_up(item):
     POTION/SCROLL/FOOD azonos which → count++
     fegyver azonos which és group → count += item.count
   else: új bejegyzés, item.packch = legkisebb szabad betű 'a'..'z'; a többi betű nem csúszik
-        a csomag típus szerint rendezett: az új tárgy az azonos típusúak mellé kerül
+        a csomag típus szerint rendezett: az új tárgy az utolsó azonos altípusú után kerül, ha nincs ilyen,
+        az utolsó azonos típusú után, ha az sincs, a csomag végére
   item.ISFOUND = true
   if AMULET: has_amulet = true
 ```
@@ -278,7 +279,7 @@ A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padl
 
 Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Bájital-, tekercs- és ételkötegből egy darab kerül le, a köteg darabolódik; a fegyverköteg (nyíl, dart, shuriken, tőr) egészben kerül le. Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
-A csomag a tárgytábla rekordjainak láncolt listája ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); a 23-as `MAX_PACK` korlát a darabszámra vonatkozik, nem a rekordokra. Felvételkor és összevonáskor a felvett rekord felszabadul, ha a köteghez csatolódott.
+A csomag a tárgytábla rekordjainak láncolt listája ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); a 23-as `MAX_PACK` korlát a darabszámra vonatkozik, nem a rekordokra. Felvételkor és összevonáskor a felvett rekord felszabadul, ha a köteghez csatolódott. A betűket nem tárolja külön tábla: a szabad betű a csomag tárgyainak betűiből adódik. *Eredetileg* a nem kötegelő, azonos altípusú tárgy (pl. egy második ring mail) az első ilyen után került, nem az utolsó után; a különbség csak a csomaglista sorrendjében látszik.
 
 ## 8.10 Arany, Amulett, Étel
 - Arany: `arm` = mennyiség; nem foglal csomaghelyet. A szoba berendezésekor lerakott arany ROOMGOLD jelzőt kap ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)), ezt őrzi a kapzsi szörny ([6.4](06_szornyek.md#64-ébresztés), E23).

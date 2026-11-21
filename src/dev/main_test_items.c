@@ -15,6 +15,9 @@ static const struct DevTest item_tests[] = {
     { "ITEM-SCROLL TITLES", test_scroll_titles, SCROLL_TITLE_TEST_SEED_COUNT },
     { "ITEM-NAMES", test_item_names, 1 },
     { "ITEM-LONGEST NAME", test_longest_item_name, 1 },
+    { "PACK-SLOTS", test_pack_slots, 1 },
+    { "PACK-LETTERS", test_pack_letters, 1 },
+    { "PACK-ORDER", test_pack_order, 1 },
 };
 
 int main(void)

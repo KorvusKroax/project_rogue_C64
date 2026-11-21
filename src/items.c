@@ -180,6 +180,7 @@ void clear_item_table(void)
     }
     game.item_count = 0;
     game.first_floor_item = NO_ITEM;
+    game.first_pack_item = NO_ITEM;
 }
 
 uint8_t allocate_item(void)
@@ -416,8 +417,8 @@ void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y)
 {
     struct Item *item = get_item(index);
 
-    item->x = x;
-    item->y = y;
+    item->location.floor_position.x = x;
+    item->location.floor_position.y = y;
     insert_item_after(&game.first_floor_item, NO_ITEM, index);
     set_map_character(x, y, get_item_character(item->type));
 }

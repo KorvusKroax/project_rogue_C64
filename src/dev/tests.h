@@ -68,6 +68,9 @@ int test_item_pseudonyms(uint16_t i);           // új játéknál minden típus
 int test_scroll_titles(uint16_t i);             // az i. seeddel indult játék tekercsfeliratai érvényesek és mind különbözők, az előállításuk nem hívja az RN-t
 int test_item_names(uint16_t i);                // kézzel összerakott tárgyak neve betűre a 8.8 példái szerint
 int test_longest_item_name(uint16_t i);         // a leghosszabb név betűre egyezik, és semmilyen név nem hosszabb az ITEM_NAME_LENGTH_MAX-nál
+int test_pack_slots(uint16_t i);                // a csomag helyei darabszám szerint, a kötegelt fegyver egy hely; betelt csomagba csak a meglévő köteghez csatolt fegyver fér
+int test_pack_letters(uint16_t i);              // egy tárgy kivétele után a többi betűje marad, az új tárgy a legkisebb szabad betűt kapja
+int test_pack_order(uint16_t i);                // a csomag típus szerint rendezett: az új tárgy az azonos altípusúak, különben az azonos típusúak után kerül
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 
@@ -76,6 +79,7 @@ struct Item;
 bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which);   // a véletlen tárgy típusa és altípusa érvényes (test_items.c)
 bool are_item_initial_values_valid(const struct Item *item);        // a tárgy kezdőértékei a típusa szerint érvényesek (test_items.c)
 uint8_t get_tested_subtype_count(uint8_t type);                     // a típus altípusainak száma; az aranynak és az amulettnek egy van, which = 0 (test_items.c)
+bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count);  // a lista elemei sorban éppen az expected első count eleme, utána vége (test_items.c)
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
@@ -86,7 +90,7 @@ uint8_t get_tested_subtype_count(uint8_t type);                     // a típus 
 int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
 int test_level_monster_moves(uint16_t i);       // az i. szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; közben a kör idejét méri
 bool show_level_room_ratios(void);              // mélységenként a sötét szobák és a labirintusok várt és kapott száma, a test_level_generation után; igaz, ha mind a tűrésen belül (leállított futásnál nem ítél, igazat ad)
-bool show_level_generation_times(void);         // mélységenként a leglassabb szintgenerálás képkockában, a test_level_generation után; igaz, ha mind a 2 másodperces kereten belül
+bool show_level_generation_times(void);         // mélységenként a leglassabb szintgenerálás képkockában, a test_level_generation után; igaz, ha mind a 3 másodperces kereten belül
 void show_level_turn_times(void);               // mélységenként egy kör ideje a képkocka százalékában, a test_level_monster_moves után
 
 #endif

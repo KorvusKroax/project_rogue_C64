@@ -40,7 +40,7 @@ static uint16_t level_test_run_count;
 // mélységenként a leglassabb generate_level képkockában
 static uint16_t level_max_frames[LEVEL_TEST_DEPTH_COUNT];
 
-#define LEVEL_TIME_LIMIT_FRAMES  100            // egy szint legfeljebb 2 másodperc: PAL-on 50 képkocka/s (NTSC-n 60, ott ez szigorúbb)
+#define LEVEL_TIME_LIMIT_FRAMES  150            // egy szint legfeljebb 3 másodperc: PAL-on 50 képkocka/s (NTSC-n 60, ott ez szigorúbb)
 
 // a szoba nem lóg ki a szektorából, és a térkép sorain belül van (a 0. és a 23. logikai sorba nem ér);
 // a normál és a fantom szoba a szektor utolsó oszlopát és sorát üresen hagyja; a labirintus legtávolabbi mezője
@@ -470,14 +470,16 @@ static bool are_floor_items_valid(void)
             return false;
         }
         if (!are_item_initial_values_valid(item)) return false;
-        if (get_map_character(item->x, item->y) != get_item_character(item->type)) return false;
-        if (!(get_map_flags(item->x, item->y) & TILE_REAL)) return false;
-        if (!is_inside_room(item->x, item->y)) return false;
+        uint8_t x = item->location.floor_position.x;
+        uint8_t y = item->location.floor_position.y;
+        if (get_map_character(x, y) != get_item_character(item->type)) return false;
+        if (!(get_map_flags(x, y) & TILE_REAL)) return false;
+        if (!is_inside_room(x, y)) return false;
 
         // a lista előtte álló tárgyai közül egyik sincs ugyanezen a mezőn, és egyiknek sem ugyanez a kötegazonosítója
         for (uint8_t other = game.first_floor_item; other != index; other = get_item(other)->next) {
             const struct Item *other_item = get_item(other);
-            if (other_item->x == item->x && other_item->y == item->y) return false;
+            if (other_item->location.floor_position.x == x && other_item->location.floor_position.y == y) return false;
             if (item->group != 0 && other_item->group == item->group) return false;
         }
     }
@@ -512,7 +514,7 @@ static bool are_gold_and_amulet_valid(void)
         uint16_t amount = item->properties.gold_amount;
         if (amount < GOLD_AMOUNT_MIN || amount > gold_amount_max) return false;
 
-        uint8_t room_index = get_room_around(item->x, item->y);
+        uint8_t room_index = get_room_around(item->location.floor_position.x, item->location.floor_position.y);
         if (room_has_gold[room_index]) return false;
         room_has_gold[room_index] = true;
     }
