@@ -179,7 +179,7 @@ void free_item(uint8_t index)
     get_item(index)->type = ITEM_TYPE_FREE;
 }
 
-static const uint8_t item_type_characters[RANDOM_ITEM_TYPE_COUNT] = {
+static const uint8_t item_type_characters[ITEM_TYPE_COUNT] = {
     CHAR_POTION,
     CHAR_SCROLL,
     CHAR_FOOD,
@@ -187,11 +187,34 @@ static const uint8_t item_type_characters[RANDOM_ITEM_TYPE_COUNT] = {
     CHAR_ARMOR,
     CHAR_RING,
     CHAR_STICK,
+    CHAR_GOLD,
+    CHAR_AMULET,
 };
 
 uint8_t get_item_character(uint8_t type)
 {
     return item_type_characters[type];
+}
+
+uint8_t create_item(uint8_t type, uint8_t which)
+{
+    uint8_t index = allocate_item();
+    if (index == NO_ITEM) return NO_ITEM;
+
+    struct Item *item = get_item(index);
+    item->type = type;
+    item->which = which;
+    return index;
+}
+
+uint8_t create_gold(void)
+{
+    uint8_t index = create_item(ITEM_TYPE_GOLD, 0);
+    if (index == NO_ITEM) return NO_ITEM;
+
+    uint16_t amount = rnd(GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * game.dungeon_level) + GOLD_AMOUNT_MIN;
+    get_item(index)->properties.gold_amount = amount;
+    return index;
 }
 
 uint8_t create_random_item(void)

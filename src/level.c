@@ -152,7 +152,7 @@ static bool find_monster_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
 #define MONSTER_CHANCE_WITH_GOLD      80        // százalék: az aranyat gyakran szörny őrzi
 #define MONSTER_CHANCE_WITHOUT_GOLD   25
 
-// szobánként: arany 1/2 eséllyel, ha van neki üres padló; utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
+// szobánként: arany 1/2 eséllyel, ha van neki üres padló és helye a tárgytáblában; utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
 static void place_gold_and_monsters(void)
 {
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
@@ -164,8 +164,12 @@ static void place_gold_and_monsters(void)
 
         // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) lehet arany; a dobás ettől függetlenül lefut
         if (rnd(GOLD_CHANCE_DIVISOR) == 0 && find_empty_floor(room_index, &x, &y)) {
-            // ide jön: az arany mennyisége és lerakása (x, y)
-            has_gold = true;
+            uint8_t gold_index = create_gold();
+            if (gold_index != NO_ITEM) {
+                // ide jön: a szoba aranya (ROOMGOLD), ezt őrzi a kapzsi szörny
+                put_item_on_floor(gold_index, x, y);
+                has_gold = true;
+            }
         }
 
         uint8_t monster_chance = has_gold ? MONSTER_CHANCE_WITH_GOLD : MONSTER_CHANCE_WITHOUT_GOLD;
@@ -252,7 +256,22 @@ static void place_treasure_room(void)
     game.dungeon_level--;
 }
 
-// a szint tárgyai: 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel kincses szoba, aztán ITEM_ATTEMPTS próba bármely nem fantom szobában
+// az amulett egy véletlen nem fantom szoba üres padlójára; kimarad, ha nincs hely, vagy betelt a tárgytábla
+static void place_amulet(void)
+{
+    uint8_t x;
+    uint8_t y;
+
+    if (!find_empty_floor(ANY_ROOM, &x, &y)) return;
+
+    uint8_t index = create_item(ITEM_TYPE_AMULET, 0);
+    if (index != NO_ITEM) {
+        put_item_on_floor(index, x, y);
+    }
+}
+
+// a szint tárgyai: 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel kincses szoba, aztán ITEM_ATTEMPTS próba bármely nem fantom szobában,
+// végül az AMULET_LEVEL mélységtől az amulett
 static void place_items(void)
 {
     // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) van tárgy
@@ -265,7 +284,11 @@ static void place_items(void)
             place_random_item(ANY_ROOM);
         }
     }
-    // ide jön: az amulett az AMULET_LEVEL mélységtől, amíg a játékosnál nincs
+
+    // ide jön: ha a játékosnál már ott van (has_amulet), nincs újabb
+    if (game.dungeon_level >= AMULET_LEVEL) {
+        place_amulet();
+    }
 }
 
 // a lépcső egy véletlen nem fantom szoba üres padlójára (labirintusban járatra)

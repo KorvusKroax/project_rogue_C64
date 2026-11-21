@@ -200,7 +200,7 @@ static bool are_map_tiles_valid(void)
 // a jel egy tárgy jele
 static bool is_item_character(uint8_t character)
 {
-    for (uint8_t type = 0; type < RANDOM_ITEM_TYPE_COUNT; type++) {
+    for (uint8_t type = 0; type < ITEM_TYPE_COUNT; type++) {
         if (get_item_character(type) == character) return true;
     }
     return false;
@@ -463,7 +463,11 @@ static bool are_floor_items_valid(void)
         floor_item_count++;
 
         const struct Item *item = get_item(index);
-        if (!is_item_type_and_subtype_valid(item->type, item->which)) return false;
+        if (item->type == ITEM_TYPE_GOLD || item->type == ITEM_TYPE_AMULET) {
+            if (item->which != 0) return false;
+        } else if (!is_item_type_and_subtype_valid(item->type, item->which)) {
+            return false;
+        }
         if (get_map_character(item->x, item->y) != get_item_character(item->type)) return false;
         if (!(get_map_flags(item->x, item->y) & TILE_REAL)) return false;
         if (!is_inside_room(item->x, item->y)) return false;
@@ -481,6 +485,36 @@ static bool are_floor_items_valid(void)
         }
     }
     return occupied_count == floor_item_count;
+}
+
+// az arany: szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban;
+// az amulett: az AMULET_LEVEL mélységtől pontosan egy, alatta egy sem;
+// az are_floor_items_valid után, mert az ellenőrzi, hogy a lista véges, és minden tárgy egy szoba falain belül van
+static bool are_gold_and_amulet_valid(void)
+{
+    bool room_has_gold[ROOM_COUNT];
+    memset(room_has_gold, 0, sizeof(room_has_gold));
+    uint8_t amulet_count = 0;
+    uint16_t gold_amount_max = GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * game.dungeon_level + GOLD_AMOUNT_MIN - 1;
+
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct Item *item = get_item(index);
+
+        if (item->type == ITEM_TYPE_AMULET) {
+            amulet_count++;
+        }
+        if (item->type != ITEM_TYPE_GOLD) continue;
+
+        uint16_t amount = item->properties.gold_amount;
+        if (amount < GOLD_AMOUNT_MIN || amount > gold_amount_max) return false;
+
+        uint8_t room_index = get_room_around(item->x, item->y);
+        if (room_has_gold[room_index]) return false;
+        room_has_gold[room_index] = true;
+    }
+
+    uint8_t expected_amulet_count = game.dungeon_level >= AMULET_LEVEL ? 1 : 0;
+    return amulet_count == expected_amulet_count;
 }
 
 // van étel a padlón
@@ -673,8 +707,10 @@ int test_level_generation(uint16_t i)
     // az ujjlenyomat még az ellenőrzések előtt, mert azok a TILE_SEEN flaget írják
     uint16_t level_checksum = calculate_level_checksum();
 
-    // a szint tárgyai előtt eggyel nő, és egy generált étel nullázza: étel csak a padlóra kerülhetett
     if (!are_floor_items_valid()) return false;
+    if (!are_gold_and_amulet_valid()) return false;
+
+    // a szint tárgyai előtt eggyel nő, és egy generált étel nullázza: étel csak a padlóra kerülhetett
     uint8_t expected_levels_without_food = levels_without_food == UINT8_MAX ? UINT8_MAX : levels_without_food + 1;
     if (is_food_on_floor()) {
         expected_levels_without_food = 0;

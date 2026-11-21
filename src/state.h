@@ -55,12 +55,18 @@ struct Monster {
     #error "túl sok szörny: a szörnyindex 8 bites"
 #endif
 
+// a tárgy típusonként más jelentésű értéke, közös helyen
+union ItemProperties {
+    uint16_t gold_amount;                       // aranynál a mennyiség
+};
+
 // egy tárgy a tárgytáblában; a listákba (a padlón lévő tárgyaké) a next fűzi
 struct Item {
     uint8_t  type;                              // ITEM_TYPE_ (items.h); szabad helyen ITEM_TYPE_FREE
     uint8_t  which;                             // az altípus a típuson belül
     uint8_t  x;                                 // a padlón: a pozíció a térképen
     uint8_t  y;
+    union ItemProperties properties;
     uint8_t  next;                              // a lista következő tárgyának indexe (0 = vége)
 };
 
