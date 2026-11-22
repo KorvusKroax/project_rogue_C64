@@ -16,6 +16,14 @@ const char text_no_room_in_pack[] = "there's no room in your pack";
 const char text_moved_onto[] = "you moved onto \1";
 const char text_nothing_to_pick_up[] = "there is nothing here to pick up";
 const char text_empty_handed[] = "you are empty handed";
+const char text_which_object[] = "which object do you want to \1? (* for list): ";
+const char text_item_purpose_drop[] = "drop";
+const char text_not_carrying_anything[] = "you aren't carrying anything";
+const char text_ran_out[] = "you ran out";
+const char text_not_valid_item[] = "'\1' is not a valid item";
+const char text_something_there_already[] = "there is something there already";
+const char text_dropped[] = "dropped \1";
+const char text_no_room_for_that[] = "there's no room for that";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

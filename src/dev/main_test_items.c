@@ -22,13 +22,15 @@ static const struct DevTest item_tests[] = {
     { "PICKUP-STEP", test_pickup_by_step, 1 },
     { "PICKUP-GOLD", test_pickup_gold, 1 },
     { "PICKUP-FULL PACK", test_pickup_full_pack, 1 },
+    { "DROP-STACK PIECE", test_drop_stack_piece, 1 },
+    { "DROP-FULL TABLE", test_drop_full_table, 1 },
 };
 
 int main(void)
 {
     init_test_program();
 
-    // az üzenetsáv sorait a felvétel üzenetei használják; a teli sáv nem vár szóközre
+    // az üzenetsáv sorait a felvétel és a lerakás üzenetei használják; a teli sáv nem vár szóközre
     set_message_more_wait(false);
     set_screen_cursor(0, MESSAGE_ROW + MESSAGE_ROW_COUNT);
     put_text("Item tests:");

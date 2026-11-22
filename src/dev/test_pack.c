@@ -238,3 +238,71 @@ int test_pickup_full_pack(uint16_t i)
     clear_pickup_scene();
     return ok;
 }
+
+// a felvétel tesztmezőin, a csomagban egy PACK_TEST_POTION_COUNT darabos bájitalköteg; az eredmény a köteg
+static uint8_t put_drop_scene(void)
+{
+    put_pickup_scene();
+    uint8_t potion = NO_ITEM;
+    for (uint8_t count = 0; count < PACK_TEST_POTION_COUNT; count++) {
+        potion = add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
+    }
+    return potion;
+}
+
+int test_drop_stack_piece(uint16_t i)
+{
+    uint8_t potion = put_drop_scene();
+    uint8_t arrows = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, WEAPON_ARROW));
+    uint8_t arrow_count = get_item(arrows)->count;
+
+    // a bájitalkötegből egy darab, új rekordként; a köteg a csomagban marad
+    bool ok = drop_item(potion);
+    uint8_t dropped = find_floor_item_at(PICKUP_PLAYER_X, PICKUP_PLAYER_Y);
+    ok = ok &&
+        dropped != NO_ITEM &&
+        dropped != potion &&
+        get_item(dropped)->type == ITEM_TYPE_POTION &&
+        get_item(dropped)->count == 1 &&
+        get_map_character(PICKUP_PLAYER_X, PICKUP_PLAYER_Y) == CHAR_POTION &&
+        get_item(potion)->count == PACK_TEST_POTION_COUNT - 1 &&
+        is_item_in_pack(potion);
+
+    // a nyílköteg egészben kerül le, és kikerül a csomagból
+    game.player.x = PICKUP_PLAYER_X + 2;
+    ok = ok &&
+        drop_item(arrows) &&
+        find_floor_item_at(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == arrows &&
+        get_item(arrows)->count == arrow_count &&
+        get_map_character(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == CHAR_WEAPON &&
+        !is_item_in_pack(arrows);
+
+    clear_pickup_scene();
+    return ok;
+}
+
+int test_drop_full_table(uint16_t i)
+{
+    uint8_t potion = put_drop_scene();
+    uint8_t scroll = add_item_to_pack(create_item(ITEM_TYPE_SCROLL, 0));
+    // a tárgytábla többi helye is foglalt
+    while (create_item(ITEM_TYPE_FOOD, FOOD_RATION) != NO_ITEM) {}
+
+    // a köteg darabolásához nincs hely: semmi nem változik
+    bool ok =
+        game.item_count == MAX_ITEMS &&
+        !drop_item(potion) &&
+        get_item(potion)->count == PACK_TEST_POTION_COUNT &&
+        game.first_floor_item == NO_ITEM &&
+        get_map_character(PICKUP_PLAYER_X, PICKUP_PLAYER_Y) == CHAR_PASSAGE &&
+        game.item_count == MAX_ITEMS;
+
+    // egy egész tárgy így is lerakható
+    ok = ok &&
+        drop_item(scroll) &&
+        game.first_floor_item == scroll &&
+        !is_item_in_pack(scroll);
+
+    clear_pickup_scene();
+    return ok;
+}

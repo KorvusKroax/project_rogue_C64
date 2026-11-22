@@ -82,14 +82,19 @@ static void fill_message_text(const char *text, const char *first_text, const ch
     message_text[message_text_length] = 0;
 }
 
+// a tárgylista-sor (pl. "a) a mace"): nem kap nagybetűt és záró pontot, és nem fűződik össze más üzenettel
+static bool is_list_row(const char *text)
+{
+    return text[0] && text[1] == ')';
+}
+
 const char *prepare_message_text(const char *text, const char *first_text, const char *second_text, int16_t number, bool add_end_character)
 {
     fill_message_text(text, first_text, second_text, number);
 
     uint8_t length = message_text_length;
 
-    // a tárgylista-sor (pl. "a) a mace") változatlan marad
-    if (length && message_text[1] != ')') {
+    if (length && !is_list_row(message_text)) {
         if (message_text[0] >= 'a' && message_text[0] <= 'z') {
             message_text[0] -= 'a' - 'A';
         }
@@ -185,12 +190,13 @@ static void show_message_bar(void)
     set_message_bar_rows_in_use(row);
 }
 
-static void show_more_and_wait(void)
+// a --More-- után szóközre vár, is_escape_allowed mellett ESC-re is; utána a sáv üres; hamis, ha ESC jött
+static bool show_more_and_wait(bool is_escape_allowed)
 {
     #ifdef DEVMODE
         if (!is_more_wait_enabled) {
             message_clear();
-            return;
+            return true;
         }
     #endif
 
@@ -209,9 +215,13 @@ static void show_more_and_wait(void)
     // a várakozás alatt a friss értékek látszanak (pl. a szörnyek támadásai után a HP); a kurzort a --More-- után mozgatja
     draw_status();
 
-    while (wait_for_key() != ' ') {}
+    uint8_t code = wait_for_key();
+    while (code != ' ' && !(is_escape_allowed && code == KEY_ESCAPE)) {
+        code = wait_for_key();
+    }
 
     message_clear();
+    return code == ' ';
 }
 
 // az eddigi szöveg után fűzi, ha a TEXT_MORE is elfér vele
@@ -235,13 +245,16 @@ static bool append_to_message_bar(const char *text)
     return true;
 }
 
-static void add_to_message_bar(const char *text)
+// a szöveg a sávba, az eddigi után, ha elfér, különben --More-- után; a szöveg előtti --More---nál is_escape_allowed mellett
+// ESC-re a szöveg elmarad, és a sáv üres; hamis, ha így elmaradt
+static bool add_to_message_bar(const char *text, bool is_escape_allowed)
 {
     if (message_bar_length) {
-        if (append_to_message_bar(text)) {
-            return;
+        // a tárgylista-sor után nem fűződik semmi, és ő sem fűződik az eddigi szöveghez; így mindig a sáv elején áll
+        if (!is_list_row(message_bar_text) && !is_list_row(text) && append_to_message_bar(text)) {
+            return true;
         }
-        show_more_and_wait();
+        if (!show_more_and_wait(is_escape_allowed)) return false;
     }
 
     while (true) {
@@ -252,9 +265,9 @@ static void add_to_message_bar(const char *text)
 
         text = text_after_break(text + message_bar_length);
         if (!*text) {
-            return;
+            return true;
         }
-        show_more_and_wait();
+        show_more_and_wait(false);
     }
 }
 
@@ -267,20 +280,21 @@ void message_format(const char *text, const char *first_text, const char *second
 {
     const char *prepared_text = prepare_message_text(text, first_text, second_text, number, true);
     strcpy(last_message_text, prepared_text);
-    add_to_message_bar(prepared_text);
+    add_to_message_bar(prepared_text, false);
 }
 
 void message_format_without_recall(const char *text, const char *first_text, const char *second_text, int16_t number)
 {
-    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true));
+    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true), false);
 }
 
-void message_without_joining(const char *text)
+bool message_unless_escaped(const char *text)
 {
-    if (message_bar_length) {
-        show_more_and_wait();
-    }
-    message(text);
+    const char *prepared_text = prepare_message_text(text, NULL, NULL, 0, true);
+    if (!add_to_message_bar(prepared_text, true)) return false;
+
+    strcpy(last_message_text, prepared_text);
+    return true;
 }
 
 void repeat_last_message(void)
@@ -290,7 +304,12 @@ void repeat_last_message(void)
 
 void message_prompt(const char *text)
 {
-    add_to_message_bar(prepare_message_text(text, NULL, NULL, 0, false));
+    message_prompt_format(text, NULL);
+}
+
+void message_prompt_format(const char *text, const char *first_text)
+{
+    add_to_message_bar(prepare_message_text(text, first_text, NULL, 0, false), false);
     message_bar_length = 0;     // a kérdés mögé nem fűződik semmi, a következő üzenet lecseréli
 }
 

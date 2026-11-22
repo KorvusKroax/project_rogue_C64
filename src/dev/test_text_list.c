@@ -206,3 +206,42 @@ int test_window_restore(uint16_t i)
     load_screen(test_program_screen);
     return is_restored;
 }
+
+// az üzenetsáv első sora a text-tel kezdődik (a képernyő karakterei ASCII kódok)
+static bool does_message_bar_start_with(const char *text)
+{
+    for (uint8_t x = 0; text[x]; x++) {
+        if (get_screen_character(x, MESSAGE_ROW) != text[x]) return false;
+    }
+    return true;
+}
+
+int test_list_row_not_joined(uint16_t i)
+{
+    save_screen(test_program_screen);
+    // a --More-- nem vár: a sáv törlődik, és a következő szöveg az elején kezdődik
+    set_message_more_wait(false);
+
+    // a listasor után a kérdés új sávban
+    message_clear();
+    message("a) a mace");
+    message_prompt("which object?");
+    bool ok = does_message_bar_start_with("Which object?");
+
+    // a listasor sem fűződik az előző üzenethez
+    message_clear();
+    message("you hit it");
+    message("a) a mace");
+    ok = ok && does_message_bar_start_with("a) a mace ");
+
+    // két másik üzenet összefűződik
+    message_clear();
+    message("you hit it");
+    message("you miss");
+    ok = ok && does_message_bar_start_with("You hit it. You miss.");
+
+    message_clear();
+    set_message_more_wait(true);
+    load_screen(test_program_screen);
+    return ok;
+}

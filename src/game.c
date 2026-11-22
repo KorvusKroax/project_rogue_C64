@@ -11,6 +11,7 @@
 #include "item_names.h"
 #include "items.h"
 #include "level.h"
+#include "map.h"
 #include "message.h"
 #include "move.h"
 #include "pack.h"
@@ -38,6 +39,11 @@ static uint8_t last_code;
 static uint8_t previous_last_code;
 // az utolsó irányt kérő parancs iránya: az `a` ezt használja, nem kérdez újra
 static uint8_t last_direction_index;
+// az utolsó parancs tárgya, ha a parancs után a csomagban maradt (egy kötegből csak egy darab ment el): az `a` ezt használja,
+// nem kérdez újra; NO_ITEM, ha a tárgy elfogyott, vagy a parancs nem a csomagból vett el
+static uint8_t last_item_index;
+// az előtte beolvasott parancs tárgya: ha az utolsó parancs tárgykérdése ESC-vel elmarad, ez lesz megint az utolsó parancs tárgya
+static uint8_t previous_last_item_index;
 
 // az `m` után a lépés nem veszi fel a tárgyat; a számprefixes ismétlés lépései is ilyenek, a következő beolvasott parancsig
 static bool is_pickup_skipped;
@@ -189,6 +195,8 @@ static uint8_t read_command(void)
     #endif
     previous_last_code = last_code;
     last_code = code;
+    previous_last_item_index = last_item_index;
+    last_item_index = NO_ITEM;
     return code;
 }
 
@@ -247,6 +255,83 @@ static bool execute_move_without_pickup_command(bool is_repeat)
     return execute_direction_command(repeat_code, direction_index);
 }
 
+// a tárgy bekérése a csomagból (get_item): a betűje; `*`-ra a csomag listája, hibás betűre „'<x>' is not a valid item”,
+// és utána újra a kérdés; a csomag nem üres; NO_ITEM, ha ESC
+static uint8_t ask_item(const char *purpose)
+{
+    while (true) {
+        message_prompt_format(text_which_object, purpose);
+        uint8_t code = wait_for_key();
+        message_clear();
+
+        if (code == KEY_ESCAPE) return NO_ITEM;
+        if (code == '*') {
+            show_pack_list();
+            continue;
+        }
+
+        uint8_t index = find_pack_item_by_letter(code);
+        if (index != NO_ITEM) return index;
+
+        char name[KEY_NAME_SIZE];
+        write_key_name(name, code);
+        message_format(text_not_valid_item, name, NULL, 0);
+    }
+}
+
+// a tárgyat kérő parancs előtt: üres csomagnál „you aren't carrying anything”, az `a` ismétlésnél, ha az előző parancs tárgya
+// elfogyott, „you ran out”; igaz, ha így a parancsnak nincs tárgya
+static bool report_missing_command_item(bool is_repeat)
+{
+    if (game.first_pack_item == NO_ITEM) {
+        message(text_not_carrying_anything);
+        return true;
+    }
+    if (is_repeat && last_item_index == NO_ITEM) {
+        message(text_ran_out);
+        return true;
+    }
+    return false;
+}
+
+// a tárgyat kérő parancs tárgya (report_missing_command_item után): az `a` ismétlésnél az előző parancsé, különben a bekért;
+// NO_ITEM, ha a kérdés ESC-vel elmaradt, és ilyenkor az utolsó parancs és a tárgya az előző marad, a számprefixes ismétlés pedig
+// véget ér (J27)
+static uint8_t get_command_item(bool is_repeat, const char *purpose)
+{
+    if (is_repeat) return last_item_index;
+
+    uint8_t index = ask_item(purpose);
+    if (index == NO_ITEM) {
+        last_code = previous_last_code;
+        last_item_index = previous_last_item_index;
+        repeat_count = 0;
+    }
+    return index;
+}
+
+// d: egy tárgy lerakása a csomagból a játékos mezőjére; igaz, ha időt vitt
+static bool execute_drop_command(bool is_repeat)
+{
+    // foglalt mezőn a tárgyat sem kérdezi
+    uint8_t character = get_map_character(game.player.x, game.player.y);
+    if (character != CHAR_FLOOR && character != CHAR_PASSAGE) {
+        message(text_something_there_already);
+        return false;
+    }
+    // az üres csomag és az elfogyott tárgy is időbe kerül
+    if (report_missing_command_item(is_repeat)) return true;
+
+    uint8_t index = get_command_item(is_repeat, text_item_purpose_drop);
+    if (index == NO_ITEM) return false;
+
+    // ide jön: a használatban lévő tárgy (az átkozott nem rakható le, a viselt páncél levétele időveszteség)
+    bool is_dropped = drop_item(index);
+    // a köteg maradéka az `a` ismétlés tárgya; ha a lerakás elmaradt, az egész tárgy
+    last_item_index = is_item_in_pack(index) ? index : NO_ITEM;
+    return is_dropped;
+}
+
 // `,`: a játékos mezőjén fekvő tárgy felvétele; üres mezőn csak üzenet
 static void pick_up_item_here(void)
 {
@@ -295,6 +380,8 @@ static bool execute_command(uint8_t code)
         case 'i':
             show_pack_list();
             return false;
+        case 'd':
+            return execute_drop_command(is_repeat);
         case '>':
             go_down_stairs();
             return false;
@@ -383,6 +470,7 @@ void run_game(void)
     init_player();
     init_item_names();
     last_code = 0;
+    last_item_index = NO_ITEM;
     game.dungeon_level = 1;
     game.levels_without_food = 0;
     clear_item_table();

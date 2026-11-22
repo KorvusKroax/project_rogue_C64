@@ -26,7 +26,7 @@ bool does_text_list_fit_window(const struct TextListSize *size);
 // - clear: külön teljes képernyőn, a 0. sortól; ami nem fér a 0..23. sorba, a következő oldalra kerül;
 //   a 24. sorban TEXT_PRESS_SPACE, és szóközre vár
 // - overwrite: a térkép fölött, a jobb felső sarokban; az utolsó sora a TEXT_PRESS_SPACE; ha nem fér el, clear módban
-// - slow: tételenként az üzenetsávban, közöttük --More--
+// - slow: tételenként az üzenetsávban, közöttük --More--; ott ESC-re a lista véget ér
 // a clear és az overwrite mód ideiglenes ablak (view.h): a végén a képernyő visszaáll
 void show_text_list(TextListEntryFunction get_entry);
 

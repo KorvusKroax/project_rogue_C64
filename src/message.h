@@ -7,12 +7,17 @@
 #define MESSAGE_ROW        0    // az üzenetsáv első képernyősora (default: 0)
 #define MESSAGE_ROW_COUNT  2    // az üzenetsáv sorai; a második sortól a térkép felső sorait takarja (default: 1)
 
-void message(const char *text);                 // a sávba, az eddigi szöveg után; ha nem fér el, --More--, és szóközre vár
+// a sávba, az eddigi szöveg után; ha nem fér el, --More--, és szóközre vár; a tárgylista-sor (pl. "a) a mace") nem fűződik
+// össze mással: ha a sávban szöveg van, előtte, és ha utána üzenet vagy kérdés jön, utána is --More--
+void message(const char *text);
 void message_format(const char *text, const char *first_text, const char *second_text, int16_t number);    // mint a message, a \1, \2 helyén a két szöveg, a \3 helyén a szám; a nem használt szöveg lehet NULL
 void message_format_without_recall(const char *text, const char *first_text, const char *second_text, int16_t number);    // mint a message_format, de a CTRL-P nem hozza vissza
-void message_without_joining(const char *text); // mint a message, de nem fűződik az előzőhöz: ha a sávban szöveg van, előbb --More--, és szóközre vár
+// mint a message, de ha előtte --More-- kell, ott ESC is leüthető: ekkor a szöveg elmarad, a sáv üres, és az eredmény hamis
+// (a slow lista megszakítása, text_list.h)
+bool message_unless_escaped(const char *text);
 void repeat_last_message(void);                 // az utolsó üzenet (a kérdések nem) újra a sávba; ha még nem volt, üres
 void message_prompt(const char *text);          // kérdés a sávba, záró pont nélkül; a képernyő kurzora a szöveg végén marad; a válasszal látszik, amíg a következő üzenet vagy törlés le nem váltja
+void message_prompt_format(const char *text, const char *first_text);  // mint a message_prompt, a \1 helyén a szöveg
 void message_reserve_input_space(uint8_t length);   // a kurzortól length karakter helyét lefoglalja a sávban, legfeljebb a sáv utolsó soráig; az újonnan lefoglalt sorok üresek
 void message_clear(void);                       // a sáv törlése; a második sortól visszajön a térkép
 uint8_t wait_for_key_and_clear_message(void);   // vár egy leütésre, törli a sávot, és a leütés kódját adja

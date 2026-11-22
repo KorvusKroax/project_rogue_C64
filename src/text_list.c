@@ -113,12 +113,14 @@ static void draw_list_entries(TextListEntryFunction get_entry, uint8_t entry_cou
     }
 }
 
-// tételenként egy üzenet: az első lecseréli a sáv szövegét, a többi előtt --More--
+// tételenként egy üzenet: az első lecseréli a sáv szövegét, a többi előtt --More--, mert a listasorok nem fűződnek össze (message.h);
+// ennél a --More---nál ESC-re a lista véget ér, és a sáv üres
 static void show_list_in_message_bar(TextListEntryFunction get_entry, uint8_t entry_count)
 {
     message_clear();
-    for (uint8_t index = 0; index < entry_count; index++) {
-        message_without_joining(get_entry(index));
+    uint8_t index = 0;
+    while (index < entry_count && message_unless_escaped(get_entry(index))) {
+        index++;
     }
 }
 

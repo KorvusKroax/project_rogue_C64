@@ -21,6 +21,7 @@ int test_prepare_message_text(uint16_t i);
 int test_text_list_rows(uint16_t i);            // a 40 oszlopos lista sorai: a hosszú tétel szóhatáron törik, a folytatósor behúzással; a szélesség legalább a lista végének szövege
 int test_text_list_window_fit(uint16_t i);      // az overwrite ablakba fér-e: az üres oszlop és a lista végének sora is kell; a teli csomag hosszú nevekkel nem fér el
 int test_window_restore(uint16_t i);            // az ideiglenes ablak bezárása után a képernyő bájtra azonos a megnyitás előttivel (a megnyitás az üzenetsávot törli)
+int test_list_row_not_joined(uint16_t i);       // a tárgylista-sor után a kérdés új sávban kezdődik, és a listasor sem fűződik az előző üzenethez; más üzenetek összefűződnek
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
 int test_map_flags(uint16_t i);
@@ -77,6 +78,8 @@ int test_pack_order(uint16_t i);                // a csomag típus szerint rende
 int test_pickup_by_step(uint16_t i);            // futva a tárgyra lépve felveszi, a futás megáll, és a mező újra folyosó; az `m` a padlón hagyja; a `,` felveszi, és a mező újra padló
 int test_pickup_gold(uint16_t i);               // az arany a pénzhez adódik, nem kerül a csomagba, és a rekordja felszabadul
 int test_pickup_full_pack(uint16_t i);          // betelt csomagnál a tárgy a jelével együtt a padlón marad
+int test_drop_stack_piece(uint16_t i);          // a bájitalkötegből egy darab kerül le új rekordként, a köteg a csomagban marad; a nyílköteg egészben
+int test_drop_full_table(uint16_t i);           // betelt tárgytáblánál a köteg darabolása elmarad, és semmi nem változik; egy egész tárgy lerakható
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 

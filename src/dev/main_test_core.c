@@ -19,6 +19,7 @@ static const struct DevTest core_tests[] = {
     { "LIST-ROWS", test_text_list_rows, 1 },
     { "LIST-WINDOW FIT", test_text_list_window_fit, 1 },
     { "WINDOW-RESTORE", test_window_restore, 1 },
+    { "LIST-ROW NOT JOINED", test_list_row_not_joined, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
 };
 

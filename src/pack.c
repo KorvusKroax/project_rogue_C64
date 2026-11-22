@@ -61,10 +61,18 @@ bool has_pack_room_for(uint8_t index)
     return calculate_pack_slots_used() + needed_slots <= MAX_PACK;
 }
 
-static bool is_pack_letter_used(uint8_t letter)
+uint8_t find_pack_item_by_letter(uint8_t letter)
 {
     for (uint8_t index = game.first_pack_item; index != NO_ITEM; index = get_item(index)->next) {
-        if (get_item(index)->location.pack_letter == letter) return true;
+        if (get_item(index)->location.pack_letter == letter) return index;
+    }
+    return NO_ITEM;
+}
+
+bool is_item_in_pack(uint8_t index)
+{
+    for (uint8_t pack_index = game.first_pack_item; pack_index != NO_ITEM; pack_index = get_item(pack_index)->next) {
+        if (pack_index == index) return true;
     }
     return false;
 }
@@ -74,7 +82,7 @@ static bool is_pack_letter_used(uint8_t letter)
 static uint8_t choose_free_pack_letter(void)
 {
     uint8_t letter = FIRST_PACK_LETTER;
-    while (is_pack_letter_used(letter)) {
+    while (find_pack_item_by_letter(letter) != NO_ITEM) {
         letter++;
     }
     return letter;
@@ -156,6 +164,32 @@ void pick_up_item(uint8_t index)
     const struct Item *pack_item = get_item(pack_index);
     char letter_text[2] = { pack_item->location.pack_letter, 0 };
     message_format(text_you_now_have, format_item_name(pack_item), letter_text, 0);
+}
+
+bool drop_item(uint8_t index)
+{
+    struct Item *item = get_item(index);
+
+    // bájital-, tekercs- és ételkötegből egy darab új rekordként kerül le, a köteg a csomagban marad
+    uint8_t dropped_index = index;
+    if (item->count > 1 && is_stackable_type(item->type)) {
+        dropped_index = allocate_item();
+        if (dropped_index == NO_ITEM) {
+            message(text_no_room_for_that);
+            return false;
+        }
+        struct Item *dropped = get_item(dropped_index);
+        *dropped = *item;
+        dropped->count = 1;
+        item->count--;
+    } else {
+        remove_item_from_list(&game.first_pack_item, index);
+    }
+
+    put_item_on_floor(dropped_index, game.player.x, game.player.y);
+    // ide jön: az amulettel has_amulet = false
+    message_format(text_dropped, format_item_name(get_item(dropped_index)), NULL, 0);
+    return true;
 }
 
 // a listasor a betűvel kezdődik: "a) a mace"

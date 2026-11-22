@@ -273,8 +273,9 @@ restore_game():   // címképernyő, R
 
 **Tárgy bekérése (`get_item(cél, típus)`):**
 ```
-if pack üres: "you aren't carrying anything"; return null
-if 'a' ismétlés: az előző kiválasztott tárgy (ha elfogyott: "you ran out")
+if pack üres: "you aren't carrying anything"; return null      // hogy időbe kerül-e, az a parancson múlik; a d-nél igen
+if 'a' ismétlés: return az előző parancs tárgya, ha a parancs a csomagból vett el (pl. d), és a tárgy utána is
+                 a csomagban maradt (egy kötegből egy darab ment el); különben "you ran out", return null (mint az üres csomag)
 loop:
   "which object do you want to <cél>? (* for list): "
   ESC → "" (törlés), return null, nem visz időt; a számprefixes ismétlés is véget ér (J27, 4.2.2)
@@ -292,8 +293,8 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 - Megjelenítés az `inven` opció szerint:
   - *clear* – külön teljes képernyő, a 0. sortól. Ha a sorok nem férnek el a 0..23. sorban, a 24. sorban „--Press space to continue--”, és szóközre a lista új oldalon folytatódik. Az utolsó oldalon is a 24. sorban áll.
   - *overwrite* – a térkép fölé, a képernyő jobb felső sarkába, keret nélkül: egy üres terület, amely eltakarja alatta a térképet, a sorok benne balról egy üres oszloppal kezdődnek, az utolsó sora a „--Press space to continue--”. Szélessége a leghosszabb sor (legalább a „--Press space to continue--” hossza) + 1, magassága a sorok száma + 1. Ha így nem férne el a képernyőn (40 oszlop, 0..24. sor), *clear* módban jelenik meg. Bezáráskor a képernyő visszaáll ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
-  - *slow* – tételenként egy üzenet az üzenetsávban: az első lecseréli a sáv szövegét, a többi előtt `--More--` (a tételek nem fűződnek össze).
-- A lista végén „--Press space to continue--”, és szóközre vár. Egyetlen tétel minden módban üzenetként jelenik meg, akkor is, ha a neve két sorra törne. Az *overwrite* és a *clear* mód ideiglenes ablak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)): a megnyitása törli az üzenetsávot, és bezárás után a sáv üres marad. Üres csomag: „you are empty handed”. Az `i` nem visz időt.
+  - *slow* – tételenként egy üzenet az üzenetsávban: az első lecseréli a sáv szövegét, a többi előtt `--More--` (a listasorok nem fűződnek össze). Ennél a `--More--`-nál ESC-re a lista véget ér, és az üzenetsáv törlődik.
+- A lista végén *clear* és *overwrite* módban „--Press space to continue--”, és szóközre vár. Egyetlen tétel minden módban üzenetként jelenik meg, akkor is, ha a neve két sorra törne. A listasorhoz nem fűződik semmi ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)): ha a `*` lista utolsó tétele a sávban maradt (egy tétel, *slow* mód), a kérdés `--More--` után, a sáv elején jelenik meg. Az *overwrite* és a *clear* mód ideiglenes ablak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)): a megnyitása törli az üzenetsávot, és bezárás után a sáv üres marad. Üres csomag: „you are empty handed”. Az `i` nem visz időt.
 
 **Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't. It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 

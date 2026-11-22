@@ -31,6 +31,14 @@ extern const char text_no_room_in_pack[];
 extern const char text_moved_onto[];                // \1: a tárgy neve
 extern const char text_nothing_to_pick_up[];
 extern const char text_empty_handed[];
+extern const char text_which_object[];              // \1: a parancs célja, pl. text_item_purpose_drop
+extern const char text_item_purpose_drop[];
+extern const char text_not_carrying_anything[];
+extern const char text_ran_out[];
+extern const char text_not_valid_item[];            // \1: a leütött billentyű
+extern const char text_something_there_already[];
+extern const char text_dropped[];                   // \1: a tárgy neve
+extern const char text_no_room_for_that[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4
