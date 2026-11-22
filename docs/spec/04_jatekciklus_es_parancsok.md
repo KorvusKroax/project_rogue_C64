@@ -290,10 +290,10 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
 
 - Egy tétel: `<betű>) <név>` ([8.8](08_targyak.md#88-azonosítás-és-nevek)). Ha 40 karakternél hosszabb, szóhatáron törik, a folytatósor 3 szóközzel beljebb kezdődik.
 - Megjelenítés az `inven` opció szerint:
-  - *clear* – külön teljes képernyő, a 0. sortól. Ha a sorok nem férnek el a 0..23. sorban, a 24. sorban „--Press space to continue--”, és a lista új oldalon folytatódik.
+  - *clear* – külön teljes képernyő, a 0. sortól. Ha a sorok nem férnek el a 0..23. sorban, a 24. sorban „--Press space to continue--”, és szóközre a lista új oldalon folytatódik. Az utolsó oldalon is a 24. sorban áll.
   - *overwrite* – a térkép fölé, a képernyő jobb felső sarkába, keret nélkül: egy üres terület, amely eltakarja alatta a térképet, a sorok benne balról egy üres oszloppal kezdődnek, az utolsó sora a „--Press space to continue--”. Szélessége a leghosszabb sor (legalább a „--Press space to continue--” hossza) + 1, magassága a sorok száma + 1. Ha így nem férne el a képernyőn (40 oszlop, 0..24. sor), *clear* módban jelenik meg. Bezáráskor a képernyő visszaáll ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)).
-  - *slow* – soronként az üzenetsávban, `--More--`-val.
-- A lista végén „--Press space to continue--”; egyetlen sornál üzenetként jelenik meg. Üres csomag: „you are empty handed”.
+  - *slow* – tételenként egy üzenet az üzenetsávban: az első lecseréli a sáv szövegét, a többi előtt `--More--` (a tételek nem fűződnek össze).
+- A lista végén „--Press space to continue--”, és szóközre vár. Egyetlen tétel minden módban üzenetként jelenik meg, akkor is, ha a neve két sorra törne. Az *overwrite* és a *clear* mód ideiglenes ablak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)): a megnyitása törli az üzenetsávot, és bezárás után a sáv üres marad. Üres csomag: „you are empty handed”. Az `i` nem visz időt.
 
 **Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't. It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 

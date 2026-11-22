@@ -15,6 +15,7 @@ const char text_you_now_have[] = "you now have \1 (\2)";
 const char text_no_room_in_pack[] = "there's no room in your pack";
 const char text_moved_onto[] = "you moved onto \1";
 const char text_nothing_to_pick_up[] = "there is nothing here to pick up";
+const char text_empty_handed[] = "you are empty handed";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

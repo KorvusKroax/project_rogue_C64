@@ -16,6 +16,9 @@ static const struct DevTest core_tests[] = {
     { "MESS-PREPARE TEXT", test_prepare_message_text, 1 },
     { "MESS-LINE LENGTH", test_message_chars_fitting_row, 1 },
     { "MESS-PAGE LENGTH", test_message_chars_fitting_bar, 1 },
+    { "LIST-ROWS", test_text_list_rows, 1 },
+    { "LIST-WINDOW FIT", test_text_list_window_fit, 1 },
+    { "WINDOW-RESTORE", test_window_restore, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
 };
 

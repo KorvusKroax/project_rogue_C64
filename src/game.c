@@ -292,6 +292,9 @@ static bool execute_command(uint8_t code)
             // üres mezőn is időbe kerül
             pick_up_item_here();
             return true;
+        case 'i':
+            show_pack_list();
+            return false;
         case '>':
             go_down_stairs();
             return false;

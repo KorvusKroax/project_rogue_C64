@@ -38,4 +38,7 @@ void pick_up_item(uint8_t index);
 // az `m` parancs üzenete a padlón fekvő tárgyra lépve: „you moved onto <név>”
 void report_moving_onto_item(uint8_t index);
 
+// `i`: a csomag listája (text_list.h), soronként a betű és a név („a) a mace”); üres csomagnál „you are empty handed”
+void show_pack_list(void);
+
 #endif

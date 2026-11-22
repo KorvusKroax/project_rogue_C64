@@ -11,6 +11,10 @@
 #define TEXT_MORE         "--More--"
 #define TEXT_MORE_LENGTH  (sizeof(TEXT_MORE) - 1)
 
+// a lista végén és oldalanként; a hossza fordításkor kell (az overwrite ablak legalább ilyen széles), ezért makró
+#define TEXT_PRESS_SPACE         "--Press space to continue--"
+#define TEXT_PRESS_SPACE_LENGTH  (sizeof(TEXT_PRESS_SPACE) - 1)
+
 extern const char text_illegal_command[];
 extern const char text_secret_door[];
 extern const char text_no_way_down[];
@@ -26,6 +30,7 @@ extern const char text_you_now_have[];              // \1: a tárgy neve, \2: a 
 extern const char text_no_room_in_pack[];
 extern const char text_moved_onto[];                // \1: a tárgy neve
 extern const char text_nothing_to_pick_up[];
+extern const char text_empty_handed[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4

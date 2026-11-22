@@ -9,7 +9,7 @@
     #define DEV_CHECK(cond, message) do { if (!(cond)) dev_fail(message, __FILE__, __LINE__); } while (0)
 
     void dev_run_start_screen(void);    // a seed kiírása, S-re kézi megadása; RETURN-re visszatér
-    bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint, F2 szörny a játékos mellé betű alapján, F3 ugrás mélységre, F4 a szint összes szörnyének üldözése, F5 teljes térkép, F6 a szint összes szörnyének lassítása ki és be, F7 tárgy a játékos mellé jel és altípus alapján, F8 a follow_passages be- és kikapcsolása; igaz, ha időt vitt (egyik sem)
+    bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint a bekért mélységen (üres mezőn ugyanazon), F2 szörny a játékos mellé betű alapján, F3 az inven opció váltása, F4 a szint összes szörnyének üldözése, F5 teljes térkép, F6 a szint összes szörnyének lassítása ki és be, F7 tárgy a játékos mellé jel és altípus alapján, F8 a follow_passages be- és kikapcsolása; igaz, ha időt vitt (egyik sem)
     void update_item_count_peak(void);  // a tárgytábla foglaltságának csúcsértéke a program indulása óta: minden foglalás után (allocate_item)
 
     // a teljes térkép (F5): a MAP jele, a titkos folyosó-mező inverz folyosóként, a titkos ajtó inverz ajtóként, a szörnyek a betűjükkel, az ébren lévők inverzen

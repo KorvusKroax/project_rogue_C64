@@ -1,11 +1,13 @@
 #include "pack.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include "item_names.h"
 #include "items.h"
 #include "message.h"
 #include "state.h"
+#include "text_list.h"
 #include "texts.h"
 
 // az arany mennyisége az üzenetben előjeles 16 bites szám (message_format)
@@ -154,4 +156,37 @@ void pick_up_item(uint8_t index)
     const struct Item *pack_item = get_item(pack_index);
     char letter_text[2] = { pack_item->location.pack_letter, 0 };
     message_format(text_you_now_have, format_item_name(pack_item), letter_text, 0);
+}
+
+// a listasor a betűvel kezdődik: "a) a mace"
+#define PACK_LIST_PREFIX_LENGTH  3
+#define PACK_LIST_ENTRY_SIZE     (PACK_LIST_PREFIX_LENGTH + ITEM_NAME_SIZE)
+
+static char pack_list_entry[PACK_LIST_ENTRY_SIZE];
+
+// a csomag index. tárgyának listasora; NULL, ha nincs ennyi tárgy (TextListEntryFunction)
+static const char *get_pack_list_entry(uint8_t index)
+{
+    uint8_t item_index = game.first_pack_item;
+    while (index > 0 && item_index != NO_ITEM) {
+        item_index = get_item(item_index)->next;
+        index--;
+    }
+    if (item_index == NO_ITEM) return NULL;
+
+    const struct Item *item = get_item(item_index);
+    pack_list_entry[0] = item->location.pack_letter;
+    pack_list_entry[1] = ')';
+    pack_list_entry[2] = ' ';
+    strcpy(pack_list_entry + PACK_LIST_PREFIX_LENGTH, format_item_name(item));
+    return pack_list_entry;
+}
+
+void show_pack_list(void)
+{
+    if (game.first_pack_item == NO_ITEM) {
+        message(text_empty_handed);
+        return;
+    }
+    show_text_list(get_pack_list_entry);
 }

@@ -1,0 +1,208 @@
+#include "tests.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
+
+#include "../platform/screen.h"
+#include "../message.h"
+#include "../pack.h"
+#include "../state.h"
+#include "../status.h"
+#include "../text_list.h"
+#include "../texts.h"
+#include "../view.h"
+
+#define LIST_TEST_ENTRY_COUNT_MAX  (SCREEN_HEIGHT + 1)     // egy sorosakból ennyi már nem fér az overwrite ablakba
+#define LIST_TEST_PREFIX_LENGTH    3                       // "a) "
+
+#if MAX_PACK > LIST_TEST_ENTRY_COUNT_MAX
+    #error "a teli csomag listája nem fér a próbatételek közé"
+#endif
+
+// a próbatételek: "a) " után egy vagy két szó; a második szó előtt szóköz
+#define SHORT_FIRST_WORD_LENGTH     6                      // egy sor, rövidebb a TEXT_PRESS_SPACE-nél
+#define WRAPPED_FIRST_WORD_LENGTH   30                     // két sorra törik a második szó előtt
+#define WRAPPED_SECOND_WORD_LENGTH  10
+#define FULL_ROW_WORD_LENGTH        (SCREEN_WIDTH - LIST_TEST_PREFIX_LENGTH)     // pontosan egy teljes sor
+
+#define WRAPPED_FIRST_ROW_LENGTH  (LIST_TEST_PREFIX_LENGTH + WRAPPED_FIRST_WORD_LENGTH)
+
+#if WRAPPED_FIRST_ROW_LENGTH + 1 + WRAPPED_SECOND_WORD_LENGTH <= SCREEN_WIDTH
+    #error "a törő próbatétel egy sorba férne"
+#endif
+
+static char short_entry[LIST_TEST_PREFIX_LENGTH + SHORT_FIRST_WORD_LENGTH + 1];
+static char wrapped_entry[LIST_TEST_PREFIX_LENGTH + WRAPPED_FIRST_WORD_LENGTH + 1 + WRAPPED_SECOND_WORD_LENGTH + 1];
+static char full_row_entry[SCREEN_WIDTH + 1];
+
+static void build_entry(char *out, uint8_t first_word_length, uint8_t second_word_length)
+{
+    memcpy(out, "a) ", LIST_TEST_PREFIX_LENGTH);
+    uint8_t length = LIST_TEST_PREFIX_LENGTH;
+    memset(out + length, 'a', first_word_length);
+    length += first_word_length;
+    if (second_word_length > 0) {
+        out[length++] = ' ';
+        memset(out + length, 'b', second_word_length);
+        length += second_word_length;
+    }
+    out[length] = 0;
+}
+
+static void build_test_entries(void)
+{
+    build_entry(short_entry, SHORT_FIRST_WORD_LENGTH, 0);
+    build_entry(wrapped_entry, WRAPPED_FIRST_WORD_LENGTH, WRAPPED_SECOND_WORD_LENGTH);
+    build_entry(full_row_entry, FULL_ROW_WORD_LENGTH, 0);
+}
+
+static const char *test_entries[LIST_TEST_ENTRY_COUNT_MAX];
+static uint8_t test_entry_count;
+
+static const char *get_test_entry(uint8_t index)
+{
+    return index < test_entry_count ? test_entries[index] : NULL;
+}
+
+// a lista count egyforma tételből
+static void set_same_test_entries(const char *entry, uint8_t count)
+{
+    for (uint8_t index = 0; index < count; index++) {
+        test_entries[index] = entry;
+    }
+    test_entry_count = count;
+}
+
+static void set_two_test_entries(const char *first, const char *second)
+{
+    test_entries[0] = first;
+    test_entries[1] = second;
+    test_entry_count = 2;
+}
+
+static bool is_test_list_size(uint8_t entry_count, uint8_t row_count, uint8_t width)
+{
+    struct TextListSize size;
+    calculate_text_list_size(get_test_entry, &size);
+    return size.entry_count == entry_count && size.row_count == row_count && size.width == width;
+}
+
+static bool does_test_list_fit_window(void)
+{
+    struct TextListSize size;
+    calculate_text_list_size(get_test_entry, &size);
+    return does_text_list_fit_window(&size);
+}
+
+int test_text_list_rows(uint16_t i)
+{
+    build_test_entries();
+
+    // a rövid sor szélessége a TEXT_PRESS_SPACE hossza
+    set_same_test_entries(short_entry, 1);
+    bool ok = is_test_list_size(1, 1, TEXT_PRESS_SPACE_LENGTH);
+
+    // a hosszú tétel a szóköznél törik, a folytatósor behúzással kezdődik
+    set_two_test_entries(short_entry, wrapped_entry);
+    ok = ok && is_test_list_size(2, 3, WRAPPED_FIRST_ROW_LENGTH);
+
+    // a pontosan sornyi tétel nem törik
+    set_same_test_entries(full_row_entry, 1);
+    ok = ok && is_test_list_size(1, 1, SCREEN_WIDTH);
+
+    // a sorok száma a képernyő magasságánál megáll
+    set_same_test_entries(wrapped_entry, SCREEN_HEIGHT);
+    return ok && is_test_list_size(SCREEN_HEIGHT, SCREEN_HEIGHT, WRAPPED_FIRST_ROW_LENGTH);
+}
+
+int test_text_list_window_fit(uint16_t i)
+{
+    build_test_entries();
+
+    set_two_test_entries(short_entry, wrapped_entry);
+    bool ok = does_test_list_fit_window();
+
+    // a teljes sor mellé nem fér az üres oszlop
+    set_two_test_entries(short_entry, full_row_entry);
+    ok = ok && !does_test_list_fit_window();
+
+    // a TEXT_PRESS_SPACE sorával együtt a képernyő magassága még elfér, eggyel több sor már nem
+    set_same_test_entries(short_entry, SCREEN_HEIGHT - 1);
+    ok = ok && does_test_list_fit_window();
+    set_same_test_entries(short_entry, SCREEN_HEIGHT);
+    ok = ok && !does_test_list_fit_window();
+
+    // a teli csomag hosszú nevű tárgyakkal sem
+    set_same_test_entries(wrapped_entry, MAX_PACK);
+    return ok && !does_test_list_fit_window();
+}
+
+#define SCREEN_SIZE  (SCREEN_WIDTH * SCREEN_HEIGHT)
+
+// a tesztprogram kiírása, amíg a teszt a képernyőt használja, és a jelenet a megnyitás előtt
+static uint8_t test_program_screen[SCREEN_SIZE];
+static uint8_t scene_screen[SCREEN_SIZE];
+
+static void save_screen(uint8_t *copy)
+{
+    for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            copy[y * SCREEN_WIDTH + x] = get_screen_character(x, y);
+        }
+    }
+}
+
+static void load_screen(const uint8_t *copy)
+{
+    for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            put_screen_character(x, y, copy[y * SCREEN_WIDTH + x]);
+        }
+    }
+}
+
+static bool is_screen_same_as(const uint8_t *copy)
+{
+    for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            if (get_screen_character(x, y) != copy[y * SCREEN_WIDTH + x]) return false;
+        }
+    }
+    return true;
+}
+
+// két sort foglal, de a --More-- nélkül is elfér
+#define WINDOW_TEST_MESSAGE  "a message that takes both rows of the message bar"
+
+int test_window_restore(uint16_t i)
+{
+    save_screen(test_program_screen);
+
+    // a jelenet: a látott térkép mintázata, a nézőablak a térkép közepén, üres üzenetsáv, státuszsor
+    for (uint8_t y = 0; y < MAP_ROWS; y++) {
+        for (uint8_t x = 0; x < MAP_COLUMNS; x++) {
+            game.seen_map[y][x] = 'a' + (x + y) % 26;
+        }
+    }
+    game.view_window_x = VIEW_WINDOW_X_MAX / 2;
+    message_clear();
+    redraw_map();
+    draw_status();
+    save_screen(scene_screen);
+
+    // a két soros üzenet a térkép felső sorát is eltakarja; a megnyitás törli, az ablak az egész képernyőt teleírja
+    message_format_without_recall(WINDOW_TEST_MESSAGE, NULL, NULL, 0);
+    open_temporary_window();
+    for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            put_screen_character(x, y, '*');
+        }
+    }
+    close_temporary_window();
+    bool is_restored = is_screen_same_as(scene_screen);
+
+    clear_seen_map();
+    load_screen(test_program_screen);
+    return is_restored;
+}

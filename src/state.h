@@ -217,9 +217,16 @@ extern struct GameState game;
 #define OPTION_FOLLOW_PASSAGES  0x01            // futásnál a folyosó kanyarjainak követése
 #define OPTION_JUMP_TO_RUN_END  0x02            // futás közben nincs rajzolás, csak a végén
 
+// a listák megjelenítése (inven, 4.2.6)
+#define INVENTORY_CLEAR        0                // külön teljes képernyőn (alapérték)
+#define INVENTORY_OVERWRITE    1                // a térkép fölött, a képernyő jobb felső sarkában
+#define INVENTORY_SLOW         2                // soronként az üzenetsávban
+#define INVENTORY_STYLE_COUNT  3
+
 // a beállításblokk: a GameState-en kívül, mert a képernyőmodul is használja; alapból minden kikapcsolva (nulla)
 struct Options {
     uint8_t flags;                              // OPTION_ bitek
+    uint8_t inventory_style;                    // INVENTORY_
 };
 
 extern struct Options options;

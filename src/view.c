@@ -126,6 +126,18 @@ void set_map_first_visible_row(uint8_t row)
     map_first_visible_row = row;
 }
 
+void open_temporary_window(void)
+{
+    message_clear();
+}
+
+void close_temporary_window(void)
+{
+    message_clear();
+    redraw_map();
+    draw_status();
+}
+
 static uint8_t calculate_centered_view_window_x(uint8_t map_x)
 {
     if (map_x < VIEW_WINDOW_WIDTH / 2) {

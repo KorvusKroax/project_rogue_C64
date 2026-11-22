@@ -24,4 +24,8 @@ void put_int(int32_t value, int8_t width);                              // width
 void screen_copy_row(uint8_t y, const uint8_t *source, uint8_t length); // length jel az y. sor elejére, a sor többi része törlődik
 void clear_to_row_end(void);                                            // a kurzortól a sor végéig
 
+#ifdef DEVMODE
+    uint8_t get_screen_character(uint8_t x, uint8_t y);                 // a tesztprogramoknak: a képernyő x, y helyén álló jel
+#endif
+
 #endif

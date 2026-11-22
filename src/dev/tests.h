@@ -18,6 +18,9 @@ int test_convert_text_to_number(uint16_t i);
 int test_key_decode(uint16_t i);
 int test_view_follow(uint16_t i);
 int test_prepare_message_text(uint16_t i);
+int test_text_list_rows(uint16_t i);            // a 40 oszlopos lista sorai: a hosszú tétel szóhatáron törik, a folytatósor behúzással; a szélesség legalább a lista végének szövege
+int test_text_list_window_fit(uint16_t i);      // az overwrite ablakba fér-e: az üres oszlop és a lista végének sora is kell; a teli csomag hosszú nevekkel nem fér el
+int test_window_restore(uint16_t i);            // az ideiglenes ablak bezárása után a képernyő bájtra azonos a megnyitás előttivel (a megnyitás az üzenetsávot törli)
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
 int test_map_flags(uint16_t i);

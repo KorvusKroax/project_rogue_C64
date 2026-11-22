@@ -87,19 +87,31 @@ static void toggle_option(uint8_t option, const char *name)
     message_format_without_recall("\1: \2", name, (options.flags & option) ? "on" : "off", 0);
 }
 
-// ESC-re vagy hibás számra nem történik semmi
-static void jump_to_depth(void)
+// új szint a bekért mélységen; üres mezőn RETURN-re ugyanazon a mélységen; ESC-re vagy hibás számra nem történik semmi
+static void create_level_at_asked_depth(void)
 {
     char answer[DEPTH_DIGITS_MAX + 1];
     uint32_t depth;
 
     bool answered = ask_text("depth (1-254): ", answer, DEPTH_DIGITS_MAX);
     message_clear();
+    if (!answered) return;
 
-    if (answered && convert_text_to_number(answer, DUNGEON_LEVEL_MAX, &depth) && depth >= 1) {
+    if (answer[0] == 0) {
+        new_level();
+    } else if (convert_text_to_number(answer, DUNGEON_LEVEL_MAX, &depth) && depth >= 1) {
         game.dungeon_level = depth;
         new_level();
     }
+}
+
+static const char *const inventory_style_names[INVENTORY_STYLE_COUNT] = { "clear", "overwrite", "slow" };
+
+// az inven opció a következő módra (clear → overwrite → slow → clear), és az új mód az üzenetsorba
+static void switch_inventory_style(void)
+{
+    options.inventory_style = (options.inventory_style + 1) % INVENTORY_STYLE_COUNT;
+    message_format_without_recall("inventory style: \1", inventory_style_names[options.inventory_style], NULL, 0);
 }
 
 // a játékos körüli első szabad mező (soronként, balról jobbra): járható, látszik a játékos mezőjéről, és nem áll rajta szörny;
@@ -293,13 +305,13 @@ bool dev_execute_command(uint8_t code)
 {
     switch (code) {
         case KEY_F1:
-            new_level();
+            create_level_at_asked_depth();
             break;
         case KEY_F2:
             create_monster_by_letter();
             break;
         case KEY_F3:
-            jump_to_depth();
+            switch_inventory_style();
             break;
         case KEY_F4:
             start_all_monsters_running();

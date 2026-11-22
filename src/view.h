@@ -31,6 +31,12 @@ void show_map_changes(void);
 
 void set_map_first_visible_row(uint8_t row);            // a térkép csak a row. képernyősortól rajzol, a fölötte lévőket az üzenetsáv foglalja; a felszabaduló sorokat visszarajzolja; MAP_TOP_ROW vagy kisebb: semmi nincs takarva
 
+// ideiglenes ablak (lista, észlelés-képernyő, súgó, beállítások): a megnyitás törli az üzenetsávot, utána az ablak közvetlenül
+// a képernyőre rajzol, a látott térkép nem változik; a bezárás visszaállítja a képernyőt: üres üzenetsáv, a térkép a látott
+// térképből, a státuszsor; közben a játék nem halad
+void open_temporary_window(void);
+void close_temporary_window(void);
+
 void center_view_window(uint8_t map_x);                 // a nézőablak a map_x oszlopra áll, újrarajzolással
 void follow_view_window(uint8_t map_x);                 // görget, ha a map_x oszlop a holt zónán kívül van; az újrarajzolás a show_map_changes-ben
 void scroll_view_window(int8_t columns);                // kézi görgetés a játékos mozgása nélkül, legfeljebb a térkép széléig; az újrarajzolás a show_map_changes-ben

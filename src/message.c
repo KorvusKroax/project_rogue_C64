@@ -275,6 +275,14 @@ void message_format_without_recall(const char *text, const char *first_text, con
     add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true));
 }
 
+void message_without_joining(const char *text)
+{
+    if (message_bar_length) {
+        show_more_and_wait();
+    }
+    message(text);
+}
+
 void repeat_last_message(void)
 {
     message(last_message_text);

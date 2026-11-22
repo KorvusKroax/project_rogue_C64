@@ -70,6 +70,13 @@ void put_screen_character(uint8_t x, uint8_t y, uint8_t character)
     SCREEN_RAM[x + y * SCREEN_WIDTH] = character;
 }
 
+#ifdef DEVMODE
+    uint8_t get_screen_character(uint8_t x, uint8_t y)
+    {
+        return SCREEN_RAM[x + y * SCREEN_WIDTH];
+    }
+#endif
+
 void set_screen_cursor(uint8_t x, uint8_t y)
 {
     cursor_x = x;

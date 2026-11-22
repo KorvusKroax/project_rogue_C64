@@ -42,14 +42,14 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 | név | mit tesztel | szabad hely (2026-11-22) |
 |---|---|---|
 | `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Rattlesnake marása (a mérgezés elleni mentődobás aránya két szinten, az erőcsökkenés), az erő határai és a legnagyobb erő, a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); fogva tartva csak a flytrapra lehet lépni, a többi lépés időbe kerül, és véget vet a futásnak és az `f`-harcnak (J25); az álcázott xeroc megtámadása csak leleplezi, a saját támadása is leleplezi; a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 11 264 bájt |
-| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, térképflagek | 29 272 bájt |
+| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, a 40 oszlopos lista sorai és az *overwrite* ablakba férése, a képernyő visszaállása az ideiglenes ablak után, térképflagek | 24 456 bájt |
 | `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 31 352 bájt |
 | `items` | a tárgytípusok és -altípusok esélytáblái a 0..99 dobásokkal; az étel nélküli szintek után kényszerített étel (`no_food`); a tárgytábla betelése (utána nincs hely, és a véletlen tárgy nem dob) és felszabadítása, közben a foglaltság számlálója; a tárgylisták (beszúrás, törlés); a kezdőértékek és a kötegazonosítók; a nevek és az álnevek listái, az álnevek kiosztása, a tekercsfeliratok; a tárgynevek a spec példái szerint, és a leghosszabb név; a csomag helyei, betűi és rendezése; a felvétel: rálépve (a futás megáll) és `,`-vel, az `m` a padlón hagyja, az arany a pénzhez adódik, betelt csomagnál a tárgy a padlón marad | 13 352 bájt |
 | `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen: a padlón lévő tárgyak (a mezőjükön a jelük, egy mezőn legfeljebb egy, a tárgytábla foglalt helyei éppen ezek), az arany (szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban), az amulett (a 26. mélységtől pontosan egy, alatta egy sem), a kincses szoba szörnyei, és az étel nélküli szintek számlálója szintenként eggyel nő, 255-nél megáll, étel után 0; 100 szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz, közben egy kör ideje; utána mélységenként a sötét szobák és labirintusok aránya, a leglassabb generálás ideje és a kör ideje; warp módban is kb. 4 perc | 344 bájt |
 | `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 21 120 bájt |
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 30 336 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 10 152, a fejlesztői build (`build.bat dev`) 5 928 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 9 040, a fejlesztői build (`build.bat dev`) 4 688 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -312,6 +312,20 @@ if (gold_index != NO_ITEM) {
 }
 ```
 Hol: `src/items.c`, `src/level.c`, `src/dev/dev_commands.c`. Hogy előjön-e, a fordító beillesztési döntésén múlik. Ellenőrzés: a `build/<név>.asm` fájlokban azok a 8 bites függvények, amelyek `LDA …` / `RTS` párral térnek vissza, és a hívójuk a `JSR` után az `ACCU + 0`-t olvassa.
+
+**11. Mutatón át módosított változóról a hívás előtt készült másolat** – futáskor, csendben; VICE-ben és a generált kódban ellenőrizve (`-O2`). Ha egy helyi változóról másolat készül, utána a változó címét egy függvény kapja, és az a mutatón át módosítja, a fordító a másolat helyett a változó hívás utáni értékét használja: a kettőt egynek veszi, és nem számol azzal, hogy a hívás megváltoztatta. A listában így a sor kirajzolása a szöveg vége utáni szemetet kapta.
+```c
+// rossz: a row helyett a továbbléptetett text megy át
+const char *row = text;
+uint8_t length = take_entry_row(&text, is_continuation);   // a *text-et a következő sorra lépteti
+draw_list_row(left, text_column, y, row, length);
+
+// jó: a függvény nem írja a hívó változóját, a léptetés a hívóban történik
+uint8_t length = calculate_entry_row_length(text, is_continuation);
+draw_list_row(left, text_column, y, text, length);
+text = skip_break_space(text + length);
+```
+Hol: `src/text_list.c`. Nincs bejelentve.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c
