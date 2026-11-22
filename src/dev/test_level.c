@@ -13,6 +13,7 @@
 #include "../message.h"
 #include "../monsters.h"
 #include "../move.h"
+#include "../pack.h"
 #include "../platform/platform.h"
 #include "../platform/screen.h"
 #include "../rng.h"
@@ -485,7 +486,7 @@ static bool are_floor_items_valid(void)
 }
 
 // az arany: szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban;
-// az amulett: az AMULET_LEVEL mélységtől pontosan egy, alatta egy sem;
+// az amulett: az AMULET_LEVEL mélységtől pontosan egy, ha nincs a játékosnál, különben egy sem;
 // az are_floor_items_valid után, mert az ellenőrzi, hogy a lista véges, és minden tárgy egy szoba falain belül van
 static bool are_gold_and_amulet_valid(void)
 {
@@ -510,7 +511,7 @@ static bool are_gold_and_amulet_valid(void)
         room_has_gold[room_index] = true;
     }
 
-    uint8_t expected_amulet_count = game.dungeon_level >= AMULET_LEVEL ? 1 : 0;
+    uint8_t expected_amulet_count = game.dungeon_level >= AMULET_LEVEL && !is_carrying_amulet() ? 1 : 0;
     return amulet_count == expected_amulet_count;
 }
 
@@ -736,6 +737,28 @@ int test_level_generation(uint16_t i)
     game.levels_without_food = levels_without_food;
     generate_level();
     return calculate_level_checksum() == level_checksum;
+}
+
+int test_level_amulet_loot(uint16_t i)
+{
+    uint8_t amulet = create_item(ITEM_TYPE_AMULET, 0);
+    insert_item_after(&game.first_pack_item, NO_ITEM, amulet);
+    game.seed = LEVEL_TEST_FIRST_SEED + i;
+    game.max_level = AMULET_LEVEL + 1;
+
+    // a legmélyebb elért szint fölött üres a padló
+    game.dungeon_level = AMULET_LEVEL;
+    generate_level();
+    bool ok = game.first_floor_item == NO_ITEM;
+
+    // a legmélyebb elért szinten van arany vagy tárgy, de újabb amulett nincs
+    game.dungeon_level = AMULET_LEVEL + 1;
+    generate_level();
+    ok = ok && game.first_floor_item != NO_ITEM && are_gold_and_amulet_valid();
+
+    game.first_pack_item = NO_ITEM;
+    free_item(amulet);
+    return ok;
 }
 
 #define MONSTER_MOVE_TEST_TURNS     20          // ennyi kör TURN_TEST_RUNNING_MONSTERS ébren lévő szörnnyel, aztán ennyi mindegyikkel

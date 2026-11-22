@@ -472,6 +472,7 @@ void run_game(void)
     last_code = 0;
     last_item_index = NO_ITEM;
     game.dungeon_level = 1;
+    game.max_level = 1;
     game.levels_without_food = 0;
     clear_item_table();
     new_level();

@@ -15,7 +15,8 @@
 bool find_empty_floor(uint8_t room_index, uint8_t *x, uint8_t *y);         // üres padló, labirintusban üres járat: tárgynak, lépcsőnek
 bool find_walkable_tile(uint8_t room_index, uint8_t *x, uint8_t *y);       // járható mező szörny nélkül: a játékosnak
 // a szint a MAP-ba a game.dungeon_level mélységen: szobák, folyosók, lépcső, a játékos helye (game.player.x, y), titkos folyosó-mezők, arany,
-// kezdő szörnyek, tárgyak, amulett; az előző szint padlón lévő tárgyai felszabadulnak; a képernyőhöz nem nyúl, ezért a fejlesztői tesztek is ezt hívják
+// kezdő szörnyek, tárgyak, amulett; ha a mélység nagyobb a game.max_level-nél, az lesz az új; az előző szint padlón lévő tárgyai
+// felszabadulnak; a képernyőhöz nem nyúl, ezért a fejlesztői tesztek is ezt hívják
 void generate_level(void);
 
 // új szint: a látott térkép törlése, generate_level, majd a nézőablak a játékosra áll, teljes újrarajzolással

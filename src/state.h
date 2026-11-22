@@ -175,6 +175,7 @@ struct Exit {
 struct GameState {
     uint32_t seed;
     uint8_t  dungeon_level;                     // 1..DUNGEON_LEVEL_MAX
+    uint8_t  max_level;                         // a legmélyebb eddig elért szint; amulettel csak ott van arany és tárgy (level.c)
     uint8_t  levels_without_food;               // hány szint óta nem generálódott étel (no_food, items.h); 255-nél megáll
 
     uint32_t gold;

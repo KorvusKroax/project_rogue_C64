@@ -153,9 +153,18 @@ static bool find_monster_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
 #define MONSTER_CHANCE_WITH_GOLD      80        // százalék: az aranyat gyakran szörny őrzi
 #define MONSTER_CHANCE_WITHOUT_GOLD   25
 
-// szobánként: arany 1/2 eséllyel, ha van neki üres padló és helye a tárgytáblában; utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
+// a szinten lehet arany és tárgy: amulett nélkül mindig, amulettel csak a legmélyebb elért szinten (max_level)
+static bool is_loot_allowed(void)
+{
+    return !is_carrying_amulet() || game.dungeon_level >= game.max_level;
+}
+
+// szobánként: arany 1/2 eséllyel, ha a szinten lehet (is_loot_allowed), és van neki üres padló és helye a tárgytáblában;
+// utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
 static void place_gold_and_monsters(void)
 {
+    bool is_gold_allowed = is_loot_allowed();
+
     for (uint8_t room_index = 0; room_index < ROOM_COUNT; room_index++) {
         if (game.rooms[room_index].flags & ROOM_PHANTOM) continue;
 
@@ -163,8 +172,8 @@ static void place_gold_and_monsters(void)
         uint8_t y;
         bool has_gold = false;
 
-        // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) lehet arany; a dobás ettől függetlenül lefut
-        if (rnd(GOLD_CHANCE_DIVISOR) == 0 && find_empty_floor(room_index, &x, &y)) {
+        // az arany dobása akkor is lefut, ha a szinten nem lehet arany
+        if (rnd(GOLD_CHANCE_DIVISOR) == 0 && is_gold_allowed && find_empty_floor(room_index, &x, &y)) {
             uint8_t gold_index = create_item(ITEM_TYPE_GOLD, 0);
             if (gold_index != NO_ITEM) {
                 set_random_gold_amount(gold_index);
@@ -272,11 +281,12 @@ static void place_amulet(void)
     }
 }
 
-// a szint tárgyai: 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel kincses szoba, aztán ITEM_ATTEMPTS próba bármely nem fantom szobában,
-// végül az AMULET_LEVEL mélységtől az amulett
+// a szint tárgyai, ha a szinten lehet (is_loot_allowed; ha nem, dobás sincs): 1 / TREASURE_ROOM_CHANCE_DIVISOR eséllyel kincses szoba,
+// aztán ITEM_ATTEMPTS próba bármely nem fantom szobában, végül az AMULET_LEVEL mélységtől az amulett, ha nincs a játékosnál
 static void place_items(void)
 {
-    // ide jön: amulettel csak a legnagyobb elért mélységen (max_level) van tárgy
+    if (!is_loot_allowed()) return;
+
     if (rnd(TREASURE_ROOM_CHANCE_DIVISOR) == 0) {
         place_treasure_room();
     }
@@ -287,8 +297,7 @@ static void place_items(void)
         }
     }
 
-    // ide jön: ha a játékosnál már ott van (has_amulet), nincs újabb
-    if (game.dungeon_level >= AMULET_LEVEL) {
+    if (game.dungeon_level >= AMULET_LEVEL && !is_carrying_amulet()) {
         place_amulet();
     }
 }
@@ -316,7 +325,9 @@ static void choose_player_position(void)
 
 void generate_level(void)
 {
-    // ide jön: ha a mélység nagyobb az eddigi legnagyobbnál (max_level), az lesz az új legnagyobb
+    if (game.dungeon_level > game.max_level) {
+        game.max_level = game.dungeon_level;
+    }
     clear_map();
     clear_monsters();
     // ide jön: a szörnyek csomagjainak törlése, a tárgytáblában a helyük felszabadul

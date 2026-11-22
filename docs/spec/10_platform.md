@@ -126,7 +126,7 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 | játékállapot (perzisztens blokk) | kb. 8,5 KB |
 | képernyő + karakterkészlet | 3 KB |
 | **szintgenerálás** | legfeljebb 3 másodperc |
-| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | átlagban legfeljebb a futás lépésideje (lásd lent), a szokásos 3–5 ébren lévő szörnnyel; egy-egy kör tovább tarthat (szobába lépés, sok gyorsított vagy repülő szörny). Az alvó szörny nem mozog, nem számít bele. A szint-önteszt minden futáskor méri ([10.9](#109-fejlesztői-build-és-determinizmus)); a szörnymozgás elkészültekor, gyorsítás előtt mélységtől függően átlagosan 2,6–5,3 képkocka volt, nagy részét a szörnyek lépése vitte el (a következő mező és a cél választása), a többit a körülnézés |
+| **egy kör** (szörnymozgással, rajzolással, görgetés nélkül) | átlagban legfeljebb a futás lépésideje (lásd lent), a szokásos 3–5 ébren lévő szörnnyel; egy-egy kör tovább tarthat (szobába lépés, sok gyorsított vagy repülő szörny). Az alvó szörny nem mozog, nem számít bele. A körök öntesztje (`turns`) minden futáskor méri ([10.9](#109-fejlesztői-build-és-determinizmus)); a szörnymozgás elkészültekor, gyorsítás előtt mélységtől függően átlagosan 2,6–5,3 képkocka volt, nagy részét a szörnyek lépése vitte el (a következő mező és a cél választása), a többit a körülnézés |
 | **futás** | lépésenként mindig ugyanannyi képkocka (3 vagy 4, a gyorsítás utáni mérés alapján rögzítve, [10.6](#106-időzítés)) |
 | **görgetés** | legfeljebb 2 képkocka |
 

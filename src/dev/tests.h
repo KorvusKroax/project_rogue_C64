@@ -99,6 +99,8 @@ bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count);  
 
 int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
 int test_level_monster_moves(uint16_t i);       // az i. szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; közben a kör idejét méri
+#define LEVEL_AMULET_TEST_LEVEL_COUNT  10       // ennyi maggal, magonként két szint
+int test_level_amulet_loot(uint16_t i);         // amulettel a legmélyebb elért szint fölött üres a padló, a legmélyebb elért szinten van arany vagy tárgy, de újabb amulett nincs
 bool show_level_room_ratios(void);              // mélységenként a sötét szobák és a labirintusok várt és kapott száma, a test_level_generation után; igaz, ha mind a tűrésen belül (leállított futásnál nem ítél, igazat ad)
 bool show_level_generation_times(void);         // mélységenként a leglassabb szintgenerálás képkockában, a test_level_generation után; igaz, ha mind a 3 másodperces kereten belül
 void show_level_turn_times(void);               // mélységenként egy kör ideje a képkocka százalékában, a test_level_monster_moves után
