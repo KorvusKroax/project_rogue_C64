@@ -136,6 +136,7 @@ uint8_t allocate_item(void);                    // egy szabad hely kitöltetlen�
 void free_item(uint8_t index);                  // a hely újra szabad, a game.item_count eggyel csökken; a tárgy már egyik listában sincs
 
 uint8_t get_item_character(uint8_t type);       // a tárgy jele a térképen
+bool is_item_character(uint8_t character);      // a jel valamelyik tárgytípusé
 
 bool is_many_weapon(uint8_t which);             // kötegelt lövedék (ISMANY): nyíl, dart, shuriken
 bool has_ring_modifier(uint8_t which);          // modos gyűrű: protection, add strength, dexterity, increase damage
@@ -164,6 +165,8 @@ void remove_item_from_list(uint8_t *list_first, uint8_t index);                /
 // a padlón lévő tárgyak listája, a legutóbb lerakottal kezdve;
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y);  // a pozíciója (x, y), a mezőn a jele, és a lista elejére kerül
+uint8_t find_floor_item_at(uint8_t x, uint8_t y);  // a padlón az x, y mezőn fekvő tárgy (egy mezőn legfeljebb egy van); NO_ITEM, ha ott nincs
+void take_item_from_floor(uint8_t index);       // a tárgy kikerül a listából, a mező jele folyosó-mezőn (TILE_PASSAGE) folyosó, különben padló
 void free_floor_items(void);                    // új szintnél: a padlón lévő tárgyak helye felszabadul, a lista üres
 
 #endif

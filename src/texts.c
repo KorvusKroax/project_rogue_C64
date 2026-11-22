@@ -10,6 +10,11 @@ const char text_which_direction[] = "which direction?";
 const char text_no_monster_there[] = "I see no monster there";
 const char text_being_held[] = "you are being held";
 const char text_xeroc_revealed[] = "wait! That's a xeroc!";
+const char text_found_gold[] = "you found \3 gold pieces";
+const char text_you_now_have[] = "you now have \1 (\2)";
+const char text_no_room_in_pack[] = "there's no room in your pack";
+const char text_moved_onto[] = "you moved onto \1";
+const char text_nothing_to_pick_up[] = "there is nothing here to pick up";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

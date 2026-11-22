@@ -1,7 +1,17 @@
 #include "pack.h"
 
+#include <stddef.h>
+
+#include "item_names.h"
 #include "items.h"
+#include "message.h"
 #include "state.h"
+#include "texts.h"
+
+// az arany mennyisége az üzenetben előjeles 16 bites szám (message_format)
+#if GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * DUNGEON_LEVEL_MAX + GOLD_AMOUNT_MIN - 1 > 0x7fff
+    #error "az arany mennyisége nem fér az üzenet számába"
+#endif
 
 // a kötegelt fegyver kötege egy hely, minden más tárgy darabonként egy
 static uint8_t get_item_slot_count(const struct Item *item)
@@ -109,4 +119,39 @@ uint8_t add_item_to_pack(uint8_t index)
     item->location.pack_letter = choose_free_pack_letter();
     insert_item_after(&game.first_pack_item, previous, index);
     return index;
+}
+
+void report_moving_onto_item(uint8_t index)
+{
+    message_format(text_moved_onto, format_item_name(get_item(index)), NULL, 0);
+}
+
+void pick_up_item(uint8_t index)
+{
+    struct Item *item = get_item(index);
+
+    // az arany nem kerül a csomagba
+    if (item->type == ITEM_TYPE_GOLD) {
+        uint16_t amount = item->properties.gold_amount;
+        game.gold += amount;
+        take_item_from_floor(index);
+        free_item(index);
+        message_format(text_found_gold, NULL, NULL, amount);
+        return;
+    }
+    // ide jön: a már látott scare monster tekercs porrá válik
+
+    if (!has_pack_room_for(index)) {
+        message(text_no_room_in_pack);
+        report_moving_onto_item(index);
+        return;
+    }
+
+    take_item_from_floor(index);
+    uint8_t pack_index = add_item_to_pack(index);
+    // ide jön: a tárgy megtaláltnak számít (ISFOUND); az amulettel has_amulet
+
+    const struct Item *pack_item = get_item(pack_index);
+    char letter_text[2] = { pack_item->location.pack_letter, 0 };
+    message_format(text_you_now_have, format_item_name(pack_item), letter_text, 0);
 }

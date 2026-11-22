@@ -39,7 +39,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 |---|---|---|
 | medvecsapdában lépne | you are still stuck in the bear trap | |
 | flytrap fogja | you are being held | |
-| `m` tárgyra | you moved onto <név> | |
+| `m` tárgyra; tele csomagnál a „there's no room in your pack” után | you moved onto <név> | |
 | `,` üres mezőn | there is nothing here to pick up | |
 | lebegve `,` `>` `<` | You can't. You're floating off the ground! | |
 | `>` nem lépcsőn, vagy a 254. szinten | I see no way down | |

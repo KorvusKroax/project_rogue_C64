@@ -197,15 +197,6 @@ static bool are_map_tiles_valid(void)
     return true;
 }
 
-// a jel egy tárgy jele
-static bool is_item_character(uint8_t character)
-{
-    for (uint8_t type = 0; type < ITEM_TYPE_COUNT; type++) {
-        if (get_item_character(type) == character) return true;
-    }
-    return false;
-}
-
 // a labirintusban nincs ajtó: a mezői folyosó-mezők, üresek, vagy a lépcső vagy egy tárgy áll rajtuk; a kijárat is folyosó-mező marad
 static bool is_maze_without_doors(const struct Room *room)
 {

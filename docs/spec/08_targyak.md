@@ -265,7 +265,8 @@ pick_up(item):
   if item is scare monster and item.ISFOUND: "the scroll turns to dust as you pick it up"; remove; return
   // helyszámlálás: inpack = a csomag DARABSZÁMA, kivéve a csoportos (group) fegyvereket
   //   – 3 egyforma bájital 3 helyet foglal; egy 25-ös nyílköteg 1 helyet
-  if inpack + 1 > MAX_PACK (23) (köteghez csatolásnál nem számít bele): "there's no room in your pack"; return
+  if inpack + 1 > MAX_PACK (23) (köteghez csatolásnál nem számít bele):
+     "there's no room in your pack"; "you moved onto <név>"; return    // a tárgy a padlón marad
   merge:
     POTION/SCROLL/FOOD azonos which → count++
     fegyver azonos which és group → count += item.count
@@ -274,8 +275,11 @@ pick_up(item):
         az utolsó azonos típusú után, ha az sincs, a csomag végére
   item.ISFOUND = true
   if AMULET: has_amulet = true
+  "you now have <név> (<betű>)"         // köteghez csatolásnál a köteg neve és betűje
 ```
-A felvett tárgy (az arany és a porrá váló scare monster is) kikerül a padlón lévő tárgyak listájából, minden szörny, amelyik rá tartott, a játékost veszi célba ([6.5](06_szornyek.md#65-célpont)), és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
+A felvett tárgy (az arany és a porrá váló scare monster is, és üres csomagnál is, J28) kikerül a padlón lévő tárgyak listájából, minden szörny, amelyik rá tartott, a játékost veszi célba ([6.5](06_szornyek.md#65-célpont)), és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
+
+> **C64-javítás (J28):** üres csomagnál is ugyanúgy megy a felvétel: a tárgy lekerül a padlóról. *Eredetileg* üres csomagnál a felvétel kihagyta a helyellenőrzést (`pack_room`), és vele a tárgy levételét a padlóról: a tárgy a padlón lévő tárgyak listájában maradt, a jele a térképen, és mivel a két lista ugyanazzal a mutatóval láncol, a csomag listája a padlón utána következő tárgyakkal folytatódott. Ez csak akkor jöhetett elő, ha a játékos mindent lerakott, mert tárgyakkal kezd.
 
 Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”); az Amulett is lerakható (ekkor `has_amulet = false`). Bájital-, tekercs- és ételkötegből egy darab kerül le, a köteg darabolódik; a fegyverköteg (nyíl, dart, shuriken, tőr) egészben kerül le. Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 

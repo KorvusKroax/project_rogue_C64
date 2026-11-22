@@ -30,4 +30,12 @@ bool has_pack_room_for(uint8_t index);
 // az eredmény a csomag tárgya, amelyben most van: a köteg, vagy maga a tárgy
 uint8_t add_item_to_pack(uint8_t index);
 
+// a padlón fekvő tárgy felvétele: az arany a pénzhez adódik („you found <n> gold pieces”), más tárgy a csomagba kerül
+// („you now have <név> (<betű>)”), és a felvett tárgy lekerül a padlóról; ha nem fér a csomagba, a padlón marad
+// („there's no room in your pack”, utána „you moved onto <név>”)
+void pick_up_item(uint8_t index);
+
+// az `m` parancs üzenete a padlón fekvő tárgyra lépve: „you moved onto <név>”
+void report_moving_onto_item(uint8_t index);
+
 #endif

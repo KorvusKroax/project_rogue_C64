@@ -2,6 +2,7 @@
 #include "test_runner.h"
 
 #include "../platform/screen.h"
+#include "../message.h"
 
 static const struct DevTest item_tests[] = {
     { "ITEM-CHANCES", test_item_chances, 1 },
@@ -18,12 +19,18 @@ static const struct DevTest item_tests[] = {
     { "PACK-SLOTS", test_pack_slots, 1 },
     { "PACK-LETTERS", test_pack_letters, 1 },
     { "PACK-ORDER", test_pack_order, 1 },
+    { "PICKUP-STEP", test_pickup_by_step, 1 },
+    { "PICKUP-GOLD", test_pickup_gold, 1 },
+    { "PICKUP-FULL PACK", test_pickup_full_pack, 1 },
 };
 
 int main(void)
 {
     init_test_program();
 
+    // az üzenetsáv sorait a felvétel üzenetei használják; a teli sáv nem vár szóközre
+    set_message_more_wait(false);
+    set_screen_cursor(0, MESSAGE_ROW + MESSAGE_ROW_COUNT);
     put_text("Item tests:");
     move_screen_cursor_to_next_row();
     bool all_ok = run_test_table(item_tests, TEST_COUNT(item_tests));

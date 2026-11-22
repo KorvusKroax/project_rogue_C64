@@ -221,6 +221,14 @@ uint8_t get_item_character(uint8_t type)
     return item_type_characters[type];
 }
 
+bool is_item_character(uint8_t character)
+{
+    for (uint8_t type = 0; type < ITEM_TYPE_COUNT; type++) {
+        if (item_type_characters[type] == character) return true;
+    }
+    return false;
+}
+
 bool is_many_weapon(uint8_t which)
 {
     return which == WEAPON_ARROW || which == WEAPON_DART || which == WEAPON_SHURIKEN;
@@ -421,6 +429,27 @@ void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y)
     item->location.floor_position.y = y;
     insert_item_after(&game.first_floor_item, NO_ITEM, index);
     set_map_character(x, y, get_item_character(item->type));
+}
+
+uint8_t find_floor_item_at(uint8_t x, uint8_t y)
+{
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct FloorPosition *position = &get_item(index)->location.floor_position;
+        if (position->x == x && position->y == y) return index;
+    }
+    return NO_ITEM;
+}
+
+void take_item_from_floor(uint8_t index)
+{
+    struct Item *item = get_item(index);
+    uint8_t x = item->location.floor_position.x;
+    uint8_t y = item->location.floor_position.y;
+
+    remove_item_from_list(&game.first_floor_item, index);
+    // tárgy csak padlóra és folyosó-mezőre kerül
+    set_map_character(x, y, (get_map_flags(x, y) & TILE_PASSAGE) ? CHAR_PASSAGE : CHAR_FLOOR);
+    // ide jön: minden szörny, amelyik a tárgy felé tartott, a játékost veszi célba
 }
 
 void free_floor_items(void)

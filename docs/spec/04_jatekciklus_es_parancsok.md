@@ -95,7 +95,7 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 | parancs | leírás |
 |---|---|
 | h j k l y u b n | lépés; szörnyre lépés = támadás; tárgyra lépve automatikus felvétel |
-| m + irány | lépés felvétel nélkül („moved onto …”) |
+| m + irány | lépés felvétel nélkül („moved onto …”); számprefixszel az irányt egyszer kérdezi, és minden lépés felvétel nélküli |
 | SHIFT + irány | futás (lásd lent) |
 | CTRL + irány | óvatos futás: ezen felül ajtó mellett, elágazásnál és bármi érdekes mellett is megáll (lásd lent); vakon ugyanaz, mint a SHIFT |
 | `>` * | lefelé lépcsőn (ha a lépcsőn áll és nem lebeg) |
@@ -163,7 +163,9 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
 
-**Irány bekérése** (`get_dir`; az `f`, `F`, `t`, `z`, `^` és `m` parancsnál): „which direction?”. Csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad. ESC-re a parancs elmarad, nem visz időt, és az utolsó parancs az előző marad ([4.2.5](#425-rendszer)). Az `a` ismétlésnél nem kérdez újra, hanem a tárolt irányt használja. ISHUH alatt 20% eséllyel véletlen irány, ismétlésnél is.
+**Irány bekérése** (`get_dir`; az `f`, `F`, `t`, `z`, `^` és `m` parancsnál): „which direction?”. Csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad. ESC-re a parancs elmarad, nem visz időt, az utolsó parancs az előző marad ([4.2.5](#425-rendszer)), és a számprefixes ismétlés is véget ér (J27). Az `a` ismétlésnél nem kérdez újra, hanem a tárolt irányt használja. ISHUH alatt 20% eséllyel véletlen irány, ismétlésnél is.
+
+> **C64-javítás (J27):** az irány vagy a tárgy bekérésénél ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) leütött ESC a számprefixes ismétlést is leállítja. *Eredetileg* a szám megmaradt, és a parancs minden hátralévő ismétlésnél újra kérdezett: az `5m` után ötször kellett ESC-et nyomni.
 
 > **C64-javítás (J15):** *eredetileg* a szabálytalan átlós irányba indított `f` nem csinált semmit, de a kör elment.
 
@@ -174,7 +176,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 ### 4.2.3 Tárgyak
 | parancs | leírás |
 |---|---|
-| `,` | felvétel (lebegve nem) |
+| `,` | felvétel (lebegve nem); időbe kerül, üres mezőn és lebegve is |
 | d | lerakás – csak üres FLOOR vagy PASSAGE mezőre; használatban lévő átkozottat nem. Bájital-, tekercs- és ételkötegből egy darab kerül le, a fegyverköteg (nyíl, dart, shuriken, tőr) egészben ([8.9](08_targyak.md#89-csomag)) |
 | q | bájital ivás |
 | r | tekercs olvasás |
@@ -210,7 +212,7 @@ waste_time():
 | `.` | pihenés 1 kör |
 | s | keresés ([9.2](09_csapdak.md#92-keresés-s-searching-gyűrű)) |
 | a | utolsó parancs ismétlése, ugyanazzal az iránnyal és tárggyal, újrakérdezés nélkül; ha az irány vagy a tárgy bekérése ESC-vel elmaradt, az előző parancsé; „you haven't typed a command yet” |
-| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): a játékos támadása, ha szörnyhöz ér (közelharc, dobott tárgy, varázslövedék, sugár), szörnytámadás, sárkánytűz, éhség-állapotváltás, „you are being held” (J25), csapda, teleport, sikeres keresés, illegális parancs |
+| szám + parancs | ismétlés ≤ 255-ször. Megmarad: `.` `a` `s` `t` `q` `r` `z` `m`, a mozgások (kis- és nagybetű, CTRL); minden másnál a szám elvész. Futásnál a szám a futások száma: futás közben nem fogy, és egy futás végén a következő ugyanabba az irányba indul (`5H` ötször fut). Megszakítja (a futással azonos esetek): a játékos támadása, ha szörnyhöz ér (közelharc, dobott tárgy, varázslövedék, sugár), szörnytámadás, sárkánytűz, éhség-állapotváltás, „you are being held” (J25), csapda, teleport, sikeres keresés, illegális parancs; ezen felül az irány vagy a tárgy bekérésénél leütött ESC (J27) |
 | ESC * | megszakít |
 | o * | beállítások (lásd lent) |
 | SHIFT-s * | mentés (lásd lent); sikeres mentés után vissza a címképernyőre |
@@ -275,7 +277,7 @@ if pack üres: "you aren't carrying anything"; return null
 if 'a' ismétlés: az előző kiválasztott tárgy (ha elfogyott: "you ran out")
 loop:
   "which object do you want to <cél>? (* for list): "
-  ESC → "" (törlés), return null, nem visz időt
+  ESC → "" (törlés), return null, nem visz időt; a számprefixes ismétlés is véget ér (J27, 4.2.2)
   '*' → a csomag szűrt listája (inventory, a típusnak megfelelők), utána újra kérdez;
         ha nincs megfelelő: "you don't have anything appropriate", return null (nem visz időt)
   betű → ha nincs ilyen: "'<x>' is not a valid item", újra; különben return a tárgy

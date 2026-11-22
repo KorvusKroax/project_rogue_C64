@@ -3,9 +3,11 @@
 #include "combat.h"
 #include "explore.h"
 #include "game.h"
+#include "items.h"
 #include "map.h"
 #include "message.h"
 #include "monsters.h"
+#include "pack.h"
 #include "rooms.h"
 #include "state.h"
 #include "texts.h"
@@ -25,7 +27,8 @@ bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint
     return is_walkable_character(get_map_character(to_x, from_y)) && is_walkable_character(get_map_character(from_x, to_y));
 }
 
-bool move_player(int8_t step_x, int8_t step_y)
+// a lépés; tárgyra lépve a tárgyat felveszi, vagy (az `m` parancsnál) csak kiírja; igaz, ha időt vitt
+static bool take_player_step(int8_t step_x, int8_t step_y, bool is_pickup_wanted)
 {
     // ide jön: medvecsapda, zavarodottságban véletlen irány
 
@@ -78,12 +81,33 @@ bool move_player(int8_t step_x, int8_t step_y)
     game.player.y = target_y;
     follow_view_window(target_x);
 
-    if (target_character == CHAR_DOOR || target_character == CHAR_STAIRS) {
+    bool is_item_target = is_item_character(target_character);
+    if (target_character == CHAR_DOOR || target_character == CHAR_STAIRS || is_item_target) {
         stop_running();
     }
 
-    // ide jön: csapda kioldása, tárgy felvétele
+    // ide jön: csapda kioldása
+    // ide jön: lebegve a tárgyra lépés csendben nem csinál semmit
+    if (is_item_target) {
+        // a tárgy jele alatt mindig van tárgy a padlón
+        uint8_t item_index = find_floor_item_at(target_x, target_y);
+        if (is_pickup_wanted) {
+            pick_up_item(item_index);
+        } else {
+            report_moving_onto_item(item_index);
+        }
+    }
     return true;
+}
+
+bool move_player(int8_t step_x, int8_t step_y)
+{
+    return take_player_step(step_x, step_y, true);
+}
+
+bool move_player_without_pickup(int8_t step_x, int8_t step_y)
+{
+    return take_player_step(step_x, step_y, false);
 }
 
 void start_running(int8_t step_x, int8_t step_y, bool is_careful)

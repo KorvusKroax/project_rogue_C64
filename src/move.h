@@ -9,8 +9,11 @@
 bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint8_t to_y);
 
 // a játékos lépése a step_x, step_y irányba (-1, 0, 1); fogva tartva csak a flytrapot támadhatja meg, más lépése helyben marad,
-// de időbe kerül; igaz, ha időt vitt
+// de időbe kerül; tárgyra lépve a futás megáll, és a tárgyat felveszi; igaz, ha időt vitt
 bool move_player(int8_t step_x, int8_t step_y);
+
+// ugyanez az `m` parancsnak: tárgyra lépve nem veszi fel, csak kiírja („you moved onto <név>”)
+bool move_player_without_pickup(int8_t step_x, int8_t step_y);
 
 // futás a step_x, step_y irányba: az indítás nem visz időt, a lépéseket a take_run_step teszi meg;
 // az óvatos (CTRL) futás minden lépés után megáll, ha valami érdekes van a játékos mellett

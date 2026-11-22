@@ -13,6 +13,7 @@
 #include "level.h"
 #include "message.h"
 #include "move.h"
+#include "pack.h"
 #include "view.h"
 #include "player.h"
 #include "state.h"
@@ -37,6 +38,9 @@ static uint8_t last_code;
 static uint8_t previous_last_code;
 // az utolsó irányt kérő parancs iránya: az `a` ezt használja, nem kérdez újra
 static uint8_t last_direction_index;
+
+// az `m` után a lépés nem veszi fel a tárgyat; a számprefixes ismétlés lépései is ilyenek, a következő beolvasott parancsig
+static bool is_pickup_skipped;
 
 void stop_running_and_repeating(void)
 {
@@ -115,13 +119,14 @@ static bool is_repeatable_command(uint8_t code)
         case '.':
         case 'a':
         case 's':
+        case 'm':
             return true;
         default:
             return false;
     }
 }
 
-// lépés (kisbetű), futás (nagybetű) vagy óvatos futás (CTRL); igaz, ha időt vitt
+// lépés (kisbetű; az `m` után felvétel nélkül), futás (nagybetű) vagy óvatos futás (CTRL); igaz, ha időt vitt
 static bool execute_direction_command(uint8_t code, uint8_t direction_index)
 {
     int8_t step_x = direction_steps_x[direction_index];
@@ -136,6 +141,7 @@ static bool execute_direction_command(uint8_t code, uint8_t direction_index)
         start_running(step_x, step_y, true);
         return false;
     }
+    if (is_pickup_skipped) return move_player_without_pickup(step_x, step_y);
     return move_player(step_x, step_y);
 }
 
@@ -156,6 +162,7 @@ static uint8_t read_command(void)
     set_key_repeat(true);
     uint8_t code = wait_for_key();
     message_clear();
+    is_pickup_skipped = false;
 
     if (is_digit_key(code)) {
         uint8_t count = 0;
@@ -204,13 +211,14 @@ static uint8_t ask_direction(void)
 }
 
 // az irányt kérő parancs iránya: az `a` ismétlésnél a tárolt, különben a bekért; DIRECTION_COUNT, ha a kérdés ESC-vel elmaradt,
-// és ilyenkor az utolsó parancs az előző marad
+// és ilyenkor az utolsó parancs az előző marad, a számprefixes ismétlés pedig véget ér (J27)
 static uint8_t get_command_direction(bool is_repeat)
 {
     if (!is_repeat) {
         uint8_t direction_index = ask_direction();
         if (direction_index == DIRECTION_COUNT) {
             last_code = previous_last_code;
+            repeat_count = 0;
             return DIRECTION_COUNT;
         }
         last_direction_index = direction_index;
@@ -226,6 +234,29 @@ static bool execute_fight_command(uint8_t code, bool is_repeat)
     if (direction_index == DIRECTION_COUNT) return false;
 
     return start_fight(direction_steps_x[direction_index], direction_steps_y[direction_index], code == 'F');
+}
+
+// m + irány: lépés felvétel nélkül; a számprefixes ismétlés innen ennek az iránynak a lépése, az irányt nem kérdezi újra; igaz, ha időt vitt
+static bool execute_move_without_pickup_command(bool is_repeat)
+{
+    uint8_t direction_index = get_command_direction(is_repeat);
+    if (direction_index == DIRECTION_COUNT) return false;
+
+    is_pickup_skipped = true;
+    repeat_code = direction_letters[direction_index];
+    return execute_direction_command(repeat_code, direction_index);
+}
+
+// `,`: a játékos mezőjén fekvő tárgy felvétele; üres mezőn csak üzenet
+static void pick_up_item_here(void)
+{
+    // ide jön: lebegve „You can't. You're floating off the ground!”
+    uint8_t index = find_floor_item_at(game.player.x, game.player.y);
+    if (index == NO_ITEM) {
+        message(text_nothing_to_pick_up);
+        return;
+    }
+    pick_up_item(index);
 }
 
 // a parancs végrehajtása; igaz, ha időt vitt
@@ -255,6 +286,12 @@ static bool execute_command(uint8_t code)
         case 'f':
         case 'F':
             return execute_fight_command(code, is_repeat);
+        case 'm':
+            return execute_move_without_pickup_command(is_repeat);
+        case ',':
+            // üres mezőn is időbe kerül
+            pick_up_item_here();
+            return true;
         case '>':
             go_down_stairs();
             return false;

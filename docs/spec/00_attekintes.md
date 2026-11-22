@@ -135,3 +135,5 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J24 | a kamikaze csak az adott `F`-harcra szól, a következő `f` nem örökli | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J25 | a „you are being held” véget vet a futásnak, az ismétlésnek és az `f`-harcnak | [4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás) |
 | J26 | az amulett nem kap címkét (eredetileg kaphatott, de a neve sosem mutatta) | [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok) |
+| J27 | az irány vagy a tárgy bekérésénél leütött ESC a számprefixes ismétlést is leállítja (eredetileg minden hátralévő ismétlésnél újra kérdezett) | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
+| J28 | üres csomagnál is lekerül a felvett tárgy a padlóról (eredetileg a padlón is maradt, és a két lista összefonódott) | [8.9](08_targyak.md#89-csomag) |

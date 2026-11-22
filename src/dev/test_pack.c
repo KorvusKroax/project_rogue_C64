@@ -3,7 +3,12 @@
 #include <stdbool.h>
 
 #include "../items.h"
+#include "../map.h"
+#include "../monsters.h"
+#include "../move.h"
 #include "../pack.h"
+#include "../player.h"
+#include "../rooms.h"
 #include "../state.h"
 
 #define PACK_TEST_POTION_COUNT  3               // ennyi egyforma bájital egy tárgy a csomagban, és ennyi helyet foglal
@@ -116,4 +121,120 @@ int test_pack_order(uint16_t i)
 
     clear_item_table();
     return is_order_kept;
+}
+
+// a felvétel tesztmezői: a játékos egy folyosó-mezőn, jobbra mellette egy folyosó- és egy padlómező
+#define PICKUP_PLAYER_X        10
+#define PICKUP_PLAYER_Y        (MAP_TOP_ROW + 2)
+#define PICKUP_PASSAGE_NUMBER  1
+
+#define PICKUP_TEST_GOLD_START   100            // ennyi aranya van a játékosnak a felvétel előtt
+#define PICKUP_TEST_GOLD_AMOUNT  25             // ennyi arany fekszik a padlón
+
+static void put_pickup_passage_tile(uint8_t x, uint8_t y)
+{
+    set_map_character(x, y, CHAR_PASSAGE);
+    add_map_flags(x, y, TILE_PASSAGE | PICKUP_PASSAGE_NUMBER);
+}
+
+// a kezdőértékű játékos a tesztmezőjén, szörnyek nélkül; üres a padló és a csomag
+static void put_pickup_scene(void)
+{
+    clear_map();
+    clear_monsters();
+    clear_item_table();
+    init_player();
+
+    put_pickup_passage_tile(PICKUP_PLAYER_X, PICKUP_PLAYER_Y);
+    put_pickup_passage_tile(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y);
+    set_map_character(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y, CHAR_FLOOR);
+    game.player.x = PICKUP_PLAYER_X;
+    game.player.y = PICKUP_PLAYER_Y;
+    game.player.room = get_room_at(PICKUP_PLAYER_X, PICKUP_PLAYER_Y);
+}
+
+static void clear_pickup_scene(void)
+{
+    clear_item_table();
+    clear_map();
+}
+
+int test_pickup_by_step(uint16_t i)
+{
+    put_pickup_scene();
+    uint8_t potion = create_item(ITEM_TYPE_POTION, 0);
+    put_item_on_floor(potion, PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y);
+    uint8_t scroll = create_item(ITEM_TYPE_SCROLL, 0);
+    put_item_on_floor(scroll, PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y);
+
+    // futva a tárgyra lépve felveszi, és a futás megáll; a futás lépése a move_player, mint a fogva tartás tesztjében (test_combat.c)
+    start_running(1, 0, false);
+    bool ok =
+        move_player(1, 0) &&
+        !is_running() &&
+        find_floor_item_at(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == NO_ITEM &&
+        get_map_character(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == CHAR_PASSAGE &&
+        game.first_pack_item == potion &&
+        get_item(potion)->location.pack_letter == FIRST_PACK_LETTER;
+
+    // az `m` lépése a tárgyat a padlón hagyja, a jelével együtt
+    ok = ok &&
+        move_player_without_pickup(1, 0) &&
+        game.player.x == PICKUP_PLAYER_X + 2 &&
+        find_floor_item_at(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == scroll &&
+        get_map_character(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == CHAR_SCROLL &&
+        get_item(potion)->next == NO_ITEM;
+
+    // a `,` felveszi, és a padlómező jele újra padló
+    pick_up_item(scroll);
+    const uint8_t expected[] = { potion, scroll };
+    ok = ok &&
+        game.first_floor_item == NO_ITEM &&
+        get_map_character(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == CHAR_FLOOR &&
+        is_item_list(game.first_pack_item, expected, sizeof(expected));
+
+    clear_pickup_scene();
+    return ok;
+}
+
+int test_pickup_gold(uint16_t i)
+{
+    put_pickup_scene();
+    game.gold = PICKUP_TEST_GOLD_START;
+    uint8_t gold = create_item(ITEM_TYPE_GOLD, 0);
+    get_item(gold)->properties.gold_amount = PICKUP_TEST_GOLD_AMOUNT;
+    put_item_on_floor(gold, PICKUP_PLAYER_X, PICKUP_PLAYER_Y);
+
+    pick_up_item(gold);
+    bool ok =
+        game.gold == PICKUP_TEST_GOLD_START + PICKUP_TEST_GOLD_AMOUNT &&
+        game.item_count == 0 &&
+        game.first_floor_item == NO_ITEM &&
+        game.first_pack_item == NO_ITEM &&
+        get_map_character(PICKUP_PLAYER_X, PICKUP_PLAYER_Y) == CHAR_PASSAGE;
+
+    clear_pickup_scene();
+    return ok;
+}
+
+int test_pickup_full_pack(uint16_t i)
+{
+    put_pickup_scene();
+    while (calculate_pack_slots_used() < MAX_PACK) {
+        add_item_to_pack(create_item(ITEM_TYPE_SCROLL, 0));
+    }
+    uint8_t potion = create_item(ITEM_TYPE_POTION, 0);
+    put_item_on_floor(potion, PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y);
+    uint8_t item_count = game.item_count;
+
+    bool ok =
+        move_player(1, 0) &&
+        game.player.x == PICKUP_PLAYER_X + 1 &&
+        find_floor_item_at(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == potion &&
+        get_map_character(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == CHAR_POTION &&
+        calculate_pack_slots_used() == MAX_PACK &&
+        game.item_count == item_count;
+
+    clear_pickup_scene();
+    return ok;
 }

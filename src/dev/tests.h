@@ -71,6 +71,9 @@ int test_longest_item_name(uint16_t i);         // a leghosszabb név betűre eg
 int test_pack_slots(uint16_t i);                // a csomag helyei darabszám szerint, a kötegelt fegyver egy hely; betelt csomagba csak a meglévő köteghez csatolt fegyver fér
 int test_pack_letters(uint16_t i);              // egy tárgy kivétele után a többi betűje marad, az új tárgy a legkisebb szabad betűt kapja
 int test_pack_order(uint16_t i);                // a csomag típus szerint rendezett: az új tárgy az azonos altípusúak, különben az azonos típusúak után kerül
+int test_pickup_by_step(uint16_t i);            // futva a tárgyra lépve felveszi, a futás megáll, és a mező újra folyosó; az `m` a padlón hagyja; a `,` felveszi, és a mező újra padló
+int test_pickup_gold(uint16_t i);               // az arany a pénzhez adódik, nem kerül a csomagba, és a rekordja felszabadul
+int test_pickup_full_pack(uint16_t i);          // betelt csomagnál a tárgy a jelével együtt a padlón marad
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 

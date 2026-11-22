@@ -21,6 +21,11 @@ extern const char text_which_direction[];
 extern const char text_no_monster_there[];
 extern const char text_being_held[];
 extern const char text_xeroc_revealed[];
+extern const char text_found_gold[];                // \3: a mennyiség
+extern const char text_you_now_have[];              // \1: a tárgy neve, \2: a betűje
+extern const char text_no_room_in_pack[];
+extern const char text_moved_onto[];                // \1: a tárgy neve
+extern const char text_nothing_to_pick_up[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4
