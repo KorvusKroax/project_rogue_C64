@@ -274,18 +274,19 @@ pick_up(item):
         a csomag típus szerint rendezett: az új tárgy az utolsó azonos altípusú után kerül, ha nincs ilyen,
         az utolsó azonos típusú után, ha az sincs, a csomag végére
   item.ISFOUND = true
-  if AMULET: has_amulet = true
   "you now have <név> (<betű>)"         // köteghez csatolásnál a köteg neve és betűje
 ```
 A felvett tárgy (az arany és a porrá váló scare monster is, és üres csomagnál is, J28) kikerül a padlón lévő tárgyak listájából, minden szörny, amelyik rá tartott, a játékost veszi célba ([6.5](06_szornyek.md#65-célpont)), és a mező jele visszaáll: `PASSAGE`, ha a mezőn F_PASS van (folyosó és labirintus), különben `FLOOR`. *Eredetileg* ezt a `roomin` döntötte el: folyosó-mezőn a folyosórendszer szobáját adja, amelyiknek ISGONE flagje van, ezért `PASSAGE`. Az F_PASS flag ugyanezt adja. Ha a csomag tele van, a tárgy és a jele a helyén marad.
 
 > **C64-javítás (J28):** üres csomagnál is ugyanúgy megy a felvétel: a tárgy lekerül a padlóról. *Eredetileg* üres csomagnál a felvétel kihagyta a helyellenőrzést (`pack_room`), és vele a tárgy levételét a padlóról: a tárgy a padlón lévő tárgyak listájában maradt, a jele a térképen, és mivel a két lista ugyanazzal a mutatóval láncol, a csomag listája a padlón utána következő tárgyakkal folytatódott. Ez csak akkor jöhetett elő, ha a játékos mindent lerakott, mert tárgyakkal kezd.
 
-Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”, a tárgyat nem is kérdezi, és nem visz időt); az Amulett is lerakható (ekkor `has_amulet = false`). Bájital-, tekercs- és ételkötegből egy darab kerül le, a köteg darabolódik; a fegyverköteg (nyíl, dart, shuriken, tőr) egészben kerül le. Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
+Lerakás (`d`): csak ha a mező FLOOR vagy PASSAGE (különben „there is something there already”, a tárgyat nem is kérdezi, és nem visz időt); az Amulett is lerakható. Bájital-, tekercs- és ételkötegből egy darab kerül le, a köteg darabolódik; a fegyverköteg (nyíl, dart, shuriken, tőr) egészben kerül le. Ha a lerakás egy köteg darabolásával jár, és a tárgytábla teljesen tele van: „there's no room for that”, nem visz időt ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
 
 A csomag a tárgytábla rekordjainak láncolt listája ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)); a 23-as `MAX_PACK` korlát a darabszámra vonatkozik, nem a rekordokra. Felvételkor és összevonáskor a felvett rekord felszabadul, ha a köteghez csatolódott. A betűket nem tárolja külön tábla: a szabad betű a csomag tárgyainak betűiből adódik. *Eredetileg* a nem kötegelő, azonos altípusú tárgy (pl. egy második ring mail) az első ilyen után került, nem az utolsó után; a különbség csak a csomaglista sorrendjében látszik.
 
 ## 8.10 Arany, Amulett, Étel
 - Arany: `arm` = mennyiség; nem foglal csomaghelyet. A szoba berendezésekor lerakott arany ROOMGOLD jelzőt kap ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)), ezt őrzi a kapzsi szörny ([6.4](06_szornyek.md#64-ébresztés), E23).
-- Amulett: `,`; az `AMULET_LEVEL` (26.) szinttől generálódik ([2.8](02_szintgeneralas.md#28-tárgyak-put_things)); megszerzésekor `has_amulet`; felfelé lépcsőzés engedélyezett; éhség alapfogyása 0. Lerakható, eldobható, és a nimfa is ellophatja (mágikus tárgy).
+- Amulett: `,`; az `AMULET_LEVEL` (26.) szinttől generálódik ([2.8](02_szintgeneralas.md#28-tárgyak-put_things)); amíg a játékos csomagjában van (`has_amulet`), felfelé lépcsőzés engedélyezett, és az éhség alapfogyása 0. Lerakható, eldobható, és a nimfa is ellophatja (mágikus tárgy). Ha elvész, a 26. mélységtől minden új szinten újra generálódik, amíg nincs a játékosnál.
+
+  > **C64-javítás (J29):** a `has_amulet` nem külön jelző, hanem a csomagból adódik: igaz, ha a csomagban van amulett. *Eredetileg* jelző volt, amelyet a felvétel beállított és a lerakás törölt, de az eldobás és a nimfa lopása nem. Ilyenkor a játékos amulett nélkül is felmehetett a lépcsőn és nyerhetett, a mély szinteken pedig új amulett sem keletkezett. A lopással az amulett végleg elvész, így itt a lopás ára az, hogy a játékosnak a 26. mélységig vissza kell mennie egy újért.
 - Étel: két fajta: food ration (90%) és gyümölcs (10%, alapnév „slime-mold”) Mindig 1 darab generálódik.

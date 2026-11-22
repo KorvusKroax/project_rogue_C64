@@ -80,6 +80,7 @@ int test_pickup_gold(uint16_t i);               // az arany a pénzhez adódik, 
 int test_pickup_full_pack(uint16_t i);          // betelt csomagnál a tárgy a jelével együtt a padlón marad
 int test_drop_stack_piece(uint16_t i);          // a bájitalkötegből egy darab kerül le új rekordként, a köteg a csomagban marad; a nyílköteg egészben
 int test_drop_full_table(uint16_t i);           // betelt tárgytáblánál a köteg darabolása elmarad, és semmi nem változik; egy egész tárgy lerakható
+int test_amulet_carried(uint16_t i);            // az amulett felvéve a játékosnál van, lerakva nincs (a csomagból adódik, J29)
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 

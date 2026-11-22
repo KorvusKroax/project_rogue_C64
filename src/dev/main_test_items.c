@@ -24,6 +24,7 @@ static const struct DevTest item_tests[] = {
     { "PICKUP-FULL PACK", test_pickup_full_pack, 1 },
     { "DROP-STACK PIECE", test_drop_stack_piece, 1 },
     { "DROP-FULL TABLE", test_drop_full_table, 1 },
+    { "AMULET-CARRIED", test_amulet_carried, 1 },
 };
 
 int main(void)

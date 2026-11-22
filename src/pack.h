@@ -21,6 +21,10 @@ uint8_t calculate_pack_slots_used(void);        // a csomag foglalt helyeinek sz
 uint8_t find_pack_item_by_letter(uint8_t letter);   // a csomag letter betűjű tárgya; NO_ITEM, ha nincs ilyen
 bool is_item_in_pack(uint8_t index);            // a tárgy a csomag listájában van
 
+// a játékosnál van-e az amulett: a csomagjában van-e; nincs külön jelző, így az eredmény a felvétel, a lerakás, a dobás és a lopás
+// után is mindig pontos (J29)
+bool is_carrying_amulet(void);
+
 // a tárgy befér-e a csomagba: a meglévő kötegéhez csatolt kötegelt fegyver nem foglal új helyet
 bool has_pack_room_for(uint8_t index);
 

@@ -306,3 +306,22 @@ int test_drop_full_table(uint16_t i)
     clear_pickup_scene();
     return ok;
 }
+
+int test_amulet_carried(uint16_t i)
+{
+    put_pickup_scene();
+    add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
+    uint8_t amulet = create_item(ITEM_TYPE_AMULET, 0);
+    put_item_on_floor(amulet, PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y);
+
+    // a padlón fekvő amulett nincs a játékosnál, felvéve nála van, lerakva újra nincs
+    bool ok = !is_carrying_amulet();
+    ok = ok &&
+        move_player(1, 0) &&
+        is_carrying_amulet() &&
+        drop_item(amulet) &&
+        !is_carrying_amulet();
+
+    clear_pickup_scene();
+    return ok;
+}

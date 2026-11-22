@@ -20,6 +20,7 @@ extern const char text_secret_door[];
 extern const char text_no_way_down[];
 extern const char text_no_way_up[];
 extern const char text_way_magically_blocked[];
+extern const char text_wrenching_sensation[];
 extern const char text_no_command_yet[];
 extern const char text_which_direction[];
 extern const char text_no_monster_there[];

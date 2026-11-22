@@ -87,7 +87,7 @@ GameState {
   no_food                // hány szint óta nem generálódott étel; > 3 esetén a következő tárgy étel (8.1)
   regen_counter          // HP-regeneráció számlálója (5.3)
   flytrap_grip           // a Venus flytrap szorítása (eredetileg vf_hit): a flytrap mellé ütése ennyit sebez; > 0, amíg a játékos fogva van (6.7, J4)
-  has_amulet             // a játékosnál van-e az amulett (8.10)
+  has_amulet             // nem tárolt: igaz, ha az amulett a játékos csomagjában van (8.10, J29)
   str_max                // a játékos legnagyobb elért ereje gyűrűk nélkül; a státuszsoron "Str:cur(max)" (5.6)
   timers: {              // hátralévő körök az egyes hatásokból (4.1.1)
     confused             // zavarodottság (ISHUH)

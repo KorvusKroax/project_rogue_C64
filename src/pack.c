@@ -69,6 +69,14 @@ uint8_t find_pack_item_by_letter(uint8_t letter)
     return NO_ITEM;
 }
 
+bool is_carrying_amulet(void)
+{
+    for (uint8_t index = game.first_pack_item; index != NO_ITEM; index = get_item(index)->next) {
+        if (get_item(index)->type == ITEM_TYPE_AMULET) return true;
+    }
+    return false;
+}
+
 bool is_item_in_pack(uint8_t index)
 {
     for (uint8_t pack_index = game.first_pack_item; pack_index != NO_ITEM; pack_index = get_item(pack_index)->next) {
@@ -159,7 +167,7 @@ void pick_up_item(uint8_t index)
 
     take_item_from_floor(index);
     uint8_t pack_index = add_item_to_pack(index);
-    // ide jön: a tárgy megtaláltnak számít (ISFOUND); az amulettel has_amulet
+    // ide jön: a tárgy megtaláltnak számít (ISFOUND)
 
     const struct Item *pack_item = get_item(pack_index);
     char letter_text[2] = { pack_item->location.pack_letter, 0 };
@@ -187,7 +195,6 @@ bool drop_item(uint8_t index)
     }
 
     put_item_on_floor(dropped_index, game.player.x, game.player.y);
-    // ide jön: az amulettel has_amulet = false
     message_format(text_dropped, format_item_name(get_item(dropped_index)), NULL, 0);
     return true;
 }

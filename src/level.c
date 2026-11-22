@@ -6,6 +6,7 @@
 #include "map.h"
 #include "message.h"
 #include "monsters.h"
+#include "pack.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -381,6 +382,14 @@ void go_up_stairs(void)
         return;
     }
 
-    // ide jön: amulettel egy szinttel feljebb, az 1. szintről győzelem
-    message(text_way_magically_blocked);
+    if (!is_carrying_amulet()) {
+        message(text_way_magically_blocked);
+        return;
+    }
+    // ide jön: az 1. szintről győzelem (M10-01); addig ott nem történik semmi
+    if (game.dungeon_level == 1) return;
+
+    game.dungeon_level--;
+    new_level();
+    message(text_wrenching_sensation);
 }
