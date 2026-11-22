@@ -80,11 +80,23 @@ static void toggle_full_map(void)
     redraw_map();
 }
 
-// a beállítás bitjének átváltása, és az új állapot az üzenetsorba
-static void toggle_option(uint8_t option, const char *name)
+static const char *get_option_state_text(uint8_t option)
 {
-    options.flags ^= option;
-    message_format_without_recall("\1: \2", name, (options.flags & option) ? "on" : "off", 0);
+    return (options.flags & option) ? "on" : "off";
+}
+
+// a futás két beállítása együtt, mint egy két bites számláló (a follow_passages az alsó bit), körbe:
+// egyik sem → follow_passages → jump_to_run_end → mindkettő → egyik sem; az új állapot az üzenetsorba
+static void switch_run_options(void)
+{
+    if (!(options.flags & OPTION_FOLLOW_PASSAGES)) {
+        options.flags |= OPTION_FOLLOW_PASSAGES;
+    } else {
+        options.flags &= ~OPTION_FOLLOW_PASSAGES;
+        options.flags ^= OPTION_JUMP_TO_RUN_END;
+    }
+    message_format_without_recall("follow passages: \1, jump to run end: \2",
+        get_option_state_text(OPTION_FOLLOW_PASSAGES), get_option_state_text(OPTION_JUMP_TO_RUN_END), 0);
 }
 
 // új szint a bekért mélységen; üres mezőn RETURN-re ugyanazon a mélységen; ESC-re vagy hibás számra nem történik semmi
@@ -326,7 +338,7 @@ bool dev_execute_command(uint8_t code)
             create_item_by_character();
             break;
         case KEY_F8:
-            toggle_option(OPTION_FOLLOW_PASSAGES, "follow passages");
+            switch_run_options();
             break;
     }
 
