@@ -268,6 +268,12 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
   - ha a játékos üres nevet ad meg („you remove the name”);
   - a típus azonosításakor, mert ekkor a név úgyis törlődik;
   - ha a címkézett tárgy megszűnik: elvész vagy eltörik dobáskor, a padlón marad szintváltáskor, a nimfa ellopja, vagy győzelemkor eladódik.
+
+  Egy címkét mindig egyetlen tárgy visel, így a felszabadítása mást nem érint:
+  - a köteg darabolásakor (dobás, a nimfa lopása) az új darab nem kap címkét, a címke a kötegen marad;
+  - ha egy címkés tárgy a csomagban egy kötegbe olvad (felvétel), a címke nélküli köteg átveszi a címkéjét; ha a kötegnek már van, a beolvadó tárgyé felszabadul.
+
+  *Eredetileg* a darab ugyanazt a nevet kapta, mint a köteg, így a padlón is a nevével látszott; itt név nélkül látszik, amíg vissza nem olvad a kötegbe (E10).
 - A korlátok úgy vannak méretezve, hogy rendes játékban ne teljenek be; a fejlesztői mód kiírja a foglaltságukat.
 
 ### 1.4.2 Számok

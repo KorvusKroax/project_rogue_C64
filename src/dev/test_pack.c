@@ -1,9 +1,14 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
+#include "../platform/key.h"
+#include "../item_names.h"
 #include "../items.h"
 #include "../map.h"
+#include "../message.h"
 #include "../monsters.h"
 #include "../move.h"
 #include "../pack.h"
@@ -322,6 +327,179 @@ int test_amulet_carried(uint16_t i)
         drop_item(amulet) &&
         !is_carrying_amulet();
 
+    clear_pickup_scene();
+    return ok;
+}
+
+// a névkészlet tesztjeihez: a felvétel tesztmezője, és új játékként minden típus ismeretlen, a névkészlet üres
+static void put_naming_scene(void)
+{
+    put_pickup_scene();
+    game.seed = 1;
+    init_item_names();
+}
+
+int test_label_freed_with_item(uint16_t i)
+{
+    put_naming_scene();
+
+    // az új tárgynak nincs címkéje, a felszabadított tárgy címkéje is felszabadul
+    uint8_t mace = create_item(ITEM_TYPE_WEAPON, 0);
+    bool ok = get_item(mace)->label == NO_NAME;
+    uint8_t label = store_name("x");
+    get_item(mace)->label = label;
+    free_item(mace);
+    ok = ok && store_name("y") == label;
+
+    // a szintváltáskor a padlón maradt tárgy címkéje is
+    uint8_t armor = create_item(ITEM_TYPE_ARMOR, 0);
+    get_item(armor)->label = label;
+    put_item_on_floor(armor, PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y);
+    free_floor_items();
+    ok = ok && game.item_count == 0 && store_name("z") == label;
+
+    clear_pickup_scene();
+    return ok;
+}
+
+int test_label_merge(uint16_t i)
+{
+    put_naming_scene();
+
+    // a csomagban egy címke nélküli nyílköteg, a padlóról két, belőle kivált nyíl jön vissza, mindkettő címkével
+    uint8_t stack = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, WEAPON_ARROW));
+    uint8_t first_piece = create_item(ITEM_TYPE_WEAPON, WEAPON_ARROW);
+    uint8_t second_piece = create_item(ITEM_TYPE_WEAPON, WEAPON_ARROW);
+    get_item(first_piece)->group = get_item(stack)->group;
+    get_item(second_piece)->group = get_item(stack)->group;
+    uint8_t first_label = store_name("x");
+    uint8_t second_label = store_name("y");
+    get_item(first_piece)->label = first_label;
+    get_item(second_piece)->label = second_label;
+
+    // a címke nélküli köteg átveszi a beolvadó tárgy címkéjét
+    bool ok = add_item_to_pack(first_piece) == stack && get_item(stack)->label == first_label && strcmp(get_name(first_label), "x") == 0;
+    // a címkés kötegé marad, a beolvadó tárgyé felszabadul
+    ok = ok && add_item_to_pack(second_piece) == stack && get_item(stack)->label == first_label;
+    ok = ok && game.item_count == 1 && store_name("z") == second_label;
+
+    clear_pickup_scene();
+    return ok;
+}
+
+int test_pack_nameable_list(uint16_t i)
+{
+    put_naming_scene();
+    add_item_to_pack(create_item(ITEM_TYPE_FOOD, FOOD_RATION));
+    add_item_to_pack(create_item(ITEM_TYPE_AMULET, 0));
+
+    // az étel és az amulett nem kerül a listába
+    message_clear();
+    bool ok = !show_pack_list(PACK_FILTER_NAMEABLE) && does_message_bar_start_with("You don't have anything appropriate.");
+
+    // az egyetlen elnevezhető tárgy listasora üzenetként jelenik meg
+    uint8_t potion = add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
+    char row_start[] = { get_item(potion)->location.pack_letter, ')', ' ', 0 };
+    message_clear();
+    ok = ok && show_pack_list(PACK_FILTER_NAMEABLE) && does_message_bar_start_with(row_start);
+
+    message_clear();
+    clear_pickup_scene();
+    return ok;
+}
+
+// az elnevezés leütései; a törlés oktális kóddal, hogy az utána álló betű ne olvadjon bele
+#define NAMING_KEY_DELETE  "\177"
+#define NAMING_KEY_ESCAPE  "\033"
+#define NAMING_KEY_RETURN  "\r"
+
+// a tárgy elnevezése a megadott leütésekkel, üres sávval kezdve, mint a játékban a parancs leütése után; igaz, ha a leütések mind
+// elfogytak, és nem maradt több
+static bool name_item_with_keys(uint8_t index, const char *keys)
+{
+    message_clear();
+    set_test_keys(keys);
+    name_item(index);
+    bool ok = read_key() == 0;
+    set_test_keys(NULL);
+    return ok;
+}
+
+// a típus elnevezése: a mező üresen indul, RETURN után a sáv üres; az átnevezés nem foglal új helyet, ESC-re a név marad,
+// üres névre törlődik
+static bool is_potion_naming_right(uint8_t potion)
+{
+    uint8_t which = get_item(potion)->which;
+
+    // név nélkül üres beírásra nem kap nevet
+    bool ok = name_item_with_keys(potion, NAMING_KEY_RETURN) && is_message_bar_empty();
+    ok = ok && game.potion_knowledge[which] == SUBTYPE_UNKNOWN;
+
+    // a beírt szöveg a típus neve lesz
+    ok = ok && name_item_with_keys(potion, "ab" NAMING_KEY_RETURN) && is_message_bar_empty();
+    uint8_t name_index = game.potion_knowledge[which];
+    ok = ok && name_index != NO_NAME && name_index != SUBTYPE_IDENTIFIED && strcmp(get_name(name_index), "ab") == 0;
+
+    // átnevezés javított elírással: a régi név előtte üzenetben (a sáv RETURN után üres, ezért az utolsó üzenet visszahívásával),
+    // és a hely marad
+    ok = ok && name_item_with_keys(potion, "rex" NAMING_KEY_DELETE "d" NAMING_KEY_RETURN);
+    repeat_last_message();
+    ok = ok && does_message_bar_start_with("Was called \"ab\".");
+    ok = ok && game.potion_knowledge[which] == name_index && strcmp(get_name(name_index), "red") == 0;
+
+    // ESC-re a név marad
+    ok = ok && name_item_with_keys(potion, "x" NAMING_KEY_ESCAPE);
+    ok = ok && game.potion_knowledge[which] == name_index && strcmp(get_name(name_index), "red") == 0;
+
+    // üres névre a név törlődik, és a helye felszabadul
+    ok = ok && name_item_with_keys(potion, NAMING_KEY_RETURN);
+    ok = ok && does_message_bar_start_with("You remove the name.");
+    ok = ok && game.potion_knowledge[which] == SUBTYPE_UNKNOWN && store_name("y") == name_index;
+    free_name(name_index);
+
+    // az azonosított típus nem kap nevet
+    game.potion_knowledge[which] = SUBTYPE_IDENTIFIED;
+    ok = ok && name_item_with_keys(potion, "") && does_message_bar_start_with("That has already been identified.");
+    ok = ok && game.potion_knowledge[which] == SUBTYPE_IDENTIFIED;
+    game.potion_knowledge[which] = SUBTYPE_UNKNOWN;
+    return ok;
+}
+
+int test_name_item(uint16_t i)
+{
+    put_naming_scene();
+    uint8_t potion = add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
+    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, 0));
+    uint8_t armor = add_item_to_pack(create_item(ITEM_TYPE_ARMOR, 0));
+    uint8_t food = add_item_to_pack(create_item(ITEM_TYPE_FOOD, FOOD_RATION));
+    uint8_t amulet = add_item_to_pack(create_item(ITEM_TYPE_AMULET, 0));
+
+    bool ok = is_potion_naming_right(potion);
+
+    // a fegyver saját címkét kap; üres névre nem kap
+    ok = ok && name_item_with_keys(mace, NAMING_KEY_RETURN) && get_item(mace)->label == NO_NAME;
+    ok = ok && name_item_with_keys(mace, "sword" NAMING_KEY_RETURN) && strcmp(get_name(get_item(mace)->label), "sword") == 0;
+
+    // a mező legfeljebb NAME_LENGTH_MAX karaktert fogad, a többi leütés elvész
+    char long_name_keys[NAME_LENGTH_MAX + 3];
+    memset(long_name_keys, 'n', NAME_LENGTH_MAX + 1);
+    long_name_keys[NAME_LENGTH_MAX + 1] = '\r';
+    long_name_keys[NAME_LENGTH_MAX + 2] = 0;
+    ok = ok && name_item_with_keys(mace, long_name_keys) && strlen(get_name(get_item(mace)->label)) == NAME_LENGTH_MAX;
+
+    // étel és amulett nem kap nevet
+    ok = ok && name_item_with_keys(food, "") && does_message_bar_start_with("You can't call that anything.");
+    ok = ok && name_item_with_keys(amulet, "") && does_message_bar_start_with("You can't call that anything.");
+
+    // betelt névkészletnél a még név nélküli páncél nem kap nevet, a címkés fegyver átnevezhető
+    while (store_name("f") != NO_NAME) {
+    }
+    ok = ok && name_item_with_keys(armor, "") && does_message_bar_start_with("You have no room for more names.");
+    ok = ok && get_item(armor)->label == NO_NAME;
+    ok = ok && name_item_with_keys(mace, "axe" NAMING_KEY_RETURN);
+    ok = ok && strcmp(get_name(get_item(mace)->label), "axe") == 0;
+
+    message_clear();
     clear_pickup_scene();
     return ok;
 }

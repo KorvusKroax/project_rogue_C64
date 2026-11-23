@@ -19,6 +19,9 @@ void repeat_last_message(void);                 // az utolsó üzenet (a kérdé
 void message_prompt(const char *text);          // kérdés a sávba, záró pont nélkül; a képernyő kurzora a szöveg végén marad; a válasszal látszik, amíg a következő üzenet vagy törlés le nem váltja
 void message_prompt_format(const char *text, const char *first_text);  // mint a message_prompt, a \1 helyén a szöveg
 void message_reserve_input_space(uint8_t length);   // a kurzortól length karakter helyét lefoglalja a sávban, legfeljebb a sáv utolsó soráig; az újonnan lefoglalt sorok üresek
+// mint a message_prompt, utána message_reserve_input_space; az eddigi szöveghez csak akkor fűződik, ha mögötte a length hosszú mező is elfér,
+// különben --More-- után a sáv elején kezdődik
+void message_prompt_with_input_space(const char *text, uint8_t input_length);
 void message_clear(void);                       // a sáv törlése; a második sortól visszajön a térkép
 uint8_t wait_for_key_and_clear_message(void);   // vár egy leütésre, törli a sávot, és a leütés kódját adja
 

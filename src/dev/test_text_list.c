@@ -208,10 +208,18 @@ int test_window_restore(uint16_t i)
 }
 
 // az üzenetsáv első sora a text-tel kezdődik (a képernyő karakterei ASCII kódok)
-static bool does_message_bar_start_with(const char *text)
+bool does_message_bar_start_with(const char *text)
 {
     for (uint8_t x = 0; text[x]; x++) {
         if (get_screen_character(x, MESSAGE_ROW) != text[x]) return false;
+    }
+    return true;
+}
+
+bool is_message_bar_empty(void)
+{
+    for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+        if (get_screen_character(x, MESSAGE_ROW) != ' ') return false;
     }
     return true;
 }
@@ -239,6 +247,36 @@ int test_list_row_not_joined(uint16_t i)
     message("you hit it");
     message("you miss");
     ok = ok && does_message_bar_start_with("You hit it. You miss.");
+
+    message_clear();
+    set_message_more_wait(true);
+    load_screen(test_program_screen);
+    return ok;
+}
+
+#define PROMPT_TEST_INPUT_LENGTH  (NAME_LENGTH_MAX + 1)     // a `c` beviteli mezője a kurzor helyével
+
+// a két eset a két 40 karakteres sorra van kiszámolva: a rövid régi névvel a kérdés után 31 hely marad, a hosszúval 16
+#if MESSAGE_ROW_COUNT * SCREEN_WIDTH != 80 || PROMPT_TEST_INPUT_LENGTH <= 16 || PROMPT_TEST_INPUT_LENGTH > 31
+    #error "a kérdés tesztje 80 karakteres sávra és 17..31 cellás mezőre számol"
+#endif
+
+int test_prompt_input_space(uint16_t i)
+{
+    save_screen(test_program_screen);
+    set_message_more_wait(false);
+
+    // a kérdés az előző üzenet után, ha a mezője is elfér mögötte
+    message_clear();
+    message("was called \"blue\"");
+    message_prompt_with_input_space("what do you want to call it? ", PROMPT_TEST_INPUT_LENGTH);
+    bool ok = does_message_bar_start_with("Was called \"blue\". What do you want to");
+
+    // ha a kérdés még elférne, de a mezője nem, a kérdés --More-- után a sáv elején kezdődik
+    message_clear();
+    message("was called \"abcdefghijklmnopqrst\"");
+    message_prompt_with_input_space("what do you want to call it? ", PROMPT_TEST_INPUT_LENGTH);
+    ok = ok && does_message_bar_start_with("What do you want to call it? ");
 
     message_clear();
     set_message_more_wait(true);

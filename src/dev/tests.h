@@ -22,6 +22,7 @@ int test_text_list_rows(uint16_t i);            // a 40 oszlopos lista sorai: a 
 int test_text_list_window_fit(uint16_t i);      // az overwrite ablakba fér-e: az üres oszlop és a lista végének sora is kell; a teli csomag hosszú nevekkel nem fér el
 int test_window_restore(uint16_t i);            // az ideiglenes ablak bezárása után a képernyő bájtra azonos a megnyitás előttivel (a megnyitás az üzenetsávot törli)
 int test_list_row_not_joined(uint16_t i);       // a tárgylista-sor után a kérdés új sávban kezdődik, és a listasor sem fűződik az előző üzenethez; más üzenetek összefűződnek
+int test_prompt_input_space(uint16_t i);        // a kérdés csak akkor fűződik az előző üzenethez, ha a beviteli mezője is elfér mögötte
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
 int test_map_flags(uint16_t i);
@@ -72,6 +73,11 @@ int test_item_pseudonyms(uint16_t i);           // új játéknál minden típus
 int test_scroll_titles(uint16_t i);             // az i. seeddel indult játék tekercsfeliratai érvényesek és mind különbözők, az előállításuk nem hívja az RN-t
 int test_item_names(uint16_t i);                // kézzel összerakott tárgyak neve betűre a 8.8 példái szerint
 int test_longest_item_name(uint16_t i);         // a leghosszabb név betűre egyezik, és semmilyen név nem hosszabb az ITEM_NAME_LENGTH_MAX-nál
+int test_name_pool(uint16_t i);                 // a névkészlet MAX_NAMES nevet tárol, utána betelt; a felszabadított hely újra foglalható, az átnevezés helyben marad
+int test_label_freed_with_item(uint16_t i);     // az új tárgynak nincs címkéje; a tárgy felszabadítása a címkéjét is felszabadítja, a szintváltáskor a padlón maradtét is
+int test_label_merge(uint16_t i);               // a címke nélküli köteg átveszi a beolvadó tárgy címkéjét, a címkés kötegé marad, és a beolvadóé felszabadul
+int test_pack_nameable_list(uint16_t i);        // a `c` listájából az étel és az amulett kimarad; ha nincs más, „you don't have anything appropriate”
+int test_name_item(uint16_t i);                 // a `c` menete leütésekkel: üres mező, átnevezés elírással, ESC, törlés, üres sáv, azonosított típus, címke, hosszkorlát, étel és amulett, betelt névkészlet
 int test_pack_slots(uint16_t i);                // a csomag helyei darabszám szerint, a kötegelt fegyver egy hely; betelt csomagba csak a meglévő köteghez csatolt fegyver fér
 int test_pack_letters(uint16_t i);              // egy tárgy kivétele után a többi betűje marad, az új tárgy a legkisebb szabad betűt kapja
 int test_pack_order(uint16_t i);                // a csomag típus szerint rendezett: az új tárgy az azonos altípusúak, különben az azonos típusúak után kerül
@@ -90,6 +96,8 @@ bool is_item_type_and_subtype_valid(uint8_t type, uint8_t which);   // a véletl
 bool are_item_initial_values_valid(const struct Item *item);        // a tárgy kezdőértékei a típusa szerint érvényesek (test_items.c)
 uint8_t get_tested_subtype_count(uint8_t type);                     // a típus altípusainak száma; az aranynak és az amulettnek egy van, which = 0 (test_items.c)
 bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count);  // a lista elemei sorban éppen az expected első count eleme, utána vége (test_items.c)
+bool does_message_bar_start_with(const char *text);     // az üzenetsáv első sora ezzel a szöveggel kezdődik (test_text_list.c)
+bool is_message_bar_empty(void);                        // az üzenetsáv első sora üres (test_text_list.c)
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal

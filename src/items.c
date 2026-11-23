@@ -1,5 +1,6 @@
 #include "items.h"
 
+#include "item_names.h"
 #include "map.h"
 #include "rng.h"
 
@@ -168,9 +169,15 @@ void choose_item_type_and_subtype(uint8_t *type, uint8_t *which)
     }
 }
 
+// a rekord helye a táblában: (index − 1) × 11 eltolásokkal és összeadással (8 + 2 + 1), mert a szorzásra az Oscar64 1.32.273
+// lassú, általános szorzórutint hív, és a függvényt minden hívás helyére beépíti
+static_assert(sizeof(struct Item) == 11, "a get_item 11 bájtos tárgyrekorddal számol");
+
 struct Item *get_item(uint8_t index)
 {
-    return &game.items[index - 1];
+    uint16_t offset = index - 1;
+    offset += (offset << 1) + (offset << 3);
+    return (struct Item *)((uint8_t *)game.items + offset);
 }
 
 void clear_item_table(void)
@@ -188,6 +195,7 @@ uint8_t allocate_item(void)
     // a tömb helyén számol, mert MAX_ITEMS = 255 mellett az index <= MAX_ITEMS feltétel 8 biten mindig igaz volna
     for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
         if (game.items[slot].type == ITEM_TYPE_FREE) {
+            game.items[slot].label = NO_NAME;
             game.item_count++;
             #ifdef DEVMODE
                 update_item_count_peak();
@@ -200,7 +208,9 @@ uint8_t allocate_item(void)
 
 void free_item(uint8_t index)
 {
-    get_item(index)->type = ITEM_TYPE_FREE;
+    struct Item *item = get_item(index);
+    free_name(item->label);
+    item->type = ITEM_TYPE_FREE;
     game.item_count--;
 }
 

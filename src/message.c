@@ -190,6 +190,23 @@ static void show_message_bar(void)
     set_message_bar_rows_in_use(row);
 }
 
+// a szöveg után a sávban maradó hely karakterekben, a show_message_bar kirajzolása szerint: ide kerül tördelés nélkül a beírt szöveg
+static uint16_t calculate_message_bar_space_after(const char *text)
+{
+    const char *row_text = text;
+    uint8_t row = 0;
+
+    while (true) {
+        uint8_t length = row == MESSAGE_ROW_COUNT - 1 ? strlen(row_text) : calculate_message_chars_fitting_row(row_text, SCREEN_WIDTH);
+        row++;
+
+        row_text = text_after_break(row_text + length);
+        if (!*row_text || row == MESSAGE_ROW_COUNT) {
+            return (MESSAGE_ROW_COUNT - row) * SCREEN_WIDTH + SCREEN_WIDTH - length;
+        }
+    }
+}
+
 // a --More-- után szóközre vár, is_escape_allowed mellett ESC-re is; utána a sáv üres; hamis, ha ESC jött
 static bool show_more_and_wait(bool is_escape_allowed)
 {
@@ -224,8 +241,8 @@ static bool show_more_and_wait(bool is_escape_allowed)
     return code == ' ';
 }
 
-// az eddigi szöveg után fűzi, ha a TEXT_MORE is elfér vele
-static bool append_to_message_bar(const char *text)
+// az eddigi szöveg után fűzi, ha a TEXT_MORE, és a kérdés után az input_length hosszú beviteli mező is elfér vele
+static bool append_to_message_bar(const char *text, uint8_t input_length)
 {
     uint16_t joined_length = message_bar_length + 1 + strlen(text);
     if (joined_length >= sizeof(message_bar_text)) {
@@ -235,7 +252,8 @@ static bool append_to_message_bar(const char *text)
     message_bar_text[message_bar_length] = ' ';
     strcpy(message_bar_text + message_bar_length + 1, text);
 
-    if (calculate_message_chars_fitting_bar(message_bar_text) < joined_length) {
+    if (calculate_message_chars_fitting_bar(message_bar_text) < joined_length
+        || calculate_message_bar_space_after(message_bar_text) < input_length) {
         message_bar_text[message_bar_length] = 0;
         return false;
     }
@@ -245,13 +263,13 @@ static bool append_to_message_bar(const char *text)
     return true;
 }
 
-// a szöveg a sávba, az eddigi után, ha elfér, különben --More-- után; a szöveg előtti --More---nál is_escape_allowed mellett
-// ESC-re a szöveg elmarad, és a sáv üres; hamis, ha így elmaradt
-static bool add_to_message_bar(const char *text, bool is_escape_allowed)
+// a szöveg a sávba, az eddigi után, ha elfér (kérdésnél a mögötte álló input_length hosszú beviteli mezővel együtt), különben --More--
+// után; a szöveg előtti --More---nál is_escape_allowed mellett ESC-re a szöveg elmarad, és a sáv üres; hamis, ha így elmaradt
+static bool add_to_message_bar(const char *text, bool is_escape_allowed, uint8_t input_length)
 {
     if (message_bar_length) {
         // a tárgylista-sor után nem fűződik semmi, és ő sem fűződik az eddigi szöveghez; így mindig a sáv elején áll
-        if (!is_list_row(message_bar_text) && !is_list_row(text) && append_to_message_bar(text)) {
+        if (!is_list_row(message_bar_text) && !is_list_row(text) && append_to_message_bar(text, input_length)) {
             return true;
         }
         if (!show_more_and_wait(is_escape_allowed)) return false;
@@ -280,18 +298,18 @@ void message_format(const char *text, const char *first_text, const char *second
 {
     const char *prepared_text = prepare_message_text(text, first_text, second_text, number, true);
     strcpy(last_message_text, prepared_text);
-    add_to_message_bar(prepared_text, false);
+    add_to_message_bar(prepared_text, false, 0);
 }
 
 void message_format_without_recall(const char *text, const char *first_text, const char *second_text, int16_t number)
 {
-    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true), false);
+    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true), false, 0);
 }
 
 bool message_unless_escaped(const char *text)
 {
     const char *prepared_text = prepare_message_text(text, NULL, NULL, 0, true);
-    if (!add_to_message_bar(prepared_text, true)) return false;
+    if (!add_to_message_bar(prepared_text, true, 0)) return false;
 
     strcpy(last_message_text, prepared_text);
     return true;
@@ -307,10 +325,22 @@ void message_prompt(const char *text)
     message_prompt_format(text, NULL);
 }
 
+// a kérdés a sávba (add_to_message_bar); mögé nem fűződik semmi, a következő üzenet lecseréli
+static void show_prompt(const char *text, uint8_t input_length)
+{
+    add_to_message_bar(text, false, input_length);
+    message_bar_length = 0;
+}
+
 void message_prompt_format(const char *text, const char *first_text)
 {
-    add_to_message_bar(prepare_message_text(text, first_text, NULL, 0, false), false);
-    message_bar_length = 0;     // a kérdés mögé nem fűződik semmi, a következő üzenet lecseréli
+    show_prompt(prepare_message_text(text, first_text, NULL, 0, false), 0);
+}
+
+void message_prompt_with_input_space(const char *text, uint8_t input_length)
+{
+    show_prompt(prepare_message_text(text, NULL, NULL, 0, false), input_length);
+    message_reserve_input_space(input_length);
 }
 
 void message_reserve_input_space(uint8_t length)

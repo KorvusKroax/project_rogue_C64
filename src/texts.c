@@ -25,6 +25,14 @@ const char text_not_valid_item[] = "'\1' is not a valid item";
 const char text_something_there_already[] = "there is something there already";
 const char text_dropped[] = "dropped \1";
 const char text_no_room_for_that[] = "there's no room for that";
+const char text_nothing_appropriate[] = "you don't have anything appropriate";
+const char text_item_purpose_call[] = "call";
+const char text_cant_call_that[] = "you can't call that anything";
+const char text_already_identified[] = "that has already been identified";
+const char text_no_room_for_names[] = "you have no room for more names. Remove a name from something first";
+const char text_was_called[] = "was called \"\1\"";
+const char text_what_to_call_it[] = "what do you want to call it? ";
+const char text_name_removed[] = "you remove the name";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

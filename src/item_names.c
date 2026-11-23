@@ -1,9 +1,12 @@
 #include "item_names.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
+#include "input.h"
 #include "items.h"
+#include "message.h"
 #include "num.h"
 #include "player.h"
 #include "rng.h"
@@ -153,6 +156,115 @@ void init_item_names(void)
     do {
         game.scroll_title_seed = RN();
     } while (!are_scroll_title_fingerprints_distinct());
+
+    for (uint8_t slot = 0; slot < MAX_NAMES; slot++) {
+        game.name_pool[slot][0] = 0;
+    }
+}
+
+// a szabad hely üres szöveg, mert üres név nincs: az üres beírás a nevet törli; NO_NAME, ha nincs szabad hely
+static uint8_t find_free_name(void)
+{
+    for (uint8_t slot = 0; slot < MAX_NAMES; slot++) {
+        if (game.name_pool[slot][0] == 0) return slot + 1;
+    }
+    return NO_NAME;
+}
+
+bool is_name_pool_full(void)
+{
+    return find_free_name() == NO_NAME;
+}
+
+uint8_t store_name(const char *text)
+{
+    uint8_t name_index = find_free_name();
+    if (name_index != NO_NAME) {
+        set_name(name_index, text);
+    }
+    return name_index;
+}
+
+void set_name(uint8_t name_index, const char *text)
+{
+    strcpy(game.name_pool[name_index - 1], text);
+}
+
+const char *get_name(uint8_t name_index)
+{
+    return game.name_pool[name_index - 1];
+}
+
+void free_name(uint8_t name_index)
+{
+    if (name_index != NO_NAME) {
+        game.name_pool[name_index - 1][0] = 0;
+    }
+}
+
+bool can_be_named(uint8_t type)
+{
+    return type != ITEM_TYPE_FOOD && type != ITEM_TYPE_AMULET;
+}
+
+// a név helye: bájitalnál, tekercsnél, gyűrűnél és pálcánál a típus ismerete, amely az ismeretlen típus nevének indexét is tárolja,
+// fegyvernél és páncélnál a tárgy címkéje
+static uint8_t *get_name_holder(struct Item *item)
+{
+    uint8_t which = item->which;
+
+    switch (item->type) {
+        case ITEM_TYPE_POTION:
+            return &game.potion_knowledge[which];
+        case ITEM_TYPE_SCROLL:
+            return &game.scroll_knowledge[which];
+        case ITEM_TYPE_RING:
+            return &game.ring_knowledge[which];
+        case ITEM_TYPE_STICK:
+            return &game.stick_knowledge[which];
+    }
+    return &item->label;
+}
+
+void name_item(uint8_t index)
+{
+    struct Item *item = get_item(index);
+    if (!can_be_named(item->type)) {
+        message(text_cant_call_that);
+        return;
+    }
+
+    uint8_t *name_holder = get_name_holder(item);
+    uint8_t name_index = *name_holder;
+    if (name_index == SUBTYPE_IDENTIFIED) {
+        message(text_already_identified);
+        return;
+    }
+    // az átnevezés nem foglal új helyet
+    if (name_index == NO_NAME && is_name_pool_full()) {
+        message(text_no_room_for_names);
+        return;
+    }
+
+    if (name_index != NO_NAME) {
+        message_format(text_was_called, get_name(name_index), NULL, 0);
+    }
+
+    char text[NAME_SIZE];
+    if (!ask_text(text_what_to_call_it, text, NAME_LENGTH_MAX)) return;
+
+    if (text[0] == 0) {
+        if (name_index != NO_NAME) {
+            free_name(name_index);
+            *name_holder = NO_NAME;
+            message(text_name_removed);
+        }
+    } else if (name_index == NO_NAME) {
+        // a kérdés előtt volt szabad hely
+        *name_holder = store_name(text);
+    } else {
+        set_name(name_index, text);
+    }
 }
 
 // a név a formázás alatt; a puffer a leghosszabb nevet is elbírja (ITEM_NAME_LENGTH_MAX), ezért az írás nem ellenőrzi a hosszt

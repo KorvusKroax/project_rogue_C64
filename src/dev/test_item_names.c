@@ -6,6 +6,7 @@
 
 #include "../item_names.h"
 #include "../items.h"
+#include "../num.h"
 #include "../state.h"
 #include "../texts.h"
 
@@ -393,4 +394,41 @@ int test_longest_item_name(uint16_t i)
     if (strlen(format_item_name(&example)) > ITEM_NAME_LENGTH_MAX) return false;
 
     return do_all_names_fit();
+}
+
+#define NAME_POOL_TEST_FREED  (MAX_NAMES / 2)   // a betelt készletből ez a hely szabadul fel
+
+int test_name_pool(uint16_t i)
+{
+    game.seed = 1;
+    init_item_names();
+    if (is_name_pool_full()) return false;
+
+    // MAX_NAMES név fér el, mindig a legkisebb szabad helyen, és a szövegük visszaolvasható; utána betelt
+    char text[NAME_SIZE];
+    for (uint8_t count = 0; count < MAX_NAMES; count++) {
+        format_int(text, count, 0);
+        if (store_name(text) != count + 1) return false;
+    }
+    for (uint8_t count = 0; count < MAX_NAMES; count++) {
+        format_int(text, count, 0);
+        if (strcmp(get_name(count + 1), text) != 0) return false;
+    }
+    if (!is_name_pool_full() || store_name("x") != NO_NAME) return false;
+
+    // a felszabadított hely újra foglalható; a NO_NAME felszabadítása nem változtat semmin
+    free_name(NAME_POOL_TEST_FREED);
+    free_name(NO_NAME);
+    if (is_name_pool_full()) return false;
+    if (store_name("x") != NAME_POOL_TEST_FREED || !is_name_pool_full()) return false;
+
+    // az átnevezés helyben cseréli a szöveget, a leghosszabb névre is
+    memset(text, 'a', NAME_LENGTH_MAX);
+    text[NAME_LENGTH_MAX] = 0;
+    set_name(NAME_POOL_TEST_FREED, text);
+    if (strcmp(get_name(NAME_POOL_TEST_FREED), text) != 0) return false;
+
+    // új játéknál a készlet üres
+    init_item_names();
+    return store_name("x") == 1;
 }

@@ -40,6 +40,14 @@ extern const char text_not_valid_item[];            // \1: a leütött billenty�
 extern const char text_something_there_already[];
 extern const char text_dropped[];                   // \1: a tárgy neve
 extern const char text_no_room_for_that[];
+extern const char text_nothing_appropriate[];
+extern const char text_item_purpose_call[];
+extern const char text_cant_call_that[];
+extern const char text_already_identified[];
+extern const char text_no_room_for_names[];
+extern const char text_was_called[];                // \1: a régi név
+extern const char text_what_to_call_it[];
+extern const char text_name_removed[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4

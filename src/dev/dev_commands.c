@@ -106,7 +106,6 @@ static void create_level_at_asked_depth(void)
     uint32_t depth;
 
     bool answered = ask_text("depth (1-254): ", answer, DEPTH_DIGITS_MAX);
-    message_clear();
     if (!answered) return;
 
     if (answer[0] == 0) {
@@ -161,7 +160,6 @@ static void create_monster_by_letter(void)
 {
     char answer[2];
     bool answered = ask_text("monster (A-Z): ", answer, 1);
-    message_clear();
     if (!answered) return;
 
     uint8_t type = answer[0];
@@ -223,7 +221,6 @@ static bool ask_item_which(uint8_t subtype_count, uint8_t *which)
     strcpy(prompt + length, "): ");
 
     bool answered = ask_text(prompt, answer, ITEM_WHICH_DIGITS_MAX);
-    message_clear();
     if (!answered || !convert_text_to_number(answer, subtype_count - 1, &number)) return false;
 
     *which = number;
@@ -238,7 +235,6 @@ static void create_item_by_character(void)
 {
     char answer[2];
     bool answered = ask_text("item (! ? : ) ] = / * ,): ", answer, 1);
-    message_clear();
     if (!answered) return;
 
     uint8_t type = 0;

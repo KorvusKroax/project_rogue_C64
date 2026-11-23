@@ -91,7 +91,8 @@ struct Item {
     union ItemProperties properties;
     uint8_t  flags;                             // ITEM_ flagek (items.h)
     uint8_t  group;                             // kötegazonosító: a köteg darabjai ugyanezt viselik; 0 = nem köteg
-    uint8_t  next;                              // a lista következő tárgyának indexe (0 = vége)
+    uint8_t  label;                             // a játékos adta címke indexe a névkészletben (item_names.h), fegyvernél és páncélnál; 0 = nincs
+    uint8_t  next;                             // a lista következő tárgyának indexe (0 = vége)
 };
 
 // a tárgytábla mérete: a padló, a csomag és a szörnyek csomagjai együtt; a tárgyakra 1..MAX_ITEMS index hivatkozik, a 0 a „nincs”
@@ -100,6 +101,16 @@ struct Item {
 // a tárgyindex 8 bites, és a 0 foglalt
 #if MAX_ITEMS > 255
     #error "túl sok tárgy: a tárgyindex 8 bites"
+#endif
+
+// a névkészlet: a játékos adta nevek (a típusé és a tárgy címkéje) közös táblája; a nevekre 1..MAX_NAMES index hivatkozik, a 0 a „nincs”
+#define MAX_NAMES        32                     // default: 32
+#define NAME_LENGTH_MAX  20                     // egy név legfeljebb ennyi karakter (default: 20)
+#define NAME_SIZE        (NAME_LENGTH_MAX + 1)
+
+// a név nem üres, mert az üres beírás a nevet törli; a beviteli mező hossza 8 bites
+#if NAME_LENGTH_MAX < 1 || NAME_LENGTH_MAX > 255
+    #error "a név hossza 1..255"
 #endif
 
 // az azonosítandó tárgytípusok altípusainak száma: ennyi elemű a típusismeret és az álnév tömbje a GameState-ben,
@@ -186,7 +197,7 @@ struct GameState {
     uint8_t  flytrap_grip;                      // a Venus flytrap szorítása: ennyit sebez a mellé ütése; ha nagyobb 0-nál, a játékos fogva van
 
     // a tárgytípusok ismerete és álneve (item_names.h); az álnév egy lista indexe (texts.h)
-    uint8_t  potion_knowledge[POTION_SUBTYPE_COUNT];    // altípusonként SUBTYPE_UNKNOWN vagy SUBTYPE_IDENTIFIED (know)
+    uint8_t  potion_knowledge[POTION_SUBTYPE_COUNT];    // altípusonként SUBTYPE_UNKNOWN, a játékos adta név indexe vagy SUBTYPE_IDENTIFIED (know)
     uint8_t  scroll_knowledge[SCROLL_SUBTYPE_COUNT];
     uint8_t  ring_knowledge[RING_SUBTYPE_COUNT];
     uint8_t  stick_knowledge[STICK_SUBTYPE_COUNT];
@@ -194,6 +205,7 @@ struct GameState {
     uint8_t  ring_stones[RING_SUBTYPE_COUNT];           // a kő (text_ring_stones)
     uint8_t  stick_materials[STICK_SUBTYPE_COUNT];      // az anyag a közös listában (text_stick_materials): fémnél pálca, fánál bot
     uint16_t scroll_title_seed;                         // a tekercsfeliratok minden kiíráskor ebből állnak elő, nem tárolódnak
+    char     name_pool[MAX_NAMES][NAME_SIZE];           // a névkészlet (item_names.h): a nevek nullával lezárva; a szabad hely üres szöveg
 
     struct Room rooms[ROOM_TABLE_SIZE];         // a szobák, utánuk a folyosórendszerek: az n. rendszer indexe ROOM_COUNT + n - 1
     struct Exit exits[MAX_EXITS];               // az ajtótábla: a szint összes kijárata, a felvétel sorrendjében

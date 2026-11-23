@@ -16,6 +16,7 @@ static const struct DevTest item_tests[] = {
     { "ITEM-SCROLL TITLES", test_scroll_titles, SCROLL_TITLE_TEST_SEED_COUNT },
     { "ITEM-NAMES", test_item_names, 1 },
     { "ITEM-LONGEST NAME", test_longest_item_name, 1 },
+    { "NAME-POOL", test_name_pool, 1 },
     { "PACK-SLOTS", test_pack_slots, 1 },
     { "PACK-LETTERS", test_pack_letters, 1 },
     { "PACK-ORDER", test_pack_order, 1 },
@@ -25,6 +26,10 @@ static const struct DevTest item_tests[] = {
     { "DROP-STACK PIECE", test_drop_stack_piece, 1 },
     { "DROP-FULL TABLE", test_drop_full_table, 1 },
     { "AMULET-CARRIED", test_amulet_carried, 1 },
+    { "NAME-LABEL FREED", test_label_freed_with_item, 1 },
+    { "NAME-LABEL MERGE", test_label_merge, 1 },
+    { "NAME-PACK LIST", test_pack_nameable_list, 1 },
+    { "NAME-CALL ITEM", test_name_item, 1 },
 };
 
 int main(void)

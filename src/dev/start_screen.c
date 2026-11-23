@@ -3,7 +3,6 @@
 #include "../platform/key.h"
 #include "../platform/screen.h"
 #include "../input.h"
-#include "../message.h"
 #include "../num.h"
 #include "../state.h"
 
@@ -24,7 +23,6 @@ static void ask_seed(void)
     if (ask_text("new seed: ",answer, FORMAT_DIGITS_MAX)) {
         convert_text_to_number(answer, UINT32_MAX, &game.seed);
     }
-    message_clear();
 }
 
 static void draw_start_screen(void)

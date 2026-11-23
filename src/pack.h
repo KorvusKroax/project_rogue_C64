@@ -30,7 +30,7 @@ bool has_pack_room_for(uint8_t index);
 
 // a tárgy a csomagba kerül (8.9), ha befér (has_pack_room_for), és egyik listában sincs:
 // - az azonos altípusú bájital, tekercs, étel, illetve az azonos altípusú és kötegazonosítójú fegyver kötegéhez csatolódik,
-//   és a rekordja felszabadul;
+//   és a rekordja felszabadul; a címkéjét a címke nélküli köteg átveszi, különben a címke is felszabadul;
 // - különben a legkisebb szabad betűt kapja, és az azonos altípusúak után kerül, ha nincs ilyen, az azonos típusúak után,
 //   ha az sincs, a csomag végére
 // az eredmény a csomag tárgya, amelyben most van: a köteg, vagy maga a tárgy
@@ -49,7 +49,12 @@ void report_moving_onto_item(uint8_t index);
 // nincs szabad hely a tárgytáblában, „there's no room for that”, és semmi nem változik; igaz, ha a tárgy lekerült
 bool drop_item(uint8_t index);
 
-// `i`: a csomag listája (text_list.h), soronként a betű és a név („a) a mace”); üres csomagnál „you are empty handed”
-void show_pack_list(void);
+// a csomaglista szűrője: mely tárgyak kerülnek a listába
+#define PACK_FILTER_ALL       0                 // minden tárgy (`i`, `d`)
+#define PACK_FILTER_NAMEABLE  1                 // ami elnevezhető (`c`, can_be_named)
+
+// `i` és a tárgy bekérésének `*` listája: a csomag szűrőn átjutó tárgyainak listája (text_list.h), soronként a betű és a név („a) a mace”);
+// ha nincs ilyen tárgy, PACK_FILTER_ALL mellett „you are empty handed”, különben „you don't have anything appropriate”, és az eredmény hamis
+bool show_pack_list(uint8_t filter);
 
 #endif

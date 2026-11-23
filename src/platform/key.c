@@ -154,8 +154,23 @@ void key_init(void)
     }
 }
 
+#ifdef DEVMODE
+    static const char *test_keys;               // a tesztek leütései, nullával lezárva; NULL vagy a végén: nincs több
+
+    void set_test_keys(const char *codes)
+    {
+        test_keys = codes;
+    }
+#endif
+
 uint8_t read_key(void)
 {
+    #ifdef DEVMODE
+        if (test_keys && *test_keys) {
+            return *test_keys++;
+        }
+    #endif
+
     if (key_buffer_read == key_buffer_write) {
         return 0;
     }

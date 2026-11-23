@@ -32,23 +32,18 @@ bool input_text(char *buffer, uint8_t max_length, uint8_t last_row)
 {
     start_field();
 
+    // a kurzor helye is a mezőhöz tartozik
     uint16_t capacity = (last_row - field_y + 1) * SCREEN_WIDTH - field_x;
-    if (max_length > capacity) {
-        max_length = capacity;
+    if (max_length + 1 > capacity) {
+        max_length = capacity - 1;
     }
 
     uint8_t length = 0;
 
     while (true) {
-        if (length < max_length) {
-            put_field_character(length, INPUT_CURSOR);
-        }
-
+        put_field_character(length, INPUT_CURSOR);
         uint8_t code = wait_for_key();
-
-        if (length < max_length) {
-            put_field_character(length, ' ');
-        }
+        put_field_character(length, ' ');
 
         if (code == KEY_RETURN) {
             buffer[length] = 0;
@@ -60,10 +55,10 @@ bool input_text(char *buffer, uint8_t max_length, uint8_t last_row)
             return false;
         }
 
+        // a törölt karakter helyére a kurzor kerül
         if (code == KEY_DELETE) {
             if (length) {
                 length--;
-                put_field_character(length, ' ');
             }
         } else if (is_printable(code) && length < max_length) {
             buffer[length] = code;
@@ -75,15 +70,10 @@ bool input_text(char *buffer, uint8_t max_length, uint8_t last_row)
 
 bool ask_text(const char *prompt, char *buffer, uint8_t max_length)
 {
-    message_prompt(prompt);
-    message_reserve_input_space(max_length);
+    message_prompt_with_input_space(prompt, max_length + 1);
 
     bool answered = input_text(buffer, max_length, MESSAGE_ROW + MESSAGE_ROW_COUNT - 1);
-
-    if (!answered) {
-        message_clear();
-    }
-
+    message_clear();
     return answered;
 }
 

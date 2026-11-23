@@ -42,4 +42,9 @@ uint8_t wait_for_key(void);         // vár egy leütésre, és annak kódját a
 void set_key_repeat(bool enabled);  // a nyomva tartott billentyű ismétlése; csak a parancsra várakozás idejére kapcsolandó be
 void enable_function_keys(void);    // az F-billentyűk kódot adnak; addig kód nélküliek, mint a kurzorbillentyűk
 
+#ifdef DEVMODE
+    // a teszteknek: a read_key a codes leütéseit adja sorban, mielőtt a billentyűpuffert olvasná; a codes a felhasználásig éljen
+    void set_test_keys(const char *codes);
+#endif
+
 #endif

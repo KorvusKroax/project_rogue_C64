@@ -128,7 +128,13 @@ uint8_t add_item_to_pack(uint8_t index)
     // az azonos kötegazonosítójú fegyverek pedig egyetlen, legfeljebb 255 darabos kötegből váltak ki
     uint8_t stack = find_pack_stack_for(item);
     if (stack != NO_ITEM) {
-        get_item(stack)->count += item->count;
+        struct Item *stack_item = get_item(stack);
+        stack_item->count += item->count;
+        // a címke nélküli köteg átveszi a tárgy címkéjét; ha mindkettőnek van, a tárgyé a rekordjával együtt felszabadul
+        if (stack_item->label == NO_NAME) {
+            stack_item->label = item->label;
+            item->label = NO_NAME;
+        }
         free_item(index);
         return stack;
     }
@@ -178,7 +184,8 @@ bool drop_item(uint8_t index)
 {
     struct Item *item = get_item(index);
 
-    // bájital-, tekercs- és ételkötegből egy darab új rekordként kerül le, a köteg a csomagban marad
+    // bájital-, tekercs- és ételkötegből egy darab új rekordként kerül le, a köteg a csomagban marad; ezek nem kapnak címkét,
+    // így a másolatnak sincs
     uint8_t dropped_index = index;
     if (item->count > 1 && is_stackable_type(item->type)) {
         dropped_index = allocate_item();
@@ -205,29 +212,40 @@ bool drop_item(uint8_t index)
 
 static char pack_list_entry[PACK_LIST_ENTRY_SIZE];
 
-// a csomag index. tárgyának listasora; NULL, ha nincs ennyi tárgy (TextListEntryFunction)
-static const char *get_pack_list_entry(uint8_t index)
-{
-    uint8_t item_index = game.first_pack_item;
-    while (index > 0 && item_index != NO_ITEM) {
-        item_index = get_item(item_index)->next;
-        index--;
-    }
-    if (item_index == NO_ITEM) return NULL;
+static uint8_t pack_list_filter;                // PACK_FILTER_
 
-    const struct Item *item = get_item(item_index);
-    pack_list_entry[0] = item->location.pack_letter;
-    pack_list_entry[1] = ')';
-    pack_list_entry[2] = ' ';
-    strcpy(pack_list_entry + PACK_LIST_PREFIX_LENGTH, format_item_name(item));
-    return pack_list_entry;
+static bool is_item_in_pack_list(const struct Item *item)
+{
+    return pack_list_filter == PACK_FILTER_ALL || can_be_named(item->type);
 }
 
-void show_pack_list(void)
+// a csomag szűrőn átjutó tárgyai közül az index. listasora; NULL, ha nincs ennyi (TextListEntryFunction)
+static const char *get_pack_list_entry(uint8_t index)
 {
-    if (game.first_pack_item == NO_ITEM) {
-        message(text_empty_handed);
-        return;
+    for (uint8_t item_index = game.first_pack_item; item_index != NO_ITEM; item_index = get_item(item_index)->next) {
+        const struct Item *item = get_item(item_index);
+        if (!is_item_in_pack_list(item)) continue;
+        if (index > 0) {
+            index--;
+            continue;
+        }
+
+        pack_list_entry[0] = item->location.pack_letter;
+        pack_list_entry[1] = ')';
+        pack_list_entry[2] = ' ';
+        strcpy(pack_list_entry + PACK_LIST_PREFIX_LENGTH, format_item_name(item));
+        return pack_list_entry;
+    }
+    return NULL;
+}
+
+bool show_pack_list(uint8_t filter)
+{
+    pack_list_filter = filter;
+    if (get_pack_list_entry(0) == NULL) {
+        message(filter == PACK_FILTER_ALL ? text_empty_handed : text_nothing_appropriate);
+        return false;
     }
     show_text_list(get_pack_list_entry);
+    return true;
 }
