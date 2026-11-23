@@ -343,6 +343,9 @@ static void execute_name_command(bool is_repeat)
     uint8_t index = get_command_item(is_repeat, text_item_purpose_call, PACK_FILTER_NAMEABLE);
     if (index != NO_ITEM) {
         name_item(index);
+        #ifdef DEVMODE
+            report_name_pool_usage();
+        #endif
     }
 }
 

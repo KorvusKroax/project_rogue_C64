@@ -8,7 +8,9 @@
 #include "../items.h"
 #include "../num.h"
 #include "../state.h"
+#include "../message.h"
 #include "../texts.h"
+#include "dev.h"
 
 // a lista minden eleme kisbetűvel kezdődik, és egy listán belül mind különböző
 static bool is_text_list_valid(const char *const *list, uint8_t count)
@@ -398,11 +400,30 @@ int test_longest_item_name(uint16_t i)
 
 #define NAME_POOL_TEST_FREED  (MAX_NAMES / 2)   // a betelt készletből ez a hely szabadul fel
 
+// a fejlesztői mód foglaltsági üzenete: „Names: <used_count>/<MAX_NAMES>.”
+static bool is_name_pool_usage_shown(uint8_t used_count)
+{
+    static const char start[] = "Names: ";
+    char expected[sizeof(start) + 2 * FORMAT_BUFFER_SIZE + 1];
+    strcpy(expected, start);
+    uint8_t length = sizeof(start) - 1;
+    length += format_int(expected + length, used_count, 0);
+    expected[length++] = '/';
+    length += format_int(expected + length, MAX_NAMES, 0);
+    strcpy(expected + length, ".");
+
+    message_clear();
+    report_name_pool_usage();
+    bool ok = does_message_bar_start_with(expected);
+    message_clear();
+    return ok;
+}
+
 int test_name_pool(uint16_t i)
 {
     game.seed = 1;
     init_item_names();
-    if (is_name_pool_full()) return false;
+    if (is_name_pool_full() || !is_name_pool_usage_shown(0)) return false;
 
     // MAX_NAMES név fér el, mindig a legkisebb szabad helyen, és a szövegük visszaolvasható; utána betelt
     char text[NAME_SIZE];
@@ -414,12 +435,12 @@ int test_name_pool(uint16_t i)
         format_int(text, count, 0);
         if (strcmp(get_name(count + 1), text) != 0) return false;
     }
-    if (!is_name_pool_full() || store_name("x") != NO_NAME) return false;
+    if (!is_name_pool_full() || store_name("x") != NO_NAME || !is_name_pool_usage_shown(MAX_NAMES)) return false;
 
     // a felszabadított hely újra foglalható; a NO_NAME felszabadítása nem változtat semmin
     free_name(NAME_POOL_TEST_FREED);
     free_name(NO_NAME);
-    if (is_name_pool_full()) return false;
+    if (is_name_pool_full() || !is_name_pool_usage_shown(MAX_NAMES - 1)) return false;
     if (store_name("x") != NAME_POOL_TEST_FREED || !is_name_pool_full()) return false;
 
     // az átnevezés helyben cseréli a szöveget, a leghosszabb névre is

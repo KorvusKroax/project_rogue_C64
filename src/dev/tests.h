@@ -73,7 +73,7 @@ int test_item_pseudonyms(uint16_t i);           // új játéknál minden típus
 int test_scroll_titles(uint16_t i);             // az i. seeddel indult játék tekercsfeliratai érvényesek és mind különbözők, az előállításuk nem hívja az RN-t
 int test_item_names(uint16_t i);                // kézzel összerakott tárgyak neve betűre a 8.8 példái szerint
 int test_longest_item_name(uint16_t i);         // a leghosszabb név betűre egyezik, és semmilyen név nem hosszabb az ITEM_NAME_LENGTH_MAX-nál
-int test_name_pool(uint16_t i);                 // a névkészlet MAX_NAMES nevet tárol, utána betelt; a felszabadított hely újra foglalható, az átnevezés helyben marad
+int test_name_pool(uint16_t i);                 // a névkészlet MAX_NAMES nevet tárol, utána betelt; a felszabadított hely újra foglalható, az átnevezés helyben marad; a fejlesztői mód foglaltsági üzenete
 int test_label_freed_with_item(uint16_t i);     // az új tárgynak nincs címkéje; a tárgy felszabadítása a címkéjét is felszabadítja, a szintváltáskor a padlón maradtét is
 int test_label_merge(uint16_t i);               // a címke nélküli köteg átveszi a beolvadó tárgy címkéjét, a címkés kötegé marad, és a beolvadóé felszabadul
 int test_pack_nameable_list(uint16_t i);        // a `c` listájából az étel és az amulett kimarad; ha nincs más, „you don't have anything appropriate”

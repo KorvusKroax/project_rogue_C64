@@ -197,6 +197,21 @@ void update_item_count_peak(void)
     }
 }
 
+// a foglalt helyek száma a névkészletben; a szabad hely üres szöveg (state.h)
+void report_name_pool_usage(void)
+{
+    uint8_t used_count = 0;
+    for (uint8_t slot = 0; slot < MAX_NAMES; slot++) {
+        if (game.name_pool[slot][0] != 0) {
+            used_count++;
+        }
+    }
+
+    char max_names_text[FORMAT_BUFFER_SIZE];
+    format_int(max_names_text, MAX_NAMES, 0);
+    message_format_without_recall("names: \3/\2", NULL, max_names_text, used_count);
+}
+
 // az altípusok száma; 0, ha a típusnak nincs altípusa (arany, amulett)
 static uint8_t get_subtype_count(uint8_t type)
 {
