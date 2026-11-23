@@ -63,7 +63,7 @@ static void choose_stick_materials(void)
     }
 }
 
-// a feliratgenerátor 16 bites xorshift, saját állapottal, így a felirat előállítása nem hívja az RN-t;
+// a feliratgenerátor saját állapotú xorshift (roll_xorshift), így a felirat előállítása nem hívja az RN-t;
 // a kezdőállapot a mag és az altípus szorzatának kizáró vagya: a szorzó páratlan, így altípusonként más
 #define TITLE_STATE_MULTIPLIER  0x9e37
 
@@ -71,12 +71,7 @@ static uint16_t title_random_state;
 
 static uint16_t roll_title_random(uint16_t n)
 {
-    uint16_t state = title_random_state;
-    state ^= state << 7;
-    state ^= state >> 9;
-    state ^= state << 8;
-    title_random_state = state;
-    return state % n;
+    return roll_xorshift(&title_random_state, n);
 }
 
 // a 0 kezdőállapot 0 marad: akkor minden dobás 0, és a felirat "a a", ez is érvényes
@@ -207,23 +202,28 @@ bool can_be_named(uint8_t type)
     return type != ITEM_TYPE_FOOD && type != ITEM_TYPE_AMULET;
 }
 
+uint8_t *get_type_knowledge(uint8_t type)
+{
+    switch (type) {
+        case ITEM_TYPE_POTION:
+            return game.potion_knowledge;
+        case ITEM_TYPE_SCROLL:
+            return game.scroll_knowledge;
+        case ITEM_TYPE_RING:
+            return game.ring_knowledge;
+        case ITEM_TYPE_STICK:
+            return game.stick_knowledge;
+    }
+    return NULL;
+}
+
 // a név helye: bájitalnál, tekercsnél, gyűrűnél és pálcánál a típus ismerete, amely az ismeretlen típus nevének indexét is tárolja,
 // fegyvernél és páncélnál a tárgy címkéje
 static uint8_t *get_name_holder(struct Item *item)
 {
-    uint8_t which = item->which;
-
-    switch (item->type) {
-        case ITEM_TYPE_POTION:
-            return &game.potion_knowledge[which];
-        case ITEM_TYPE_SCROLL:
-            return &game.scroll_knowledge[which];
-        case ITEM_TYPE_RING:
-            return &game.ring_knowledge[which];
-        case ITEM_TYPE_STICK:
-            return &game.stick_knowledge[which];
-    }
-    return &item->label;
+    uint8_t *knowledge = get_type_knowledge(item->type);
+    if (knowledge == NULL) return &item->label;
+    return &knowledge[item->which];
 }
 
 void name_item(uint8_t index)

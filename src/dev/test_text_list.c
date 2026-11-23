@@ -232,15 +232,24 @@ int test_list_row_not_joined(uint16_t i)
 
     // a listasor után a kérdés új sávban
     message_clear();
-    message("a) a mace");
+    message_list_row("a) a mace", false);
     message_prompt("which object?");
     bool ok = does_message_bar_start_with("Which object?");
 
-    // a listasor sem fűződik az előző üzenethez
+    // a listasor sem fűződik az előző üzenethez, és változatlan marad: nem kap nagybetűt és pontot
     message_clear();
     message("you hit it");
-    message("a) a mace");
+    message_list_row("a) a mace", false);
     ok = ok && does_message_bar_start_with("a) a mace ");
+
+    // a betű nélküli listasor (a felfedezések listája) sem fűződik a következő listasorhoz, és a CTRL-P is változatlanul hozza vissza
+    message_clear();
+    message_list_row("a potion of healing(blue)", false);
+    message_list_row("a scroll called mine", false);
+    ok = ok && does_message_bar_start_with("a scroll called mine ");
+    message_clear();
+    repeat_last_message();
+    ok = ok && does_message_bar_start_with("a scroll called mine ");
 
     // két másik üzenet összefűződik
     message_clear();

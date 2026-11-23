@@ -99,6 +99,8 @@ static void draw_list_entries(TextListEntryFunction get_entry, uint8_t entry_cou
                 screen_clear();
                 y = 0;
             }
+            // az üres tétel (elválasztó) nem kerül az oldal elejére; az első tétel nem üres
+            if (y == 0 && !*text) break;
 
             uint8_t length = calculate_entry_row_length(text, is_continuation);
             uint8_t text_column = left + margin;
@@ -114,13 +116,13 @@ static void draw_list_entries(TextListEntryFunction get_entry, uint8_t entry_cou
 }
 
 // tételenként egy üzenet: az első lecseréli a sáv szövegét, a többi előtt --More--, mert a listasorok nem fűződnek össze (message.h);
-// ennél a --More---nál ESC-re a lista véget ér, és a sáv üres
+// ennél a --More---nál ESC-re a lista véget ér, és a sáv üres; az üres tétel kimarad
 static void show_list_in_message_bar(TextListEntryFunction get_entry, uint8_t entry_count)
 {
     message_clear();
-    uint8_t index = 0;
-    while (index < entry_count && message_unless_escaped(get_entry(index))) {
-        index++;
+    for (uint8_t index = 0; index < entry_count; index++) {
+        const char *text = get_entry(index);
+        if (*text && !message_list_row(text, true)) return;
     }
 }
 
@@ -130,7 +132,7 @@ void show_text_list(TextListEntryFunction get_entry)
     calculate_text_list_size(get_entry, &size);
 
     if (size.entry_count == 1) {
-        message(get_entry(0));
+        message_list_row(get_entry(0), false);
         return;
     }
     if (options.inventory_style == INVENTORY_SLOW) {

@@ -288,7 +288,7 @@ static void dev_message_and_view_screen(void)
                 message("you feel a wrenching sensation");
                 message("you are now wearing a very long piece of armor and it fits you");
                 break;
-            case '6': message("a) a mace"); break;
+            case '6': message_list_row("a) a mace", false); break;
             case '7': ask_key("which object do you want to quaff? (* for list): "); break;
             case '8': ask_test_field("call it: "); break;   // a mező elfér a 0. sorban
             case '9': ask_test_field("this question is long enough to go on to the second row, name it: "); break; // a mező az 1. sor végéig tart

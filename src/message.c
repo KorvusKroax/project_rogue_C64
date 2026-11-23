@@ -26,8 +26,10 @@
 static char message_text[MESSAGE_TEXT_SIZE];
 static char last_message_text[MESSAGE_TEXT_SIZE];   // kiírt alakjában, a CTRL-P-hez
 static uint8_t message_text_length;
+static bool is_last_message_list_row;           // a CTRL-P listasorként hozza vissza
 static char message_bar_text[SCREEN_WIDTH * MESSAGE_ROW_COUNT + 1];
 static uint16_t message_bar_length;
+static bool is_message_bar_list_row;            // a sáv szövege listasor: semmi nem fűződik hozzá
 static uint8_t message_bar_end_column;
 static uint8_t message_bar_rows_in_use = 1;     // ennyi sort foglal a sáv; a többi a térképé
 
@@ -82,19 +84,13 @@ static void fill_message_text(const char *text, const char *first_text, const ch
     message_text[message_text_length] = 0;
 }
 
-// a tárgylista-sor (pl. "a) a mace"): nem kap nagybetűt és záró pontot, és nem fűződik össze más üzenettel
-static bool is_list_row(const char *text)
-{
-    return text[0] && text[1] == ')';
-}
-
 const char *prepare_message_text(const char *text, const char *first_text, const char *second_text, int16_t number, bool add_end_character)
 {
     fill_message_text(text, first_text, second_text, number);
 
     uint8_t length = message_text_length;
 
-    if (length && !is_list_row(message_text)) {
+    if (length) {
         if (message_text[0] >= 'a' && message_text[0] <= 'z') {
             message_text[0] -= 'a' - 'A';
         }
@@ -265,16 +261,17 @@ static bool append_to_message_bar(const char *text, uint8_t input_length)
 
 // a szöveg a sávba, az eddigi után, ha elfér (kérdésnél a mögötte álló input_length hosszú beviteli mezővel együtt), különben --More--
 // után; a szöveg előtti --More---nál is_escape_allowed mellett ESC-re a szöveg elmarad, és a sáv üres; hamis, ha így elmaradt
-static bool add_to_message_bar(const char *text, bool is_escape_allowed, uint8_t input_length)
+static bool add_to_message_bar(const char *text, bool is_escape_allowed, uint8_t input_length, bool is_list_row)
 {
     if (message_bar_length) {
-        // a tárgylista-sor után nem fűződik semmi, és ő sem fűződik az eddigi szöveghez; így mindig a sáv elején áll
-        if (!is_list_row(message_bar_text) && !is_list_row(text) && append_to_message_bar(text, input_length)) {
+        // a listasor után nem fűződik semmi, és ő sem fűződik az eddigi szöveghez; így mindig a sáv elején áll
+        if (!is_message_bar_list_row && !is_list_row && append_to_message_bar(text, input_length)) {
             return true;
         }
         if (!show_more_and_wait(is_escape_allowed)) return false;
     }
 
+    is_message_bar_list_row = is_list_row;
     while (true) {
         message_bar_length = calculate_message_chars_fitting_bar(text);
         memcpy(message_bar_text, text, message_bar_length);
@@ -298,26 +295,31 @@ void message_format(const char *text, const char *first_text, const char *second
 {
     const char *prepared_text = prepare_message_text(text, first_text, second_text, number, true);
     strcpy(last_message_text, prepared_text);
-    add_to_message_bar(prepared_text, false, 0);
+    is_last_message_list_row = false;
+    add_to_message_bar(prepared_text, false, 0, false);
 }
 
 void message_format_without_recall(const char *text, const char *first_text, const char *second_text, int16_t number)
 {
-    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true), false, 0);
+    add_to_message_bar(prepare_message_text(text, first_text, second_text, number, true), false, 0, false);
 }
 
-bool message_unless_escaped(const char *text)
+bool message_list_row(const char *text, bool is_escape_allowed)
 {
-    const char *prepared_text = prepare_message_text(text, NULL, NULL, 0, true);
-    if (!add_to_message_bar(prepared_text, true, 0)) return false;
+    if (!add_to_message_bar(text, is_escape_allowed, 0, true)) return false;
 
-    strcpy(last_message_text, prepared_text);
+    strcpy(last_message_text, text);
+    is_last_message_list_row = true;
     return true;
 }
 
 void repeat_last_message(void)
 {
-    message(last_message_text);
+    if (is_last_message_list_row) {
+        add_to_message_bar(last_message_text, false, 0, true);
+    } else {
+        message(last_message_text);
+    }
 }
 
 void message_prompt(const char *text)
@@ -328,7 +330,7 @@ void message_prompt(const char *text)
 // a kérdés a sávba (add_to_message_bar); mögé nem fűződik semmi, a következő üzenet lecseréli
 static void show_prompt(const char *text, uint8_t input_length)
 {
-    add_to_message_bar(text, false, input_length);
+    add_to_message_bar(text, false, input_length, false);
     message_bar_length = 0;
 }
 

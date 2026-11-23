@@ -7,6 +7,7 @@
 #include "platform/key.h"
 #include "chase.h"
 #include "combat.h"
+#include "discoveries.h"
 #include "explore.h"
 #include "item_names.h"
 #include "items.h"
@@ -401,6 +402,9 @@ static bool execute_command(uint8_t code)
             return execute_drop_command(is_repeat);
         case 'c':
             execute_name_command(is_repeat);
+            return false;
+        case 'D':
+            show_discoveries();
             return false;
         case '>':
             go_down_stairs();

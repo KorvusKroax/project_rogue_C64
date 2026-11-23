@@ -33,6 +33,9 @@ const char text_no_room_for_names[] = "you have no room for more names. Remove a
 const char text_was_called[] = "was called \"\1\"";
 const char text_what_to_call_it[] = "what do you want to call it? ";
 const char text_name_removed[] = "you remove the name";
+const char text_discovery_question[] = "for what type of object do you want a list? (* for all)";
+const char text_discovery_type_error[] = "please type one of !?=/ (ESCAPE to quit)";
+const char text_nothing_discovered[] = "haven't discovered anything about any \1s";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";
@@ -227,6 +230,7 @@ const char text_scroll_kind[] = "scroll";
 const char text_ring_kind[] = "ring";
 const char text_wand_kind[] = "wand";
 const char text_staff_kind[] = "staff";
+const char text_stick_kind[] = "stick";
 const char text_of[] = " of ";
 const char text_called[] = " called ";
 const char text_titled[] = " titled ";

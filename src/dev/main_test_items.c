@@ -30,6 +30,7 @@ static const struct DevTest item_tests[] = {
     { "NAME-LABEL MERGE", test_label_merge, 1 },
     { "NAME-PACK LIST", test_pack_nameable_list, 1 },
     { "NAME-CALL ITEM", test_name_item, 1 },
+    { "DISC-LIST", test_discovery_list, 1 },
 };
 
 int main(void)

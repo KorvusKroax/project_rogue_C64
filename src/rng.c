@@ -84,3 +84,13 @@ uint16_t spread(uint16_t n)
 {
     return n - n / 20 + rnd(n / 10);
 }
+
+uint16_t roll_xorshift(uint16_t *state, uint16_t n)
+{
+    uint16_t value = *state;
+    value ^= value << 7;
+    value ^= value >> 9;
+    value ^= value << 8;
+    *state = value;
+    return value % n;
+}

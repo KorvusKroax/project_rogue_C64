@@ -8,7 +8,8 @@
 // a folytatósor ennyi szóközzel beljebb kezdődik (az "a) " alá)
 #define TEXT_LIST_CONTINUATION_INDENT  3
 
-// a lista index. tétele (0-tól), pl. "a) a mace"; NULL, ha nincs több; az eredmény a következő hívásig él
+// a lista index. tétele (0-tól), pl. "a) a mace"; az üres tétel üres sor (a felfedezések listái között); NULL, ha nincs több;
+// az eredmény a következő hívásig él
 typedef const char *(*TextListEntryFunction)(uint8_t index);
 
 struct TextListSize {
@@ -26,7 +27,7 @@ bool does_text_list_fit_window(const struct TextListSize *size);
 // - clear: külön teljes képernyőn, a 0. sortól; ami nem fér a 0..23. sorba, a következő oldalra kerül;
 //   a 24. sorban TEXT_PRESS_SPACE, és szóközre vár
 // - overwrite: a térkép fölött, a jobb felső sarokban; az utolsó sora a TEXT_PRESS_SPACE; ha nem fér el, clear módban
-// - slow: tételenként az üzenetsávban, közöttük --More--; ott ESC-re a lista véget ér
+// - slow: tételenként az üzenetsávban, közöttük --More--; ott ESC-re a lista véget ér; az üres tétel kimarad
 // a clear és az overwrite mód ideiglenes ablak (view.h): a végén a képernyő visszaáll
 void show_text_list(TextListEntryFunction get_entry);
 

@@ -48,6 +48,9 @@ extern const char text_no_room_for_names[];
 extern const char text_was_called[];                // \1: a régi név
 extern const char text_what_to_call_it[];
 extern const char text_name_removed[];
+extern const char text_discovery_question[];
+extern const char text_discovery_type_error[];
+extern const char text_nothing_discovered[];        // \1: a típus szava, pl. text_potion_kind
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4
@@ -95,6 +98,7 @@ extern const char text_scroll_kind[];
 extern const char text_ring_kind[];
 extern const char text_wand_kind[];
 extern const char text_staff_kind[];
+extern const char text_stick_kind[];                // a pálca és a bot közös szava a felfedezések listájában
 extern const char text_of[];                        // "a potion of healing"
 extern const char text_called[];                    // "a potion called <név>(blue)", "a mace called <címke>"
 extern const char text_titled[];                    // "a scroll titled 'zok bie'"

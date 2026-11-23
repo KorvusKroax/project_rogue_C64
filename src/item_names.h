@@ -13,6 +13,9 @@
 
 #define NO_NAME  0                              // névindex helyett: nincs név (a címke helyén, a típusismeretben a SUBTYPE_UNKNOWN)
 
+// a típus ismeretének tömbje altípusonként (game.potion_knowledge stb.) bájitalnál, tekercsnél, gyűrűnél és pálcánál; NULL a többinél
+uint8_t *get_type_knowledge(uint8_t type);
+
 // a típusismeret bájtja a név indexét is tárolja: a név nélküli ismeretlen típusé a „nincs név”, és a névindex nem éri el az azonosítottét
 #if SUBTYPE_UNKNOWN != NO_NAME || MAX_NAMES >= SUBTYPE_IDENTIFIED
     #error "a névindex nem fér el a típusismeret mellett"

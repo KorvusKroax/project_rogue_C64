@@ -96,9 +96,6 @@ static const struct TextCase text_cases[] = {
 
     // nem betűvel kezdődik
     { "'x' is not a valid item", "'x' is not a valid item." },
-
-    // tárgylista-sor
-    { "a) a mace", "a) a mace" },
 };
 
 struct FormatCase {
@@ -111,9 +108,6 @@ static const struct FormatCase format_cases[] = {
     { "\1 hits you", "the bat", NULL, 0, "The bat hits you." },
     { "you find \3 gold pieces", NULL, NULL, 25, "You find 25 gold pieces." },
     { "\1 \2 \3", "a", "b", -3, "A b -3." },
-
-    // a helyőrzőből lett tárgylista-sor
-    { "\1) \2", "c", "a mace", 0, "c) a mace" },
 };
 
 // a fordító a literálokat ASCII-ban hagyja, nem alakítja PETSCII-re

@@ -4,8 +4,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "../discoveries.h"
 #include "../item_names.h"
 #include "../items.h"
+#include "../map.h"
 #include "../num.h"
 #include "../state.h"
 #include "../message.h"
@@ -506,4 +508,76 @@ int test_name_pool(uint16_t i)
     // új játéknál a készlet üres
     init_item_names();
     return store_name("x") == 1;
+}
+
+// a bájitaltípus neve a felfedezések alakjában: egy darab, azonosítatlanul
+static void write_discovered_potion_name(char *out, uint8_t which)
+{
+    set_example(ITEM_TYPE_POTION, which, 1, 0);
+    strcpy(out, format_item_name(&example));
+}
+
+// a felfedezések listájában a text pontosan egyszer szerepel; a text nem a format_item_name eredménye, hanem másolata
+static bool is_discovery_listed_once(const char *text)
+{
+    uint8_t count = 0;
+    for (uint8_t index = 0; get_discovery_entry(index) != NULL; index++) {
+        if (strcmp(get_discovery_entry(index), text) == 0) {
+            count++;
+        }
+    }
+    return count == 1;
+}
+
+#define DISCOVERY_TEST_CALL_COUNT  8            // ennyi újrakeverés alatt az első tétel már más (14 tételnél egy hívásban 1/14 eséllyel marad)
+
+int test_discovery_list(uint16_t i)
+{
+    init_item_names();
+    uint32_t seed = game.seed;
+    char expected[ITEM_NAME_SIZE];
+
+    // egy elnevezett és egy ismert bájitaltípus a lista elején, bármilyen sorrendben; a többi típusról semmi
+    uint8_t name_index = store_name("mine");
+    game.potion_knowledge[0] = name_index;
+    game.potion_knowledge[1] = SUBTYPE_IDENTIFIED;
+    bool ok = prepare_discovery_list(CHAR_POTION) && get_discovery_entry(2) == NULL;
+    write_discovered_potion_name(expected, 0);
+    ok = ok && is_discovery_listed_once(expected);
+    write_discovered_potion_name(expected, 1);
+    ok = ok && is_discovery_listed_once(expected);
+
+    ok = ok && prepare_discovery_list(CHAR_SCROLL) && get_discovery_entry(1) == NULL;
+    ok = ok && strcmp(get_discovery_entry(0), "Haven't discovered anything about any scrolls") == 0;
+
+    // a négy lista üres tételekkel elválasztva: 2 bájital, üres, tekercs, üres, gyűrű, üres, pálca
+    ok = ok && prepare_discovery_list('*') && get_discovery_entry(8) == NULL;
+    ok = ok && get_discovery_entry(2)[0] == 0 && get_discovery_entry(4)[0] == 0 && get_discovery_entry(6)[0] == 0;
+    ok = ok && strcmp(get_discovery_entry(7), "Haven't discovered anything about any sticks") == 0;
+
+    ok = ok && !prepare_discovery_list('x');
+
+    // minden ismert típus pontosan egyszer
+    memset(game.potion_knowledge, SUBTYPE_IDENTIFIED, sizeof(game.potion_knowledge));
+    ok = ok && prepare_discovery_list(CHAR_POTION) && get_discovery_entry(POTION_SUBTYPE_COUNT) == NULL;
+    for (uint8_t which = 0; which < POTION_SUBTYPE_COUNT && ok; which++) {
+        write_discovered_potion_name(expected, which);
+        ok = is_discovery_listed_once(expected);
+    }
+
+    // minden hívás újra kever
+    strcpy(expected, get_discovery_entry(0));
+    bool is_order_changed = false;
+    for (uint8_t call = 0; call < DISCOVERY_TEST_CALL_COUNT && !is_order_changed; call++) {
+        prepare_discovery_list(CHAR_POTION);
+        is_order_changed = strcmp(get_discovery_entry(0), expected) != 0;
+    }
+    ok = ok && is_order_changed;
+
+    // a keverés nem hívja az RN-t
+    ok = ok && game.seed == seed;
+
+    memset(game.potion_knowledge, SUBTYPE_UNKNOWN, sizeof(game.potion_knowledge));
+    free_name(name_index);
+    return ok;
 }
