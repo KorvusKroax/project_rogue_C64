@@ -244,7 +244,7 @@ A feliratok nem tárolódnak, csak a `scroll_title_seed`; ugyanabból az érték
 | állapot | bájital / gyűrű / pálca | tekercs |
 |---|---|---|
 | ismert | `a potion of healing(blue)`, `2 potions of …`; gyűrűnél `a ring of protection [+1](ruby)`; pálcánál `a wand of light [5 charges](iron)` | `a scroll of identify potion` |
-| elnevezett (`c`) | `a potion called <név>(blue)` | `a scroll called <név>` |
+| elnevezett (`c`) | `a potion called <név>(blue)`, `2 potions called <név>(blue)`; gyűrűnél `a ring called <név>(ruby)`, pálcánál `a wand called <név>(iron)`; az azonosított tárgy modja és töltése itt is a név után áll, mint az ismert típusnál | `a scroll called <név>` |
 | ismeretlen | `a blue potion`, `an amber potion`, `2 blue potions` | `a scroll titled 'zok bie'` |
 
 Fegyver: `a mace`, `an arrow`, azonosítva `a +1,+1 mace`, `a +0,+0 arrow`, köteg: `25 +0,+0 arrows`; címkével (`c`) `a +1,+1 mace called <címke>`. Páncél: `ring mail`, azonosítva `+1 ring mail [protection 4]` (a szám `10 − arm`, az előjeles szám `alap − arm`); címkével `ring mail called <címke>`. Étel: `some food` / `3 rations of food`, gyümölcs (a `fruit` opció, [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)) `a slime-mold` / `2 slime-molds`. Arany: `25 Gold pieces`. Amulett: `the Amulet of Yendor`. A csomaglistában a használt tárgyak után: `(weapon in hand)`, `(being worn)`, `(on left hand)` / `(on right hand)`.

@@ -170,6 +170,10 @@ static bool is_example_named(const char *expected)
     return strcmp(format_item_name(&example), expected) == 0;
 }
 
+// a példák típusneve és címkéje a névkészletben (test_item_names foglalja és szabadítja fel)
+#define EXAMPLE_NAME  "mine"
+static uint8_t example_name;
+
 static bool are_potion_names_valid(void)
 {
     uint8_t healing = find_text(text_potion_names, POTION_SUBTYPE_COUNT, "healing");
@@ -189,6 +193,11 @@ static bool are_potion_names_valid(void)
     example.count = 1;
     if (!is_example_named("a potion of healing(blue)")) return false;
 
+    game.potion_knowledge[healing] = example_name;
+    if (!is_example_named("a potion called " EXAMPLE_NAME "(blue)")) return false;
+    example.count = 2;
+    if (!is_example_named("2 potions called " EXAMPLE_NAME "(blue)")) return false;
+
     set_example(ITEM_TYPE_POTION, confusion, 1, 0);
     return is_example_named("an amber potion");
 }
@@ -202,6 +211,11 @@ static bool are_scroll_names_valid(void)
     if (!is_example_named("a scroll of identify potion")) return false;
     example.count = 2;
     if (!is_example_named("2 scrolls of identify potion")) return false;
+
+    game.scroll_knowledge[identify_potion] = example_name;
+    if (!is_example_named("2 scrolls called " EXAMPLE_NAME)) return false;
+    example.count = 1;
+    if (!is_example_named("a scroll called " EXAMPLE_NAME)) return false;
 
     // a 0. altípus a 0 maggal 0 állapotból indul: minden dobás 0, egy-egy "a" szótagú két szó
     game.scroll_title_seed = 0;
@@ -250,6 +264,9 @@ static bool are_weapon_names_valid(void)
     if (!is_example_named("a mace")) return false;
     example.flags = ITEM_KNOWN;
     if (!is_example_named("a +1,+1 mace")) return false;
+    example.label = example_name;
+    if (!is_example_named("a +1,+1 mace called " EXAMPLE_NAME)) return false;
+    example.label = NO_NAME;
     set_weapon_bonuses(-1, 0);
     if (!is_example_named("a -1,+0 mace")) return false;
 
@@ -259,6 +276,9 @@ static bool are_weapon_names_valid(void)
     if (!is_example_named("25 arrows")) return false;
     example.flags = ITEM_KNOWN;
     if (!is_example_named("25 +0,+0 arrows")) return false;
+    example.label = example_name;
+    if (!is_example_named("25 +0,+0 arrows called " EXAMPLE_NAME)) return false;
+    example.label = NO_NAME;
     example.count = 1;
     return is_example_named("a +0,+0 arrow");
 }
@@ -270,7 +290,11 @@ static bool are_armor_names_valid(void)
     set_example(ITEM_TYPE_ARMOR, ring_mail, 1, 0);
     example.properties.armor_class = get_armor_base_class(ring_mail) - 1;
     if (!is_example_named("ring mail")) return false;
+    example.label = example_name;
+    if (!is_example_named("ring mail called " EXAMPLE_NAME)) return false;
     example.flags = ITEM_KNOWN;
+    if (!is_example_named("+1 ring mail [protection 4] called " EXAMPLE_NAME)) return false;
+    example.label = NO_NAME;
     if (!is_example_named("+1 ring mail [protection 4]")) return false;
     example.properties.armor_class = get_armor_base_class(ring_mail) + 2;
     return is_example_named("-2 ring mail [protection 1]");
@@ -287,12 +311,16 @@ static bool are_ring_names_valid(void)
     set_example(ITEM_TYPE_RING, RING_PROTECTION, 1, ITEM_KNOWN);
     example.properties.ring_modifier = 1;
     if (!is_example_named("a ruby ring")) return false;
+    game.ring_knowledge[RING_PROTECTION] = example_name;
+    if (!is_example_named("a ring called " EXAMPLE_NAME " [+1](ruby)")) return false;
     game.ring_knowledge[RING_PROTECTION] = SUBTYPE_IDENTIFIED;
     if (!is_example_named("a ring of protection [+1](ruby)")) return false;
     example.properties.ring_modifier = -1;
     if (!is_example_named("a ring of protection [-1](ruby)")) return false;
     example.flags = 0;
     if (!is_example_named("a ring of protection(ruby)")) return false;
+    game.ring_knowledge[RING_PROTECTION] = example_name;
+    if (!is_example_named("a ring called " EXAMPLE_NAME "(ruby)")) return false;
 
     // a mod nélküli gyűrűnek azonosítva sincs modja
     set_example(ITEM_TYPE_RING, stealth, 1, ITEM_KNOWN);
@@ -312,31 +340,39 @@ static bool are_stick_names_valid(void)
     set_example(ITEM_TYPE_STICK, STICK_LIGHT, 1, ITEM_KNOWN);
     example.properties.charges = 5;
     if (!is_example_named("an iron wand")) return false;
+    game.stick_knowledge[STICK_LIGHT] = example_name;
+    if (!is_example_named("a wand called " EXAMPLE_NAME " [5 charges](iron)")) return false;
     game.stick_knowledge[STICK_LIGHT] = SUBTYPE_IDENTIFIED;
     if (!is_example_named("a wand of light [5 charges](iron)")) return false;
     example.flags = 0;
     if (!is_example_named("a wand of light(iron)")) return false;
+    game.stick_knowledge[STICK_LIGHT] = example_name;
+    if (!is_example_named("a wand called " EXAMPLE_NAME "(iron)")) return false;
 
     set_example(ITEM_TYPE_STICK, teleport_away, 1, 0);
     return is_example_named("a persimmon wood staff");
 }
 
-int test_item_names(uint16_t i)
+static bool are_other_names_valid(void)
 {
-    if (!are_potion_names_valid()) return false;
-    if (!are_scroll_names_valid()) return false;
-    if (!are_food_names_valid()) return false;
-    if (!are_weapon_names_valid()) return false;
-    if (!are_armor_names_valid()) return false;
-    if (!are_ring_names_valid()) return false;
-    if (!are_stick_names_valid()) return false;
-
     set_example(ITEM_TYPE_GOLD, 0, 1, 0);
     example.properties.gold_amount = 25;
     if (!is_example_named("25 Gold pieces")) return false;
 
     set_example(ITEM_TYPE_AMULET, 0, 1, 0);
     return is_example_named("the Amulet of Yendor");
+}
+
+int test_item_names(uint16_t i)
+{
+    example_name = store_name(EXAMPLE_NAME);
+
+    bool ok = example_name != NO_NAME && are_potion_names_valid() && are_scroll_names_valid() && are_food_names_valid()
+        && are_weapon_names_valid() && are_armor_names_valid() && are_ring_names_valid() && are_stick_names_valid()
+        && are_other_names_valid();
+
+    free_name(example_name);
+    return ok;
 }
 
 // a lista leghosszabb elemének indexe
@@ -351,15 +387,20 @@ static uint8_t find_longest_text(const char *const *list, uint8_t count)
     return longest;
 }
 
-// minden típus minden altípusa, ismert és ismeretlen típusként, a leghosszabb álnévvel, 255 darabbal és a leghosszabban kiírt értékekkel
-static bool do_all_names_fit(void)
+#define KNOWLEDGE_ROUND_COUNT  3                // ismeretlen, elnevezett és ismert típus
+
+// minden típus minden altípusa, ismeretlen, a long_name nevű és ismert típusként, a fegyver és a páncél a long_name címkével,
+// a leghosszabb álnévvel, 255 darabbal és a leghosszabban kiírt értékekkel
+static bool do_all_names_fit(uint8_t long_name)
 {
     memset(game.potion_colors, find_longest_text(text_potion_colors, POTION_COLOR_COUNT), sizeof(game.potion_colors));
     memset(game.ring_stones, find_longest_text(text_ring_stones, RING_STONE_COUNT), sizeof(game.ring_stones));
     memset(game.stick_materials, find_longest_text(text_stick_materials, STICK_MATERIAL_COUNT), sizeof(game.stick_materials));
 
-    for (uint8_t knowledge_round = 0; knowledge_round < 2; knowledge_round++) {
-        uint8_t knowledge = knowledge_round == 0 ? SUBTYPE_UNKNOWN : SUBTYPE_IDENTIFIED;
+    // az ismert típus az utolsó: a tesztek után így marad
+    uint8_t knowledge_rounds[KNOWLEDGE_ROUND_COUNT] = { SUBTYPE_UNKNOWN, long_name, SUBTYPE_IDENTIFIED };
+    for (uint8_t knowledge_round = 0; knowledge_round < KNOWLEDGE_ROUND_COUNT; knowledge_round++) {
+        uint8_t knowledge = knowledge_rounds[knowledge_round];
         memset(game.potion_knowledge, knowledge, sizeof(game.potion_knowledge));
         memset(game.scroll_knowledge, knowledge, sizeof(game.scroll_knowledge));
         memset(game.ring_knowledge, knowledge, sizeof(game.ring_knowledge));
@@ -369,6 +410,7 @@ static bool do_all_names_fit(void)
             uint8_t subtype_count = get_tested_subtype_count(type);
             for (uint8_t which = 0; which < subtype_count; which++) {
                 set_example(type, which, 255, ITEM_KNOWN);
+                example.label = long_name;
                 // a fegyver két bónusza -128, a páncél védelme is: "+136 ... [protection 138]"; a töltés 255; az arany 65535
                 memset(&example.properties, 0x80, sizeof(example.properties));
                 if (type == ITEM_TYPE_STICK) {
@@ -386,16 +428,28 @@ static bool do_all_names_fit(void)
 
 int test_longest_item_name(uint16_t i)
 {
+    char long_name[NAME_SIZE];
+    memset(long_name, 'n', NAME_LENGTH_MAX);
+    long_name[NAME_LENGTH_MAX] = 0;
+    uint8_t long_name_index = store_name(long_name);
+
+    // a leghosszabb név (item_names.h): a leghosszabb nevű, elnevezett típusú bot a legtöbb töltéssel
     uint8_t teleport_away = find_text(text_stick_names, STICK_SUBTYPE_COUNT, "teleport away");
     game.stick_materials[teleport_away] = find_text(text_stick_materials, STICK_MATERIAL_COUNT, "persimmon wood");
-    game.stick_knowledge[teleport_away] = SUBTYPE_IDENTIFIED;
+    game.stick_knowledge[teleport_away] = long_name_index;
+
+    char expected[ITEM_NAME_SIZE];
+    strcpy(expected, "a staff called ");
+    strcat(expected, long_name);
+    strcat(expected, " [255 charges](persimmon wood)");
 
     set_example(ITEM_TYPE_STICK, teleport_away, 1, ITEM_KNOWN);
     example.properties.charges = 255;
-    if (!is_example_named("a staff of teleport away [255 charges](persimmon wood)")) return false;
-    if (strlen(format_item_name(&example)) > ITEM_NAME_LENGTH_MAX) return false;
+    bool ok = long_name_index != NO_NAME && is_example_named(expected) && strlen(expected) <= ITEM_NAME_LENGTH_MAX;
 
-    return do_all_names_fit();
+    ok = ok && do_all_names_fit(long_name_index);
+    free_name(long_name_index);
+    return ok;
 }
 
 #define NAME_POOL_TEST_FREED  (MAX_NAMES / 2)   // a betelt készletből ez a hely szabadul fel

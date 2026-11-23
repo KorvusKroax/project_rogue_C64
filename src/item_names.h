@@ -27,8 +27,8 @@
 #define SCROLL_TITLE_LENGTH_MAX      30         // default: 30
 #define SCROLL_TITLE_SIZE            (SCROLL_TITLE_LENGTH_MAX + 1)
 
-// a leghosszabb név a később jövő címkével és a használatban lévő tárgy utótagjával együtt:
-// "a staff called " (15) + a 20 karakteres címke + " [255 charges]" (14) + "(persimmon wood)" (16) + " (weapon in hand)" (17)
+// a leghosszabb név az elnevezett típussal és a használatban lévő tárgy (később jövő) utótagjával együtt:
+// "a staff called " (15) + a 20 karakteres név + " [255 charges]" (14) + "(persimmon wood)" (16) + " (weapon in hand)" (17)
 #define ITEM_NAME_LENGTH_MAX  82
 #define ITEM_NAME_SIZE        (ITEM_NAME_LENGTH_MAX + 1)
 

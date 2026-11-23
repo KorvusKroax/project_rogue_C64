@@ -96,6 +96,7 @@ extern const char text_ring_kind[];
 extern const char text_wand_kind[];
 extern const char text_staff_kind[];
 extern const char text_of[];                        // "a potion of healing"
+extern const char text_called[];                    // "a potion called <név>(blue)", "a mace called <címke>"
 extern const char text_titled[];                    // "a scroll titled 'zok bie'"
 extern const char text_charges[];                   // "[5 charges]"
 extern const char text_protection[];                // "[protection 4]"

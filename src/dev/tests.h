@@ -71,8 +71,8 @@ int test_item_groups(uint16_t i);               // kötegekkel teli tárgytábl�
 int test_item_name_lists(uint16_t i);           // a nevek és az álnevek listái: minden elem kisbetűvel kezdődik, és egy listán belül mind különböző
 int test_item_pseudonyms(uint16_t i);           // új játéknál minden típus ismeretlen, az álnevek a lista tartományában, ismétlés nélkül; pálca és bot is van
 int test_scroll_titles(uint16_t i);             // az i. seeddel indult játék tekercsfeliratai érvényesek és mind különbözők, az előállításuk nem hívja az RN-t
-int test_item_names(uint16_t i);                // kézzel összerakott tárgyak neve betűre a 8.8 példái szerint
-int test_longest_item_name(uint16_t i);         // a leghosszabb név betűre egyezik, és semmilyen név nem hosszabb az ITEM_NAME_LENGTH_MAX-nál
+int test_item_names(uint16_t i);                // kézzel összerakott tárgyak neve betűre a 8.8 példái szerint, az elnevezett típusok és a címkék `called` alakjával is
+int test_longest_item_name(uint16_t i);         // a leghosszabb név (20 karakteres típusnévvel) betűre egyezik, és semmilyen név nem hosszabb az ITEM_NAME_LENGTH_MAX-nál, a 20 karakteres típusnévvel és címkével sem
 int test_name_pool(uint16_t i);                 // a névkészlet MAX_NAMES nevet tárol, utána betelt; a felszabadított hely újra foglalható, az átnevezés helyben marad; a fejlesztői mód foglaltsági üzenete
 int test_label_freed_with_item(uint16_t i);     // az új tárgynak nincs címkéje; a tárgy felszabadítása a címkéjét is felszabadítja, a szintváltáskor a padlón maradtét is
 int test_label_merge(uint16_t i);               // a címke nélküli köteg átveszi a beolvadó tárgy címkéjét, a címkés kötegé marad, és a beolvadóé felszabadul

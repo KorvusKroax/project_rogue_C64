@@ -228,6 +228,7 @@ const char text_ring_kind[] = "ring";
 const char text_wand_kind[] = "wand";
 const char text_staff_kind[] = "staff";
 const char text_of[] = " of ";
+const char text_called[] = " called ";
 const char text_titled[] = " titled ";
 const char text_charges[] = " charges";
 const char text_protection[] = "protection ";

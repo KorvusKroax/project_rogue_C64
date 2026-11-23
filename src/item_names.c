@@ -336,13 +336,18 @@ static void complete_article(void)
     item_name_length++;
 }
 
-// ismert típus: "a potion of healing", "2 potions of healing"
-static void add_known_kind_name(uint8_t count, const char *kind, const char *real_name)
+// ismert vagy elnevezett típus a knowledge (a típus ismerete, nem SUBTYPE_UNKNOWN) szerint: "a potion of healing", "2 potions called <név>"
+static void add_named_kind_name(uint8_t count, const char *kind, uint8_t knowledge, const char *real_name)
 {
     add_count_or_article(count);
     add_counted_word(kind, count);
-    add_text(text_of);
-    add_text(real_name);
+    if (knowledge == SUBTYPE_IDENTIFIED) {
+        add_text(text_of);
+        add_text(real_name);
+    } else {
+        add_text(text_called);
+        add_text(get_name(knowledge));
+    }
 }
 
 // ismeretlen típus: "a blue potion", "2 blue potions"
@@ -354,7 +359,7 @@ static void add_unknown_kind_name(uint8_t count, const char *pseudonym, const ch
     add_counted_word(kind, count);
 }
 
-// az ismert típus neve után: "(blue)"
+// az ismert vagy elnevezett típus neve után: "(blue)"
 static void add_pseudonym_in_parentheses(const char *pseudonym)
 {
     add_character('(');
@@ -362,27 +367,28 @@ static void add_pseudonym_in_parentheses(const char *pseudonym)
     add_character(')');
 }
 
+// "a blue potion", elnevezve "a potion called <név>(blue)", ismert típusnál "a potion of healing(blue)"
 static void add_potion_name(const struct Item *item)
 {
     uint8_t which = item->which;
+    uint8_t knowledge = game.potion_knowledge[which];
     const char *color = text_potion_colors[game.potion_colors[which]];
 
-    if (game.potion_knowledge[which] == SUBTYPE_IDENTIFIED) {
-        add_known_kind_name(item->count, text_potion_kind, text_potion_names[which]);
-        add_pseudonym_in_parentheses(color);
-    } else {
+    if (knowledge == SUBTYPE_UNKNOWN) {
         add_unknown_kind_name(item->count, color, text_potion_kind);
+    } else {
+        add_named_kind_name(item->count, text_potion_kind, knowledge, text_potion_names[which]);
+        add_pseudonym_in_parentheses(color);
     }
 }
 
-// ismeretlen típus: "a scroll titled 'zok bie'"
+// "a scroll titled 'zok bie'", elnevezve "a scroll called <név>", ismert típusnál "a scroll of identify potion"
 static void add_scroll_name(const struct Item *item)
 {
     uint8_t which = item->which;
+    uint8_t knowledge = game.scroll_knowledge[which];
 
-    if (game.scroll_knowledge[which] == SUBTYPE_IDENTIFIED) {
-        add_known_kind_name(item->count, text_scroll_kind, text_scroll_names[which]);
-    } else {
+    if (knowledge == SUBTYPE_UNKNOWN) {
         add_count_or_article(item->count);
         add_counted_word(text_scroll_kind, item->count);
         add_text(text_titled);
@@ -390,6 +396,8 @@ static void add_scroll_name(const struct Item *item)
         write_scroll_title(item_name + item_name_length, which);
         item_name_length += strlen(item_name + item_name_length);
         add_character('\'');
+    } else {
+        add_named_kind_name(item->count, text_scroll_kind, knowledge, text_scroll_names[which]);
     }
 }
 
@@ -407,7 +415,16 @@ static void add_food_name(const struct Item *item)
     }
 }
 
-// "a mace", azonosítva "a +1,+1 mace", kötegben "25 +0,+0 arrows"
+// a fegyver és a páncél címkéje (`c`) a név végén: " called <címke>"
+static void add_label(uint8_t label)
+{
+    if (label != NO_NAME) {
+        add_text(text_called);
+        add_text(get_name(label));
+    }
+}
+
+// "a mace", azonosítva "a +1,+1 mace", kötegben "25 +0,+0 arrows", címkével "a +1,+1 mace called <címke>"
 static void add_weapon_name(const struct Item *item)
 {
     add_count_or_article(item->count);
@@ -418,9 +435,11 @@ static void add_weapon_name(const struct Item *item)
         add_character(' ');
     }
     add_counted_word(text_weapon_names[item->which], item->count);
+    add_label(item->label);
 }
 
-// névelő nélkül: "ring mail", azonosítva "+1 ring mail [protection 4]": az eltérés az alapvédelemtől, és a védelem a státuszsor módján
+// névelő nélkül: "ring mail", azonosítva "+1 ring mail [protection 4]": az eltérés az alapvédelemtől, és a védelem a státuszsor módján;
+// címkével "ring mail called <címke>"
 static void add_armor_name(const struct Item *item)
 {
     int8_t armor_class = item->properties.armor_class;
@@ -437,37 +456,44 @@ static void add_armor_name(const struct Item *item)
         add_number(BASE_ARMOR - armor_class);
         add_character(']');
     }
+    add_label(item->label);
 }
 
-// "a ruby ring", ismert típusnál "a ring of protection(ruby)", azonosítva a modos gyűrű modjával: "a ring of protection [+1](ruby)"
+// "a ruby ring", elnevezve "a ring called <név>(ruby)", ismert típusnál "a ring of protection(ruby)"; azonosítva a modos gyűrű
+// modjával: "a ring of protection [+1](ruby)"
 static void add_ring_name(const struct Item *item)
 {
     uint8_t which = item->which;
+    uint8_t knowledge = game.ring_knowledge[which];
     const char *stone = text_ring_stones[game.ring_stones[which]];
 
-    if (game.ring_knowledge[which] == SUBTYPE_IDENTIFIED) {
-        add_known_kind_name(item->count, text_ring_kind, text_ring_names[which]);
+    if (knowledge == SUBTYPE_UNKNOWN) {
+        add_unknown_kind_name(item->count, stone, text_ring_kind);
+    } else {
+        add_named_kind_name(item->count, text_ring_kind, knowledge, text_ring_names[which]);
         if ((item->flags & ITEM_KNOWN) && has_ring_modifier(which)) {
             add_text(" [");
             add_signed_number(item->properties.ring_modifier);
             add_character(']');
         }
         add_pseudonym_in_parentheses(stone);
-    } else {
-        add_unknown_kind_name(item->count, stone, text_ring_kind);
     }
 }
 
-// fémből pálca, fából bot: "an iron wand", ismert típusnál "a wand of light(iron)", azonosítva a töltéssel: "a wand of light [5 charges](iron)"
+// fémből pálca, fából bot: "an iron wand", elnevezve "a wand called <név>(iron)", ismert típusnál "a wand of light(iron)"; azonosítva
+// a töltéssel: "a wand of light [5 charges](iron)"
 static void add_stick_name(const struct Item *item)
 {
     uint8_t which = item->which;
+    uint8_t knowledge = game.stick_knowledge[which];
     uint8_t material_index = game.stick_materials[which];
     const char *material = text_stick_materials[material_index];
     const char *kind = material_index < STICK_METAL_COUNT ? text_wand_kind : text_staff_kind;
 
-    if (game.stick_knowledge[which] == SUBTYPE_IDENTIFIED) {
-        add_known_kind_name(item->count, kind, text_stick_names[which]);
+    if (knowledge == SUBTYPE_UNKNOWN) {
+        add_unknown_kind_name(item->count, material, kind);
+    } else {
+        add_named_kind_name(item->count, kind, knowledge, text_stick_names[which]);
         if (item->flags & ITEM_KNOWN) {
             add_text(" [");
             add_number(item->properties.charges);
@@ -475,8 +501,6 @@ static void add_stick_name(const struct Item *item)
             add_character(']');
         }
         add_pseudonym_in_parentheses(material);
-    } else {
-        add_unknown_kind_name(item->count, material, kind);
     }
 }
 
