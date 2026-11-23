@@ -56,7 +56,7 @@ Item {
   pos      // pozíció, ha a padlón van
   packch   // csomagbetű ('a'..'z'), ha a csomagban van (8.9)
   launch   // a kilövő fegyver típusa, amellyel lőni kell (nyílnál: short bow); nincs: üres (7.4) – nem tárolt, a típusból jön
-  damage   // sebzés-string közelharcban, kézben tartva ("NxM") – nem tárolt: fegyvernél a típusból (8.4), pálcánál az anyagából: bot vagy pálca (8.7, 8.8)
+  damage   // sebzés-string közelharcban, kézben tartva ("NxM") – nem tárolt: fegyvernél a típusból (8.4), pálcánál az anyagából: bot vagy pálca (8.7, 8.8); minden más tárgynál 0x0 (7.1)
   hurldmg  // sebzés-string dobva vagy kilőve (7.4) – nem tárolt, mint a damage
   count    // darabszám kötegelt tárgynál (nyíl, dart, shuriken, dagger, bájital, tekercs, étel)
   hplus    // találati bónusz (fegyvernél; átkozott fegyvernél negatív) (7.1, 8.4)
@@ -78,7 +78,7 @@ GameState {
   max_level              // a legmélyebb eddig elért szint; tárgy/arany csak ott generálódik, ha nálad az amulett (2.7, 2.8)
   gold                   // a játékos aranya; ebből lesz a pontszám (4.3)
   player                 // Creature: a játékos (1.1.2)
-  cur_weapon             // a kézben tartott fegyver (vagy üres)
+  cur_weapon             // a kézben tartott tárgy (vagy üres): többnyire fegyver, de bármi lehet, ami nem páncél (4.2.6)
   cur_armor              // a viselt páncél (vagy üres)
   cur_ring[LEFT]         // gyűrű a bal kézen (vagy üres) (8.6)
   cur_ring[RIGHT]        // gyűrű a jobb kézen (vagy üres)

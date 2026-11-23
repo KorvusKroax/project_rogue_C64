@@ -2,7 +2,7 @@
 
 ## 7.1 Közelharci találat
 ```
-attack(attacker, defender, weapon /*null = fegyvertelen*/, thrown):
+attack(attacker, defender, weapon /*közelharcban a kézben tartott tárgy; null = üres kéz*/, thrown):
   hit_bonus = (weapon ? weapon.hplus : 0) + str_plus[attacker.str]   // szörnynél 0
             + (player, weapon kézben, !thrown ? sum(dexterity rings.arm) : 0)
   if !defender.ISRUN: hit_bonus += 4                 // alvó/fogva tartott szörny – és alvó, ájult, fagyott játékos is (1.2.1, J1)
@@ -26,7 +26,8 @@ attack(attacker, defender, weapon /*null = fegyvertelen*/, thrown):
 - Védő páncél: játékosnál `player_armor()` ([5.5](05_jatekos.md#55-effektív-páncél-védekezéskor)), szörnynél `monster.arm`.
 - Játékos támad: a szörny azonnal ISRUN-t kap és ISHELD-je törlődik (ezért a +4 gyakorlatilag nem érvényesül).
 - Szörny támad: `weapon = null`, `str = 10` → `str_plus = 0`, `add_dam = 0`.
-- Fegyveres közelharc sebzés-stringje: `weapon.damage`; fegyvertelen: `player.dmg` ("1x4"); szörnynél `monster.dmg` szegmensenként.
+- A játékos közelharcának sebzés-stringje a kézben tartott tárgyé ([4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok)): fegyvernél a típus kézi sebzése ([8.4](08_targyak.md#84-fegyverek)), botnál 2x3, pálcánál 1x1 ([8.7](08_targyak.md#87-pálcákbotok-z)), minden más tárgynál 0x0, így a találat csak a bónuszokat sebzi (16-os erőnél `add_dam` = 1). Üres kézzel `player.dmg` ("1x4"); szörnynél `monster.dmg` szegmensenként.
+- A `hplus` és a `dplus` csak fegyvernél számít, minden más tárgynál 0; a tárgyrekordban a helyükön más adat áll ([1.4.6](01_adatmodell_es_flagek.md#146-tárgyrekord)).
 - CANHUH: sikeres játékos-ütésnél a szörny ISHUH-t kap, CANHUH törlődik, „your hands stop glowing red” / „the <szörny> appears confused”.
 - Xeroc leleplezés ([6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)): ha a játékos nem vak, a játékos közelharci támadása csak leleplezi (sebzés nincs, a kör eltelik), a xeroc támadása pedig üzenet nélkül leplezi le, és normálisan lefut.
 

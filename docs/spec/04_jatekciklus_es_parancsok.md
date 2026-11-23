@@ -177,13 +177,13 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | parancs | leírás |
 |---|---|
 | `,` | felvétel (lebegve nem); időbe kerül, üres mezőn és lebegve is |
-| d | lerakás – csak üres FLOOR vagy PASSAGE mezőre; használatban lévő átkozottat nem. Bájital-, tekercs- és ételkötegből egy darab kerül le, a fegyverköteg (nyíl, dart, shuriken, tőr) egészben ([8.9](08_targyak.md#89-csomag)) |
+| d | lerakás – csak üres FLOOR vagy PASSAGE mezőre; használatban lévő átkozottat nem, a többit előbb leveszi. Bájital-, tekercs- és ételkötegből egy darab kerül le, a fegyverköteg (nyíl, dart, shuriken, tőr) egészben ([8.9](08_targyak.md#89-csomag)) |
 | q | bájital ivás |
 | r | tekercs olvasás |
 | e | evés |
-| w | fegyver kézbe (átkozott jelenlegi fegyvert nem lehet cserélni). Bármilyen nem-páncél tárgy kézbe vehető (bájital, étel …), csak a páncélt utasítja el |
-| SHIFT-w | páncél felvétele – 2 kör (`waste_time`); a páncél ezzel azonosítódik (ISKNOW). Ha már van rajta páncél: „you are already wearing some. You'll have to take it off first”, nem visz időt. Nem páncélra: „you can't wear that” (időbe kerül) |
-| SHIFT-t | páncél levétele – 2 kör (`waste_time`); átkozottat nem: „you can't. It appears to be cursed”. Ha nincs rajta: „you aren't wearing any armor”, nem visz időt |
+| w | fegyver kézbe (átkozott tárgyat a kézből nem lehet cserélni). Bármilyen nem-páncél tárgy kézbe vehető (bájital, étel …), csak a páncélt utasítja el ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
+| SHIFT-w | páncél felvétele – 2 kör (`waste_time`); a páncél ezzel azonosítódik (ISKNOW) ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
+| SHIFT-t | páncél levétele – 2 kör (`waste_time`); átkozottat nem ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | SHIFT-p | gyűrű felhúzása (melyik kézre kérdez, ha mindkettő szabad) |
 | SHIFT-r | gyűrű levétele (átkozottat nem) |
 | c * | tárgytípus elnevezése (bájital, tekercs, gyűrű, pálca) |
@@ -199,7 +199,7 @@ waste_time():
 | parancs | leírás |
 |---|---|
 | i | teljes csomag listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
-| `)` `]` `=` | kézben lévő fegyver / viselt páncél / gyűrűk; „you are wielding nothing” / „wearing nothing” |
+| `)` `]` `=` | kézben lévő fegyver / viselt páncél / gyűrűk, a név utótag nélkül ([8.8](08_targyak.md#88-azonosítás-és-nevek)); „you are wielding nothing” / „wearing nothing” |
 | SHIFT-d | felfedezett típusok listája ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `/` | jel magyarázata ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) |
 | `^` + irány | csapda azonosítása a szomszéd mezőn („You have found <csapda>”), rejtettnél vagy ha nincs: „You have found no trap there”. ISHUH-nál 20% eséllyel más irány (mint minden irányos parancsnál, `get_dir`); ISHALU alatt véletlen csapdanév |
@@ -296,9 +296,13 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
   - *slow* – tételenként egy üzenet az üzenetsávban: az első lecseréli a sáv szövegét, a többi előtt `--More--` (a listasorok nem fűződnek össze). Ennél a `--More--`-nál ESC-re a lista véget ér, és az üzenetsáv törlődik.
 - A lista végén *clear* és *overwrite* módban „--Press space to continue--”, és szóközre vár. Egyetlen tétel minden módban üzenetként jelenik meg, akkor is, ha a neve két sorra törne. A listasorhoz nem fűződik semmi ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)): ha a `*` lista utolsó tétele a sávban maradt (egy tétel, *slow* mód), a kérdés `--More--` után, a sáv elején jelenik meg. Az *overwrite* és a *clear* mód ideiglenes ablak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)): a megnyitása törli az üzenetsávot, és bezárás után a sáv üres marad. Üres csomag: „you are empty handed”. Az `i` nem visz időt.
 
-**Fegyver kézbe (`w`):** ha a jelenlegi fegyver átkozott: „you can't. It appears to be cursed” (időbe kerül). Páncélra: „you can't wield armor” (nincs idő). Már használt tárgyra: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
+**Fegyver kézbe (`w`):** bármilyen tárgy kézbe vehető, ami nem páncél, így a kézben tartott tárgy nem mindig fegyver; a közelharc sebzését ez adja ([7.1](07_harc.md#71-közelharci-találat)). Ha a kézben tartott tárgy átkozott, a tárgyat sem kérdezi: „you can't. It appears to be cursed” (időbe kerül). Ha a tárgy bekérése elmarad (üres csomag, „you ran out”, ESC, nincs megfelelő tárgy), nem visz időt. Páncélra: „you can't wield armor” (nincs idő). Használatban lévő tárgyra, a kézben tartottra is: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 
-**Páncél fel (`W`) / le (`T`):** [4.2.3](#423-tárgyak). Siker: „you are now wearing <név>” (a páncél azonosítódik), illetve „you used to be wearing <betű>) <név>”. Nem páncélra: „you can't wear that”.
+**Kiürülő kéz:** ha a kézben tartott tárgyból iszik, olvas vagy eszik (`q`, `r`, `e`), a kéz kiürül, akkor is, ha a kötegből marad. Ugyanígy, ha lerakja (`d`, [8.9](08_targyak.md#89-csomag)) vagy eldobja (`t`, [7.4](07_harc.md#74-hajítás-t)). Más módon a kézben tartott tárgy nem hagyja el a csomagot: a nimfa csak használaton kívüli tárgyat lop ([6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)).
+
+**Páncél fel (`W`):** előbb a tárgyat kérdezi. Ha a bekérés üres csomag vagy „you ran out” miatt marad el, a kör elmegy; ESC-re és ha nincs megfelelő tárgy, nem. Ha már van rajta páncél: „you are already wearing some. You'll have to take it off first” (nincs idő). Nem páncélra: „you can't wear that” (időbe kerül). Siker: `waste_time` ([4.2.3](#423-tárgyak)), a páncél azonosítódik (ISKNOW), „you are now wearing <név>”; ez összesen 2 kör.
+
+**Páncél le (`T`):** ha nincs rajta páncél: „you aren't wearing any armor” (nincs idő). Átkozottra: „you can't. It appears to be cursed” (időbe kerül). Siker: `waste_time`, „you used to be wearing <betű>) <név>”; ez is 2 kör.
 
 **Gyűrű fel (`P`):** nem gyűrűre: „it would be difficult to wrap that around a finger” (időbe kerül); használt tárgyra: „That's already in use”; ha mindkét kéz szabad: „left hand or right hand? ” (`l`/`r`; ESC kilép, de a kör elmegy), különben a szabad kézre; két gyűrűnél: „you already have a ring on each hand”. Felhúzáskor: add strength → `chg_str(+mod)`; see invisible → CANSEE (a láthatatlan szörnyek kirajzolódnak); aggravate monster → aggravate ([6.4](06_szornyek.md#64-ébresztés)). Üzenet: „you are now wearing <név> (<betű>)”.
 
