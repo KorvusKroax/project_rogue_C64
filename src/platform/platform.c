@@ -4,6 +4,7 @@
 #include <c64/memmap.h>
 #include <c64/vic.h>
 
+#include "disk.h"
 #include "key.h"
 #include "screen.h"
 
@@ -11,14 +12,29 @@
 // $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
 //              – a main régió, lásd a #pragma region sort
 // $C000-$C3FF  képernyőmemória (VIC 3. bank)
-// $C400-$C7FF  szabad
+// $C400-$C7FF  szabad; induláskor a szövegek betöltésének puffere
 // $C800-$CFFF  saját karakterkészlet
 // $D000-$DFFF  I/O, alatta szövegek
 // $E000-$FFF9  KERNAL ROM, alatta szövegek
+//              – a texts régió, lásd a #pragma region sort
 // $FFFA-$FFFF  KERNAL ROM, alatta NMI-, RESET- és IRQ vektorok
 
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
+
+// a texts szakasz (texts.c) a lemezen külön fájl (az 1-es overlay), a neve a régió neve; induláskor a load_texts tölti be
+#pragma region(texts, 0xd000, 0xfffa, , 1, {texts})
+#pragma overlay(texts, 1)
+
+extern void texts_section_start, texts_section_end;
+
+#define TEXTS_FILE_NAME       "TEXTS"               // a régió neve, PETSCII-ben nagybetűvel
+#define TEXT_LOAD_BUFFER      ((char *)0xc400)
+#define TEXT_LOAD_CHUNK_SIZE  256
+
+#if TEXT_LOAD_CHUNK_SIZE > 0x400
+    #error "a szövegek betöltésének puffere nem fér el a $C400-$C7FF területen"
+#endif
 
 // a fordító becsült veremmélysége a .map fájl STACK sorában (a régió vége − a sor kezdete); mérve 194 bájt volt a dev buildben
 #pragma stacksize(512)
@@ -52,6 +68,52 @@ __asm restore_key_handler
     rti
 }
 
+// mint a memcpy, a ROM-ok és az I/O alá is; a php és a plp miatt tiltott megszakítás mellett hívva sem engedélyezi
+static void copy_to_memory_under_roms(char *destination, const char *source, uint16_t count)
+{
+    __asm {
+        php
+        sei
+    }
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
+    MEMORY_CONFIGURATION = MMAP_RAM;
+
+    for (uint16_t position = 0; position < count; position++) {
+        destination[position] = source[position];
+    }
+
+    MEMORY_CONFIGURATION = memory_configuration;
+    __asm {
+        plp
+    }
+}
+
+// a fájl a betöltési címmel kezdődik, utána a texts szakasz; a LOAD a $D000-$DFFF alá nem írhat, mert ott az I/O látszik, ezért
+// darabonként a pufferbe olvas, és onnan másol a helyére; igaz, ha a fájlban pontosan a szakasz volt, és hiba nélkül beolvasódott
+static bool load_texts(void)
+{
+    char *destination = (char *)&texts_section_start;
+    uint16_t remaining = (char *)&texts_section_end - destination;
+    bool is_loaded = false;
+
+    if (open_file_for_reading(TEXTS_FILE_NAME, get_game_device())) {
+        uint16_t load_address = 0;
+        if (read_file((char *)&load_address, sizeof(load_address)) == sizeof(load_address) && load_address == (uint16_t)destination) {
+            while (remaining > 0) {
+                uint16_t chunk_size = remaining < TEXT_LOAD_CHUNK_SIZE ? remaining : TEXT_LOAD_CHUNK_SIZE;
+                uint16_t count = read_file(TEXT_LOAD_BUFFER, chunk_size);
+                copy_to_memory_under_roms(destination, TEXT_LOAD_BUFFER, count);
+                destination += count;
+                remaining -= count;
+                if (count < chunk_size) break;
+            }
+            is_loaded = remaining == 0 && is_file_end_reached();
+        }
+        close_file();
+    }
+    return is_loaded;
+}
+
 void platform_init(void)
 {
     mmap_set(MMAP_NO_BASIC);
@@ -75,6 +137,9 @@ void platform_init(void)
     screen_init();
 
     __asm { cli }
+
+    // ide jön: betöltés közben „loading...”, ha nem sikerült, „insert the game disk and press space”, és szóközre újra
+    load_texts();
 }
 
 // ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön

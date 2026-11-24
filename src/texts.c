@@ -1,5 +1,12 @@
 #include "texts.h"
 
+// minden szöveg és tábla a texts szakaszba kerül, a táblák névtelen szövegei is: ezek a code szakaszba kerülnének, ezért kell
+// a #pragma code is; a szakasz régiója a ROM-ok alatt van, a lemezen külön fájlként (platform.c); a határait a betöltés használja
+void texts_section_start, texts_section_end;
+#pragma section(texts, 0, texts_section_start, texts_section_end)
+#pragma data(texts)
+#pragma code(texts)
+
 const char text_illegal_command[] = "illegal command '\1'";
 const char text_secret_door[] = "a secret door";
 const char text_no_way_down[] = "I see no way down";

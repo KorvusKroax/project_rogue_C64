@@ -13,7 +13,7 @@ rem --- a karakterkeszlet: src\platform\charset_custom.c (sajat) vagy src\platfo
 set CHARSET=src\platform\charset_rom.c
 
 rem --- a jatek forrasfajljai, a main.c nelkul (a tesztprogramoknak sajat main-juk van) ---
-set GAME_SOURCES=src\game.c src\texts.c src\state.c src\platform\platform.c src\platform\screen.c src\platform\key.c src\platform\key_codes.c %CHARSET% src\map.c src\view.c src\message.c src\input.c src\status.c src\player.c src\explore.c src\move.c src\rooms.c src\corridors.c src\level.c src\rng.c src\num.c src\monsters.c src\chase.c src\combat.c src\items.c src\item_names.c src\pack.c src\text_list.c src\discoveries.c
+set GAME_SOURCES=src\game.c src\texts.c src\state.c src\platform\platform.c src\platform\disk.c src\platform\screen.c src\platform\key.c src\platform\key_codes.c %CHARSET% src\map.c src\view.c src\message.c src\input.c src\status.c src\player.c src\explore.c src\move.c src\rooms.c src\corridors.c src\level.c src\rng.c src\num.c src\monsters.c src\chase.c src\combat.c src\items.c src\item_names.c src\pack.c src\text_list.c src\discoveries.c
 
 rem --- a fejlesztoi build fajljai; a tesztprogramokba is bekerulnek ---
 set DEV_SOURCES=src\dev\dev.c src\dev\dev_commands.c src\dev\start_screen.c src\dev\checks.c
