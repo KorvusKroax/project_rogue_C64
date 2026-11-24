@@ -18,5 +18,7 @@ uint16_t get_frame_count_16(void);       // képkockaszámláló 16 biten (a jif
 char *copy_text(char *destination, const char *text, uint8_t max_length);
 // mint a copy_text, a table index. elemével; a tábla is bármely címen lehet
 char *copy_text_from_table(char *destination, const char *const *table, uint8_t index, uint8_t max_length);
+// a table index. eleme, a szöveg címe; a tábla bármely címen lehet; a szöveget a copy_text olvassa
+const char *get_text_from_table(const char *const *table, uint8_t index);
 
 #endif

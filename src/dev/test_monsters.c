@@ -5,9 +5,12 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "../platform/platform.h"
 #include "../map.h"
 #include "../monsters.h"
 #include "../texts.h"
+
+#define TYPE_NAME_TEST_SIZE  20                 // a leghosszabb típusnév (13) is elfér
 
 static bool segment_count_is(uint8_t letter, uint8_t count)
 {
@@ -22,7 +25,9 @@ static bool segment_is(uint8_t letter, uint8_t segment, uint8_t dice, uint8_t si
 
 static bool name_is(uint8_t letter, const char *name)
 {
-    return strcmp(text_monster_names[letter - 'A'], name) == 0;
+    char type_name[TYPE_NAME_TEST_SIZE];
+    copy_text_from_table(type_name, text_monster_names, letter - 'A', sizeof(type_name) - 1);
+    return strcmp(type_name, name) == 0;
 }
 
 static bool segment_counts_valid(void)

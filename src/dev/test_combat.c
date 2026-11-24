@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../platform/platform.h"
 #include "../chase.h"
 #include "../combat.h"
 #include "../explore.h"
@@ -134,14 +135,18 @@ int test_monster_names(uint16_t i)
     bool ok = strcmp(prepare_monster_name(&game.monsters[0]), "the kestrel") == 0;
 
     put_combat_monster(MONSTER_NAME_TEST_INVISIBLE, COMBAT_PLAYER_X - 1, COMBAT_PLAYER_Y);
-    ok = ok && strcmp(prepare_monster_name(&game.monsters[1]), text_something) == 0;
+    ok = ok && strcmp(prepare_monster_name(&game.monsters[1]), "something") == 0;
 
+    // a puffer egy karakterrel hosszabb a névnél, így a túl hosszú szöveg hossza is legalább MONSTER_NAME_TEXT_SIZE
+    char text[MONSTER_NAME_TEXT_SIZE + 1];
+    uint8_t article_length = copy_text(text, text_monster_article, MONSTER_NAME_TEXT_SIZE) - text;
     for (uint8_t type_index = 0; type_index < MONSTER_TYPE_COUNT; type_index++) {
-        if (strlen(text_monster_article) + strlen(text_monster_names[type_index]) >= MONSTER_NAME_TEXT_SIZE) {
+        uint8_t type_name_length = copy_text_from_table(text, text_monster_names, type_index, MONSTER_NAME_TEXT_SIZE) - text;
+        if (article_length + type_name_length >= MONSTER_NAME_TEXT_SIZE) {
             ok = false;
         }
     }
-    if (strlen(text_something) >= MONSTER_NAME_TEXT_SIZE) {
+    if (copy_text(text, text_something, MONSTER_NAME_TEXT_SIZE) - text >= MONSTER_NAME_TEXT_SIZE) {
         ok = false;
     }
 

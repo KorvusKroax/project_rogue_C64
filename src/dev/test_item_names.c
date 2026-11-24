@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "../platform/platform.h"
 #include "../discoveries.h"
 #include "../item_names.h"
 #include "../items.h"
@@ -14,15 +15,26 @@
 #include "../texts.h"
 #include "dev.h"
 
+// a lista index. eleme a buffer-be, amely ITEM_NAME_SIZE bájtos, mert az elem a tárgynévbe kerül, így nem hosszabb annál; a buffer-t adja
+static const char *read_list_text(char *buffer, const char *const *list, uint8_t index)
+{
+    copy_text_from_table(buffer, list, index, ITEM_NAME_LENGTH_MAX);
+    return buffer;
+}
+
 // a lista minden eleme kisbetűvel kezdődik, és egy listán belül mind különböző
 static bool is_text_list_valid(const char *const *list, uint8_t count)
 {
+    char text[ITEM_NAME_SIZE];
+    char other_text[ITEM_NAME_SIZE];
+
     for (uint8_t index = 0; index < count; index++) {
-        const char *text = list[index];
-        if (text == NULL || text[0] < 'a' || text[0] > 'z') return false;
+        if (get_text_from_table(list, index) == NULL) return false;
+        read_list_text(text, list, index);
+        if (text[0] < 'a' || text[0] > 'z') return false;
 
         for (uint8_t other = index + 1; other < count; other++) {
-            if (list[other] != NULL && strcmp(text, list[other]) == 0) return false;
+            if (strcmp(text, read_list_text(other_text, list, other)) == 0) return false;
         }
     }
     return true;
@@ -149,8 +161,9 @@ int test_scroll_titles(uint16_t i)
 // a szöveg indexe a listában; a teszt csak a listában lévő szöveget keres
 static uint8_t find_text(const char *const *list, uint8_t count, const char *text)
 {
+    char list_text[ITEM_NAME_SIZE];
     uint8_t index = 0;
-    while (index < count - 1 && strcmp(list[index], text) != 0) {
+    while (index < count - 1 && strcmp(read_list_text(list_text, list, index), text) != 0) {
         index++;
     }
     return index;
@@ -380,10 +393,14 @@ int test_item_names(uint16_t i)
 // a lista leghosszabb elemének indexe
 static uint8_t find_longest_text(const char *const *list, uint8_t count)
 {
+    char text[ITEM_NAME_SIZE];
     uint8_t longest = 0;
-    for (uint8_t index = 1; index < count; index++) {
-        if (strlen(list[index]) > strlen(list[longest])) {
+    uint8_t longest_length = 0;
+    for (uint8_t index = 0; index < count; index++) {
+        uint8_t length = copy_text_from_table(text, list, index, ITEM_NAME_LENGTH_MAX) - text;
+        if (length > longest_length) {
             longest = index;
+            longest_length = length;
         }
     }
     return longest;

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "platform/key.h"
+#include "platform/platform.h"
 #include "platform/screen.h"
 #include "num.h"
 #include "status.h"
@@ -17,6 +18,7 @@
 #endif
 
 #define MESSAGE_TEXT_SIZE       128
+#define MESSAGE_TEXT_LENGTH_MAX (MESSAGE_TEXT_SIZE - 2)     // a kitöltött szöveg után a záró pontnak és a nullának hely kell
 #define MESSAGE_END_CHARACTER   '.'
 
 #define PLACEHOLDER_FIRST_TEXT  '\1'
@@ -44,26 +46,31 @@ static uint8_t message_bar_rows_in_use = 1;     // ennyi sort foglal a sáv; a t
 
 static void add_character_to_message_text(char character)
 {
-    if (message_text_length < MESSAGE_TEXT_SIZE - 2) {  // a záró pontnak és nullának hely kell
+    if (message_text_length < MESSAGE_TEXT_LENGTH_MAX) {
         message_text[message_text_length++] = character;
     }
 }
 
+// a szöveg bármely címen lehet (copy_text)
 static void add_text_to_message_text(const char *text)
 {
-    while (*text) {
-        add_character_to_message_text(*text++);
-    }
+    char *end = copy_text(message_text + message_text_length, text, MESSAGE_TEXT_LENGTH_MAX - message_text_length);
+    message_text_length = end - message_text;
 }
 
+// a mintaszöveg és a helyőrzők szövege bármely címen lehet: a minta előbb a pattern-be kerül, a helyőrzők szövege közvetlenül
+// a message_text-be
 static void fill_message_text(const char *text, const char *first_text, const char *second_text, int16_t number)
 {
+    char pattern[MESSAGE_TEXT_SIZE];
     char number_text[FORMAT_BUFFER_SIZE];
 
+    copy_text(pattern, text, sizeof(pattern) - 1);
     message_text_length = 0;
 
-    while (*text) {
-        switch (*text) {
+    const char *character = pattern;
+    while (*character) {
+        switch (*character) {
             case PLACEHOLDER_FIRST_TEXT:
                 add_text_to_message_text(first_text);
                 break;
@@ -75,10 +82,10 @@ static void fill_message_text(const char *text, const char *first_text, const ch
                 add_text_to_message_text(number_text);
                 break;
             default:
-                add_character_to_message_text(*text);
+                add_character_to_message_text(*character);
                 break;
         }
-        text++;
+        character++;
     }
 
     message_text[message_text_length] = 0;

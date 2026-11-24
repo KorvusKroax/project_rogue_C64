@@ -71,9 +71,11 @@ int test_copy_text(uint16_t i)
         is_copied(buffer, copy_text(buffer, "", sizeof(buffer) - 1), "") &&
         is_copied(buffer, copy_text_from_table(buffer, table, 0, sizeof(buffer) - 1), "alpha") &&
         is_copied(buffer, copy_text_from_table(buffer, table, 1, 2), "he") &&
+        get_text_from_table(table, 1) == text &&
         // a játék szövegei és táblái is
         is_copied(buffer, copy_text(buffer, text_you, sizeof(buffer) - 1), "you") &&
         is_copied(buffer, copy_text_from_table(buffer, text_monster_names, 'Z' - 'A', sizeof(buffer) - 1), "zombie") &&
+        is_copied(buffer, copy_text(buffer, get_text_from_table(text_monster_names, 'Y' - 'A'), sizeof(buffer) - 1), "yeti") &&
         // a $01 visszaáll
         MEMORY_CONFIGURATION == memory_configuration;
 }

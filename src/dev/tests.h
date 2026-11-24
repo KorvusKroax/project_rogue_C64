@@ -26,7 +26,7 @@ int test_prompt_input_space(uint16_t i);        // a kérdés csak akkor fűződ
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);
 int test_map_flags(uint16_t i);
-int test_copy_text(uint16_t i);                 // a szöveg és a táblaelem a lezáró nullával, legfeljebb max_length karakter, a lezáró nullára mutat; a játék szövegeivel is; a $01 és a megszakítás tiltása a hívás után ugyanaz, mint előtte
+int test_copy_text(uint16_t i);                 // a szöveg és a táblaelem a lezáró nullával, legfeljebb max_length karakter, a lezáró nullára mutat; a táblaelem címe; a játék szövegeivel is; a $01 és a megszakítás tiltása a hívás után ugyanaz, mint előtte
 int test_nmi_during_copy(uint16_t i);           // a RAM-beli NMI-vektor ugyanoda mutat, mint a $0318; a CIA2 időzítőjének NMI-je a kilapozott ROM melletti másolás közben visszatér, és a másolás hibátlan
 int test_diagonal_step(uint16_t i);
 int test_neighbor_visibility(uint16_t i);

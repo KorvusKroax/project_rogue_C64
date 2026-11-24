@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "platform/platform.h"
 #include "explore.h"
 #include "game.h"
 #include "map.h"
@@ -65,11 +66,14 @@ static char monster_name_text[MONSTER_NAME_TEXT_SIZE];
 const char *prepare_monster_name(const struct Monster *monster)
 {
     // ide jön: szörnyérzékeléssel (SEEMONST) a nem látott szörny is a nevén
-    if (!is_monster_visible(monster)) return text_something;
+    if (!is_monster_visible(monster)) {
+        copy_text(monster_name_text, text_something, MONSTER_NAME_TEXT_SIZE - 1);
+        return monster_name_text;
+    }
 
     // ide jön: hallucinálva a képernyőn látott betűhöz tartozó név
-    strcpy(monster_name_text, text_monster_article);
-    strcat(monster_name_text, text_monster_names[monster->type - 'A']);
+    char *type_name = copy_text(monster_name_text, text_monster_article, MONSTER_NAME_TEXT_SIZE - 1);
+    copy_text_from_table(type_name, text_monster_names, monster->type - 'A', MONSTER_NAME_TEXT_SIZE - 1 - (type_name - monster_name_text));
     return monster_name_text;
 }
 
@@ -80,7 +84,7 @@ static void report_attack(const char *const *hit_texts, const char *const *miss_
     if (is_fight_active) return;
 
     const char *const *texts = did_hit ? hit_texts : miss_texts;
-    message_format(texts[rnd(ATTACK_TEXT_VARIANT_COUNT)], attacker_name, defender_name, 0);
+    message_format(get_text_from_table(texts, rnd(ATTACK_TEXT_VARIANT_COUNT)), attacker_name, defender_name, 0);
 }
 
 bool roll_player_attack(struct Monster *monster)

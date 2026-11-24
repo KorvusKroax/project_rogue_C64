@@ -156,3 +156,21 @@ char *copy_text_from_table(char *destination, const char *const *table, uint8_t 
     }
     return end;
 }
+
+const char *get_text_from_table(const char *const *table, uint8_t index)
+{
+    __asm {
+        php
+        sei
+    }
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
+    MEMORY_CONFIGURATION = MMAP_RAM;
+
+    const char *text = table[index];
+
+    MEMORY_CONFIGURATION = memory_configuration;
+    __asm {
+        plp
+    }
+    return text;
+}

@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "platform/platform.h"
 #include "input.h"
 #include "items.h"
 #include "message.h"
@@ -83,23 +84,26 @@ void write_scroll_title(char *out, uint8_t which)
     bool is_full = false;
     uint8_t word_count = roll_title_random(SCROLL_TITLE_WORDS_RANGE) + SCROLL_TITLE_WORDS_MIN;
 
+    // a szótag hossza a beillesztése előtt kell, ezért előbb ide másolódik; a feliratnál hosszabb szótag úgysem férne el
+    char syllable_text[SCROLL_TITLE_SIZE];
+
     for (uint8_t word = 0; word < word_count && !is_full; word++) {
         uint8_t syllable_count = roll_title_random(SCROLL_WORD_SYLLABLES_RANGE) + SCROLL_WORD_SYLLABLES_MIN;
 
         for (uint8_t syllable = 0; syllable < syllable_count && !is_full; syllable++) {
-            const char *text = text_scroll_syllables[roll_title_random(SCROLL_SYLLABLE_COUNT)];
+            uint8_t syllable_index = roll_title_random(SCROLL_SYLLABLE_COUNT);
+            uint8_t syllable_length = copy_text_from_table(syllable_text, text_scroll_syllables, syllable_index, SCROLL_TITLE_LENGTH_MAX) - syllable_text;
             // a szó első szótagja előtt szóköz áll, kivéve az első szót; a szótagok rövidek, így az első mindig elfér, és a felirat nem üres
             bool needs_space = word > 0 && syllable == 0;
 
-            if (length + needs_space + strlen(text) > SCROLL_TITLE_LENGTH_MAX) {
+            if (length + needs_space + syllable_length > SCROLL_TITLE_LENGTH_MAX) {
                 is_full = true;
             } else {
                 if (needs_space) {
                     out[length++] = ' ';
                 }
-                while (*text) {
-                    out[length++] = *text++;
-                }
+                memcpy(out + length, syllable_text, syllable_length);
+                length += syllable_length;
             }
         }
     }
@@ -267,7 +271,8 @@ void name_item(uint8_t index)
     }
 }
 
-// a név a formázás alatt; a puffer a leghosszabb nevet is elbírja (ITEM_NAME_LENGTH_MAX), ezért az írás nem ellenőrzi a hosszt
+// a név a formázás alatt; a puffer a leghosszabb nevet is elbírja (ITEM_NAME_LENGTH_MAX), ezért a karakterek és a számok írása
+// nem ellenőrzi a hosszt
 static char item_name[ITEM_NAME_SIZE];
 static uint8_t item_name_length;
 static bool item_name_has_article;              // a név az "a " névelővel kezdődik, ezt a végén a complete_article igazítja
@@ -277,11 +282,10 @@ static void add_character(char character)
     item_name[item_name_length++] = character;
 }
 
+// a szöveg bármely címen lehet (copy_text)
 static void add_text(const char *text)
 {
-    while (*text) {
-        item_name[item_name_length++] = *text++;
-    }
+    item_name_length = copy_text(item_name + item_name_length, text, ITEM_NAME_LENGTH_MAX - item_name_length) - item_name;
 }
 
 static void add_number(int32_t number)
@@ -372,12 +376,12 @@ static void add_potion_name(const struct Item *item)
 {
     uint8_t which = item->which;
     uint8_t knowledge = game.potion_knowledge[which];
-    const char *color = text_potion_colors[game.potion_colors[which]];
+    const char *color = get_text_from_table(text_potion_colors, game.potion_colors[which]);
 
     if (knowledge == SUBTYPE_UNKNOWN) {
         add_unknown_kind_name(item->count, color, text_potion_kind);
     } else {
-        add_named_kind_name(item->count, text_potion_kind, knowledge, text_potion_names[which]);
+        add_named_kind_name(item->count, text_potion_kind, knowledge, get_text_from_table(text_potion_names, which));
         add_pseudonym_in_parentheses(color);
     }
 }
@@ -397,7 +401,7 @@ static void add_scroll_name(const struct Item *item)
         item_name_length += strlen(item_name + item_name_length);
         add_character('\'');
     } else {
-        add_named_kind_name(item->count, text_scroll_kind, knowledge, text_scroll_names[which]);
+        add_named_kind_name(item->count, text_scroll_kind, knowledge, get_text_from_table(text_scroll_names, which));
     }
 }
 
@@ -434,7 +438,7 @@ static void add_weapon_name(const struct Item *item)
         add_signed_number(item->properties.weapon.damage_bonus);
         add_character(' ');
     }
-    add_counted_word(text_weapon_names[item->which], item->count);
+    add_counted_word(get_text_from_table(text_weapon_names, item->which), item->count);
     add_label(item->label);
 }
 
@@ -449,7 +453,7 @@ static void add_armor_name(const struct Item *item)
         add_signed_number(get_armor_base_class(item->which) - armor_class);
         add_character(' ');
     }
-    add_text(text_armor_names[item->which]);
+    add_text(get_text_from_table(text_armor_names, item->which));
     if (is_known) {
         add_text(" [");
         add_text(text_protection);
@@ -465,12 +469,12 @@ static void add_ring_name(const struct Item *item)
 {
     uint8_t which = item->which;
     uint8_t knowledge = game.ring_knowledge[which];
-    const char *stone = text_ring_stones[game.ring_stones[which]];
+    const char *stone = get_text_from_table(text_ring_stones, game.ring_stones[which]);
 
     if (knowledge == SUBTYPE_UNKNOWN) {
         add_unknown_kind_name(item->count, stone, text_ring_kind);
     } else {
-        add_named_kind_name(item->count, text_ring_kind, knowledge, text_ring_names[which]);
+        add_named_kind_name(item->count, text_ring_kind, knowledge, get_text_from_table(text_ring_names, which));
         if ((item->flags & ITEM_KNOWN) && has_ring_modifier(which)) {
             add_text(" [");
             add_signed_number(item->properties.ring_modifier);
@@ -487,13 +491,13 @@ static void add_stick_name(const struct Item *item)
     uint8_t which = item->which;
     uint8_t knowledge = game.stick_knowledge[which];
     uint8_t material_index = game.stick_materials[which];
-    const char *material = text_stick_materials[material_index];
+    const char *material = get_text_from_table(text_stick_materials, material_index);
     const char *kind = material_index < STICK_METAL_COUNT ? text_wand_kind : text_staff_kind;
 
     if (knowledge == SUBTYPE_UNKNOWN) {
         add_unknown_kind_name(item->count, material, kind);
     } else {
-        add_named_kind_name(item->count, kind, knowledge, text_stick_names[which]);
+        add_named_kind_name(item->count, kind, knowledge, get_text_from_table(text_stick_names, which));
         if (item->flags & ITEM_KNOWN) {
             add_text(" [");
             add_number(item->properties.charges);

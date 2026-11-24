@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "platform/key.h"
+#include "platform/platform.h"
 #include "chase.h"
 #include "combat.h"
 #include "discoveries.h"
@@ -510,9 +511,9 @@ void run_game(void)
     draw_status();
     uint8_t death_cause = get_death_cause();
     if (death_cause < DEATH_CAUSE_COUNT) {
-        message_format(text_killed_by, "", text_death_causes[death_cause], 0);
+        message_format(text_killed_by, "", get_text_from_table(text_death_causes, death_cause), 0);
     } else {
-        message_format(text_killed_by, text_monster_article, text_monster_names[death_cause - 'A'], 0);
+        message_format(text_killed_by, text_monster_article, get_text_from_table(text_monster_names, death_cause - 'A'), 0);
     }
     wait_for_key_and_clear_message();
 }
