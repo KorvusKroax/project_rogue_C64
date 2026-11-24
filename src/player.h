@@ -16,12 +16,11 @@
     #error "a kezdő erő az erő tartományán kívül esik"
 #endif
 
-// ideiglenes, a felszerelés issue-ig (M06-04): a kezdőfelszerelés rögzített adatként, a kézben a buzogány, viselve a gyűrűs ing
+// ideiglenes, a felszerelés issue-ig (M06-04): a kézben tartott buzogány rögzített adatként
 #define STARTING_WEAPON_DAMAGE_DICE   2 // buzogány: 2x4 (default: 2)
 #define STARTING_WEAPON_DAMAGE_SIDES  4 // (default: 4)
 #define STARTING_WEAPON_HIT_BONUS     1 // +1 (default: 1)
 #define STARTING_WEAPON_DAMAGE_BONUS  1 // +1 (default: 1)
-#define STARTING_ARMOR_CLASS          6 // gyűrűs ing: 7 − 1 (default: 6)
 
 // a szint 1 + az XP-vel elért küszöbök száma (xp_next)
 #define EXPERIENCE_THRESHOLD_COUNT  20                                  // (default: 20)
@@ -45,7 +44,7 @@ void kill_player(uint8_t cause);
 bool is_player_dead(void);
 uint8_t get_death_cause(void);          // a kill_player oka; csak halál után értelmes
 
-int8_t calculate_player_armor(void);    // a viselt páncél (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
+int8_t calculate_player_armor(void);    // a viselt páncél védelme (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
 
 // az erő változása (chg_str): STRENGTH_MIN és STRENGTH_MAX között marad, és ha a gyűrűk nélküli erő a legnagyobb
 // eddigi fölé nő, az is nő

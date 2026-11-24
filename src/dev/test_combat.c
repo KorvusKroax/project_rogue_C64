@@ -6,15 +6,19 @@
 #include <string.h>
 
 #include "../platform/platform.h"
+#include "../platform/screen.h"
 #include "../chase.h"
 #include "../combat.h"
+#include "../equipment.h"
 #include "../explore.h"
+#include "../items.h"
 #include "../map.h"
 #include "../monsters.h"
 #include "../move.h"
 #include "../player.h"
 #include "../rooms.h"
 #include "../state.h"
+#include "../status.h"
 #include "../texts.h"
 #include "../view.h"
 
@@ -955,5 +959,51 @@ int test_player_death(uint16_t i)
         game.gold == 0;
 
     clear_combat_scene();
+    return ok;
+}
+
+// a státuszsor második sorában szerepel-e a text
+static bool is_in_second_status_row(const char *text)
+{
+    uint8_t length = strlen(text);
+    for (uint8_t x = 0; x + length <= SCREEN_WIDTH; x++) {
+        uint8_t matched = 0;
+        while (matched < length && get_screen_character(x + matched, STATUS_ROW + 1) == text[matched]) {
+            matched++;
+        }
+        if (matched == length) return true;
+    }
+    return false;
+}
+
+int test_player_armor(uint16_t i)
+{
+    // a státuszsor helyén a tesztprogram kiírása állhat: a két sor a teszt végén visszaáll
+    uint8_t saved_rows[STATUS_ROW_COUNT][SCREEN_WIDTH];
+    for (uint8_t row = 0; row < STATUS_ROW_COUNT; row++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            saved_rows[row][x] = get_screen_character(x, STATUS_ROW + row);
+        }
+    }
+
+    // a kezdő gyűrűs inggel a védelme 6, a kijelzett érték 10 − 6
+    clear_item_table();
+    init_player();
+    create_starting_equipment();
+    draw_status();
+    bool ok = calculate_player_armor() == get_armor_base_class(ARMOR_RING_MAIL) - STARTING_ARMOR_ENCHANTMENT;
+    ok = ok && is_in_second_status_row(" Arm:4 ");
+
+    // levéve az alapérték, a csomagban maradt páncél nem számít
+    game.worn_armor = NO_ITEM;
+    draw_status();
+    ok = ok && calculate_player_armor() == BASE_ARMOR && is_in_second_status_row(" Arm:0 ");
+
+    clear_item_table();
+    for (uint8_t row = 0; row < STATUS_ROW_COUNT; row++) {
+        for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
+            put_screen_character(x, STATUS_ROW + row, saved_rows[row][x]);
+        }
+    }
     return ok;
 }

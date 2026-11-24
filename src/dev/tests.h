@@ -64,6 +64,7 @@ int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_xeroc_reveal(uint16_t i);
 int test_player_death(uint16_t i);
+int test_player_armor(uint16_t i);              // a védelem a viselt páncélé, levéve a BASE_ARMOR; a státuszsorban a kezdő páncéllal Arm:4, levéve Arm:0
 int test_item_chances(uint16_t i);
 int test_levels_without_food(uint16_t i);
 int test_item_table(uint16_t i);                // a tárgytábla betelik, utána nincs hely; felszabadítás után újra van

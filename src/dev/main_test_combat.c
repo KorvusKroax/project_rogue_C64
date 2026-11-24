@@ -28,6 +28,7 @@ static const struct DevTest combat_tests[] = {
     { "SPECIAL-HELD", test_flytrap_hold, 1 },
     { "SPECIAL-XEROC", test_xeroc_reveal, 1 },
     { "PLAYER-DEATH", test_player_death, 1 },
+    { "PLAYER-ARMOR", test_player_armor, 1 },
 };
 
 int main(void)

@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 
+#include "items.h"
 #include "message.h"
 #include "rng.h"
 #include "state.h"
@@ -46,10 +47,11 @@ uint8_t get_death_cause(void)
     return death_cause;
 }
 
-// ideiglenes, a felszerelés issue-ig (M06-04): mindig a kezdő gyűrűs ing; ide jön: a védelem-gyűrűk
+// ide jön: a védelem-gyűrűk
 int8_t calculate_player_armor(void)
 {
-    return STARTING_ARMOR_CLASS;
+    if (game.worn_armor == NO_ITEM) return BASE_ARMOR;
+    return get_item(game.worn_armor)->properties.armor_class;
 }
 
 // az erő növelése vagy csökkentése STRENGTH_MIN és STRENGTH_MAX között (add_str)
