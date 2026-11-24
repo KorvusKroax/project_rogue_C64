@@ -16,11 +16,9 @@
     #error "a kezdő erő az erő tartományán kívül esik"
 #endif
 
-// ideiglenes, a felszerelés issue-ig (M06-04): a kézben tartott buzogány rögzített adatként
-#define STARTING_WEAPON_DAMAGE_DICE   2 // buzogány: 2x4 (default: 2)
-#define STARTING_WEAPON_DAMAGE_SIDES  4 // (default: 4)
-#define STARTING_WEAPON_HIT_BONUS     1 // +1 (default: 1)
-#define STARTING_WEAPON_DAMAGE_BONUS  1 // +1 (default: 1)
+// a játékos sebzése üres kézzel (dmg)
+#define EMPTY_HAND_DAMAGE_DICE   1      // (default: 1)
+#define EMPTY_HAND_DAMAGE_SIDES  4      // (default: 4)
 
 // a szint 1 + az XP-vel elért küszöbök száma (xp_next)
 #define EXPERIENCE_THRESHOLD_COUNT  20                                  // (default: 20)

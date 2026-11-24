@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "items.h"
 #include "monsters.h"
 #include "player.h"
 
@@ -35,6 +36,14 @@
 // az erő találati és sebzésbónusza (str_plus, add_dam), az erővel indexelve
 extern const int8_t strength_hit_bonus[STRENGTH_MAX + 1];
 extern const int8_t strength_damage_bonus[STRENGTH_MAX + 1];
+
+// a kézben tartott tárgy sebzése közelharcban: a fegyvereké típusonként (8.4, a „kézben” oszlop), a fegyvertípusok sorrendjében;
+// a boté és a pálcáé az anyaguk szerint (8.7); minden más tárgy 0x0, így a találat csak a bónuszokat sebzi
+extern const struct DamageSegment weapon_melee_damage[WEAPON_SUBTYPE_COUNT];
+#define STAFF_MELEE_DICE   2                    // (default: 2)
+#define STAFF_MELEE_SIDES  3                    // (default: 3)
+#define WAND_MELEE_DICE    1                    // (default: 1)
+#define WAND_MELEE_SIDES   1                    // (default: 1)
 
 // a szörny neve az üzenetekben: "the " + a típus neve, a nem látott szörnyé "something"; az eredmény a következő hívásig él (set_mname)
 #define MONSTER_NAME_TEXT_SIZE  18              // "the " + a leghosszabb név (13) + a lezáró nulla

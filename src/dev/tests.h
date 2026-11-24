@@ -64,6 +64,7 @@ int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_xeroc_reveal(uint16_t i);
 int test_player_death(uint16_t i);
+int test_wielded_damage(uint16_t i);            // a kézben tartott tárgy sebzése az erő bónuszával: üres kéz 1x4, bot 2x3, pálca 1x1, más tárgy 0x0; a nem fegyver tárgy rekordja nem bónusz
 int test_player_armor(uint16_t i);              // a védelem a viselt páncélé, levéve a BASE_ARMOR; a státuszsorban a kezdő páncéllal Arm:4, levéve Arm:0
 int test_item_chances(uint16_t i);
 int test_levels_without_food(uint16_t i);

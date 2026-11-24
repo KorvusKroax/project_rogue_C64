@@ -40,13 +40,15 @@ static void put_combat_tile(uint8_t x, uint8_t y)
     add_map_flags(x, y, TILE_PASSAGE | COMBAT_PASSAGE_NUMBER);
 }
 
-// az 1. mélységen a kezdőértékű játékos a tesztmezőjén, szörnyek nélkül
+// az 1. mélységen a kezdőértékű játékos a kezdőfelszereléssel (a buzogány kézben, a gyűrűs ing viselve) a tesztmezőjén, szörnyek nélkül
 static void put_combat_player(void)
 {
     clear_map();
     clear_monsters();
+    clear_item_table();
     game.dungeon_level = 1;
     init_player();
+    create_starting_equipment();
 
     put_combat_tile(COMBAT_PLAYER_X, COMBAT_PLAYER_Y);
     game.player.x = COMBAT_PLAYER_X;
@@ -71,6 +73,7 @@ static struct Monster *put_combat_scene(void)
 static void clear_combat_scene(void)
 {
     clear_monsters();
+    clear_item_table();
     clear_map();
 }
 
@@ -158,16 +161,17 @@ int test_monster_names(uint16_t i)
     return ok;
 }
 
-// az 1. szintű, kezdőfelszerelésű játékos (buzogány) a kestrelt a képletből számolt eséllyel találja el (most 9/20);
-// találatnál a sebzés a buzogány kockái, a sebzésbónusza és az erő sebzésbónusza, hibánál nincs sebzés
+// az 1. szintű, kezdőfelszerelésű játékos a kézben tartott +1,+1 buzogánnyal a kestrelt a képletből számolt eséllyel találja el
+// (most 9/20); találatnál a sebzés a buzogány kockái, a sebzésbónusza és az erő sebzésbónusza, hibánál nincs sebzés
 int test_player_hit_rate(uint16_t i)
 {
     game.seed = COMBAT_TEST_SEED;
     struct Monster *monster = put_combat_scene();
-    int16_t hit_bonus = STARTING_WEAPON_HIT_BONUS + strength_hit_bonus[INITIAL_STRENGTH];
-    int16_t damage_bonus = STARTING_WEAPON_DAMAGE_BONUS + strength_damage_bonus[INITIAL_STRENGTH];
-    int16_t damage_min = calculate_damage_limit(STARTING_WEAPON_DAMAGE_DICE + damage_bonus);
-    int16_t damage_max = calculate_damage_limit(STARTING_WEAPON_DAMAGE_DICE * STARTING_WEAPON_DAMAGE_SIDES + damage_bonus);
+    const struct DamageSegment *mace_damage = &weapon_melee_damage[WEAPON_MACE];
+    int16_t hit_bonus = STARTING_MACE_HIT_BONUS + strength_hit_bonus[INITIAL_STRENGTH];
+    int16_t damage_bonus = STARTING_MACE_DAMAGE_BONUS + strength_damage_bonus[INITIAL_STRENGTH];
+    int16_t damage_min = calculate_damage_limit(mace_damage->dice + damage_bonus);
+    int16_t damage_max = calculate_damage_limit(mace_damage->dice * mace_damage->sides + damage_bonus);
     bool ok = true;
     uint16_t hits = 0;
 
@@ -189,6 +193,75 @@ int test_player_hit_rate(uint16_t i)
     if (!is_hit_count_close(hits, expected, COMBAT_TEST_SWINGS)) {
         ok = false;
     }
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define WIELDED_TEST_SWINGS  1000               // ennyi csapás a kézben tartott tárgy sebzésének tartományához
+
+// a nem fegyver tárgy rekordjában a bónuszok helyére írt érték: ha a támadás bónusznak olvasná, egyszer sem találna, és nem sebezne
+#define MISREAD_BONUS  (-20)
+
+// WIELDED_TEST_SWINGS csapás a kézben tartott tárggyal: van találat, minden találat sebzése damage_min..damage_max között van,
+// és a két szélső érték is előfordul; hibánál nincs sebzés
+static bool wielded_damage_valid(struct Monster *monster, int16_t damage_min, int16_t damage_max)
+{
+    bool ok = true;
+    bool is_min_seen = false;
+    bool is_max_seen = false;
+
+    for (uint16_t swing = 0; swing < WIELDED_TEST_SWINGS; swing++) {
+        monster->hit_points = monster->max_hit_points;
+        bool did_hit = roll_player_attack(monster);
+        int16_t damage = monster->max_hit_points - monster->hit_points;
+        if (did_hit) {
+            if (damage < damage_min || damage > damage_max) {
+                ok = false;
+            }
+            if (damage == damage_min) {
+                is_min_seen = true;
+            }
+            if (damage == damage_max) {
+                is_max_seen = true;
+            }
+        } else if (damage != 0) {
+            ok = false;
+        }
+    }
+    return ok && is_min_seen && is_max_seen;
+}
+
+// a kézben tartott tárgy sebzése az erő sebzésbónuszával: üres kézzel 1x4, botnál 2x3, pálcánál 1x1 (az anyaguk szerint), más
+// tárgynál 0x0; a nem fegyver tárgy rekordjának bónusznak látszó helye nem számít
+int test_wielded_damage(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    struct Monster *monster = put_combat_scene();
+    int16_t strength_damage = strength_damage_bonus[INITIAL_STRENGTH];
+
+    game.wielded_item = NO_ITEM;
+    bool ok = wielded_damage_valid(monster, EMPTY_HAND_DAMAGE_DICE + strength_damage,
+                                   EMPTY_HAND_DAMAGE_DICE * EMPTY_HAND_DAMAGE_SIDES + strength_damage);
+
+    // a 0. pálcatípus a tesztben fából (bot), majd fémből (pálca); a töltés helyén a rossz bónusz
+    uint8_t stick = create_item(ITEM_TYPE_STICK, 0);
+    get_item(stick)->properties.weapon.hit_bonus = MISREAD_BONUS;
+    get_item(stick)->properties.weapon.damage_bonus = MISREAD_BONUS;
+    uint8_t material = game.stick_materials[0];
+    game.wielded_item = stick;
+    game.stick_materials[0] = STICK_METAL_COUNT;
+    ok = ok && wielded_damage_valid(monster, STAFF_MELEE_DICE + strength_damage, STAFF_MELEE_DICE * STAFF_MELEE_SIDES + strength_damage);
+    game.stick_materials[0] = 0;
+    ok = ok && wielded_damage_valid(monster, WAND_MELEE_DICE + strength_damage, WAND_MELEE_DICE * WAND_MELEE_SIDES + strength_damage);
+    game.stick_materials[0] = material;
+
+    // a bájital találata csak az erő sebzésbónuszát sebzi
+    uint8_t potion = create_item(ITEM_TYPE_POTION, 0);
+    get_item(potion)->properties.weapon.hit_bonus = MISREAD_BONUS;
+    get_item(potion)->properties.weapon.damage_bonus = MISREAD_BONUS;
+    game.wielded_item = potion;
+    ok = ok && wielded_damage_valid(monster, strength_damage, strength_damage);
 
     clear_combat_scene();
     return ok;

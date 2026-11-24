@@ -6,6 +6,7 @@
 #include "platform/platform.h"
 #include "explore.h"
 #include "game.h"
+#include "items.h"
 #include "map.h"
 #include "message.h"
 #include "monsters.h"
@@ -28,8 +29,36 @@ const int8_t strength_damage_bonus[STRENGTH_MAX + 1] = {
     -7, -6, -5, -4, -3, -2, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6
 };
 
-// ideiglenes, a felszerelés issue-ig (M06-04): a kézben mindig a kezdő buzogány
-static const struct DamageSegment starting_weapon_damage = { STARTING_WEAPON_DAMAGE_DICE, STARTING_WEAPON_DAMAGE_SIDES };
+const struct DamageSegment weapon_melee_damage[WEAPON_SUBTYPE_COUNT] = {
+    { 2, 4 },   // mace
+    { 3, 4 },   // long sword
+    { 1, 1 },   // short bow
+    { 1, 1 },   // arrow
+    { 1, 6 },   // dagger
+    { 4, 4 },   // two handed sword
+    { 1, 1 },   // dart
+    { 1, 2 },   // shuriken
+    { 2, 3 },   // spear
+};
+
+static const struct DamageSegment staff_melee_damage = { STAFF_MELEE_DICE, STAFF_MELEE_SIDES };
+static const struct DamageSegment wand_melee_damage = { WAND_MELEE_DICE, WAND_MELEE_SIDES };
+static const struct DamageSegment no_melee_damage = { 0, 0 };
+static const struct DamageSegment empty_hand_damage = { EMPTY_HAND_DAMAGE_DICE, EMPTY_HAND_DAMAGE_SIDES };
+
+// a kézben tartott tárgy sebzése közelharcban: fegyvernél a típusé, a pálcánál és a botnál az anyaguké (fém: pálca, fa: bot),
+// minden más tárgynál nincs
+static const struct DamageSegment *get_melee_damage(const struct Item *item)
+{
+    switch (item->type) {
+        case ITEM_TYPE_WEAPON:
+            return &weapon_melee_damage[item->which];
+        case ITEM_TYPE_STICK:
+            return game.stick_materials[item->which] < STICK_METAL_COUNT ? &wand_melee_damage : &staff_melee_damage;
+        default:
+            return &no_melee_damage;
+    }
+}
 
 // az f-harc állapota: tart-e, merre, kamikaze-e (HP-határ nélkül), és a harc legnagyobb egyszeri sebzése a játékoson;
 // a harc alatt nincs parancsolvasás, így mentés sem, ezért nem a játékállapotban van
@@ -89,12 +118,21 @@ static void report_attack(const char *const *hit_texts, const char *const *miss_
 
 bool roll_player_attack(struct Monster *monster)
 {
-    // a fegyver és az erő bónusza; ide jön: a dexterity és az increase damage gyűrű bónusza
-    int16_t hit_bonus = STARTING_WEAPON_HIT_BONUS + strength_hit_bonus[game.player.strength];
-    int16_t damage_bonus = STARTING_WEAPON_DAMAGE_BONUS + strength_damage_bonus[game.player.strength];
+    // az erő és a kézben tartott fegyver bónusza; ide jön: a dexterity és az increase damage gyűrű bónusza
+    int16_t hit_bonus = strength_hit_bonus[game.player.strength];
+    int16_t damage_bonus = strength_damage_bonus[game.player.strength];
+    const struct DamageSegment *damage = &empty_hand_damage;
 
-    return roll_attack(game.player.experience_level, hit_bonus, damage_bonus, monster->armor,
-                       &starting_weapon_damage, 1, &monster->hit_points);
+    if (game.wielded_item != NO_ITEM) {
+        const struct Item *item = get_item(game.wielded_item);
+        damage = get_melee_damage(item);
+        // a bónuszok csak fegyvernél: más tárgy rekordjában a helyükön más adat áll (pl. a pálca töltése)
+        if (item->type == ITEM_TYPE_WEAPON) {
+            hit_bonus += item->properties.weapon.hit_bonus;
+            damage_bonus += item->properties.weapon.damage_bonus;
+        }
+    }
+    return roll_attack(game.player.experience_level, hit_bonus, damage_bonus, monster->armor, damage, 1, &monster->hit_points);
 }
 
 bool roll_monster_attack(const struct Monster *monster)

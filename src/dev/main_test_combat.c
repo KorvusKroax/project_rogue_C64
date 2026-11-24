@@ -8,6 +8,7 @@ static const struct DevTest combat_tests[] = {
     { "COMBAT-STRENGTH", test_strength_bonuses, 1 },
     { "COMBAT-NAMES", test_monster_names, 1 },
     { "COMBAT-PLAYER HITS", test_player_hit_rate, 1 },
+    { "COMBAT-WIELDED", test_wielded_damage, 1 },
     { "COMBAT-MONSTER HITS", test_monster_hit_rate, 1 },
     { "COMBAT-MOVE ATTACK", test_move_attack, 1 },
     { "COMBAT-MONST ATTACK", test_monster_attack, 1 },
