@@ -31,7 +31,7 @@ extern void texts_section_start, texts_section_end;
 #define TEXTS_FILE_NAME       "TEXTS"               // a régió neve, PETSCII-ben nagybetűvel
 #define TEXT_LOAD_BUFFER      ((char *)0xc400)
 #define TEXT_LOAD_CHUNK_SIZE  256
-#define LOADING_ROW           0                     // a „loading...” sora, mint a „saving...”-é (10.7)
+#define LOADING_ROW           0                     // a szövegek betöltésének állapotsora, mint a „saving...”-é (10.7)
 
 #if TEXT_LOAD_CHUNK_SIZE > 0x400
     #error "a szövegek betöltésének puffere nem fér el a $C400-$C7FF területen"
@@ -97,6 +97,9 @@ static bool load_texts(void)
     uint16_t remaining = (char *)&texts_section_end - destination;
     bool is_loaded = false;
 
+    // szöveg nélküli programban (pl. egy tesztprogramban) a szakasz üres, és a fordító betöltési cím nélküli fájlt ír a lemezre
+    if (remaining == 0) return true;
+
     if (open_file_for_reading(TEXTS_FILE_NAME, get_game_device())) {
         uint16_t load_address = 0;
         if (read_file((char *)&load_address, sizeof(load_address)) == sizeof(load_address) && load_address == (uint16_t)destination) {
@@ -113,6 +116,14 @@ static bool load_texts(void)
         close_file();
     }
     return is_loaded;
+}
+
+// állapotjelzés a LOADING_ROW sorában, nem üzenet: a sor többi része üres
+static void show_loading_status(const char *text)
+{
+    set_screen_cursor(0, LOADING_ROW);
+    put_text(text);
+    clear_to_row_end();
 }
 
 void platform_init(void)
@@ -139,13 +150,14 @@ void platform_init(void)
 
     __asm { cli }
 
-    // állapotjelzés, nem üzenet: a betöltés után eltűnik
-    set_screen_cursor(0, LOADING_ROW);
-    put_text("loading...");
-    // ide jön: ha nem sikerült, „insert the game disk and press space”, és szóközre újra
-    load_texts();
-    set_screen_cursor(0, LOADING_ROW);
-    clear_to_row_end();
+    // ha a fájl nem olvasható be, vagy csak hiányosan (nincs a lemezen, az egység nem válaszol), szóközre újra
+    show_loading_status("loading...");
+    while (!load_texts()) {
+        show_loading_status("insert the game disk and press space");
+        while (wait_for_key() != ' ') {}
+        show_loading_status("loading...");
+    }
+    show_loading_status("");
 }
 
 // ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön
