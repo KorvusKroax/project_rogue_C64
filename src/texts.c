@@ -57,8 +57,6 @@ const char text_killed_by[] = "killed by \1\2";
 
 const char *const text_death_causes[DEATH_CAUSE_COUNT] = { "hypothermia" };
 
-const char *const text_hunger_states[] = { "", "Hungry", "Weak", "Faint" };
-
 const char *const text_monster_names[MONSTER_TYPE_COUNT] = {
     "aquator",
     "bat",

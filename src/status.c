@@ -3,7 +3,9 @@
 #include "platform/screen.h"
 #include "player.h"
 #include "state.h"
-#include "texts.h"
+
+// a hunger_state szerint: 0 rendben (üres), 1 Hungry, 2 Weak, 3 Faint
+static const char *const hunger_state_words[] = { "", "Hungry", "Weak", "Faint" };
 
 void draw_status(void)
 {
@@ -17,7 +19,7 @@ void draw_status(void)
     put_text("(");
     put_int(game.player.max_hit_points, 0);
     put_text(") ");
-    put_text(text_hunger_states[game.hunger_state]);
+    put_text(hunger_state_words[game.hunger_state]);
     clear_to_row_end();
 
     set_screen_cursor(0, STATUS_ROW + 1);
