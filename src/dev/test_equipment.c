@@ -189,3 +189,68 @@ int test_take_off_armor(uint16_t i)
     clear_equipment_scene();
     return ok;
 }
+
+#define EQUIPMENT_TEST_POTION_COUNT  3          // a kézben tartott bájitalköteg darabszáma
+
+// a játékos mezőjére lerakott tárgy; lekerül a padlóról, hogy a következő lerakásnak is legyen helye; NO_ITEM, ha nincs ott tárgy
+static uint8_t take_dropped_item(void)
+{
+    uint8_t index = find_floor_item_at(EQUIPMENT_PLAYER_X, EQUIPMENT_PLAYER_Y);
+    if (index != NO_ITEM) {
+        take_item_from_floor(index);
+    }
+    return index;
+}
+
+int test_drop_item_in_use(uint16_t i)
+{
+    struct Monster *monster = put_equipment_scene();
+    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, EQUIPMENT_TEST_WEAPON));
+    uint8_t potion = NO_ITEM;
+    for (uint8_t count = 0; count < EQUIPMENT_TEST_POTION_COUNT; count++) {
+        potion = add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
+    }
+    uint8_t armor = add_item_to_pack(create_item(ITEM_TYPE_ARMOR, EQUIPMENT_TEST_ARMOR));
+
+    // az átkozott fegyver a kézben marad; időbe kerül, de üres kör nélkül
+    game.wielded_item = mace;
+    get_item(mace)->flags |= ITEM_CURSED;
+    message_clear();
+    bool ok = drop_item(mace) && does_message_bar_start_with("You can't. It appears to be cursed.");
+    ok = ok && game.wielded_item == mace && is_item_in_pack(mace) && take_dropped_item() == NO_ITEM;
+
+    // különben a kéz kiürül, és a fegyver lekerül
+    get_item(mace)->flags &= ~ITEM_CURSED;
+    ok = ok && drop_item(mace) && game.wielded_item == NO_ITEM && take_dropped_item() == mace;
+
+    // a kézben tartott kötegből egy darab kerül le, és a kéz akkor is kiürül
+    game.wielded_item = potion;
+    ok = ok && drop_item(potion) && game.wielded_item == NO_ITEM && get_item(potion)->count == EQUIPMENT_TEST_POTION_COUNT - 1;
+    uint8_t piece = take_dropped_item();
+    ok = ok && piece != NO_ITEM && piece != potion;
+
+    // ha a darabolásnak nincs helye, a köteg a kézben marad, és nem visz időt
+    game.wielded_item = potion;
+    while (create_item(ITEM_TYPE_FOOD, FOOD_RATION) != NO_ITEM) {}
+    message_clear();
+    ok = ok && !drop_item(potion) && does_message_bar_start_with("There's no room for that.");
+    ok = ok && game.wielded_item == potion && get_item(potion)->count == EQUIPMENT_TEST_POTION_COUNT - 1;
+
+    // eddig egyik lerakás sem járt üres körrel; a viselt páncél egy üres kör után kerül le
+    ok = ok && has_monster_stayed(monster);
+    game.worn_armor = armor;
+    message_clear();
+    ok = ok && drop_item(armor) && game.worn_armor == NO_ITEM && has_monster_stepped_once(monster);
+    ok = ok && does_message_bar_start_with("Dropped leather armor.") && take_dropped_item() == armor;
+
+    // ha a játékos az üres körben meghal, a parancs ott véget ér: a páncél rajta és a csomagban marad, üzenet sincs
+    add_item_to_pack(armor);
+    game.worn_armor = armor;
+    kill_player(EQUIPMENT_TEST_MONSTER);
+    message_clear();
+    ok = ok && drop_item(armor) && game.worn_armor == armor && is_item_in_pack(armor) && take_dropped_item() == NO_ITEM;
+    ok = ok && is_message_bar_empty();
+
+    clear_equipment_scene();
+    return ok;
+}

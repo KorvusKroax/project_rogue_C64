@@ -18,6 +18,12 @@ bool wield_item(uint8_t index);
 // az üres körben meghal, a parancs ott véget ér; igaz, ha időt vitt
 bool wear_armor(uint8_t index);
 
+// a használatban lévő tárgy levétele, mielőtt a tárgy elhagyja a csomagot (`d`): az átkozott marad („you can't. It appears
+// to be cursed”), a kézben tartott tárgynál a kéz kiürül, a viselt páncél egy üres kör (waste_time) után kerül le; a használaton kívüli
+// tárgyhoz nem nyúl; igaz, ha a tárgy már nincs használatban, hamis, ha átkozott, vagy ha a játékos az üres körben meghalt (a parancs
+// ilyenkor véget ér, de időt vitt)
+bool release_item(uint8_t index);
+
 // `T`: a viselt páncél egy üres kör után lekerül („you used to be wearing <betű>) <név>”); ha nincs rajta páncél, „you aren't wearing
 // any armor”, átkozottra „you can't. It appears to be cursed”; ha a játékos az üres körben meghal, a parancs ott véget ér;
 // igaz, ha időt vitt

@@ -335,7 +335,6 @@ static bool execute_drop_command(bool is_repeat)
     if (report_missing_command_item(is_repeat)) return true;
 
     uint8_t index = get_command_item(is_repeat, text_item_purpose_drop, PACK_FILTER_ALL);
-    // ide jön: a használatban lévő tárgy (az átkozott nem rakható le, a viselt páncél levétele időveszteség)
     // egy kifejezésben: a külön `if (index == NO_ITEM) return false;` után a `return drop_item(index);` eredményét az Oscar64 1.32.273
     // elveszti (README, Oscar64-hibák, 14.)
     return index != NO_ITEM && drop_item(index);

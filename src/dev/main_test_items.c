@@ -29,6 +29,7 @@ static const struct DevTest item_tests[] = {
     { "EQUIP-WIELD", test_wield_item, 1 },
     { "EQUIP-WEAR", test_wear_armor, 1 },
     { "EQUIP-TAKE OFF", test_take_off_armor, 1 },
+    { "EQUIP-DROP IN USE", test_drop_item_in_use, 1 },
     { "NAME-LABEL FREED", test_label_freed_with_item, 1 },
     { "NAME-LABEL MERGE", test_label_merge, 1 },
     { "NAME-PACK LIST", test_pack_nameable_list, 1 },

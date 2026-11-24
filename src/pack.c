@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "equipment.h"
 #include "item_names.h"
 #include "items.h"
 #include "message.h"
@@ -184,15 +185,20 @@ bool drop_item(uint8_t index)
 {
     struct Item *item = get_item(index);
 
-    // bájital-, tekercs- és ételkötegből egy darab új rekordként kerül le, a köteg a csomagban marad; ezek nem kapnak címkét,
-    // így a másolatnak sincs
+    // bájital-, tekercs- és ételkötegből egy darab új rekordként kerül le, a köteg a csomagban marad; ehhez szabad hely kell,
+    // és ez a levétel előtt dől el, így ha nincs, a tárgy használatban marad
+    bool is_piece = item->count > 1 && is_stackable_type(item->type);
+    if (is_piece && game.item_count == MAX_ITEMS) {
+        message(text_no_room_for_that);
+        return false;
+    }
+    if (!release_item(index)) return true;
+
     uint8_t dropped_index = index;
-    if (item->count > 1 && is_stackable_type(item->type)) {
+    if (is_piece) {
+        // a hely megvan: üres kör csak a páncél levételével jár, és a páncél nem köteg; a darabok nem kapnak címkét,
+        // így a másolatnak sincs
         dropped_index = allocate_item();
-        if (dropped_index == NO_ITEM) {
-            message(text_no_room_for_that);
-            return false;
-        }
         struct Item *dropped = get_item(dropped_index);
         *dropped = *item;
         dropped->count = 1;

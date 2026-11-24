@@ -72,6 +72,24 @@ bool wear_armor(uint8_t index)
     return true;
 }
 
+bool release_item(uint8_t index)
+{
+    if (!is_item_in_use(index)) return true;
+    if (report_cursed_item(index)) return false;
+
+    if (index == game.wielded_item) {
+        game.wielded_item = NO_ITEM;
+        return true;
+    }
+    // ide jön: a gyűrű, a levétel hatásával (mint az `R`-nél)
+
+    // a viselt páncél: az üres körben még véd
+    waste_time();
+    if (is_player_dead()) return false;
+    game.worn_armor = NO_ITEM;
+    return true;
+}
+
 bool take_off_armor(void)
 {
     uint8_t index = game.worn_armor;
@@ -79,13 +97,8 @@ bool take_off_armor(void)
         message(text_not_wearing_armor);
         return false;
     }
-    if (report_cursed_item(index)) return true;
+    if (!release_item(index)) return true;
 
-    // az üres körben még a páncél véd
-    waste_time();
-    if (is_player_dead()) return true;
-
-    game.worn_armor = NO_ITEM;
     // a név a levétel után készül, így nincs utótagja (8.8)
     const struct Item *item = get_item(index);
     char letter_text[2] = { item->location.pack_letter, 0 };

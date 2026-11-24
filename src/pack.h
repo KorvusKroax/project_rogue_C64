@@ -46,7 +46,9 @@ void report_moving_onto_item(uint8_t index);
 
 // `d`: a csomag tárgya a játékos mezőjére kerül, amely üres padló vagy folyosó („dropped <név>”); bájital-, tekercs- és ételkötegből
 // egy darab, és a köteg többi darabja a csomagban marad, minden más egészben, a fegyverköteg is; ha a köteg darabolásához
-// nincs szabad hely a tárgytáblában, „there's no room for that”, és semmi nem változik; igaz, ha a tárgy lekerült
+// nincs szabad hely a tárgytáblában, „there's no room for that”, és semmi nem változik; a használatban lévő tárgy előbb lekerül
+// (release_item): az átkozott marad, a kézben tartott tárgynál a kéz akkor is kiürül, ha csak egy darab kerül le, a viselt páncél
+// egy üres kör után kerül le; igaz, ha időt vitt
 bool drop_item(uint8_t index);
 
 // a csomaglista szűrője: mely tárgyak kerülnek a listába
