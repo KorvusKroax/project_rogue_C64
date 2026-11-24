@@ -28,6 +28,8 @@ void screen_init(void)
         CHARSET_RAM[i + CHARSET_HALF_SIZE] = ~CHARSET_RAM[i];
     }
 
+    // az átkapcsoláskor már üres legyen: a szövegek betöltése alatt látszik
+    screen_clear();
     vic_setmode(VICM_TEXT, (const char *)SCREEN_RAM, (const char *)CHARSET_RAM);
 }
 

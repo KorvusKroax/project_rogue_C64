@@ -6,7 +6,7 @@
 #define SCREEN_WIDTH   40
 #define SCREEN_HEIGHT  25
 
-void screen_init(void);     // csak tiltott megszakítással hívható
+void screen_init(void);     // csak tiltott megszakítással hívható; utána a képernyő üres
 
 void set_screen_colors(uint8_t border, uint8_t background, uint8_t text);
 uint8_t get_border_color(void);

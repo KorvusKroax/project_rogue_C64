@@ -31,6 +31,7 @@ extern void texts_section_start, texts_section_end;
 #define TEXTS_FILE_NAME       "TEXTS"               // a régió neve, PETSCII-ben nagybetűvel
 #define TEXT_LOAD_BUFFER      ((char *)0xc400)
 #define TEXT_LOAD_CHUNK_SIZE  256
+#define LOADING_ROW           0                     // a „loading...” sora, mint a „saving...”-é (10.7)
 
 #if TEXT_LOAD_CHUNK_SIZE > 0x400
     #error "a szövegek betöltésének puffere nem fér el a $C400-$C7FF területen"
@@ -138,8 +139,13 @@ void platform_init(void)
 
     __asm { cli }
 
-    // ide jön: betöltés közben „loading...”, ha nem sikerült, „insert the game disk and press space”, és szóközre újra
+    // állapotjelzés, nem üzenet: a betöltés után eltűnik
+    set_screen_cursor(0, LOADING_ROW);
+    put_text("loading...");
+    // ide jön: ha nem sikerült, „insert the game disk and press space”, és szóközre újra
     load_texts();
+    set_screen_cursor(0, LOADING_ROW);
+    clear_to_row_end();
 }
 
 // ideiglenes: az E13 szerinti végleges változat (az N leütésekor) az M10-05-ben jön
