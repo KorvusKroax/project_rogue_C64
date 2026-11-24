@@ -98,6 +98,7 @@ static bool load_texts(void)
     bool is_loaded = false;
 
     // szöveg nélküli programban (pl. egy tesztprogramban) a szakasz üres, és a fordító betöltési cím nélküli fájlt ír a lemezre
+    // (README, Oscar64-hibák, 13.)
     if (remaining == 0) return true;
 
     if (open_file_for_reading(TEXTS_FILE_NAME, get_game_device())) {

@@ -12,7 +12,7 @@ Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`).
 
 | parancs | mit csinál |
 |---|---|
-| `build.bat` | lefordítja a játékot: `build\rogue.prg` és `build\rogue.d64` (a lemezen `rogue` néven) |
+| `build.bat` | lefordítja a játékot: `build\rogue.prg` és `build\rogue.d64` (a lemezen a `rogue` és a szövegek fájlja, a `texts`) |
 | `run.bat` | lefordítja, majd elindítja VICE-ban a lemezképről (autostart) |
 | `build.bat dev` | a fejlesztői build: `build\rogue_dev.prg` és `build\rogue_dev.d64` |
 | `build.bat dev 12345` | a fejlesztői build rögzített seeddel (itt 12345) |
@@ -26,6 +26,15 @@ Szükséges: **Oscar64** (`C:\oscar64`) és **VICE** (`C:\GTK3VICE-3.10-win64`).
 
 Mindegyik bárhonnan indítható (PowerShellben `.\build.bat`, `.\run.bat`, `.\test.bat`). A C64-en (vagy VICE-ban a lemezkép csatolása után) kézzel: `LOAD"ROGUE",8` vagy `LOAD"ROGUE",8,1`, majd `RUN`.
 
+**A lemezkép tartalma:**
+
+| fájl | tartalom |
+|---|---|
+| `rogue` | a játék, BASIC-indítósorral |
+| `texts` | a játék szövegei és a tábláik; a játék induláskor tölti be a ROM-ok alatti RAM-ba, közben a 0. sorban „loading...” látszik ([10.2](docs/spec/10_platform.md#102-memória)) |
+
+A `texts`-et a fordító ugyanabban a menetben írja ki, mint a játékot, a lemezképre és a `build` mappába is (`build\rogue.prgtexts.prg`). A lemeznek induláskor bent kell lennie: a `build\rogue.prg` önmagában, a lemezkép nélkül nem indul el, hanem „insert the game disk and press space” jelenik meg, és szóközre újrapróbálja. Később a képernyőmodul (`rogue.screens`) is ide kerül ([10.1](docs/spec/10_platform.md#101-célgép)).
+
 ### Fejlesztői build
 
 A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A fejlesztői build a játék, és mellette csak ennyi; a kiadási buildbe ezekből semmi nem kerül:
@@ -37,20 +46,20 @@ Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem k�
 
 ### Tesztprogramok
 
-Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja. Ahol a tesztek üzenetet adó játékkódot futtatnak (pl. szörnytámadás), a program a sáv alatt kezdi a kiírást, és kikapcsolja a `--More--` várakozását (`set_message_more_wait(false)`, csak a `DEVMODE` fordításban létezik), mert a tesztben nincs, aki szóközt nyomjon. A billentyűre váró játékkódnak (pl. a `c` beviteli mezője) a teszt a `set_test_keys` leütéseit adja, ez is csak a `DEVMODE` fordításban létezik.
+Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja. Ahol a tesztek üzenetet adó játékkódot futtatnak (pl. szörnytámadás), a program a sáv alatt kezdi a kiírást, és kikapcsolja a `--More--` várakozását (`set_message_more_wait(false)`, csak a `DEVMODE` fordításban létezik), mert a tesztben nincs, aki szóközt nyomjon. A billentyűre váró játékkódnak (pl. a `c` beviteli mezője) a teszt a `set_test_keys` leütéseit adja, ez is csak a `DEVMODE` fordításban létezik. A tesztprogramok a játékhoz hasonlóan induláskor betöltik a szövegeiket a lemezképükről (a szöveget nem használóké üres, ott a betöltés elmarad), ezért a `.d64`-ről kell indítani őket; a `test.bat` is így teszi.
 
-| név | mit tesztel | szabad hely (2026-11-22) |
+| név | mit tesztel | szabad hely (2026-11-24) |
 |---|---|---|
-| `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Rattlesnake marása (a mérgezés elleni mentődobás aránya két szinten, az erőcsökkenés), az erő határai és a legnagyobb erő, a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); fogva tartva csak a flytrapra lehet lépni, a többi lépés időbe kerül, és véget vet a futásnak és az `f`-harcnak (J25); az álcázott xeroc megtámadása csak leleplezi, a saját támadása is leleplezi; a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 10 112 bájt |
-| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, a 40 oszlopos lista sorai és az *overwrite* ablakba férése, a képernyő visszaállása az ideiglenes ablak után, a listasor (a betű nélküli is) nem fűződik össze más üzenettel, és a CTRL-P változatlanul hozza vissza, a beviteli mezős kérdés csak akkor fűződik az előző üzenethez, ha a mező is elfér mögötte, térképflagek | 22 024 bájt |
-| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 30 584 bájt |
-| `items` | a tárgytípusok és -altípusok esélytáblái a 0..99 dobásokkal; az étel nélküli szintek után kényszerített étel (`no_food`); a tárgytábla betelése (utána nincs hely, és a véletlen tárgy nem dob) és felszabadítása, közben a foglaltság számlálója; a tárgylisták (beszúrás, törlés); a kezdőértékek és a kötegazonosítók; a nevek és az álnevek listái, az álnevek kiosztása, a tekercsfeliratok; a tárgynevek a spec példái szerint, az elnevezett típusok és a címkék `called` alakjával is, és a leghosszabb név 20 karakteres típusnévvel és címkével; a csomag helyei, betűi és rendezése; a felvétel: rálépve (a futás megáll) és `,`-vel, az `m` a padlón hagyja, az arany a pénzhez adódik, betelt csomagnál a tárgy a padlón marad; a lerakás: bájitalkötegből egy darab új rekordként, a nyílköteg egészben, betelt tárgytáblánál a köteg darabolása elmarad; az amulett felvéve a játékosnál van, lerakva nincs; a névkészlet: betelés, felszabadítás, átnevezés, új játéknál üres, a fejlesztői mód foglaltsági üzenete; a címke a tárggyal felszabadul, a kötegbe olvadó tárgyét a címke nélküli köteg átveszi; a `c` listájából az étel és az amulett kimarad; a `c` menete leütésekkel: üres mezőre nincs név, átnevezés elírás javításával, ESC, törlés, RETURN után üres sáv, azonosított típus, fegyvercímke, a 20 karakteres korlát, étel és amulett, betelt névkészlet; a `D` listája: az ismert és az elnevezett típusok egyszer, a „semmi” sor, a `*` elválasztói, hívásonként új sorrend, az RN érintetlen | 3 880 bájt |
-| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen: a padlón lévő tárgyak (a mezőjükön a jelük, egy mezőn legfeljebb egy, a tárgytábla foglalt helyei éppen ezek), az arany (szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban), az amulett (a 26. mélységtől pontosan egy, alatta egy sem), a kincses szoba szörnyei, és az étel nélküli szintek számlálója szintenként eggyel nő, 255-nél megáll, étel után 0; utána mélységenként a sötét szobák és labirintusok aránya és a leglassabb generálás ideje; 10 maggal az amulettes szintek: a legmélyebb elért szint fölött nincs arany és tárgy, a legmélyebb elért szinten van, de újabb amulett nincs | 15 528 bájt |
-| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 20 224 bájt |
-| `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 29 184 bájt |
-| `turns` | 100 generált szinten (a `level` magjaival és mélységeivel) körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; utána mélységenként egy kör ideje | 9 368 bájt |
+| `combat` | az erő harci táblái; a szörny neve az üzenetekben; a játékos és a szörny találati aránya 20 000 csapásból, rögzített maggal, a képletből számolthoz képest (±1%), a szörnyé a cselekvésképtelen játékos ellen is (+4), és a sebzés tartománya; a szörnyre lépő játékos támad, a szomszédos ébren lévő szörny támad; az `f`-harc szabálytalan átlónál nem indul, és véget ér a HP-határnál (kamikazénál nem), más szörny támadására, a célpont elmozdulásakor és halálakor; a szörny halála: kikerül a táblából, a játékos megkapja az XP-jét (16 777 215-nél telítődik); a szintlépés küszöbei és HP-ja; a különleges támadások: az Ice monster fagyasztása és a fagyhalál (a kikapcsolt Ice monster nem fagyaszt), a Vampire szívása és az aránya, a Wraith szintszívása (J2), a Rattlesnake marása (a mérgezés elleni mentődobás aránya két szinten, az erőcsökkenés), az erő határai és a legnagyobb erő, a Venus flytrap szorítása (a fogás és a mellé ütés sebzése, a kikapcsolt flytrap, a halála elengedi a játékost, a mellé ütés is ölhet); fogva tartva csak a flytrapra lehet lépni, a többi lépés időbe kerül, és véget vet a futásnak és az `f`-harcnak (J25); az álcázott xeroc megtámadása csak leleplezi, a saját támadása is leleplezi; a játékos halála (utána a szörnyek nem lépnek, az f-harc véget ér) és az új játék kezdőértékei | 13 184 bájt |
+| `core` | RNG, számok és szövegből szám, billentyűkódok, nézőablak-követés, üzenetsáv-tördelés, a 40 oszlopos lista sorai és az *overwrite* ablakba férése, a képernyő visszaállása az ideiglenes ablak után, a listasor (a betű nélküli is) nem fűződik össze más üzenettel, és a CTRL-P változatlanul hozza vissza, a beviteli mezős kérdés csak akkor fűződik az előző üzenethez, ha a mező is elfér mögötte, térképflagek; a szövegek kiolvasása (a játék szövegeivel, a ROM-ok alól is; a `$01` és a megszakítás tiltása a hívás után ugyanaz), és a CIA2 NMI-je a kilapozott ROM melletti másolás közben visszatér | 19 720 bájt |
+| `explore` | átlós lépés, a szomszédos mezők láthatósága, futás, keresés | 30 072 bájt |
+| `items` | a tárgytípusok és -altípusok esélytáblái a 0..99 dobásokkal; az étel nélküli szintek után kényszerített étel (`no_food`); a tárgytábla betelése (utána nincs hely, és a véletlen tárgy nem dob) és felszabadítása, közben a foglaltság számlálója; a tárgylisták (beszúrás, törlés); a kezdőértékek és a kötegazonosítók; a nevek és az álnevek listái, az álnevek kiosztása, a tekercsfeliratok; a tárgynevek a spec példái szerint, az elnevezett típusok és a címkék `called` alakjával is, és a leghosszabb név 20 karakteres típusnévvel és címkével; a csomag helyei, betűi és rendezése; a felvétel: rálépve (a futás megáll) és `,`-vel, az `m` a padlón hagyja, az arany a pénzhez adódik, betelt csomagnál a tárgy a padlón marad; a lerakás: bájitalkötegből egy darab új rekordként, a nyílköteg egészben, betelt tárgytáblánál a köteg darabolása elmarad; az amulett felvéve a játékosnál van, lerakva nincs; a névkészlet: betelés, felszabadítás, átnevezés, új játéknál üres, a fejlesztői mód foglaltsági üzenete; a címke a tárggyal felszabadul, a kötegbe olvadó tárgyét a címke nélküli köteg átveszi; a `c` listájából az étel és az amulett kimarad; a `c` menete leütésekkel: üres mezőre nincs név, átnevezés elírás javításával, ESC, törlés, RETURN után üres sáv, azonosított típus, fegyvercímke, a 20 karakteres korlát, étel és amulett, betelt névkészlet; a `D` listája: az ismert és az elnevezett típusok egyszer, a „semmi” sor, a `*` elválasztói, hívásonként új sorrend, az RN érintetlen | 6 848 bájt |
+| `level` | 1000 véletlen szint rögzített magokkal, az 1., 10., 26. és 40. mélységen: a padlón lévő tárgyak (a mezőjükön a jelük, egy mezőn legfeljebb egy, a tárgytábla foglalt helyei éppen ezek), az arany (szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban), az amulett (a 26. mélységtől pontosan egy, alatta egy sem), a kincses szoba szörnyei, és az étel nélküli szintek számlálója szintenként eggyel nő, 255-nél megáll, étel után 0; utána mélységenként a sötét szobák és labirintusok aránya és a leglassabb generálás ideje; 10 maggal az amulettes szintek: a legmélyebb elért szint fölött nincs arany és tárgy, a legmélyebb elért szinten van, de újabb amulett nincs | 14 872 bájt |
+| `monsters` | szörnytípusok, szörnytábla, generálás, a szörnyek mezőflagje, láthatósága, ébresztése és üldözése | 19 968 bájt |
+| `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 28 416 bájt |
+| `turns` | 100 generált szinten (a `level` magjaival és mélységeivel) körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; utána mélységenként egy kör ideje | 12 376 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 4 376, a fejlesztői build (`build.bat dev`) 192 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 8 216, a fejlesztői build (`build.bat dev`) 3 944 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -145,7 +154,7 @@ Mélységenként (átlag / leglassabb, képkocka):
 - Az llvm-mos `-O2` a gyári zero page-kerettel (`-mlto-zp=110`) nem linkelhető (`relocation R_MOS_ADDR8 out of range`), 61 bájtig igen; a `compare.bat` 32-t ad meg.
 - A fordítási idő a keretprogramon mindkettőnél 1 másodperc alatti.
 
-**A váltás költsége.** A játéklogika változás nélkül fordul, Oscar64-specifikus rész csak a `src/platform/` alatt és a `build.bat`-ban van:
+**A váltás költsége.** A játéklogika változás nélkül fordul, Oscar64-specifikus rész csak a `src/platform/` alatt, a `build.bat`-ban és a `src/texts.c` elején (a szövegek szakaszának pragmái) van:
 
 | Oscar64 | llvm-mos |
 |---|---|
@@ -154,6 +163,8 @@ Mélységenként (átlag / leglassabb, képkocka):
 | `__interrupt`, `__forceinline` | `__attribute__((interrupt))`, `__attribute__((always_inline))` |
 | `<c64/vic.h>`, `<c64/cia.h>`, `<c64/memmap.h>` (`vic.`, `cia1.`, `mmap_set`, `vic_setmode`) | `<c64.h>` (`VIC.`, `CIA1.`), a `$01`, `$D018`, `$DD00` közvetlen írása |
 | `-d64=` | `c1541` a VICE-ből |
+| `#pragma section(texts, …)`, `#pragma region(texts, …)`, `#pragma overlay(texts, 1)`: a szövegek a `$D000`-s régióban, külön fájlként a lemezen | a linkerszkriptben külön szakasz, a fájl kiírása külön lépésben |
+| `<c64/kernalio.h>` (`krnio_`) | a KERNAL-hívások (`cbm_k_*`) |
 | beépített emulátor (`-e`) | nincs |
 
 Ez kb. 250 sornyi platformkód és egy linkerszkript. A szövegek a ROM-ok alá és a képernyőmodul mindkét fordítóval külön memóriatérképet kíván, ez nem a váltás költsége.
@@ -339,6 +350,14 @@ if (!has_pack_list_entry()) { … }
 show_text_list(get_pack_list_entry);
 ```
 Hol: `src/pack.c`. Nincs bejelentve.
+
+**13. Üres overlay-szakasz fájlja** – fordításkor, csendben. Ha egy overlayként kiírt szakaszba (`#pragma overlay`) semmi nem kerül, a fordító akkor is ír egy fájlt a lemezképre, de az 255 bájt, nullákkal és egy záró bájttal, betöltési cím nélkül. Azokban a tesztprogramokban jön elő, amelyek egyetlen szöveget sem használnak (pl. `explore`): ott a `texts` szakasz üres, és a betöltés ezt a fájlt hibásnak találta, ezért a program az „insert the game disk and press space”-nél állt meg.
+```c
+// jó: üres szakasznál a betöltés el sem indul
+uint16_t remaining = (char *)&texts_section_end - (char *)&texts_section_start;
+if (remaining == 0) return true;
+```
+Hol: `src/platform/platform.c` (`load_texts`). Nincs bejelentve.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c

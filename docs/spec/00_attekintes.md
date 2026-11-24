@@ -23,7 +23,8 @@ A *Rogue: Exploring the Dungeons of Doom* 5.4.4-es változatának specifikáció
 
 ```
 bekapcsolás / betöltés után:
-  hardver előkészítése (10.2): memória-konfiguráció, a szövegek a helyükre másolása, képernyő, karakterkészlet, megszakítás, billentyűzet
+  hardver előkészítése (10.2): memória-konfiguráció, képernyő, karakterkészlet, megszakítás, billentyűzet
+  a szövegek betöltése a lemezről (10.2): közben "loading...", hibánál "insert the game disk and press space", szóközre újra
   rogue.cfg beolvasása a lemezről, ha van (4.2.5); hiba esetén csendben az alapértékek
   a képernyőmodul betöltése (10.10); a címképernyőt, a névbekérést és a seedet a modul kezeli
   címképernyő:

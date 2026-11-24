@@ -5,12 +5,17 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 ## 10.1 Célgép
 - Commodore 64 vagy 64C, PAL és NTSC; bővítés (REU, gyorstöltő, SuperCPU) nem szükséges, de nem is zavarhat.
 - Lemezegység: 1541 / 1571 / 1581 vagy kompatibilis (SD2IEC, emulátor), 8–11. eszközszám.
-- A program két PRG fájl: a `rogue` maga a játék, a `rogue.screens` a képernyőmodul ([10.10](#1010-képernyőmodul)). A játék `LOAD"ROGUE",8,1` (vagy `,8` + `RUN`) után indul, egy BASIC-indítósorral (`SYS`), a modult pedig a játék tölti be. A kiadás egy lemezkép, amelyen mindkét fájl rajta van.
+- A program három PRG fájl:
+  - a `rogue` maga a játék;
+  - a `texts` a játék szövegei ([10.2](#102-memória)). A fordító ugyanabban a menetben írja ki, mint a játékot, és a nevét a szövegek régiójának nevéből adja, amely nem tartalmazhat pontot, ezért nincs `rogue.` előtagja;
+  - a `rogue.screens` a képernyőmodul ([10.10](#1010-képernyőmodul)).
+
+  A játék `LOAD"ROGUE",8,1` (vagy `,8` + `RUN`) után indul, egy BASIC-indítósorral (`SYS`). A szövegeket és a modult a játék tölti be. A kiadás egy lemezkép, amelyen mindhárom fájl rajta van.
 - A programból nincs kilépés a BASIC-be: a játék vége után a címképernyő jön ([0.1](00_attekintes.md#01-indítás)), a gépet újraindítással lehet elhagyni. Így a kilépéskor semmit nem kell visszaállítani (megszakításvektorok, ROM-lapozás, a BASIC zero page-e).
 - Fejlesztéshez és teszteléshez: VICE (x64sc) emulátor, a kiadás előtt valódi gépen is ki kell próbálni.
 
 ## 10.2 Memória
-**Konfiguráció:** a BASIC ROM játék közben ki van lapozva, így a `$A000–$BFFF` RAM is használható. A KERNAL ROM és az I/O bent van. Csak egy szöveg kiolvasásának idejére lapozódik ki minden ROM és az I/O is (`$01 = $30`), mert a szövegek a `$D000–$FFFF` alatti RAM-ban vannak (lásd lent).
+**Konfiguráció:** a BASIC ROM játék közben ki van lapozva, így a `$A000–$BFFF` RAM is használható. A KERNAL ROM és az I/O bent van. Csak egy szöveg kiolvasásának idejére lapozódik ki minden ROM és az I/O is (`$01 = $30`), mert a szövegek a `$D000–$FFF9` alatti RAM-ban vannak (lásd lent).
 
 **Megszakítás:** a saját raszter-IRQ kezelő ([10.6](#106-időzítés)) a `$0314/$0315` vektoron át fut. Szöveg kiolvasása közben a megszakítás tiltva van, így ekkor az IRQ nem fut. A RESTORE billentyű NMI-jét a tiltás nem állítja meg, ezért mindkét helyen egy azonnal visszatérő kezelőre mutat: a KERNAL-lal a `$0318/$0319` vektoron át, kilapozott ROM mellett a RAM-beli `$FFFA/$FFFB` vektoron át. Emiatt a `$FFFA–$FFFF` 6 bájtjára nem kerülhet szöveg.
 
@@ -25,15 +30,15 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 | `$0801–$087F` | BASIC-indítósor |
 | `$0880–$BFFF` | fő régió (46 976 bájt): kód, állandó adatok, változók, a fordító szoftveres verme (512 bájt, `#pragma stacksize`; a dev buildben mérve 194 bájt kell); a játékállapot-blokk helyére a címképernyő idején a képernyőmodul töltődik ([10.10](#1010-képernyőmodul)) |
 | `$C000–$C3FF` | képernyőmemória (VIC 3. bank) |
-| `$C400–$C7FF` | szabad (1 KB, lapozás nélkül elérhető): pl. pufferek, ritkán használt táblák |
+| `$C400–$C7FF` | szabad (1 KB, lapozás nélkül elérhető): induláskor a szövegek betöltésének puffere (lásd lent), utána pl. pufferek, ritkán használt táblák |
 | `$C800–$CFFF` | saját karakterkészlet (2 KB) |
 | `$D000–$DFFF` | I/O, színmemória (`$D800`); alatta RAM: szövegek |
 | `$E000–$FFF9` | KERNAL ROM; alatta RAM: szövegek |
 | `$FFFA–$FFFF` | KERNAL ROM; alatta RAM: az NMI-, RESET- és IRQ-vektor a kilapozott ROM idejére |
 
-**Szövegek:** minden játékszöveg ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)) a `$D000–$FFF9` alatti RAM-ban van (12 282 bájt; a rezidens szövegek kb. 10,2 KB-ot foglalnak). Ha egyszer nem férnének el, a `$C400–$C7FF` jöhet szóba a folytatásukra.
-- **Kiolvasás:** a megszakítás tiltása, `$01 = $30`, a szöveg átmásolása egy pufferbe a fő régióban, a `$01` visszaállítása, végül a megszakítás engedélyezése.
-- **Betöltés:** a `$D000` alá a betöltés nem írhat, mert ott az I/O látszik. Ezért a PRG-ben a szövegek a kód után vannak, és induláskor `$01 = $30` mellett a helyükre másolódnak. Az ideiglenes példány helyét ezután a változók használják.
+**Szövegek:** minden játékszöveg ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)) a `$D000–$FFF9` alatti RAM-ban van (12 282 bájt; a rezidens szövegek a végén kb. 10,2 KB-ot foglalnak, 2026-11-24-én 4 825 bájtot). A szövegek és a tábláik egy külön szakaszban (`texts`) vannak, amelynek régiója `$D000`-nál kezdődik. Ha egyszer nem férnének el, a `$C400–$C7FF` jöhet szóba a folytatásukra.
+- **Kiolvasás:** a megszakítás tiltása, `$01 = $30`, a szöveg átmásolása a hívó pufferébe a fő régióban, legfeljebb a megadott hosszig, a `$01` visszaállítása, végül a megszakítás régi állapota (tiltott megszakítás mellett hívva tiltva marad). Bármely címről olvas, mert `$01 = $30` mellett a fő régió ugyanúgy látszik, így a hívónak nem kell tudnia, hol a szöveg. Táblaelemnél a mutató kiolvasása és a szöveg másolása egy lapozásban történik; ha a táblaelem címe továbbadódik (pl. üzenet mintájaként vagy helyőrzőjeként), csak a mutató olvasódik ki, és a szöveget a felhasználás helye másolja.
+- **Betöltés:** induláskor, az első szövegkiírás előtt, a játékban és minden tesztprogramban, arról az egységről, amelyről a játék betöltődött (8 alatti egységszámnál a 8-asról). A fájl a `$D000`-s betöltési címmel kezdődik. A `LOAD` a `$D000–$DFFF` alá nem írhat, mert ott az I/O látszik, ezért a fájl 256 bájtos darabokban a `$C400`-as pufferbe olvasódik, és minden darab `$01 = $30` mellett másolódik a helyére. A betöltés csak akkor sikeres, ha a betöltési cím `$D000`, és pontosan a szakasz hossza jött, utána a fájl véget ért. Közben a 0. sorban „loading...” látszik, hibánál „insert the game disk and press space”, és szóközre újra ([10.7](#107-lemezkezelés)). A 4,8 KB-os fájl kb. 9–12 másodperc. Szöveg nélküli programban (pl. egy tesztprogramban) a szakasz üres, és a betöltés elmarad.
 - **Tömörítés:** nincs. Ha a szövegek kinőnék a helyet, akkor jöhet szóba, például szótáras tömörítés.
 
 **Játékállapot:** a teljes perzisztens állapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)) egyetlen összefüggő blokk (kb. 8,5 KB), mert a mentés és a betöltés ezt egyben írja és olvassa ([10.7](#107-lemezkezelés)). Ami nem kerül bele:
@@ -80,9 +85,10 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 ## 10.7 Lemezkezelés
 **Rutinok:** a KERNAL szabványos rutinjai (SETLFS, SETNAM, OPEN, CHKIN/CHKOUT, CHRIN/CHROUT, READST, CLRCHN, CLOSE), a `device` opció egységszámával ([4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer)). Lemezművelet közben a KERNAL be van lapozva.
 
-**Fájlok** (a képernyőmodul PRG, a többi SEQ):
+**Fájlok** (a szövegek és a képernyőmodul PRG, a többi SEQ):
 | fájl | tartalom |
 |---|---|
+| `texts` | a játék szövegei ([10.2](#102-memória)) |
 | `rogue.screens` | képernyőmodul ([10.10](#1010-képernyőmodul)) |
 | a `file` opció neve (alapból `rogue.sav`) | mentett játék |
 | `rogue.scr` | ranglista (legfeljebb 10 bejegyzés) |
@@ -93,7 +99,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 - **Létezés-ellenőrzés:** a fájl megnyitása olvasásra, majd a hibacsatorna: `00` → létezik, `62` → nem létezik.
 - **Felülírás:** a régi fájl törlése a `S0:<név>` paranccsal, majd új fájl írása. Az `@0:` (save-with-replace) parancs **nem** használható, mert az 1541 DOS-ban hibás.
 - **Betöltés utáni törlés:** szintén `S0:<név>`.
-- **A játék lemeze:** ha a képernyőmodul nem tölthető be, mert nincs a lemezen, vagy az egység nem válaszol, a 0. sorban „insert the game disk and press space” jelenik meg. Szóközre a játék újra próbálkozik, amíg sikerül.
+- **A játék lemeze:** a szövegeket és a képernyőmodult a játék arról az egységről tölti be, amelyről ő maga betöltődött. Ha valamelyik nem tölthető be, mert nincs a lemezen, csonka, vagy az egység nem válaszol, a 0. sorban „insert the game disk and press space” jelenik meg. Szóközre a játék újra próbálkozik, amíg sikerül.
 - **Hiányzó fájlok:** a `rogue.cfg` és a `rogue.scr` hiánya nem hiba: ilyenkor az alapértékek, illetve üres ranglista jön. Mindkettő olyankor olvasódik, amikor a játék lemeze bizonyosan bent van:
   - a `rogue.cfg` induláskor, közvetlenül azután, hogy a játék onnan betöltődött;
   - a ranglista a modulban, közvetlenül a modul betöltése után.
@@ -113,14 +119,14 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 
 **Beállításfájl:** a [4.2.5](04_jatekciklus_es_parancsok.md#425-rendszer) opciói rögzített sorrendben (logikai opciók bitekként, szövegek nullával lezárva), elején egy formátumverzió-bájttal; ismeretlen verziónál a fájl figyelmen kívül marad.
 
-**Sebesség:** a KERNAL soros átvitele kb. 400 bájt/s, így egy kb. 8,5 KB-os mentés kb. 21 másodperc. Írás közben a képernyőn „saving...”, olvasás közben „restoring...” felirat látszik a 0. sorban (ezek csak állapotjelzések, nem üzenetek).
+**Sebesség:** a KERNAL soros átvitele kb. 400 bájt/s, így egy kb. 8,5 KB-os mentés kb. 21 másodperc. Írás közben a képernyőn „saving...”, olvasás közben „restoring...”, a szövegek betöltése alatt „loading...” felirat látszik a 0. sorban (ezek csak állapotjelzések, nem üzenetek).
 
 ## 10.8 Erőforrás-keretek
 | tétel | becslés / cél |
 |---|---|
 | fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak |
 | kód | 28–34 KB; durva becslés, nem mérés, mérföldkövenként mérni kell |
-| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 11,5 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,5 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,0 KB (a súgósorok jel + leírás formában, a futássorok kiíráskor összerakva), győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$D000–$FFF9` alatti RAM-ban (12 282 bájt, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak, így a ROM-ok alatt kb. 10,2 KB foglalt. |
+| szövegek (üzenetek, nevek, súgó, szótagok) | kb. 11,5 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,5 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,0 KB (a súgósorok jel + leírás formában, a futássorok kiíráskor összerakva), győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$D000–$FFF9` alatti RAM-ban (12 282 bájt, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak, így a ROM-ok alatt kb. 10,2 KB foglalt. Mérve (2026-11-24): a szövegek és a tábláik 4 825 bájtot foglalnak a ROM-ok alatt. Az áthelyezésük a betöltővel együtt a szabad helyet a játékban 4 376-ról 8 216, a fejlesztői buildben 192-ről 3 944 bájtra növelte. |
 | képernyőmodul | kb. 3 KB kód és szöveg; a játékállapot-blokk helyére töltődik, így nem foglal külön helyet ([10.10](#1010-képernyőmodul)) |
 | állandó táblák (szörnyek, tárgyak, erő, xp) | kb. 1,5 KB |
 | játékállapot (perzisztens blokk) | kb. 8,5 KB |
@@ -176,8 +182,4 @@ A címképernyő, a győzelmi képernyő, a sírkő és a ranglista egy külön 
 
   Ezekre a modul nem írhat: a játék kódja, az IRQ-kezelő, a képernyő, a karakterkészlet, a szövegek és a két blokk. A modulba saját képernyő-, billentyű- és lemezrutinok fordulnak. A játék a modul hívása előtt elmenti a fordító által használt zero page-területet, és visszatérés után visszaírja. Ezeket a hibákat a fordító nem jelzi, ezért a modul első elkészültekor külön ki kell próbálni őket.
 - **Betöltés:** a játék lemezéről, arról az egységről, amelyről a játék betöltődött. Ha nem sikerül, „insert the game disk and press space” ([10.7](#107-lemezkezelés)).
-- **Későbbi döntés:** az első induláskor a modul a játék PRG-jébe ágyazva eleve a helyén lehetne, így induláskor nem kellene külön betölteni. Ennek két feltétele van:
-  - a játékállapot-blokk nem lehet induláskor nullázott terület;
-  - a modulnak a szövegek ideiglenes példánya mellett is be kell férnie a fő régióba.
-
-  Erről akkor döntünk, amikor a modul és a szövegek kimásolása elkészült. Címképernyő-grafikával valószínűleg nem fér be.
+- **Későbbi döntés:** az első induláskor a modul a játék PRG-jébe ágyazva eleve a helyén lehetne, így induláskor nem kellene külön betölteni. Ennek feltétele, hogy a játékállapot-blokk ne legyen induláskor nullázott terület. Erről akkor döntünk, amikor a modul elkészült. Címképernyő-grafikával valószínűleg nem fér be.
