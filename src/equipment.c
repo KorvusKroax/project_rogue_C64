@@ -6,9 +6,48 @@
 #include "item_names.h"
 #include "items.h"
 #include "message.h"
+#include "pack.h"
 #include "player.h"
+#include "rng.h"
 #include "state.h"
 #include "texts.h"
+
+// a kezdőfelszerelés fegyvere: a bónuszai, és azonosítva
+static void set_starting_weapon(uint8_t index, int8_t hit_bonus, int8_t damage_bonus)
+{
+    struct Item *item = get_item(index);
+    item->properties.weapon.hit_bonus = hit_bonus;
+    item->properties.weapon.damage_bonus = damage_bonus;
+    item->flags |= ITEM_KNOWN;
+}
+
+void create_starting_equipment(void)
+{
+    // a tárgytábla üres, így minden tárgynak van helye; a csomag a típusok sorrendjében épül, így a betűk is ebben a sorrendben jönnek
+    add_item_to_pack(create_item(ITEM_TYPE_FOOD, FOOD_RATION));
+
+    uint8_t armor = create_item(ITEM_TYPE_ARMOR, ARMOR_RING_MAIL);
+    struct Item *armor_item = get_item(armor);
+    armor_item->properties.armor_class -= STARTING_ARMOR_ENCHANTMENT;
+    armor_item->flags |= ITEM_KNOWN;
+    add_item_to_pack(armor);
+    game.worn_armor = armor;
+
+    uint8_t mace = create_item(ITEM_TYPE_WEAPON, WEAPON_MACE);
+    set_starting_weapon(mace, STARTING_MACE_HIT_BONUS, STARTING_MACE_DAMAGE_BONUS);
+    add_item_to_pack(mace);
+    game.wielded_item = mace;
+
+    uint8_t bow = create_item(ITEM_TYPE_WEAPON, WEAPON_SHORT_BOW);
+    set_starting_weapon(bow, STARTING_BOW_HIT_BONUS, 0);
+    add_item_to_pack(bow);
+
+    // a nyílköteg a létrehozáskor kap egy véletlen darabszámot, mint a szinten talált; a kezdő köteg ezt felülírja
+    uint8_t arrows = create_item(ITEM_TYPE_WEAPON, WEAPON_ARROW);
+    set_starting_weapon(arrows, 0, 0);
+    get_item(arrows)->count = rnd(STARTING_ARROW_COUNT_RANGE) + STARTING_ARROW_COUNT_MIN;
+    add_item_to_pack(arrows);
+}
 
 // a tárgy a kézben van, vagy ez a viselt páncél; ide jön: a gyűrűk
 static bool is_item_in_use(uint8_t index)

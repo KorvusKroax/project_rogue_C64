@@ -20,7 +20,6 @@
 #define EQUIPMENT_PASSAGE_NUMBER  1
 
 #define EQUIPMENT_TEST_MONSTER  'Z'             // zombi: normál sebességű, nem repül, így egy körben egyet lép
-#define EQUIPMENT_TEST_WEAPON   0               // mace
 #define EQUIPMENT_TEST_ARMOR    0               // leather armor: a védelme az alapérték, így azonosítva "+0 leather armor"
 
 static void put_equipment_tile(uint8_t x, uint8_t y)
@@ -89,7 +88,7 @@ int test_wield_item(uint16_t i)
     // a `*` lista csak a fegyvereket mutatja
     message_clear();
     bool ok = !show_pack_list(PACK_FILTER_WEAPON) && does_message_bar_start_with("You don't have anything appropriate.");
-    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, EQUIPMENT_TEST_WEAPON));
+    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, WEAPON_MACE));
     message_clear();
     ok = ok && show_pack_list(PACK_FILTER_WEAPON) && does_message_bar_start_with("c) a mace");
 
@@ -205,7 +204,7 @@ static uint8_t take_dropped_item(void)
 int test_drop_item_in_use(uint16_t i)
 {
     struct Monster *monster = put_equipment_scene();
-    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, EQUIPMENT_TEST_WEAPON));
+    uint8_t mace = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, WEAPON_MACE));
     uint8_t potion = NO_ITEM;
     for (uint8_t count = 0; count < EQUIPMENT_TEST_POTION_COUNT; count++) {
         potion = add_item_to_pack(create_item(ITEM_TYPE_POTION, 0));
@@ -252,5 +251,46 @@ int test_drop_item_in_use(uint16_t i)
     ok = ok && is_message_bar_empty();
 
     clear_equipment_scene();
+    return ok;
+}
+
+#define STARTING_PACK_ITEM_COUNT  5             // étel, gyűrűs ing, buzogány, rövid íj, nyílköteg
+
+// a kezdőfelszerelés fegyvere: a típusa és a bónuszai, azonosítva és átok nélkül
+static bool is_starting_weapon(const struct Item *item, uint8_t which, int8_t hit_bonus, int8_t damage_bonus)
+{
+    return item->type == ITEM_TYPE_WEAPON && item->which == which && item->flags == ITEM_KNOWN &&
+        item->properties.weapon.hit_bonus == hit_bonus && item->properties.weapon.damage_bonus == damage_bonus;
+}
+
+int test_starting_equipment(uint16_t i)
+{
+    clear_item_table();
+    game.seed = i + 1;
+    create_starting_equipment();
+
+    // a betűk a csomag sorrendjében: étel, gyűrűs ing, buzogány, rövid íj, nyílköteg
+    uint8_t items[STARTING_PACK_ITEM_COUNT];
+    for (uint8_t position = 0; position < STARTING_PACK_ITEM_COUNT; position++) {
+        items[position] = find_pack_item_by_letter(FIRST_PACK_LETTER + position);
+    }
+    bool ok = is_item_list(game.first_pack_item, items, STARTING_PACK_ITEM_COUNT);
+
+    const struct Item *food = get_item(items[0]);
+    const struct Item *armor = get_item(items[1]);
+    const struct Item *arrows = get_item(items[4]);
+    ok = ok &&
+        food->type == ITEM_TYPE_FOOD && food->which == FOOD_RATION && food->count == 1 &&
+        armor->type == ITEM_TYPE_ARMOR && armor->which == ARMOR_RING_MAIL && armor->flags == ITEM_KNOWN &&
+        armor->properties.armor_class == get_armor_base_class(ARMOR_RING_MAIL) - STARTING_ARMOR_ENCHANTMENT &&
+        is_starting_weapon(get_item(items[2]), WEAPON_MACE, STARTING_MACE_HIT_BONUS, STARTING_MACE_DAMAGE_BONUS) &&
+        is_starting_weapon(get_item(items[3]), WEAPON_SHORT_BOW, STARTING_BOW_HIT_BONUS, 0) &&
+        is_starting_weapon(arrows, WEAPON_ARROW, 0, 0) && arrows->group != 0 &&
+        arrows->count >= STARTING_ARROW_COUNT_MIN && arrows->count < STARTING_ARROW_COUNT_MIN + STARTING_ARROW_COUNT_RANGE;
+
+    // a gyűrűs ing viselve, a buzogány kézben
+    ok = ok && game.worn_armor == items[1] && game.wielded_item == items[2];
+
+    clear_item_table();
     return ok;
 }

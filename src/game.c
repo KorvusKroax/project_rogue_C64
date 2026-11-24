@@ -551,6 +551,7 @@ void run_game(void)
     game.max_level = 1;
     game.levels_without_food = 0;
     clear_item_table();
+    create_starting_equipment();
     new_level();
 
     while (!is_player_dead()) {

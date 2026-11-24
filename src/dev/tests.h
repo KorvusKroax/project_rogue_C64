@@ -93,9 +93,11 @@ int test_amulet_carried(uint16_t i);            // az amulett felvéve a játék
 int test_wield_item(uint16_t i);                // a `w`: a `*` lista csak fegyver; páncélra és használt tárgyra elmarad; bármi más kézbe vehető; az átkozott a kézben marad; üres kör nincs
 int test_wear_armor(uint16_t i);                // a `W`: a `*` lista csak páncél; nem páncélra üres kör nélkül; a páncél egy üres kör után kerül fel, azonosítva; második nem; halálnál elmarad
 int test_take_off_armor(uint16_t i);            // a `T`: páncél nélkül nem visz időt; az átkozott rajta marad üres kör nélkül; egy üres kör után lekerül; halálnál elmarad
+int test_starting_equipment(uint16_t i);        // az i. seeddel: a kezdő csomag betűi és sorrendje, a típusok, a bónuszok, az azonosítás, a nyilak száma; a páncél viselve, a buzogány kézben
 int test_drop_item_in_use(uint16_t i);          // a `d` a használt tárggyal: az átkozott marad; a kéz kiürül, egy darabnál is; hely nélkül a köteg a kézben marad; a páncél üres körrel; halálnál elmarad
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
+#define STARTING_EQUIPMENT_TEST_SEED_COUNT  100 // ennyi seeddel készül a kezdőfelszerelés a tesztjében (a nyilak száma véletlen)
 
 struct Item;
 

@@ -6,6 +6,18 @@
 
 // a kézben tartott tárgy (game.wielded_item) és a viselt páncél (game.worn_armor): mindkettő a csomag tárgya
 
+// a kezdőfelszerelés (5.1)
+#define STARTING_ARMOR_ENCHANTMENT  1           // a gyűrűs ing védelme ennyivel jobb az alapértékénél
+#define STARTING_MACE_HIT_BONUS     1
+#define STARTING_MACE_DAMAGE_BONUS  1
+#define STARTING_BOW_HIT_BONUS      1
+#define STARTING_ARROW_COUNT_MIN    25
+#define STARTING_ARROW_COUNT_RANGE  15          // 25..39
+
+// új játéknál, az üres tárgytáblába: a kezdő csomag (5.1) a betűk sorrendjében: étel, gyűrűs ing (viselve), buzogány (kézben),
+// rövid íj, nyílköteg; a páncél és a fegyverek azonosítva
+void create_starting_equipment(void);
+
 // `w` előtt: ha a kézben tartott tárgy átkozott, „you can't. It appears to be cursed”, és nem cserélhető; igaz, ha átkozott
 bool report_cursed_wielded_item(void);
 

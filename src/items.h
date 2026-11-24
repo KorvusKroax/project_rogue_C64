@@ -43,10 +43,15 @@
 #define ARMOR_SUBTYPE_COUNT   8
 
 // a külön kezelt fegyvertípusok: a fegyverek esélytáblájának (weapon_chances) indexei; a többi neve az első használatánál jön
-#define WEAPON_ARROW     3
-#define WEAPON_DAGGER    4
-#define WEAPON_DART      6
-#define WEAPON_SHURIKEN  7
+#define WEAPON_MACE       0
+#define WEAPON_SHORT_BOW  2
+#define WEAPON_ARROW      3
+#define WEAPON_DAGGER     4
+#define WEAPON_DART       6
+#define WEAPON_SHURIKEN   7
+
+// a külön kezelt páncéltípus: a páncélok esélytáblájának (armor_chances) indexe
+#define ARMOR_RING_MAIL  1
 
 // a külön kezelt gyűrűtípusok: a gyűrűk esélytáblájának (ring_chances) indexei
 #define RING_PROTECTION         0
