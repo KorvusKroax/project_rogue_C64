@@ -23,6 +23,7 @@ static const struct DevTest core_tests[] = {
     { "MESS-PROMPT INPUT", test_prompt_input_space, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
     { "PLATFORM-COPY TEXT", test_copy_text, 1 },
+    { "PLATFORM-NMI IN COPY", test_nmi_during_copy, 1 },
 };
 
 int main(void)

@@ -25,7 +25,8 @@
 
 #define IRQ_VECTOR            (*(void **)0x0314)
 #define NMI_VECTOR            (*(void **)0x0318)
-#define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt
+#define RAM_NMI_VECTOR        (*(void **)0xfffa)            // a KERNAL ROM alatt: kilapozott ROM mellett ezt használja a processzor
+#define JIFFY_CLOCK          ((volatile uint8_t *)0x00a0)  // 3 bájt
 #define VIC_RASTER_INTERRUPT  0x01
 
 // a processzor $01 portja: a ROM-ok és az I/O be- és kilapozása; a __memmap jelzi a fordítónak, hogy az írása
@@ -45,7 +46,7 @@ __asm raster_interrupt_handler
     jmp $ea81  // a verem visszaállítása, RTI
 }
 
-// ide mutat a $0318: a RESTORE (NMI) nem csinál semmit
+// ide mutat a $0318, kilapozott ROM mellett a RAM-beli $FFFA: a RESTORE (NMI) nem csinál semmit
 __asm restore_key_handler
 {
     rti
@@ -64,6 +65,7 @@ void platform_init(void)
 
     IRQ_VECTOR = raster_interrupt_handler;
     NMI_VECTOR = restore_key_handler;
+    RAM_NMI_VECTOR = restore_key_handler;   // a ROM-ra írás az alatta lévő RAM-ba kerül; a screen_init előtt, mert a ROM-os karakterkészlet másolása is kilapozza a KERNAL-t
 
     vic.raster = RASTER_INTERRUPT_ROW;
     vic.ctrl1 &= 0x7f;                      // a sorszám 9. bitje 0

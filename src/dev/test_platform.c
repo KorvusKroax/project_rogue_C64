@@ -2,12 +2,26 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <c64/cia.h>
+#include <c64/memmap.h>
 
 #include "../platform/platform.h"
 #include "../texts.h"
 
 #define COPY_TEST_BUFFER_SIZE               16
 #define PROCESSOR_STATUS_INTERRUPT_DISABLE  0x04    // az állapotregiszter I bitje
+
+#define MEMORY_CONFIGURATION  (*(volatile __memmap uint8_t *)0x01)
+#define KERNAL_NMI_VECTOR     (*(void **)0x0318)
+#define RAM_NMI_VECTOR        (*(void * volatile *)0xfffa)
+
+#define CIA_INTERRUPT_TIMER_A     0x01
+#define CIA_INTERRUPT_ENABLE      0x80  // az icr írásakor a megadott forrásokat engedélyezi, enélkül tiltja
+#define CIA_INTERRUPT_ALL         0x7f
+#define CIA_TIMER_START_ONE_SHOT  0x19  // indítás, egyszeri lefutás, a kezdőérték betöltése
+
+#define NMI_TEST_TEXT_LENGTH   120      // a másolása kb. 2500 ciklus (karakterenként kb. 21)
+#define NMI_TEST_TIMER_CYCLES  500      // ennyi ciklus után kér NMI-t a CIA2 időzítője: a másolás közben
 
 static volatile uint8_t processor_status;
 
@@ -31,7 +45,7 @@ int test_copy_text(uint16_t i)
     static const char text[] = "hello";
     static const char *const table[] = { "alpha", text };
     char buffer[COPY_TEST_BUFFER_SIZE];
-    uint8_t memory_configuration = *(volatile uint8_t *)0x01;
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
 
     // a megszakítás tiltása a hívás után ugyanaz, mint előtte
     __asm { sei }
@@ -61,5 +75,53 @@ int test_copy_text(uint16_t i)
         is_copied(buffer, copy_text(buffer, text_you, sizeof(buffer) - 1), "you") &&
         is_copied(buffer, copy_text_from_table(buffer, text_monster_names, 'Z' - 'A', sizeof(buffer) - 1), "zombie") &&
         // a $01 visszaáll
-        *(volatile uint8_t *)0x01 == memory_configuration;
+        MEMORY_CONFIGURATION == memory_configuration;
+}
+
+// a KERNAL ROM alatti RAM-ból
+static void *read_ram_nmi_vector(void)
+{
+    __asm {
+        php
+        sei
+    }
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
+    MEMORY_CONFIGURATION = MMAP_RAM;
+
+    void *vector = RAM_NMI_VECTOR;
+
+    MEMORY_CONFIGURATION = memory_configuration;
+    __asm {
+        plp
+    }
+    return vector;
+}
+
+// rossz vektornál a gép elszáll, és a tesztprogram nem ér véget
+int test_nmi_during_copy(uint16_t i)
+{
+    static char text[NMI_TEST_TEXT_LENGTH + 1];
+    static char buffer[NMI_TEST_TEXT_LENGTH + 1];
+
+    if (read_ram_nmi_vector() != KERNAL_NMI_VECTOR) {
+        return false;
+    }
+
+    memset(text, 'a', NMI_TEST_TEXT_LENGTH);
+    text[NMI_TEST_TEXT_LENGTH] = 0;
+    uint8_t timer_control = cia2.cra;
+
+    __asm { sei }                       // a raszter-IRQ ne késleltesse a másolás kezdetét
+    cia2.icr = CIA_INTERRUPT_ALL;
+    (void)(cia2.icr);                   // a függő kérés törlése
+    cia2.ta = NMI_TEST_TIMER_CYCLES;
+    cia2.icr = CIA_INTERRUPT_ENABLE | CIA_INTERRUPT_TIMER_A;
+    cia2.cra = CIA_TIMER_START_ONE_SHOT;
+    copy_text(buffer, text, NMI_TEST_TEXT_LENGTH);
+    uint8_t interrupts = cia2.icr;      // az olvasás törli a kérést, és az NMI-vonal felenged
+    cia2.icr = CIA_INTERRUPT_ALL;
+    cia2.cra = timer_control;
+    __asm { cli }
+
+    return (interrupts & CIA_INTERRUPT_TIMER_A) && strcmp(buffer, text) == 0;
 }
