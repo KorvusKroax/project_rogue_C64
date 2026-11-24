@@ -359,6 +359,19 @@ if (remaining == 0) return true;
 ```
 Hol: `src/platform/platform.c` (`load_texts`). Nincs bejelentve.
 
+**14. A 8 bites eredményt a függvény kilépő kódja felülírja** – futáskor, csendben; VICE-ben és a generált kódban ellenőrizve. Az `execute_wear_command` (bool) egy korábbi ágon `return false`-szal lépett ki, a végén pedig a beillesztett `wear_armor` eredményét adta vissza (`return wear_armor(index);`). A fordító az eredményt az A regiszterbe töltötte (`LDA #$01`), de a kilépő kód a mentett regisztereket az A-n át állította vissza (`LDA $bf23,x`), és az ACCU-ba semmit nem írt. A hívó az ACCU-ból olvasott, ahol a bekért tárgy indexe maradt, így a játék az idő nélküli választ is időt vivőnek vette: a `W` ismétlésére a „you are already wearing some” után a szomszédos kígyó támadott. Az `execute_drop_command` ugyanígy fordult. Az ugyanilyen alakú `execute_wield_command` helyes lett (ott a kilépő kód `STA ACCU + 0`-val kezdődik), tehát a fordító döntésén múlik. A tesztprogramok a parancsok belső függvényeit közvetlenül hívják, ezért az öntesztek nem vették észre.
+```c
+// rossz: a wear_armor eredménye elvész
+uint8_t index = get_command_item(…);
+if (index == NO_ITEM) return false;
+return wear_armor(index);
+
+// jó: egy kifejezésben
+uint8_t index = get_command_item(…);
+return index != NO_ITEM && wear_armor(index);
+```
+Hol: `src/game.c` (`execute_drop_command`, `execute_wear_command`). Ellenőrzés: a `build/<név>.asm` fájlokban a 8 bites függvények azon kilépő blokkjai, amelyek a `@stack`-ből állítják vissza a regisztereket, és nem `STA ACCU + 0`-val kezdődnek. Ha egy ág közvetlenül előttük az A-ba tölti az eredményt, az elvész. Nincs bejelentve.
+
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c
 // a BASIC ROM visszalapozása után a $B000 fölötti C-verem helyén ROM látszott
@@ -371,7 +384,7 @@ return 0;                           // a BASIC-ben néhány parancs után ?FORMU
 
 ## Dokumentáció
 
-- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E24) és az eredeti hibáinak javításai (J1–J29) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
+- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E24) és az eredeti hibáinak javításai (J1–J30) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
 - [Mérföldkövek](https://github.com/KorvusKroax/project_rogue_C64/milestones) és [issue-k](https://github.com/KorvusKroax/project_rogue_C64/issues) – a megvalósítás mérföldkövenként (M0–M12), issue-nként tartalommal és „Kész, ha” feltételekkel (áttekintés lent).
 
 ## Mérföldkövek és issue-k
@@ -394,7 +407,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | **M11 – Véglegesítés** | [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) szövegek, képernyők · [M11-02](https://github.com/KorvusKroax/project_rogue_C64/issues/46) robot, invariánsok · [M11-03](https://github.com/KorvusKroax/project_rogue_C64/issues/47) végigjátszás · [M11-04](https://github.com/KorvusKroax/project_rogue_C64/issues/48) erőforrások, kiadás |
 | **M12 – Opcionális kiegészítések** | [M12-01](https://github.com/KorvusKroax/project_rogue_C64/issues/49) színek · [M12-02](https://github.com/KorvusKroax/project_rogue_C64/issues/50) hangok · [M12-03](https://github.com/KorvusKroax/project_rogue_C64/issues/51) botkormány · [M12-04](https://github.com/KorvusKroax/project_rogue_C64/issues/52) gyorsabb lemez |
 
-## A javítások (J1–J29) helye
+## A javítások (J1–J30) helye
 | javítás | issue |
 |---|---|
 | J1 a játékos ISRUN-ja | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
@@ -426,3 +439,4 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J27 ESC és a számprefixes ismétlés | [M06-03](https://github.com/KorvusKroax/project_rogue_C64/issues/28) |
 | J28 felvétel üres csomagba | [M06-03](https://github.com/KorvusKroax/project_rogue_C64/issues/28) |
 | J29 az amulett a csomagból adódik | [M06-03](https://github.com/KorvusKroax/project_rogue_C64/issues/28) |
+| J30 az `a` tárgya, amíg a csomagban van | [M06-04](https://github.com/KorvusKroax/project_rogue_C64/issues/29) |

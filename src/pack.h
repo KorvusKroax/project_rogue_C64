@@ -52,6 +52,8 @@ bool drop_item(uint8_t index);
 // a csomaglista szűrője: mely tárgyak kerülnek a listába
 #define PACK_FILTER_ALL       0                 // minden tárgy (`i`, `d`)
 #define PACK_FILTER_NAMEABLE  1                 // ami elnevezhető (`c`, can_be_named)
+#define PACK_FILTER_WEAPON    2                 // a fegyverek (`w`)
+#define PACK_FILTER_ARMOR     3                 // a páncélok (`W`)
 
 // `i` és a tárgy bekérésének `*` listája: a csomag szűrőn átjutó tárgyainak listája (text_list.h), soronként a betű és a név („a) a mace”);
 // ha nincs ilyen tárgy, PACK_FILTER_ALL mellett „you are empty handed”, különben „you don't have anything appropriate”, és az eredmény hamis

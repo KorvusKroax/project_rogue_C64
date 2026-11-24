@@ -216,7 +216,16 @@ static uint8_t pack_list_filter;                // PACK_FILTER_
 
 static bool is_item_in_pack_list(const struct Item *item)
 {
-    return pack_list_filter == PACK_FILTER_ALL || can_be_named(item->type);
+    switch (pack_list_filter) {
+        case PACK_FILTER_NAMEABLE:
+            return can_be_named(item->type);
+        case PACK_FILTER_WEAPON:
+            return item->type == ITEM_TYPE_WEAPON;
+        case PACK_FILTER_ARMOR:
+            return item->type == ITEM_TYPE_ARMOR;
+        default:
+            return true;
+    }
 }
 
 // a csomag szűrőn átjutó tárgyai közül az index. listasora; NULL, ha nincs ennyi (TextListEntryFunction)

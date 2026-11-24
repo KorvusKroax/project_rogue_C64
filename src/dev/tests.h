@@ -90,6 +90,9 @@ int test_pickup_full_pack(uint16_t i);          // betelt csomagnál a tárgy a 
 int test_drop_stack_piece(uint16_t i);          // a bájitalkötegből egy darab kerül le új rekordként, a köteg a csomagban marad; a nyílköteg egészben
 int test_drop_full_table(uint16_t i);           // betelt tárgytáblánál a köteg darabolása elmarad, és semmi nem változik; egy egész tárgy lerakható
 int test_amulet_carried(uint16_t i);            // az amulett felvéve a játékosnál van, lerakva nincs (a csomagból adódik, J29)
+int test_wield_item(uint16_t i);                // a `w`: a `*` lista csak fegyver; páncélra és használt tárgyra elmarad; bármi más kézbe vehető; az átkozott a kézben marad; üres kör nincs
+int test_wear_armor(uint16_t i);                // a `W`: a `*` lista csak páncél; nem páncélra üres kör nélkül; a páncél egy üres kör után kerül fel, azonosítva; második nem; halálnál elmarad
+int test_take_off_armor(uint16_t i);            // a `T`: páncél nélkül nem visz időt; az átkozott rajta marad üres kör nélkül; egy üres kör után lekerül; halálnál elmarad
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 

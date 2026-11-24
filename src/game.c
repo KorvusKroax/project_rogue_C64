@@ -9,6 +9,7 @@
 #include "chase.h"
 #include "combat.h"
 #include "discoveries.h"
+#include "equipment.h"
 #include "explore.h"
 #include "item_names.h"
 #include "items.h"
@@ -41,8 +42,8 @@ static uint8_t last_code;
 static uint8_t previous_last_code;
 // az utolsó irányt kérő parancs iránya: az `a` ezt használja, nem kérdez újra
 static uint8_t last_direction_index;
-// az utolsó parancs tárgya, ha a parancs után a csomagban maradt (egy kötegből csak egy darab ment el): az `a` ezt használja,
-// nem kérdez újra; NO_ITEM, ha a tárgy elfogyott, vagy a parancs nem a csomagból vett el
+// az utolsó parancs bekért tárgya: az `a` ezt használja, nem kérdez újra, ha a tárgy még a csomagban van (J30); NO_ITEM, ha a parancs
+// nem kért tárgyat
 static uint8_t last_item_index;
 // az előtte beolvasott parancs tárgya: ha az utolsó parancs tárgykérdése ESC-vel elmarad, ez lesz megint az utolsó parancs tárgya
 static uint8_t previous_last_item_index;
@@ -293,26 +294,32 @@ static uint8_t ask_item(const char *purpose, uint8_t filter)
 }
 
 // a tárgyat kérő parancs előtt: üres csomagnál „you aren't carrying anything”, az `a` ismétlésnél, ha az előző parancs tárgya
-// elfogyott, „you ran out”; igaz, ha így a parancsnak nincs tárgya
+// már nincs a csomagban, „you ran out”; igaz, ha így a parancsnak nincs tárgya
 static bool report_missing_command_item(bool is_repeat)
 {
     if (game.first_pack_item == NO_ITEM) {
         message(text_not_carrying_anything);
         return true;
     }
-    if (is_repeat && last_item_index == NO_ITEM) {
+    if (is_repeat && !is_item_in_pack(last_item_index)) {
         message(text_ran_out);
         return true;
     }
     return false;
 }
 
-// a tárgyat kérő parancs tárgya (report_missing_command_item után): az `a` ismétlésnél az előző parancsé, különben a bekért (ask_item);
-// NO_ITEM, ha a kérdés elmaradt
+// a tárgyat kérő parancs tárgya (report_missing_command_item után): az `a` ismétlésnél az előző parancsé, különben a bekért (ask_item),
+// és ez lesz az `a` tárgya; NO_ITEM, ha a kérdés elmaradt
 static uint8_t get_command_item(bool is_repeat, const char *purpose, uint8_t filter)
 {
     if (is_repeat) return last_item_index;
-    return ask_item(purpose, filter);
+
+    // ESC-re a cancel_command már az előző parancs tárgyát állította vissza
+    uint8_t index = ask_item(purpose, filter);
+    if (index != NO_ITEM) {
+        last_item_index = index;
+    }
+    return index;
 }
 
 // d: egy tárgy lerakása a csomagból a játékos mezőjére; igaz, ha időt vitt
@@ -328,13 +335,34 @@ static bool execute_drop_command(bool is_repeat)
     if (report_missing_command_item(is_repeat)) return true;
 
     uint8_t index = get_command_item(is_repeat, text_item_purpose_drop, PACK_FILTER_ALL);
-    if (index == NO_ITEM) return false;
-
     // ide jön: a használatban lévő tárgy (az átkozott nem rakható le, a viselt páncél levétele időveszteség)
-    bool is_dropped = drop_item(index);
-    // a köteg maradéka az `a` ismétlés tárgya; ha a lerakás elmaradt, az egész tárgy
-    last_item_index = is_item_in_pack(index) ? index : NO_ITEM;
-    return is_dropped;
+    // egy kifejezésben: a külön `if (index == NO_ITEM) return false;` után a `return drop_item(index);` eredményét az Oscar64 1.32.273
+    // elveszti (README, Oscar64-hibák, 14.)
+    return index != NO_ITEM && drop_item(index);
+}
+
+// w: a tárgy kézbe vétele (wield_item); igaz, ha időt vitt
+static bool execute_wield_command(bool is_repeat)
+{
+    // ha a kézben tartott tárgy átkozott, a tárgyat sem kérdezi
+    if (report_cursed_wielded_item()) return true;
+    // az üres csomag és az elfogyott tárgy nem visz időt
+    if (report_missing_command_item(is_repeat)) return false;
+
+    uint8_t index = get_command_item(is_repeat, text_item_purpose_wield, PACK_FILTER_WEAPON);
+    if (index == NO_ITEM) return false;
+    return wield_item(index);
+}
+
+// W: páncél felvétele (wear_armor); igaz, ha időt vitt
+static bool execute_wear_command(bool is_repeat)
+{
+    // az üres csomag és az elfogyott tárgy időbe kerül
+    if (report_missing_command_item(is_repeat)) return true;
+
+    uint8_t index = get_command_item(is_repeat, text_item_purpose_wear, PACK_FILTER_ARMOR);
+    // egy kifejezésben, mint a lerakásnál (README, Oscar64-hibák, 14.)
+    return index != NO_ITEM && wear_armor(index);
 }
 
 // c: a tárgy vagy a típusa elnevezése (name_item); nem visz időt, az üres csomag és az elfogyott tárgy sem
@@ -401,6 +429,12 @@ static bool execute_command(uint8_t code)
             return false;
         case 'd':
             return execute_drop_command(is_repeat);
+        case 'w':
+            return execute_wield_command(is_repeat);
+        case 'W':
+            return execute_wear_command(is_repeat);
+        case 'T':
+            return take_off_armor();
         case 'c':
             execute_name_command(is_repeat);
             return false;
@@ -448,10 +482,29 @@ static void rest_while_unable_to_act(void)
     }
 }
 
-// egy kör: a BEFORE fázis, a játékos akciói, majd az AFTER fázis
+// a kör eleje, a játékos akciói előtt
+static void run_before_phase(void)
+{
+    // ide jön: a vándorló szörny dobása, a hallucináció, a BEFORE-időzítők
+}
+
+// a kör vége, a játékos akciói után
+static void run_after_phase(void)
+{
+    move_monsters();
+    // ide jön: az éhség; az állapotváltása (Hungry, Weak, Faint) a futást, az ismétlést és az f-harcot is megszakítja
+}
+
+void waste_time(void)
+{
+    run_before_phase();
+    run_after_phase();
+}
+
+// egy kör: a BEFORE fázis, a játékos akciói, az AFTER fázis
 static void play_turn(void)
 {
-    // BEFORE fázis
+    run_before_phase();
 
     // az ingyenes parancs nem fogyaszt akciót
     uint8_t actions = 1;
@@ -485,9 +538,8 @@ static void play_turn(void)
         }
     }
 
-    // AFTER fázis
-    move_monsters();
-    // ide jön: az éhség; az állapotváltása (Hungry, Weak, Faint) a futást, az ismétlést és az f-harcot is megszakítja
+    run_after_phase();
+    // ide jön: a gyűrűhatások (searching, teleportation); az üres körben nem futnak le
 }
 
 void run_game(void)

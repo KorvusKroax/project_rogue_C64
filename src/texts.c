@@ -43,6 +43,17 @@ const char text_name_removed[] = "you remove the name";
 const char text_discovery_question[] = "for what type of object do you want a list? (* for all)";
 const char text_discovery_type_error[] = "please type one of !?=/ (ESCAPE to quit)";
 const char text_nothing_discovered[] = "haven't discovered anything about any \1s";
+const char text_item_purpose_wield[] = "wield";
+const char text_item_purpose_wear[] = "wear";
+const char text_appears_cursed[] = "you can't. It appears to be cursed";
+const char text_cant_wield_armor[] = "you can't wield armor";
+const char text_already_in_use[] = "That's already in use";
+const char text_now_wielding[] = "you are now wielding \1 (\2)";
+const char text_cant_wear_that[] = "you can't wear that";
+const char text_already_wearing[] = "you are already wearing some. You'll have to take it off first";
+const char text_now_wearing[] = "you are now wearing \1";
+const char text_not_wearing_armor[] = "you aren't wearing any armor";
+const char text_used_to_be_wearing[] = "you used to be wearing \1) \2";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

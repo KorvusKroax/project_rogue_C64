@@ -51,6 +51,17 @@ extern const char text_name_removed[];
 extern const char text_discovery_question[];
 extern const char text_discovery_type_error[];
 extern const char text_nothing_discovered[];        // \1: a típus szava, pl. text_potion_kind
+extern const char text_item_purpose_wield[];
+extern const char text_item_purpose_wear[];
+extern const char text_appears_cursed[];
+extern const char text_cant_wield_armor[];
+extern const char text_already_in_use[];
+extern const char text_now_wielding[];              // \1: a tárgy neve, \2: a betűje
+extern const char text_cant_wear_that[];
+extern const char text_already_wearing[];
+extern const char text_now_wearing[];               // \1: a páncél neve
+extern const char text_not_wearing_armor[];
+extern const char text_used_to_be_wearing[];        // \1: a páncél betűje, \2: a neve
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4

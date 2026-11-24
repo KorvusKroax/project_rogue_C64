@@ -188,7 +188,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | SHIFT-r | gyűrű levétele (átkozottat nem) |
 | c * | tárgytípus elnevezése (bájital, tekercs, gyűrű, pálca) |
 
-**Időveszteség (`waste_time`):** a parancs saját köre előtt még egy teljes „üres” kör lefut, amelyben a játékos nem cselekszik, de minden más igen: a szörnyek lépnek és támadnak, fogy az étel, regenerál a HP, ketyegnek az időzítők (a [4.1](#41-fő-játékciklus) BEFORE és AFTER fázisa). A gyűrűhatások (searching, teleportation) ebben az üres körben **nem** futnak le. A páncél felvétele és levétele így összesen 2 körbe kerül. Ugyanez történik, ha a viselt páncélt más parancs veszi le automatikusan, mert lerakod (`d`) vagy eldobod (`t`).
+**Időveszteség (`waste_time`):** a parancs saját köre előtt még egy teljes „üres” kör lefut, amelyben a játékos nem cselekszik, de minden más igen: a szörnyek lépnek és támadnak, fogy az étel, regenerál a HP, ketyegnek az időzítők (a [4.1](#41-fő-játékciklus) BEFORE és AFTER fázisa). A gyűrűhatások (searching, teleportation) ebben az üres körben **nem** futnak le. Ha a játékos az üres körben meghal, a parancs ott véget ér. A páncél felvétele és levétele így összesen 2 körbe kerül. Ugyanez történik, ha a viselt páncélt más parancs veszi le automatikusan, mert lerakod (`d`) vagy eldobod (`t`).
 ```
 waste_time():
   BEFORE-démonok (vándorló-szörny dobás, hallucináció); BEFORE-időzítők
@@ -274,8 +274,8 @@ restore_game():   // címképernyő, R
 **Tárgy bekérése (`get_item(cél, típus)`):**
 ```
 if pack üres: "you aren't carrying anything"; return null      // hogy időbe kerül-e, az a parancson múlik; a d-nél igen
-if 'a' ismétlés: return az előző parancs tárgya, ha a parancs a csomagból vett el (pl. d), és a tárgy utána is
-                 a csomagban maradt (egy kötegből egy darab ment el); különben "you ran out", return null (mint az üres csomag)
+if 'a' ismétlés: return az előző parancs tárgya, ha még a csomagban van (J30);
+                 különben "you ran out", return null (mint az üres csomag)
 loop:
   "which object do you want to <cél>? (* for list): "
   ESC → "" (törlés), return null, nem visz időt; a számprefixes ismétlés is véget ér (J27, 4.2.2)
@@ -284,6 +284,8 @@ loop:
   betű → ha nincs ilyen: "'<x>' is not a valid item", újra; különben return a tárgy
 ```
 A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás típust maga a parancs utasítja el.
+
+> **C64-javítás (J30):** az `a` ismétlés az előző parancs tárgyát kapja, amíg az a csomagban van: a `w` ismétlésére így „That's already in use”, a `W` ismétlésére „you are already wearing some…” jön, az elmaradt lerakásé ugyanazt a tárgyat próbálja újra. *Eredetileg* csak akkor kapta meg, ha az előző parancs egy kötegből elvett egy darabot; minden más esetben „you ran out” jött, akkor is, ha a tárgy még megvolt (a `w`, a `W`, az elnevezés és az elmaradt lerakás után).
 
 **Listák 40 oszlopon** (csomaglista, `*` lista, `D`, győzelmi eladási lista):
 
@@ -296,11 +298,11 @@ A típus csak a `*` listát szűri – bármelyik betű elfogadott; a hibás tí
   - *slow* – tételenként egy üzenet az üzenetsávban: az első lecseréli a sáv szövegét, a többi előtt `--More--` (a listasorok nem fűződnek össze). Ennél a `--More--`-nál ESC-re a lista véget ér, és az üzenetsáv törlődik.
 - A lista végén *clear* és *overwrite* módban „--Press space to continue--”, és szóközre vár. Egyetlen tétel minden módban üzenetként jelenik meg, akkor is, ha a neve két sorra törne. A listasorhoz nem fűződik semmi ([3.4](03_latoter_es_megjelenites.md#34-üzenetsor)): ha a `*` lista utolsó tétele a sávban maradt (egy tétel, *slow* mód), a kérdés `--More--` után, a sáv elején jelenik meg. Az *overwrite* és a *clear* mód ideiglenes ablak ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés)): a megnyitása törli az üzenetsávot, és bezárás után a sáv üres marad. Üres csomag: „you are empty handed”. Az `i` nem visz időt.
 
-**Fegyver kézbe (`w`):** bármilyen tárgy kézbe vehető, ami nem páncél, így a kézben tartott tárgy nem mindig fegyver; a közelharc sebzését ez adja ([7.1](07_harc.md#71-közelharci-találat)). Ha a kézben tartott tárgy átkozott, a tárgyat sem kérdezi: „you can't. It appears to be cursed” (időbe kerül). Ha a tárgy bekérése elmarad (üres csomag, „you ran out”, ESC, nincs megfelelő tárgy), nem visz időt. Páncélra: „you can't wield armor” (nincs idő). Használatban lévő tárgyra, a kézben tartottra is: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
+**Fegyver kézbe (`w`):** bármilyen tárgy kézbe vehető, ami nem páncél, így a kézben tartott tárgy nem mindig fegyver; a közelharc sebzését ez adja ([7.1](07_harc.md#71-közelharci-találat)). A `*` lista csak a fegyvereket mutatja. Ha a kézben tartott tárgy átkozott, a tárgyat sem kérdezi: „you can't. It appears to be cursed” (időbe kerül). Ha a tárgy bekérése elmarad (üres csomag, „you ran out”, ESC, nincs megfelelő tárgy), nem visz időt. Páncélra: „you can't wield armor” (nincs idő). Használatban lévő tárgyra, a kézben tartottra is: „That's already in use” (nincs idő). Siker: „you are now wielding <név> (<betű>)”.
 
 **Kiürülő kéz:** ha a kézben tartott tárgyból iszik, olvas vagy eszik (`q`, `r`, `e`), a kéz kiürül, akkor is, ha a kötegből marad. Ugyanígy, ha lerakja (`d`, [8.9](08_targyak.md#89-csomag)) vagy eldobja (`t`, [7.4](07_harc.md#74-hajítás-t)). Más módon a kézben tartott tárgy nem hagyja el a csomagot: a nimfa csak használaton kívüli tárgyat lop ([6.7](06_szornyek.md#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)).
 
-**Páncél fel (`W`):** előbb a tárgyat kérdezi. Ha a bekérés üres csomag vagy „you ran out” miatt marad el, a kör elmegy; ESC-re és ha nincs megfelelő tárgy, nem. Ha már van rajta páncél: „you are already wearing some. You'll have to take it off first” (nincs idő). Nem páncélra: „you can't wear that” (időbe kerül). Siker: `waste_time` ([4.2.3](#423-tárgyak)), a páncél azonosítódik (ISKNOW), „you are now wearing <név>”; ez összesen 2 kör.
+**Páncél fel (`W`):** előbb a tárgyat kérdezi; a `*` lista csak a páncélokat mutatja. Ha a bekérés üres csomag vagy „you ran out” miatt marad el, a kör elmegy; ESC-re és ha nincs megfelelő tárgy, nem. Ha már van rajta páncél: „you are already wearing some. You'll have to take it off first” (nincs idő). Nem páncélra: „you can't wear that” (időbe kerül). Siker: `waste_time` ([4.2.3](#423-tárgyak)), a páncél azonosítódik (ISKNOW), „you are now wearing <név>”; ez összesen 2 kör.
 
 **Páncél le (`T`):** ha nincs rajta páncél: „you aren't wearing any armor” (nincs idő). Átkozottra: „you can't. It appears to be cursed” (időbe kerül). Siker: `waste_time`, „you used to be wearing <betű>) <név>”; ez is 2 kör.
 

@@ -131,7 +131,7 @@ void choose_item_type_and_subtype(uint8_t *type, uint8_t *which);
 
 // a tárgytábla: a tárgyakra 1..MAX_ITEMS index hivatkozik (state.h)
 struct Item *get_item(uint8_t index);           // index: 1..MAX_ITEMS
-void clear_item_table(void);                    // minden hely szabad, a padló és a csomag üres: a játék elején
+void clear_item_table(void);                    // minden hely szabad, a padló és a csomag üres, a kéz is, és nincs viselt páncél: a játék elején
 uint8_t allocate_item(void);                    // egy szabad hely címke nélkül, egyébként kitöltetlenül, a type beírásától foglalt; a game.item_count eggyel nő; NO_ITEM, ha betelt
 void free_item(uint8_t index);                  // a hely és a tárgy címkéje újra szabad, a game.item_count eggyel csökken; a tárgy már egyik listában sincs
 

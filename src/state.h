@@ -216,6 +216,8 @@ struct GameState {
     uint8_t  item_count;                        // a tárgytábla foglalt helyeinek száma
     uint8_t  first_floor_item;                  // a padlón lévő tárgyak listájának eleje (0 = üres)
     uint8_t  first_pack_item;                   // a csomag listájának eleje (0 = üres; pack.h)
+    uint8_t  wielded_item;                      // a kézben tartott tárgy a csomagból: bármi lehet, ami nem páncél (0 = üres kéz; equipment.h)
+    uint8_t  worn_armor;                        // a viselt páncél a csomagból (0 = nincs)
 
     uint8_t  map_characters[MAP_ROWS][MAP_COLUMNS]; // a MAP karakterrétege: a mező valódi jele, a logikai y sora a [y - MAP_TOP_ROW]
     uint8_t  map_flags[MAP_ROWS][MAP_COLUMNS];      // a MAP flagrétege: a mezőflagek (map.h)

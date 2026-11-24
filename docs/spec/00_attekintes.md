@@ -139,3 +139,4 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J27 | az irány vagy a tárgy bekérésénél leütött ESC a számprefixes ismétlést is leállítja (eredetileg minden hátralévő ismétlésnél újra kérdezett) | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J28 | üres csomagnál is lekerül a felvett tárgy a padlóról (eredetileg a padlón is maradt, és a két lista összefonódott) | [8.9](08_targyak.md#89-csomag) |
 | J29 | a `has_amulet` a csomagból adódik: az amulett eldobása és ellopása után sem marad igaz (eredetileg amulett nélkül is lehetett felfelé menni és nyerni) | [8.10](08_targyak.md#810-arany-amulett-étel) |
+| J30 | az `a` ismétlés az előző parancs tárgyát kapja, amíg az a csomagban van (eredetileg csak egy kötegből elvett darab után, különben „you ran out” jött, a `w` és a `W` után is) | [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok) |

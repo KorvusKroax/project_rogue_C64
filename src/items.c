@@ -188,6 +188,8 @@ void clear_item_table(void)
     game.item_count = 0;
     game.first_floor_item = NO_ITEM;
     game.first_pack_item = NO_ITEM;
+    game.wielded_item = NO_ITEM;
+    game.worn_armor = NO_ITEM;
 }
 
 uint8_t allocate_item(void)
