@@ -22,6 +22,7 @@ static const struct DevTest core_tests[] = {
     { "LIST-ROW NOT JOINED", test_list_row_not_joined, 1 },
     { "MESS-PROMPT INPUT", test_prompt_input_space, 1 },
     { "MAP-FLAGS", test_map_flags, 1 },
+    { "PLATFORM-COPY TEXT", test_copy_text, 1 },
 };
 
 int main(void)

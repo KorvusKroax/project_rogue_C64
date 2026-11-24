@@ -28,6 +28,10 @@
 #define JIFFY_CLOCK           ((volatile uint8_t *)0x00a0)  // 3 bájt
 #define VIC_RASTER_INTERRUPT  0x01
 
+// a processzor $01 portja: a ROM-ok és az I/O be- és kilapozása; a __memmap jelzi a fordítónak, hogy az írása
+// a memóriatérképet változtatja (mint az Oscar64 mmap_set-jében)
+#define MEMORY_CONFIGURATION  (*(volatile __memmap uint8_t *)0x01)
+
 volatile uint8_t frame_count;
 
 // ide mutat a $0314: lépteti a képkocka-számlálót, lefuttatja a billentyűkezelést, nyugtázza a VIC-et, lépteti a jiffy órát, majd a KERNAL-on át visszatér
@@ -98,4 +102,55 @@ void wait_for_next_frame(void)
 {
     uint8_t start_frame = frame_count;
     while (frame_count == start_frame) {}
+}
+
+// a hívó lapozza ki a ROM-okat
+static char *copy_characters(char *destination, const char *text, uint8_t max_length)
+{
+    uint8_t length = 0;
+    while (length < max_length && text[length]) {
+        destination[length] = text[length];
+        length++;
+    }
+
+    destination[length] = 0;
+    return destination + length;
+}
+
+// a php és a plp miatt tiltott megszakítás mellett hívva sem engedélyezi
+char *copy_text(char *destination, const char *text, uint8_t max_length)
+{
+    __asm {
+        php
+        sei
+    }
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
+    MEMORY_CONFIGURATION = MMAP_RAM;
+
+    char *end = copy_characters(destination, text, max_length);
+
+    MEMORY_CONFIGURATION = memory_configuration;
+    __asm {
+        plp
+    }
+    return end;
+}
+
+// a mutató kiolvasása és a szöveg másolása egy lapozásban
+char *copy_text_from_table(char *destination, const char *const *table, uint8_t index, uint8_t max_length)
+{
+    __asm {
+        php
+        sei
+    }
+    uint8_t memory_configuration = MEMORY_CONFIGURATION;
+    MEMORY_CONFIGURATION = MMAP_RAM;
+
+    char *end = copy_characters(destination, table[index], max_length);
+
+    MEMORY_CONFIGURATION = memory_configuration;
+    __asm {
+        plp
+    }
+    return end;
 }

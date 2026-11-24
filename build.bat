@@ -19,7 +19,7 @@ rem --- a fejlesztoi build fajljai; a tesztprogramokba is bekerulnek ---
 set DEV_SOURCES=src\dev\dev.c src\dev\dev_commands.c src\dev\start_screen.c src\dev\checks.c
 
 rem --- a tesztek; mindegyik tesztprogram az egeszet kapja, a nem hivott reszeket az Oscar64 kihagyja ---
-set TEST_SOURCES=src\dev\test_runner.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_explore.c src\dev\test_chase.c src\dev\test_level.c src\dev\test_monsters.c src\dev\test_combat.c src\dev\test_items.c src\dev\test_item_names.c src\dev\test_pack.c src\dev\test_text_list.c src\dev\test_screens.c
+set TEST_SOURCES=src\dev\test_runner.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_explore.c src\dev\test_chase.c src\dev\test_level.c src\dev\test_monsters.c src\dev\test_combat.c src\dev\test_items.c src\dev\test_item_names.c src\dev\test_pack.c src\dev\test_text_list.c src\dev\test_screens.c src\dev\test_platform.c
 
 rem --- kiadasi, fejlesztoi vagy teszt build ---
 set NAME=rogue
