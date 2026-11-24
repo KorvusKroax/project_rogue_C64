@@ -328,6 +328,18 @@ text = skip_break_space(text + length);
 ```
 Hol: `src/text_list.c`. Nincs bejelentve.
 
+**12. Állandóval közvetlenül és függvénymutatón át is hívott függvény paramétere** – futáskor, csendben, végtelen ciklussal; VICE-ben (pillanatképből kiolvasva) és a generált kódban ellenőrizve. A `get_pack_list_entry(index)`-et a `show_pack_list` egyszer közvetlenül hívta 0-val (üres-e a lista), utána a címét a `show_text_list` kapta, amely függvénymutatón át 0, 1, 2… indexszel hívja. A fordító a közvetlen hívás állandóját beépítette a függvénybe: a lefordított kód a paramétert nem olvasta, és az `index--` ág is kimaradt. Így minden indexre az első sort adta, a lista hossza sosem ért véget, és az `i` két tárgytól lefagyott. A játékban és a fejlesztői buildben fordult így, a tesztprogramokban helyesen, ezért az öntesztek nem vették észre. A csak mutatón át hívott `get_discovery_entry` helyes.
+```c
+// rossz: a mutatón át érkező index elvész
+if (get_pack_list_entry(0) == NULL) { … }
+show_text_list(get_pack_list_entry);
+
+// jó: a függvényt csak a mutató hívja
+if (!has_pack_list_entry()) { … }
+show_text_list(get_pack_list_entry);
+```
+Hol: `src/pack.c`. Nincs bejelentve.
+
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c
 // a BASIC ROM visszalapozása után a $B000 fölötti C-verem helyén ROM látszott

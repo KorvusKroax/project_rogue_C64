@@ -239,10 +239,20 @@ static const char *get_pack_list_entry(uint8_t index)
     return NULL;
 }
 
+// a get_pack_list_entry(0) helyett: ha a get_pack_list_entry-t állandó indexszel közvetlenül is hívnánk, az Oscar64 1.32.273
+// az indexet a mutatón át érkező hívásokban is ennek venné (README, Oscar64-hibák, 12.)
+static bool has_pack_list_entry(void)
+{
+    for (uint8_t item_index = game.first_pack_item; item_index != NO_ITEM; item_index = get_item(item_index)->next) {
+        if (is_item_in_pack_list(get_item(item_index))) return true;
+    }
+    return false;
+}
+
 bool show_pack_list(uint8_t filter)
 {
     pack_list_filter = filter;
-    if (get_pack_list_entry(0) == NULL) {
+    if (!has_pack_list_entry()) {
         message(filter == PACK_FILTER_ALL ? text_empty_handed : text_nothing_appropriate);
         return false;
     }
