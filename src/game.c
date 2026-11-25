@@ -16,6 +16,7 @@
 #include "level.h"
 #include "map.h"
 #include "message.h"
+#include "monsters.h"
 #include "move.h"
 #include "pack.h"
 #include "view.h"
@@ -556,6 +557,9 @@ void run_game(void)
     game.dungeon_level = 1;
     game.max_level = 1;
     game.levels_without_food = 0;
+    // az előző játék szörnyei is eltűnnek: a csomagjuk tárgyai a tárgytábla törlésével felszabadulnak, így az új szint már nem
+    // szabadítja fel őket
+    clear_monsters();
     clear_item_table();
     create_starting_equipment();
     new_level();

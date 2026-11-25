@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "combat.h"
+#include "explore.h"
+#include "items.h"
 #include "level.h"
 #include "map.h"
 #include "rng.h"
@@ -211,6 +213,31 @@ void start_monster_running(struct Monster *monster)
 {
     monster->flags |= MONSTER_RUNNING;
     monster->flags &= ~MONSTER_HELD;
-    // ide jön: tárgyat gyűjtő szörnynél a szobájában fekvő tárgy is lehet a célpont (find_dest)
-    monster->destination_item = DESTINATION_PLAYER;
+    monster->destination_item = choose_monster_destination(monster);
+}
+
+// a tárgy egy másik szörny célpontja-e (J3)
+static bool is_destination_of_other_monster(const struct Monster *monster, uint8_t item_index)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *other = get_monster(index);
+        if (other != monster && other->destination_item == item_index) return true;
+    }
+    return false;
+}
+
+uint8_t choose_monster_destination(const struct Monster *monster)
+{
+    uint8_t carry_chance = monster_types[monster->type - 'A'].carry_chance;
+    if (carry_chance == 0 || monster->room == game.player.room || is_monster_visible(monster)) return DESTINATION_PLAYER;
+
+    // tárgyanként külön dobás, a padló listájának sorrendjében
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct FloorPosition *position = &get_item(index)->location.floor_position;
+        // ide jön: a scare monster tekercs nem lehet célpont
+        if (get_room_at(position->x, position->y) != monster->room) continue;
+        if (rnd(100) >= carry_chance) continue;
+        if (!is_destination_of_other_monster(monster, index)) return index;
+    }
+    return DESTINATION_PLAYER;
 }

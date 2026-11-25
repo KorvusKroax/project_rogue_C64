@@ -39,8 +39,11 @@ int test_monster_order(uint16_t i);
 int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
+int test_tile_visibility(uint16_t i);           // a mező látszik-e (cansee): világos szobában az egész szoba, sötétben és folyosón a szomszédos, folyosón átlósan sarkon át nem
 int test_monster_waking(uint16_t i);
 int test_monster_chase(uint16_t i);
+int test_monster_destination(uint16_t i);       // a célpont: a szoba tárgya, ha a játékos nincs a szobában és nem látja a szörnyet; a carry 0 típusé és a foglalt tárgy nem; J3
+int test_monster_pickup(uint16_t i);            // a szörny felveszi a célpont tárgyat, a mező padló; ha a játékos látja, a tárgy jele nem tér vissza (J32), ha nem, az emlék marad; az útjában álló játékost megtámadja (J33)
 int test_strength_bonuses(uint16_t i);
 int test_monster_names(uint16_t i);
 int test_player_hit_rate(uint16_t i);
@@ -117,8 +120,8 @@ bool is_message_bar_empty(void);                        // az üzenetsáv első 
 
 #define LEVEL_MOVE_TEST_LEVEL_COUNT  100        // ennyi szinten lépnek a szörnyek, ugyanazokkal a magokkal, mint a generálás tesztjében
 
-int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés
-int test_level_monster_moves(uint16_t i);       // az i. szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; közben a kör idejét méri
+int test_level_generation(uint16_t i);          // az i. szint generálása és ellenőrzése: szobák, labirintusok, összekötés, tárgyak, a szörnyek kezdő tárgyai
+int test_level_monster_moves(uint16_t i);       // az i. szinten körök a játékos lépésével, előbb 5, aztán minden szörny üldöz (a tárgygyűjtők a szobájuk tárgyait is felveszik): a lépéseik után is érvényesek a szörnymezők és a tárgylisták; közben a kör idejét méri
 #define LEVEL_AMULET_TEST_LEVEL_COUNT  10       // ennyi maggal, magonként két szint
 int test_level_amulet_loot(uint16_t i);         // amulettel a legmélyebb elért szint fölött üres a padló, a legmélyebb elért szinten van arany vagy tárgy, de újabb amulett nincs
 bool show_level_room_ratios(void);              // mélységenként a sötét szobák és a labirintusok várt és kapott száma, a test_level_generation után; igaz, ha mind a tűrésen belül (leállított futásnál nem ítél, igazat ad)

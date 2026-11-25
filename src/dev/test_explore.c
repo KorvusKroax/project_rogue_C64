@@ -376,6 +376,42 @@ int test_monster_visibility(uint16_t i)
     return ok;
 }
 
+static bool is_test_tile_visible(uint8_t offset_x, uint8_t offset_y)
+{
+    return is_tile_visible(BASE_X + offset_x, BASE_Y + offset_y);
+}
+
+// világos szobában a szoba minden mezője látszik (a fala is), az ajtó előtti folyosó-mező nem; sötét szobában csak a szomszédos;
+// folyosón a szomszédos, átlósan csak akkor, ha a sarok legalább egyik mezője járható
+int test_tile_visibility(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    put_see_test_room(0);
+    bool ok = is_test_tile_visible(6, 3) && is_test_tile_visible(SEE_ROOM_WIDTH - 1, 0)
+           && !is_tile_visible(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
+
+    put_see_test_room(ROOM_DARK);
+    ok = ok && !is_test_tile_visible(6, 3) && is_test_tile_visible(3, 3);
+
+    put_see_test_room(0);
+    put_test_passage(0, 6);
+    put_test_passage(1, 7);
+    game.player.x = BASE_X;
+    game.player.y = BASE_Y + 6;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
+    ok = ok && !is_test_tile_visible(1, 7);
+    put_test_passage(1, 6);
+    ok = ok && is_test_tile_visible(1, 6) && is_test_tile_visible(1, 7);
+
+    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
+    clear_monsters();
+    clear_map();
+    clear_seen_map();
+    return ok;
+}
+
 #define WAKE_TEST_SEED       12345
 #define WAKE_TEST_ROUNDS     150                // ennyiszer lép be a játékos az aljas szörny szobájába
 #define WAKE_TEST_EXPECTED   (WAKE_TEST_ROUNDS * 2 / 3)
@@ -459,7 +495,9 @@ static bool is_passage_entry_waking_valid(void)
 static bool is_forced_waking_valid(void)
 {
     put_see_test_room(0);
-    struct Monster *centaur = put_see_test_monster('C', 6, 2);
+    put_see_test_monster('C', 6, 2);
+    // a rekord címe a táblából jön, nem egy hívás eredményéből (README, Oscar64-hibák, 8.)
+    struct Monster *centaur = &game.monsters[0];
     centaur->flags |= MONSTER_HELD;
     centaur->destination_item = 1;
 

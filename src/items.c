@@ -433,6 +433,15 @@ void remove_item_from_list(uint8_t *list_first, uint8_t index)
     get_item(previous)->next = next;
 }
 
+void free_item_list(uint8_t *list_first)
+{
+    while (*list_first != NO_ITEM) {
+        uint8_t index = *list_first;
+        *list_first = get_item(index)->next;
+        free_item(index);
+    }
+}
+
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y)
 {
     struct Item *item = get_item(index);
@@ -462,13 +471,4 @@ void take_item_from_floor(uint8_t index)
     // tárgy csak padlóra és folyosó-mezőre kerül
     set_map_character(x, y, (get_map_flags(x, y) & TILE_PASSAGE) ? CHAR_PASSAGE : CHAR_FLOOR);
     // ide jön: minden szörny, amelyik a tárgy felé tartott, a játékost veszi célba
-}
-
-void free_floor_items(void)
-{
-    while (game.first_floor_item != NO_ITEM) {
-        uint8_t index = game.first_floor_item;
-        game.first_floor_item = get_item(index)->next;
-        free_item(index);
-    }
 }

@@ -166,12 +166,12 @@ void set_random_gold_amount(uint8_t index);
 // a következő tárgyé a next mező; a list_first a lista elejét tároló változó
 void insert_item_after(uint8_t *list_first, uint8_t previous, uint8_t index);  // az index a previous után, NO_ITEM-nél a lista elejére kerül
 void remove_item_from_list(uint8_t *list_first, uint8_t index);                // az index kikerül a listából; a listában kell lennie
+void free_item_list(uint8_t *list_first);       // a lista minden tárgyának helye felszabadul, és a lista üres: új szintnél a padlóé és a szörnyek csomagjai
 
 // a padlón lévő tárgyak listája, a legutóbb lerakottal kezdve;
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y);  // a pozíciója (x, y), a mezőn a jele, és a lista elejére kerül
 uint8_t find_floor_item_at(uint8_t x, uint8_t y);  // a padlón az x, y mezőn fekvő tárgy (egy mezőn legfeljebb egy van); NO_ITEM, ha ott nincs
 void take_item_from_floor(uint8_t index);       // a tárgy kikerül a listából, a mező jele folyosó-mezőn (TILE_PASSAGE) folyosó, különben padló
-void free_floor_items(void);                    // új szintnél: a padlón lévő tárgyak helye felszabadul, a lista üres
 
 #endif

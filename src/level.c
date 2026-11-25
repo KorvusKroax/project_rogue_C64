@@ -149,6 +149,21 @@ static bool find_monster_tile(uint8_t room_index, uint8_t *x, uint8_t *y)
     return find_tile(room_index, FIND_FOR_MONSTER, x, y);
 }
 
+// a szörny kezdő tárgya (give_pack): a legmélyebb elért szinten a típus carry értékének százalékos esélyével egy véletlen tárgy
+// a csomagjába; kimarad, ha betelt a tárgytábla
+static void give_starting_item(uint8_t monster_index)
+{
+    if (game.dungeon_level < game.max_level) return;
+
+    struct Monster *monster = get_monster(monster_index);
+    if (rnd(100) >= monster_types[monster->type - 'A'].carry_chance) return;
+
+    uint8_t item_index = create_random_item();
+    if (item_index != NO_ITEM) {
+        insert_item_after(&monster->first_pack_item, NO_ITEM, item_index);
+    }
+}
+
 #define GOLD_CHANCE_DIVISOR           2         // a szobában 1 / GOLD_CHANCE_DIVISOR eséllyel van arany
 #define MONSTER_CHANCE_WITH_GOLD      80        // százalék: az aranyat gyakran szörny őrzi
 #define MONSTER_CHANCE_WITHOUT_GOLD   25
@@ -160,7 +175,7 @@ static bool is_loot_allowed(void)
 }
 
 // szobánként: arany 1/2 eséllyel, ha a szinten lehet (is_loot_allowed), és van neki üres padló és helye a tárgytáblában;
-// utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel
+// utána egy alvó kezdő szörny, aranyas szobában nagyobb eséllyel, a kezdő tárgyával
 static void place_gold_and_monsters(void)
 {
     bool is_gold_allowed = is_loot_allowed();
@@ -185,8 +200,10 @@ static void place_gold_and_monsters(void)
 
         uint8_t monster_chance = has_gold ? MONSTER_CHANCE_WITH_GOLD : MONSTER_CHANCE_WITHOUT_GOLD;
         if (rnd(100) < monster_chance && find_monster_tile(room_index, &x, &y)) {
-            generate_monster(false, x, y);
-            // ide jön: a szörny kezdő tárgya (give_item)
+            uint8_t monster_index = generate_monster(false, x, y);
+            if (monster_index != NO_MONSTER) {
+                give_starting_item(monster_index);
+            }
         }
     }
 }
@@ -222,7 +239,7 @@ static void place_random_item(uint8_t room_index)
 }
 
 // kincses szoba egy véletlen nem fantom szobában, labirintusban is: TREASURE_MIN..TREASURE_MAX tárgy a belső terület erejéig,
-// és legalább TREASURE_EXTRA_MONSTERS-szel több aljas szörny a következő mélység szerint; ami nem fér el, kimarad
+// és legalább TREASURE_EXTRA_MONSTERS-szel több aljas szörny a kezdő tárgyával, a következő mélység szerint; ami nem fér el, kimarad
 static void place_treasure_room(void)
 {
     uint8_t room_index = choose_random_room();
@@ -262,7 +279,7 @@ static void place_treasure_room(void)
         if (index == NO_MONSTER) break;
 
         get_monster(index)->flags |= MONSTER_MEAN;
-        // ide jön: a szörny kezdő tárgya (give_item), szintén a következő mélység szerint
+        give_starting_item(index);
     }
     game.dungeon_level--;
 }
@@ -329,9 +346,13 @@ void generate_level(void)
         game.max_level = game.dungeon_level;
     }
     clear_map();
+    // a szörnyek csomagjai és a padló tárgyai felszabadulnak, a játékos csomagja marad
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        struct Monster *monster = get_monster(index);
+        free_item_list(&monster->first_pack_item);
+    }
     clear_monsters();
-    // ide jön: a szörnyek csomagjainak törlése, a tárgytáblában a helyük felszabadul
-    free_floor_items();
+    free_item_list(&game.first_floor_item);
 
     generate_rooms();
     connect_rooms();

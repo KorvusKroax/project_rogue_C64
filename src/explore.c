@@ -41,6 +41,23 @@ bool is_monster_visible(const struct Monster *monster)
     return monster->room == game.player.room && is_room_lit(monster->room);
 }
 
+bool is_tile_visible(uint8_t x, uint8_t y)
+{
+    // ide jön: vakon egyik sem látszik
+    int8_t offset_x = x - game.player.x;
+    int8_t offset_y = y - game.player.y;
+    bool is_adjacent = offset_x >= -1 && offset_x <= 1 && offset_y >= -1 && offset_y <= 1;
+
+    // a szomszédos mező a lámpafényben látszik; folyosó-mezőn átlósan csak akkor, ha a sarok legalább egyik mezője járható
+    if (is_adjacent) {
+        if (offset_x == 0 || offset_y == 0 || !(get_map_flags(x, y) & TILE_PASSAGE)) return true;
+        return is_walkable_character(get_map_character(game.player.x, y))
+            || is_walkable_character(get_map_character(x, game.player.y));
+    }
+
+    return get_room_at(x, y) == game.player.room && is_room_lit(game.player.room);
+}
+
 uint8_t get_visible_character(uint8_t x, uint8_t y)
 {
     uint8_t monster_index = find_monster_at(x, y);

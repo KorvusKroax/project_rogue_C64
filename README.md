@@ -291,7 +291,7 @@ prepare_monster_name(monster);
 put_combat_scene();
 prepare_monster_name(&game.monsters[0]);
 ```
-Hol: `src/dev/test_combat.c`. A generált kódban (`build/<név>.asm`) a `@proxy` nevű függvényeket és az előttük használt paraméterregisztereket érdemes megnézni, ha egy érték lehetetlennek látszik.
+Hol: `src/dev/test_combat.c`; ugyanez a `monsters` tesztprogramban is előjött (`src/dev/test_chase.c`, `src/dev/test_explore.c`): a beágyazott `start_monster_running` a `choose_monster_destination@proxy` hívása előtt írta a szörny flagjeit, ezért a szörny nem indult el. A generált kódban (`build/<név>.asm`) a `@proxy` nevű függvényeket és az előttük használt paraméterregisztereket érdemes megnézni, ha egy érték lehetetlennek látszik.
 
 **9. Az optimalizáló nem jut a végére egy függvénynek** – fordításkor, figyelmeztetéssel: `warning 2007: Optimizer locked in infinite loop 'is_something_interesting_beside'`, előtte lépésenként 11 `Oops 7`, `Oops 8`, `Oops 9` sor. Az optimalizáló lépései addig ismétlődnek, amíg változtatnak a kódon: az `Oops N` azt jelzi, hogy az N. lépés 190-nél többször ismétlődött, a 200. körnél pedig a fordító abbahagyja ezt a lépést, figyelmeztet, és a következővel folytatja. A félbehagyott lépés csak az optimalizálást hagyja abba; a figyelmeztetéses buildben is minden teszt átment, köztük az óvatos futásé, amely ezt a függvényt ellenőrzi. Csak a `combat` tesztprogramban jött elő, amikor egy teszt a `take_run_step`-et hívta, és vele az `is_something_interesting_beside` is a programba került; a játékban és a fejlesztői buildben, ahol a függvény a `take_run_step`-be olvad, nem. Hogy előjön-e, a teljes program hívásain múlik.
 ```c
@@ -385,7 +385,7 @@ return 0;                           // a BASIC-ben néhány parancs után ?FORMU
 
 ## Dokumentáció
 
-- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E24) és az eredeti hibáinak javításai (J1–J32) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
+- [docs/spec/](docs/spec/) – a C64-es változat specifikációja: a Rogue 5.4.4 minden szabálya, képlete, táblája és üzenete, a C64 képernyőjére, billentyűzetére, memóriájára és lemezkezelésére átdolgozva. A platform miatti eltérések (E1–E24) és az eredeti hibáinak javításai (J1–J33) jegyzéke: [0.3](docs/spec/00_attekintes.md#03-eltérések-és-javítások-jegyzéke); a hardverközeli részletek: [10. Platform](docs/spec/10_platform.md).
 - [Mérföldkövek](https://github.com/KorvusKroax/project_rogue_C64/milestones) és [issue-k](https://github.com/KorvusKroax/project_rogue_C64/issues) – a megvalósítás mérföldkövenként (M0–M12), issue-nként tartalommal és „Kész, ha” feltételekkel (áttekintés lent).
 
 ## Mérföldkövek és issue-k
@@ -408,7 +408,7 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | **M11 – Véglegesítés** | [M11-01](https://github.com/KorvusKroax/project_rogue_C64/issues/45) szövegek, képernyők · [M11-02](https://github.com/KorvusKroax/project_rogue_C64/issues/46) robot, invariánsok · [M11-03](https://github.com/KorvusKroax/project_rogue_C64/issues/47) végigjátszás · [M11-04](https://github.com/KorvusKroax/project_rogue_C64/issues/48) erőforrások, kiadás |
 | **M12 – Opcionális kiegészítések** | [M12-01](https://github.com/KorvusKroax/project_rogue_C64/issues/49) színek · [M12-02](https://github.com/KorvusKroax/project_rogue_C64/issues/50) hangok · [M12-03](https://github.com/KorvusKroax/project_rogue_C64/issues/51) botkormány · [M12-04](https://github.com/KorvusKroax/project_rogue_C64/issues/52) gyorsabb lemez |
 
-## A javítások (J1–J32) helye
+## A javítások (J1–J33) helye
 | javítás | issue |
 |---|---|
 | J1 a játékos ISRUN-ja | [M05-04](https://github.com/KorvusKroax/project_rogue_C64/issues/25), [M09-02](https://github.com/KorvusKroax/project_rogue_C64/issues/38) |
@@ -443,3 +443,4 @@ Az issue-k GitHubon vannak, mindegyikben: „Függ” (előfeltételek), „Spec
 | J30 az `a` tárgya, amíg a csomagban van | [M06-04](https://github.com/KorvusKroax/project_rogue_C64/issues/29) |
 | J31 a nimfa és a köteg | [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |
 | J32 a szörny tárgyfelvétele látható mezőn | [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |
+| J33 a tárgy felé tartó szörny útjában a játékos | [M06-05](https://github.com/KorvusKroax/project_rogue_C64/issues/30) |

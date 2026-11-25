@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "../chase.h"
+#include "../explore.h"
+#include "../items.h"
 #include "../map.h"
 #include "../monsters.h"
 #include "../player.h"
@@ -72,11 +74,12 @@ static void put_chase_passage(uint8_t offset_x, uint8_t offset_y, uint8_t passag
 //  - a 0. szoba: (10, 6)..(21, 12), ajtó a bal falán a (10, 9), a jobb falán a (21, 9) mezőn;
 //  - az 1. folyosórendszer az 1. szoba ajtajától lefelé a (3, 9) mezőig, onnan jobbra a 0. szoba bal ajtajáig;
 //  - a 2. folyosórendszer a 0. szoba jobb ajtajától jobbra, a (24, 9) mezőig;
-// a többi szoba fantom, hogy a get_room_at csak ezt a kettőt találja
+// a többi szoba fantom, hogy a get_room_at csak ezt a kettőt találja; a padló üres
 static void put_chase_level(void)
 {
     clear_map();
     clear_monsters();
+    clear_item_table();
     clear_seen_map();
     game.dungeon_level = 1;
     game.exit_count = 0;
@@ -113,10 +116,12 @@ static void put_chase_player(uint8_t offset_x, uint8_t offset_y)
     game.player.room = get_room_at(game.player.x, game.player.y);
 }
 
-// ébren lévő szörny, a célpontja a játékos
+// ébren lévő szörny, a célpontja a choose_monster_destination szerint; a rekord címe a táblából jön, nem egy hívás eredményéből
+// (README, Oscar64-hibák, 8.)
 static struct Monster *put_chase_monster(uint8_t type, uint8_t offset_x, uint8_t offset_y)
 {
-    struct Monster *monster = get_monster(create_monster(type, CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y));
+    create_monster(type, CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y);
+    struct Monster *monster = &game.monsters[game.monster_count - 1];
     start_monster_running(monster);
     return monster;
 }
@@ -131,6 +136,19 @@ static void run_monster_turns(uint8_t turn_count)
 static bool is_monster_at(const struct Monster *monster, uint8_t offset_x, uint8_t offset_y)
 {
     return monster->x == CHASE_BASE_X + offset_x && monster->y == CHASE_BASE_Y + offset_y;
+}
+
+// étel a padlón, a tesztpálya megadott mezőjén
+static uint8_t put_chase_item(uint8_t offset_x, uint8_t offset_y)
+{
+    uint8_t index = create_item(ITEM_TYPE_FOOD, FOOD_RATION);
+    put_item_on_floor(index, CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y);
+    return index;
+}
+
+static uint8_t get_chase_seen_character(uint8_t offset_x, uint8_t offset_y)
+{
+    return get_seen_character(CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y);
 }
 
 // ugyanabban a szobában a zombi egyenesen a játékos felé lép, mellé érve megáll, és nem lép rá
@@ -242,6 +260,17 @@ static bool is_bat_movement_chaotic(void)
     return is_straight_count_valid && is_sideways_count_valid;
 }
 
+// a tesztpálya után: a szobatábla vissza, a többi tábla és a térkép üres
+static void clear_chase_level(const struct Room *saved_rooms)
+{
+    memcpy(game.rooms, saved_rooms, sizeof(game.rooms));
+    game.exit_count = 0;
+    clear_monsters();
+    clear_item_table();
+    clear_map();
+    clear_seen_map();
+}
+
 int test_monster_chase(uint16_t i)
 {
     struct Room saved_rooms[ROOM_TABLE_SIZE];
@@ -253,10 +282,144 @@ int test_monster_chase(uint16_t i)
         is_exit_chase_valid() &&
         is_bat_movement_chaotic();
 
-    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
-    game.exit_count = 0;
-    clear_monsters();
-    clear_map();
-    clear_seen_map();
+    clear_chase_level(saved_rooms);
+    return ok;
+}
+
+// a játékos az 1. szobában, a 0. szobában egy tárgy: a nimfa (carry 100) a tárgyat választja, a zombi (carry 0) a játékost;
+// egy második nimfa sem a foglalt tárgyat; ha a játékos a 0. szobába lép, a nimfa célpontja is a játékos
+static bool is_room_item_destination_valid(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t food = put_chase_item(15, 8);
+
+    struct Monster *nymph = put_chase_monster('N', 19, 7);
+    struct Monster *zombie = put_chase_monster('Z', 19, 8);
+    struct Monster *other_nymph = put_chase_monster('N', 19, 11);
+    if (nymph->destination_item != food) return false;
+    if (zombie->destination_item != DESTINATION_PLAYER) return false;
+    if (other_nymph->destination_item != DESTINATION_PLAYER) return false;
+
+    put_chase_player(11, 9);
+    return choose_monster_destination(nymph) == DESTINATION_PLAYER;
+}
+
+// a nimfa a folyosón, a tárgy is: ha a játékos az 1. szoba ajtaján áll, a szomszédos nimfát látja, ezért ő a célpont;
+// a szobában beljebb állva már nem látja, és a nimfa a tárgyat választja; a más szobában fekvő tárgyat nem
+static bool is_visible_monster_destination_valid(void)
+{
+    put_chase_level();
+    put_chase_player(3, 4);
+    uint8_t food = put_chase_item(3, 8);
+    struct Monster *nymph = put_chase_monster('N', 3, 5);
+    if (nymph->destination_item != DESTINATION_PLAYER) return false;
+
+    put_chase_player(3, 2);
+    if (choose_monster_destination(nymph) != food) return false;
+
+    // a 0. szobában álló nimfa szobájában nincs tárgy; a játékos a 2. folyosórendszerben, távol
+    put_chase_player(24, 9);
+    struct Monster *room_nymph = put_chase_monster('N', 19, 7);
+    return room_nymph->destination_item == DESTINATION_PLAYER;
+}
+
+// J3: a 0. szobában két tárgy; az elsőre (a padló listájában) a folyosón álló nimfa tart; a szoba nimfája a második tárgyat
+// választja, mert a többi tárgyat a saját szobájához hasonlítja, nem a foglaló szörnyéhez
+static bool is_occupied_item_skipped(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t second = put_chase_item(15, 10);
+    uint8_t first = put_chase_item(15, 8);
+
+    struct Monster *passage_nymph = put_chase_monster('N', 6, 9);
+    passage_nymph->destination_item = first;
+    struct Monster *room_nymph = put_chase_monster('N', 19, 7);
+    return room_nymph->destination_item == second;
+}
+
+int test_monster_destination(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_room_item_destination_valid() &&
+        is_visible_monster_destination_valid() &&
+        is_occupied_item_skipped();
+
+    clear_chase_level(saved_rooms);
+    return ok;
+}
+
+// a világos 0. szobában a játékos látja a tárgyat: a nimfa odaér, felveszi, a mező padló, a nimfa alatt is; a szobában nincs
+// több tárgy, és a játékos is itt van, így a célpont a játékos; továbblépve a tárgy jele nem tér vissza (J32)
+static bool is_visible_pickup_valid(void)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    uint8_t food = put_chase_item(17, 7);
+    struct Monster *nymph = put_chase_monster('N', 20, 7);
+    nymph->destination_item = food;
+    enter_room(game.player.x, game.player.y);
+    if (get_chase_seen_character(17, 7) != CHAR_FOOD) return false;
+
+    run_monster_turns(3);
+    if (!is_monster_at(nymph, 17, 7)) return false;
+    if (nymph->first_pack_item != food || get_item(food)->next != NO_ITEM) return false;
+    if (game.first_floor_item != NO_ITEM) return false;
+    if (get_map_character(CHASE_BASE_X + 17, CHASE_BASE_Y + 7) != CHAR_FLOOR) return false;
+    if (nymph->character_below != CHAR_FLOOR) return false;
+    if (nymph->destination_item != DESTINATION_PLAYER) return false;
+
+    run_monster_turns(1);
+    if (is_monster_at(nymph, 17, 7)) return false;
+    return get_chase_seen_character(17, 7) == CHAR_FLOOR;
+}
+
+// a játékos az 1. szobában nem látja a 0. szobát: a nimfa felveszi a tárgyat, de a játékos emlékében a tárgy a helyén marad
+static bool is_unseen_pickup_remembered(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t food = put_chase_item(17, 7);
+    draw_tile(CHASE_BASE_X + 17, CHASE_BASE_Y + 7, CHAR_FOOD);
+    struct Monster *nymph = put_chase_monster('N', 20, 7);
+    if (nymph->destination_item != food) return false;
+
+    run_monster_turns(3);
+    if (nymph->first_pack_item != food) return false;
+    if (nymph->destination_item != DESTINATION_PLAYER) return false;
+
+    run_monster_turns(1);
+    if (is_monster_at(nymph, 17, 7)) return false;
+    return get_chase_seen_character(17, 7) == CHAR_FOOD;
+}
+
+// a tárgy felé a legjobb lépés a játékos mezője: a nimfa megtámadja, nem lép rá, és a tárgy a padlón marad, továbbra is célpontként (J33)
+static bool is_player_in_the_way_attacked(void)
+{
+    put_chase_level();
+    put_chase_player(19, 9);
+    uint8_t food = put_chase_item(14, 9);
+    struct Monster *nymph = put_chase_monster('N', 20, 9);
+    nymph->destination_item = food;
+
+    run_monster_turns(1);
+    return is_monster_at(nymph, 20, 9) && game.first_floor_item == food && nymph->destination_item == food;
+}
+
+int test_monster_pickup(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_visible_pickup_valid() &&
+        is_unseen_pickup_remembered() &&
+        is_player_in_the_way_attacked();
+
+    clear_chase_level(saved_rooms);
     return ok;
 }

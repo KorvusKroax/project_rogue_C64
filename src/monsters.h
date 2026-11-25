@@ -80,7 +80,13 @@ uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y);
 // az alvó aljas szörny 2/3 eséllyel felébred, a kapzsi mindig; a többit csak a start_monster_running indítja el
 void wake_monster(struct Monster *monster);
 
-// a szörny mindenképp felébred és üldöz (runto), a fogva tartás (MONSTER_HELD) is megszűnik: pl. ha a játékos megtámadja
+// a szörny mindenképp felébred és üldöz (runto), a fogva tartás (MONSTER_HELD) is megszűnik: pl. ha a játékos megtámadja;
+// a célpontját a choose_monster_destination adja
 void start_monster_running(struct Monster *monster);
+
+// a szörny célpontja (find_dest): a játékos, ha a típus nem gyűjt tárgyat (carry 0), a játékos szobájában van, vagy a játékos látja;
+// különben a szobájában fekvő tárgyak közül az első, amelyre a carry értékének százalékos esélyével rádob, és nem egy másik szörny
+// célpontja (J3); ha nincs ilyen, a játékos
+uint8_t choose_monster_destination(const struct Monster *monster);
 
 #endif

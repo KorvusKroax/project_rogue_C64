@@ -355,7 +355,7 @@ int test_label_freed_with_item(uint16_t i)
     uint8_t armor = create_item(ITEM_TYPE_ARMOR, 0);
     get_item(armor)->label = label;
     put_item_on_floor(armor, PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y);
-    free_floor_items();
+    free_item_list(&game.first_floor_item);
     ok = ok && game.item_count == 0 && store_name("z") == label;
 
     clear_pickup_scene();

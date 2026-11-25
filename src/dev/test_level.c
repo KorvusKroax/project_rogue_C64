@@ -443,9 +443,66 @@ static bool are_initial_monsters_valid(void)
     return crowded_room_count <= 1;
 }
 
+// a lista hossza; ha a lista szabálytalan (MAX_ITEMS-nál hosszabb, vagyis kör van benne, vagy érvénytelen indexre mutat), MAX_ITEMS + 1
+static uint8_t count_list_items(uint8_t list_first)
+{
+    uint8_t count = 0;
+    for (uint8_t index = list_first; index != NO_ITEM; index = get_item(index)->next) {
+        if (index > MAX_ITEMS || count == MAX_ITEMS) return MAX_ITEMS + 1;
+        count++;
+    }
+    return count;
+}
+
+// a szörnyek csomagjainak tárgyai összesen
+static uint16_t count_monster_pack_items(void)
+{
+    uint16_t count = 0;
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        count += count_list_items(get_monster(index)->first_pack_item);
+    }
+    return count;
+}
+
+// a tárgytábla foglalt helyei
+static uint8_t count_occupied_items(void)
+{
+    uint8_t count = 0;
+    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
+        if (game.items[slot].type != ITEM_TYPE_FREE) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// a szintteszt eddigi szintjein a szörnyek kezdő tárgyai összesen: a teszt végére legalább egynek lennie kell
+static uint16_t level_starting_item_count;
+
+// a szörnyek kezdő tárgyai: csak tárgyat gyűjtő típusnál (carry > 0), szörnyenként legfeljebb egy, érvényes típusú, érvényes
+// kezdőértékekkel; a legmélyebb elért szint fölött egy sem
+static bool are_starting_items_valid(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        uint8_t item_index = monster->first_pack_item;
+        if (item_index == NO_ITEM) continue;
+
+        if (game.dungeon_level < game.max_level) return false;
+        if (monster_types[monster->type - 'A'].carry_chance == 0) return false;
+        if (item_index > MAX_ITEMS) return false;
+        const struct Item *item = get_item(item_index);
+        if (item->next != NO_ITEM) return false;
+        if (!is_item_type_and_subtype_valid(item->type, item->which)) return false;
+        if (!are_item_initial_values_valid(item)) return false;
+        level_starting_item_count++;
+    }
+    return true;
+}
+
 // a padlón lévő tárgyak: a lista legfeljebb MAX_ITEMS hosszú (nincs benne kör); minden tárgy érvényes típusú, a kezdőértékei érvényesek,
 // egy nem fantom szoba falain belül, nem rejtett mezőn van, a mezőjén a jele áll; két tárgy nincs egy mezőn, és két köteg azonosítója
-// nem egyezik; a tárgytábla foglalt helyei éppen a lista tárgyai, és a game.item_count ennyi
+// nem egyezik; a tárgytábla foglalt helyei éppen a lista és a szörnyek csomagjainak tárgyai, és a game.item_count ennyi
 static bool are_floor_items_valid(void)
 {
     uint8_t floor_item_count = 0;
@@ -476,13 +533,8 @@ static bool are_floor_items_valid(void)
         }
     }
 
-    uint8_t occupied_count = 0;
-    for (uint8_t slot = 0; slot < MAX_ITEMS; slot++) {
-        if (game.items[slot].type != ITEM_TYPE_FREE) {
-            occupied_count++;
-        }
-    }
-    return occupied_count == floor_item_count && game.item_count == floor_item_count;
+    uint16_t listed_count = floor_item_count + count_monster_pack_items();
+    return count_occupied_items() == listed_count && game.item_count == listed_count;
 }
 
 // az arany: szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban;
@@ -520,6 +572,16 @@ static bool is_food_on_floor(void)
 {
     for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
         if (get_item(index)->type == ITEM_TYPE_FOOD) return true;
+    }
+    return false;
+}
+
+// van étel egy szörny csomagjában; az are_starting_items_valid után, mert az ellenőrzi, hogy egy csomagban legfeljebb egy tárgy van
+static bool is_food_carried_by_monster(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        uint8_t item_index = get_monster(index)->first_pack_item;
+        if (item_index != NO_ITEM && get_item(item_index)->type == ITEM_TYPE_FOOD) return true;
     }
     return false;
 }
@@ -653,12 +715,15 @@ int test_level_generation(uint16_t i)
             level_maze_counts[d] = 0;
             level_max_frames[d] = 0;
         }
+        level_starting_item_count = 0;
     }
     level_test_run_count = i + 1;
 
     // a térképen kívüli írást a map.c DEV_CHECK-je ellenőrzi
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.dungeon_level = level_test_depths[depth_index];
+    // minden mélység a legmélyebb elért szint, így a szörnyek mindenhol kaphatnak kezdő tárgyat
+    game.max_level = game.dungeon_level;
     clear_map();
     generate_rooms();
 
@@ -705,15 +770,20 @@ int test_level_generation(uint16_t i)
     // az ujjlenyomat még az ellenőrzések előtt, mert azok a TILE_SEEN flaget írják
     uint16_t level_checksum = calculate_level_checksum();
 
+    if (!are_starting_items_valid()) return false;
     if (!are_floor_items_valid()) return false;
     if (!are_gold_and_amulet_valid()) return false;
 
-    // a szint tárgyai előtt eggyel nő, és egy generált étel nullázza: étel csak a padlóra kerülhetett
+    // a szint tárgyai előtt eggyel nő, és egy generált étel nullázza: a padlóra kerülő étel a növelés után jön, így 0 marad;
+    // a szörny kezdő tárgya a szobák szörnyeinél a növelés előtt (1 lesz), a kincses szobáéinál utána (0 marad)
     uint8_t expected_levels_without_food = levels_without_food == UINT8_MAX ? UINT8_MAX : levels_without_food + 1;
     if (is_food_on_floor()) {
-        expected_levels_without_food = 0;
+        if (game.levels_without_food != 0) return false;
+    } else if (is_food_carried_by_monster()) {
+        if (game.levels_without_food > 1) return false;
+    } else if (game.levels_without_food != expected_levels_without_food) {
+        return false;
     }
-    if (game.levels_without_food != expected_levels_without_food) return false;
 
     if (!is_stairs_valid()) return false;
     if (!is_player_position_valid()) return false;
@@ -736,7 +806,10 @@ int test_level_generation(uint16_t i)
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.levels_without_food = levels_without_food;
     generate_level();
-    return calculate_level_checksum() == level_checksum;
+    if (calculate_level_checksum() != level_checksum) return false;
+
+    // a teljes futás alatt legalább egy szörny kapott kezdő tárgyat
+    return i < LEVEL_TEST_LEVEL_COUNT - 1 || level_starting_item_count > 0;
 }
 
 int test_level_amulet_loot(uint16_t i)
@@ -746,15 +819,15 @@ int test_level_amulet_loot(uint16_t i)
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.max_level = AMULET_LEVEL + 1;
 
-    // a legmélyebb elért szint fölött üres a padló
+    // a legmélyebb elért szint fölött üres a padló, és a szörnyeknek sincs tárgyuk
     game.dungeon_level = AMULET_LEVEL;
     generate_level();
-    bool ok = game.first_floor_item == NO_ITEM;
+    bool ok = game.first_floor_item == NO_ITEM && count_monster_pack_items() == 0;
 
     // a legmélyebb elért szinten van arany vagy tárgy, de újabb amulett nincs
     game.dungeon_level = AMULET_LEVEL + 1;
     generate_level();
-    ok = ok && game.first_floor_item != NO_ITEM && are_gold_and_amulet_valid();
+    ok = ok && game.first_floor_item != NO_ITEM && are_gold_and_amulet_valid() && are_starting_items_valid();
 
     game.first_pack_item = NO_ITEM;
     free_item(amulet);
@@ -860,7 +933,26 @@ static bool are_monster_positions_valid(void)
     return true;
 }
 
-// MONSTER_MOVE_TEST_TURNS kör; mindegyik után a szörnymezők ellenőrzése, az idők a mélység számlálóiba
+// minden foglalt tárgy egy listában van: a padlón, a játékos vagy egy szörny csomagjában; a padló tárgyainak mezőjén a jelük áll
+static bool are_item_lists_valid(void)
+{
+    uint8_t floor_count = count_list_items(game.first_floor_item);
+    uint8_t pack_count = count_list_items(game.first_pack_item);
+    if (floor_count > MAX_ITEMS || pack_count > MAX_ITEMS) return false;
+
+    uint16_t listed_count = floor_count + pack_count + count_monster_pack_items();
+    if (count_occupied_items() != listed_count || game.item_count != listed_count) return false;
+
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct Item *item = get_item(index);
+        uint8_t x = item->location.floor_position.x;
+        uint8_t y = item->location.floor_position.y;
+        if (get_map_character(x, y) != get_item_character(item->type)) return false;
+    }
+    return true;
+}
+
+// MONSTER_MOVE_TEST_TURNS kör; mindegyik után a szörnymezők és a tárgylisták ellenőrzése, az idők a mélység számlálóiba
 static bool run_timed_turns(uint8_t depth_index, bool are_all_running)
 {
     for (uint8_t turn = 0; turn < MONSTER_MOVE_TEST_TURNS; turn++) {
@@ -880,6 +972,7 @@ static bool run_timed_turns(uint8_t depth_index, bool are_all_running)
 
         if (!are_monster_tiles_valid()) return false;
         if (!are_monster_positions_valid()) return false;
+        if (!are_item_lists_valid()) return false;
     }
     return true;
 }

@@ -9,6 +9,9 @@
 // a játékos látja-e a szörnyet: a láthatatlant nem; a szomszédosat (átlósan sarkon át nem), a távolabbit csak a saját világos szobájában (see_monst)
 bool is_monster_visible(const struct Monster *monster);
 
+// a játékos látja-e a mezőt: a szomszédosat (folyosó-mezőn átlósan sarkon át nem), a távolabbit csak a saját világos szobájában (cansee)
+bool is_tile_visible(uint8_t x, uint8_t y);
+
 // a mező jele, ahogy a játékos látja: a látható szörny álcája, különben a MAP jele
 uint8_t get_visible_character(uint8_t x, uint8_t y);
 

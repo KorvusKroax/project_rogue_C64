@@ -197,7 +197,9 @@ do_chase(monster):
     break
   (next_pos, arrived) = chase(monster, goal)
   if arrived:                                                     // chase nem talált jobb mezőt
-     if goal == player.pos: return attack(monster)                // 7.1, 6.7; MEGHALT, ha a szörny a támadásában eltűnt
+     if next_pos == player.pos: return attack(monster)            // 7.1, 6.7; tárgy célpontnál is, ha a játékos az útjában áll (J33);
+                                                                  // MEGHALT, ha a szörny a támadásában eltűnt
+     // különben a lépés maga a cél (next_pos == goal)
      if goal == monster.dest:
         if monster.dest egy padlón fekvő tárgy, és nem (monster.ISGREED and a tárgy ROOMGOLD):   // a szoba aranyára a kapzsi szörny ráül (E23)
            felveszi a csomagjába (a ROOMGOLD jelző törlődik, E23), a mező FLOOR/PASSAGE lesz,
@@ -237,6 +239,8 @@ rndmove(who):  // zavarodott mozgás (szörny és játékos is)
 > **C64-javítás (J22):** szörnynél a véletlen lépés a szörnyes mezőt (F_MONST) is kizárja, így az álcázott Xerocét is. *Eredetileg* a `step_ok` csak a képernyőjelet nézte, ezért a zavarodott szörny, a denevér és a phantom ráléphetett az álcázott Xerocra, és két szörny került egy mezőre. A játékos zavarodott lépése nem változik: az álcázott Xerocra lépve megtámadja.
 
 > **C64-javítás (J32):** ha a szörny olyan mezőn vesz fel tárgyat, amelyet a játékos lát, a mező azonnal padlóként (folyosón folyosóként) rajzolódik ki. Így a szörny alatti jel (`oldch`) is ez lesz, és továbblépéskor nem a tárgy jele kerül vissza. A rajzolás nem villan: a padlót még ugyanabban a lépésben felülírja a szörny jele, és a videomemóriába a változások csak a következő parancsbeolvasás előtt, egyszerre kerülnek ki ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés), Rajzolás). *Eredetileg* a felvétel csak a térképet írta át, a képernyőn a tárgy jele maradt. Világos szobában, a játékostól távolabb a szörny ezt jegyezte meg, és továbblépéskor visszarajzolta: a játékos a tárgyat a helyén látta, amíg oda nem ment.
+
+> **C64-javítás (J33):** a szörny akkor támad, ha a legjobb lépése a játékos mezőjére vinne, akkor is, ha a célpontja egy tárgy, és a játékos az útjában áll; a tárgy a helyén marad, a szörny is. *Eredetileg* a `do_chase` csak azt nézte, hogy a cél a játékos-e: tárgy célpontnál a tárgyat a padlóról a szörny csomagjába tette, bárhol feküdt (a játékos mögött, legalább két mezőre), aztán a szörny a játékos mezőjére lépett. Mivel az új célpontja a játékos lett, a mezője pedig egyezett vele, a futása is leállt: a szörny a játékoson ült. Ez akkor fordulhatott elő, ha a szörny még a játékos nélküli szobában választotta a tárgyat, és a játékos utána közéjük lépett, mert a célpont szobaváltáskor nem számolódik újra.
 
 - **Eltűnés a saját körében:** a nimfa és a leprechaun a támadásában eltűnhet ([6.7](#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)). A kivett szörny helyére a mögötte álló csúszik ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)), ezért utána a szörnyre semmi nem hivatkozhat. A további lépései (a gyorsított és a repülő második lépése), a `turn` váltása és az `f`-harc vizsgálata elmarad, a kör a következő szörnnyel folytatódik. Az üres körben (`waste_time`, [4.2.3](04_jatekciklus_es_parancsok.md#423-tárgyak)) is így van.
 - A szörny akkor támad, ha a legjobb lépés a játékos mezőjére vinne – vagyis ha szomszédos vele (átlósan csak `diag_ok` szerint).
