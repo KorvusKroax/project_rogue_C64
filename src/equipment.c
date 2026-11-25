@@ -144,3 +144,25 @@ bool take_off_armor(void)
     message_format(text_used_to_be_wearing, letter_text, format_item_name(item), 0);
     return true;
 }
+
+// a használatban lévő tárgy betűje és neve, utótag nélkül (item_text), vagy ha nincs ilyen, a nothing_text (current)
+static void report_item_in_use(uint8_t index, const char *item_text, const char *nothing_text)
+{
+    if (index == NO_ITEM) {
+        message(nothing_text);
+        return;
+    }
+    const struct Item *item = get_item(index);
+    char letter_text[2] = { item->location.pack_letter, 0 };
+    message_format(item_text, letter_text, format_item_name_without_suffix(item), 0);
+}
+
+void report_wielded_item(void)
+{
+    report_item_in_use(game.wielded_item, text_wielding_item, text_wielding_nothing);
+}
+
+void report_worn_armor(void)
+{
+    report_item_in_use(game.worn_armor, text_wearing_item, text_wearing_nothing);
+}

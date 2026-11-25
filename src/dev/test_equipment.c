@@ -294,3 +294,28 @@ int test_starting_equipment(uint16_t i)
     clear_item_table();
     return ok;
 }
+
+int test_report_items_in_use(uint16_t i)
+{
+    clear_item_table();
+    message_clear();
+    report_wielded_item();
+    bool ok = does_message_bar_start_with("You are wielding nothing.");
+    message_clear();
+    report_worn_armor();
+    ok = ok && does_message_bar_start_with("You are wearing nothing.");
+
+    // a betű és a név; a név után közvetlenül a pont áll, vagyis nincs utótag
+    game.worn_armor = add_item_to_pack(create_item(ITEM_TYPE_ARMOR, EQUIPMENT_TEST_ARMOR));
+    game.wielded_item = add_item_to_pack(create_item(ITEM_TYPE_WEAPON, WEAPON_MACE));
+    message_clear();
+    report_wielded_item();
+    ok = ok && does_message_bar_start_with("You are wielding (b) a mace.");
+    message_clear();
+    report_worn_armor();
+    ok = ok && does_message_bar_start_with("You are wearing (a) leather armor.");
+
+    message_clear();
+    clear_item_table();
+    return ok;
+}

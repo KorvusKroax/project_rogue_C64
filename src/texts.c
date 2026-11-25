@@ -54,6 +54,10 @@ const char text_already_wearing[] = "you are already wearing some. You'll have t
 const char text_now_wearing[] = "you are now wearing \1";
 const char text_not_wearing_armor[] = "you aren't wearing any armor";
 const char text_used_to_be_wearing[] = "you used to be wearing \1) \2";
+const char text_wielding_item[] = "you are wielding (\1) \2";
+const char text_wielding_nothing[] = "you are wielding nothing";
+const char text_wearing_item[] = "you are wearing (\1) \2";
+const char text_wearing_nothing[] = "you are wearing nothing";
 
 static const char text_excellent_hit[] = "\1 scored an excellent hit on \2";
 static const char text_plain_hit[] = "\1 hit \2";

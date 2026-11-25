@@ -10,6 +10,7 @@ static const struct DevTest equipment_tests[] = {
     { "EQUIP-TAKE OFF", test_take_off_armor, 1 },
     { "EQUIP-DROP IN USE", test_drop_item_in_use, 1 },
     { "EQUIP-STARTING", test_starting_equipment, STARTING_EQUIPMENT_TEST_SEED_COUNT },
+    { "EQUIP-IN USE", test_report_items_in_use, 1 },
 };
 
 int main(void)

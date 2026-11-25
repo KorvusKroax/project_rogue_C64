@@ -61,5 +61,6 @@ void write_scroll_title(char *out, uint8_t which);
 // a tárgy neve (8.8), kisbetűvel kezdve; a kézben tartott tárgyé és a viselt páncélé után az utótag: " (weapon in hand)",
 // " (being worn)", ezért ezek nevét a tárgytábla rekordjával kell kérni; az eredmény a következő hívásig él
 const char *format_item_name(const struct Item *item);
+const char *format_item_name_without_suffix(const struct Item *item);  // a név a használat utótagja nélkül (`)`, `]`)
 
 #endif

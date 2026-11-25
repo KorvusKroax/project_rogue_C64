@@ -41,4 +41,10 @@ bool release_item(uint8_t index);
 // igaz, ha időt vitt
 bool take_off_armor(void);
 
+// `)`: „you are wielding (<betű>) <név>”, a név utótag nélkül; üres kéznél „you are wielding nothing”
+void report_wielded_item(void);
+
+// `]`: „you are wearing (<betű>) <név>”, a név utótag nélkül; páncél nélkül „you are wearing nothing”
+void report_worn_armor(void);
+
 #endif

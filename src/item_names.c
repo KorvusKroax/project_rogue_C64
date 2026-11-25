@@ -518,7 +518,8 @@ static void add_in_use_suffix(const struct Item *item)
     }
 }
 
-const char *format_item_name(const struct Item *item)
+// a név az item_name-be, a használat utótagja és a lezáró nulla nélkül
+static void add_item_name(const struct Item *item)
 {
     item_name_length = 0;
     item_name_has_article = false;
@@ -557,7 +558,19 @@ const char *format_item_name(const struct Item *item)
     if (item_name_has_article) {
         complete_article();
     }
+}
+
+const char *format_item_name(const struct Item *item)
+{
+    add_item_name(item);
     add_in_use_suffix(item);
+    item_name[item_name_length] = 0;
+    return item_name;
+}
+
+const char *format_item_name_without_suffix(const struct Item *item)
+{
+    add_item_name(item);
     item_name[item_name_length] = 0;
     return item_name;
 }

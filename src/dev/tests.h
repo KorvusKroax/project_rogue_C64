@@ -96,6 +96,7 @@ int test_wield_item(uint16_t i);                // a `w`: a `*` lista csak fegyv
 int test_wear_armor(uint16_t i);                // a `W`: a `*` lista csak páncél; nem páncélra üres kör nélkül; a páncél egy üres kör után kerül fel, azonosítva; második nem; halálnál elmarad
 int test_take_off_armor(uint16_t i);            // a `T`: páncél nélkül nem visz időt; az átkozott rajta marad üres kör nélkül; egy üres kör után lekerül; halálnál elmarad
 int test_starting_equipment(uint16_t i);        // az i. seeddel: a kezdő csomag betűi és sorrendje, a típusok, a bónuszok, az azonosítás, a nyilak száma; a páncél viselve, a buzogány kézben
+int test_report_items_in_use(uint16_t i);       // a `)` és a `]`: „you are wielding nothing” / „wearing nothing”; különben a betű és a név, utótag nélkül
 int test_drop_item_in_use(uint16_t i);          // a `d` a használt tárggyal: az átkozott marad; a kéz kiürül, egy darabnál is; hely nélkül a köteg a kézben marad; a páncél üres körrel; halálnál elmarad
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében

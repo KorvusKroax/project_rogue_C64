@@ -62,6 +62,10 @@ extern const char text_already_wearing[];
 extern const char text_now_wearing[];               // \1: a páncél neve
 extern const char text_not_wearing_armor[];
 extern const char text_used_to_be_wearing[];        // \1: a páncél betűje, \2: a neve
+extern const char text_wielding_item[];             // \1: a kézben tartott tárgy betűje, \2: a neve
+extern const char text_wielding_nothing[];
+extern const char text_wearing_item[];              // \1: a viselt páncél betűje, \2: a neve
+extern const char text_wearing_nothing[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4

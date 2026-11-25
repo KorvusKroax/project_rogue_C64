@@ -434,6 +434,12 @@ static bool execute_command(uint8_t code)
             return execute_wear_command(is_repeat);
         case 'T':
             return take_off_armor();
+        case ')':
+            report_wielded_item();
+            return false;
+        case ']':
+            report_worn_armor();
+            return false;
         case 'c':
             execute_name_command(is_repeat);
             return false;
