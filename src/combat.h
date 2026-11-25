@@ -15,6 +15,7 @@
 // a mentődobás: egy SAVING_THROW_SIDES oldalú kocka (1-től) legalább a cél − a játékos szintje / 2 (save_throw)
 #define SAVING_THROW_SIDES  20                  // (default: 20)
 #define POISON_SAVE_TARGET  14                  // a mérgezés elleni mentődobás célja (default: 14)
+#define MAGIC_SAVE_TARGET   17                  // a mágia elleni mentődobás célja (default: 17)
 
 // a nem cselekvő védőt (alvó szörnyet, cselekvésképtelen játékost) ennyivel könnyebb eltalálni
 #define INACTIVE_DEFENDER_HIT_BONUS  4          // (default: 4)
@@ -27,6 +28,15 @@
 #define VAMPIRE_DRAIN_SIDES   3                 // a szívás egy ekkora kocka (default: 3)
 #define WRAITH_DRAIN_CHANCE   15                // a Wraith ennyi százalék eséllyel szív egy szintet (default: 15)
 #define WRAITH_DRAIN_SIDES    10                // a szintszívással a HP és a max. HP egy ekkora kockányival csökken (default: 10)
+
+#define RUST_ARMOR_CLASS_LIMIT  9               // az Aquator rozsdája ennél a védelemnél már nem ront tovább (default: 9)
+#define LEPRECHAUN_EXTRA_GOLD_ROLLS  4          // a leprechaun lopása sikertelen, a halálakor hagyott arany sikeres mágia elleni mentődobásnál
+                                                // ennyi további aranydobással nagyobb (default: 4)
+
+// a leprechaun aranya (egy aranydobás és a további dobások) az arany mennyiségének 16 bitjén és az üzenet előjeles számán elfér
+#if (LEPRECHAUN_EXTRA_GOLD_ROLLS + 1) * (GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * DUNGEON_LEVEL_MAX + GOLD_AMOUNT_MIN - 1) > 0x7fff
+    #error "a leprechaun aranya nem fér el 15 biten"
+#endif
 
 // a fagyás a halálos határ alatt még egyszer hozzáadódhat, és a körök száma 8 bites
 #if HYPOTHERMIA_TURNS + FREEZE_TURNS_MIN + FREEZE_TURNS_RANDOM - 1 > 255
@@ -57,7 +67,8 @@ bool attack_monster(struct Monster *monster);
 // a szörny megtámadja a játékost (attack): az álcázott xeroc előbb üzenet nélkül leleplezi magát; a támadás dob, és f-harcon
 // kívül kiíródik a hit/miss üzenet (az Ice monsternél nem);
 // találat után jön a különleges hatás, ha a szörnynek van és nincs kikapcsolva (MONSTER_CANCELLED); a Venus flytrap mellé ütése
-// is sebez; igaz, ha talált
+// is sebez; a nimfa és a leprechaun a lopással eltűnik: ekkor a szörnytábla eggyel rövidebb, és a mutató a következő szörnyre
+// mutat; igaz, ha talált
 bool attack_player(struct Monster *monster);
 
 // csak a dobás és a sebzés, üzenet és más hatás nélkül; igaz, ha talált

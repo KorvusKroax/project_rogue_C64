@@ -49,9 +49,9 @@ void create_starting_equipment(void)
     add_item_to_pack(arrows);
 }
 
-// a tárgy a kézben van, vagy ez a viselt páncél; ide jön: a gyűrűk
-static bool is_item_in_use(uint8_t index)
+bool is_item_in_use(uint8_t index)
 {
+    // ide jön: a felhúzott gyűrűk
     return index == game.wielded_item || index == game.worn_armor;
 }
 

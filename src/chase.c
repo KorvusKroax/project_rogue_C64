@@ -222,11 +222,12 @@ static bool is_guarding_room_gold(const struct Monster *monster)
 }
 
 // egy lépés a célpont felé; a játékos mellé érve megtámadja, a célpont tárgyat felveszi, a kapzsi szörny a szoba aranyára ráül,
-// és nem fut tovább (do_chase)
-static void take_chase_step(struct Monster *monster)
+// és nem fut tovább (do_chase); hamis, ha a szörny a támadásában eltűnt (a nimfa, a leprechaun): akkor a mutató már a következő
+// szörnyre mutat
+static bool take_chase_step(struct Monster *monster)
 {
     // a játékos halála után a kör hátralévő részében már egy szörny sem lép (a gyorsított és a repülő második lépése sem)
-    if (is_player_dead()) return;
+    if (is_player_dead()) return true;
 
     // a tárgy felé tartó kapzsi szörny célpontja a játékos lesz, ha a szobájában már nem fekszik a szoba aranya
     if ((monster->flags & MONSTER_GREEDY) && monster->destination_item != DESTINATION_PLAYER && find_room_gold(monster->room) == NO_ITEM) {
@@ -244,8 +245,10 @@ static void take_chase_step(struct Monster *monster)
     bool is_sitting_down = false;
     if (choose_chase_step(monster, goal_x, goal_y, &step_x, &step_y)) {
         if (step_x == game.player.x && step_y == game.player.y) {
+            // a támadás alatt más szörny nem kerül ki a táblából, és nem jön létre, így a rövidebb tábla a támadó eltűnését jelenti
+            uint8_t monster_count = game.monster_count;
             attack_player(monster);
-            return;
+            return game.monster_count == monster_count;
         }
         if (is_destination_item_at(monster, goal_x, goal_y)) {
             if (is_guarding_room_gold(monster)) {
@@ -256,26 +259,28 @@ static void take_chase_step(struct Monster *monster)
         }
     } else if (monster->type == 'F') {
         // a Venus flytrap nem mozdul el
-        return;
+        return true;
     }
 
     relocate_monster(monster, step_x, step_y);
     if (is_sitting_down) {
         monster->flags &= ~MONSTER_RUNNING;
     }
+    return true;
 }
 
-// a lassított szörny minden második körben lép, a gyorsított kétszer (move_monst)
-static void take_monster_turn(struct Monster *monster)
+// a lassított szörny minden második körben lép, a gyorsított kétszer (move_monst); hamis, ha a szörny közben eltűnt:
+// akkor a további lépései és a lassítás váltása elmarad
+static bool take_monster_turn(struct Monster *monster)
 {
     if (!(monster->flags & MONSTER_SLOW) || (monster->flags & MONSTER_SLOW_TURN)) {
-        take_chase_step(monster);
+        if (!take_chase_step(monster)) return false;
     }
-    // ide jön: ha a szörny meghalt, nincs több lépése
     if (monster->flags & MONSTER_HASTED) {
-        take_chase_step(monster);
+        if (!take_chase_step(monster)) return false;
     }
     monster->flags ^= MONSTER_SLOW_TURN;
+    return true;
 }
 
 void move_monsters(void)
@@ -288,11 +293,11 @@ void move_monsters(void)
         uint8_t old_x = monster->x;
         uint8_t old_y = monster->y;
 
-        // ide jön: ha a szörny meghalt (pl. a játékost megtámadva eltűnt), a következő jön
-        take_monster_turn(monster);
+        // ha a szörny eltűnt (a játékost megtámadva), a mögötte állók előrecsúsztak; a következő a kisebb indexű, azt ez nem érinti
+        if (!take_monster_turn(monster)) continue;
         // a repülő a játékostól távol kétszer lép
         if ((monster->flags & MONSTER_FLYING) && !is_beside_player(monster->x, monster->y)) {
-            take_monster_turn(monster);
+            if (!take_monster_turn(monster)) continue;
         }
 
         // az f-harc célpontja elmozdult

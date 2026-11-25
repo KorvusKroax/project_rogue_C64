@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "checks.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -563,6 +564,53 @@ int test_greedy_monster(uint16_t i)
         is_greedy_monster_chasing_after_gold_taken() &&
         is_room_gold_flag_cleared_by_monster_pickup() &&
         is_greedy_item_destination_checked();
+
+    clear_chase_level(saved_rooms);
+    return ok;
+}
+
+#define VANISH_TEST_TURNS_MAX  6                // ennyi kör alatt a gyorsított nimfa biztosan talál (rögzített maggal), és a zombi még egyenesen jön
+
+// a játékos mellett egy gyorsított nimfa, távolabb egy zombi; a játékosnál egy bájital, ezt lophatja; a nimfa a tábla végén
+// (ő lép először) vagy elején áll; abban a körben, amelyben a nimfa a lopással eltűnik, a második lépése elmarad, a zombi pontosan
+// egyet lép, és a TILE_MONSTER bitek a táblával egyeznek
+static bool is_vanishing_turn_valid(bool is_nymph_last)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    uint8_t potion = create_item(ITEM_TYPE_POTION, 0);
+    add_item_to_pack(potion);
+
+    if (is_nymph_last) {
+        put_chase_monster('Z', 20, 9);
+    }
+    struct Monster *nymph = put_chase_monster('N', 12, 9);
+    nymph->flags |= MONSTER_HASTED;
+    if (!is_nymph_last) {
+        put_chase_monster('Z', 20, 9);
+    }
+    const struct Monster *zombie = &game.monsters[is_nymph_last ? 0 : 1];
+
+    for (uint8_t turn = 0; turn < VANISH_TEST_TURNS_MAX; turn++) {
+        uint8_t zombie_x = zombie->x;
+        run_monster_turns(1);
+        if (game.monster_count == 1) {
+            const struct Monster *remaining = &game.monsters[0];
+            return remaining->type == 'Z' && remaining->x == zombie_x - 1 && are_monster_tiles_valid() && !is_item_in_pack(potion);
+        }
+    }
+    return false;
+}
+
+int test_vanishing_monster_turn(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+    game.seed = 1;
+
+    bool ok =
+        is_vanishing_turn_valid(true) &&
+        is_vanishing_turn_valid(false);
 
     clear_chase_level(saved_rooms);
     return ok;

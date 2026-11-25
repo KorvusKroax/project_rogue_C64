@@ -15,6 +15,7 @@
 #include "../map.h"
 #include "../monsters.h"
 #include "../move.h"
+#include "../pack.h"
 #include "../player.h"
 #include "../rooms.h"
 #include "../state.h"
@@ -1068,6 +1069,161 @@ int test_xeroc_reveal(uint16_t i)
     ok = ok && game.monsters[0].disguise != 'X';
     attack_player(&game.monsters[0]);
     ok = ok && game.monsters[0].disguise == 'X';
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define RUST_TEST_ATTACKS      100              // ennyi támadás alatt a rozsda biztosan eléri a határát (rögzített maggal)
+#define RUST_TEST_ARMOR_CLASS  5                // a védett páncél, a bőrpáncél és a páncél nélküli eset védelme: a határ alatt
+
+// a tábla első szörnye count-szor támad
+static void attack_player_times(uint16_t count)
+{
+    for (uint16_t attack = 0; attack < count; attack++) {
+        attack_player(&game.monsters[0]);
+    }
+}
+
+// az Aquator találata a viselt páncél védelmét eggyel rontja, RUST_ARMOR_CLASS_LIMIT-ig; a védett páncélt, a bőrpáncélt nem,
+// és a kikapcsolt Aquator sem; páncél nélkül nincs hatása
+int test_aquator(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('A');
+    struct Item *armor = get_item(game.worn_armor);
+
+    int8_t armor_class = armor->properties.armor_class;
+    uint16_t attacks = 0;
+    while (armor->properties.armor_class == armor_class && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        attack_player(&game.monsters[0]);
+        attacks++;
+    }
+    bool ok = armor->properties.armor_class == armor_class + 1;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && armor->properties.armor_class == RUST_ARMOR_CLASS_LIMIT;
+
+    armor->properties.armor_class = RUST_TEST_ARMOR_CLASS;
+    armor->flags |= ITEM_PROTECTED;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && armor->properties.armor_class == RUST_TEST_ARMOR_CLASS;
+
+    armor->flags &= ~ITEM_PROTECTED;
+    armor->which = ARMOR_LEATHER;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && armor->properties.armor_class == RUST_TEST_ARMOR_CLASS;
+
+    armor->which = ARMOR_RING_MAIL;
+    game.monsters[0].flags |= MONSTER_CANCELLED;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && armor->properties.armor_class == RUST_TEST_ARMOR_CLASS;
+
+    game.monsters[0].flags &= ~MONSTER_CANCELLED;
+    game.worn_armor = NO_ITEM;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && armor->properties.armor_class == RUST_TEST_ARMOR_CLASS;
+
+    clear_combat_scene();
+    return ok;
+}
+
+// a tábla első szörnye támad, amíg el nem tűnik, legfeljebb SPECIAL_TEST_ATTACKS_MAX-szor
+static void attack_player_until_monster_gone(void)
+{
+    uint16_t attacks = 0;
+    while (game.monster_count > 0 && attacks < SPECIAL_TEST_ATTACKS_MAX) {
+        attack_player(&game.monsters[0]);
+        attacks++;
+    }
+}
+
+// a tábla első szörnyének csomagjába egy étel; a rekord címe a táblából (README, Oscar64-hibák, 8.)
+static void give_monster_food(void)
+{
+    uint8_t index = create_item(ITEM_TYPE_FOOD, FOOD_RATION);
+    insert_item_after(&game.monsters[0].first_pack_item, NO_ITEM, index);
+}
+
+// a kezdő csomag íja (d) +1-es, ezért mágikus; a buzogány kézben, az ing viselve, a nyilak +0-sak, az étel nem mágikus
+#define NYMPH_TEST_BOW_LETTER  'd'
+
+// a nimfa jelenetében az íj ne legyen mágikus: így csak a teszt tárgya lopható
+static void make_bow_plain(void)
+{
+    get_item(find_pack_item_by_letter(NYMPH_TEST_BOW_LETTER))->properties.weapon.hit_bonus = 0;
+}
+
+// a nimfa egy használaton kívüli mágikus tárgyat lop (a kezdő csomagból az íjat), és eltűnik vele, a saját tárgyaival együtt;
+// kötegből egy darabot (J31); az amulettet is ellopja; ha nincs mit lopnia, nem tűnik el
+int test_nymph(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('N');
+    give_monster_food();
+    uint8_t bow = find_pack_item_by_letter(NYMPH_TEST_BOW_LETTER);
+    uint8_t item_count = game.item_count;
+    attack_player_until_monster_gone();
+    bool ok = game.monster_count == 0 && !is_item_in_pack(bow) && game.item_count == item_count - 2;
+
+    put_special_attack_scene('N');
+    make_bow_plain();
+    uint8_t potions = create_item(ITEM_TYPE_POTION, 0);
+    get_item(potions)->count = 3;
+    add_item_to_pack(potions);
+    attack_player_until_monster_gone();
+    ok = ok && game.monster_count == 0 && is_item_in_pack(potions) && get_item(potions)->count == 2;
+
+    put_special_attack_scene('N');
+    make_bow_plain();
+    add_item_to_pack(create_item(ITEM_TYPE_AMULET, 0));
+    attack_player_until_monster_gone();
+    ok = ok && game.monster_count == 0 && !is_carrying_amulet();
+
+    put_special_attack_scene('N');
+    make_bow_plain();
+    item_count = game.item_count;
+    attack_player_times(RUST_TEST_ATTACKS);
+    ok = ok && game.monster_count == 1 && game.item_count == item_count;
+
+    clear_combat_scene();
+    return ok;
+}
+
+#define LEPRECHAUN_TEST_GOLD  10000             // a játékos pénze: több, mint amennyit a leprechaun egyszerre lophat
+
+// a leprechaun aranyat lop, egy aranydobásnyit, sikertelen mentődobásnál LEPRECHAUN_EXTRA_GOLD_ROLLS-szal többet, és eltűnik,
+// a saját tárgyaival együtt; pénz nélkül is eltűnik; ha megölik, az aranya a mezőjére esik
+int test_leprechaun(uint16_t i)
+{
+    // az 1. mélységen egy aranydobás legfeljebb ennyi
+    uint16_t gold_roll_max = GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL + GOLD_AMOUNT_MIN - 1;
+    uint16_t leprechaun_gold_max = (LEPRECHAUN_EXTRA_GOLD_ROLLS + 1) * gold_roll_max;
+
+    game.seed = COMBAT_TEST_SEED;
+    put_special_attack_scene('L');
+    give_monster_food();
+    uint8_t item_count = game.item_count;
+    game.gold = LEPRECHAUN_TEST_GOLD;
+    attack_player_until_monster_gone();
+    uint32_t stolen = LEPRECHAUN_TEST_GOLD - game.gold;
+    bool ok = game.monster_count == 0 && game.item_count == item_count - 1
+           && stolen >= GOLD_AMOUNT_MIN && stolen <= leprechaun_gold_max;
+
+    put_special_attack_scene('L');
+    game.gold = 0;
+    attack_player_until_monster_gone();
+    ok = ok && game.monster_count == 0 && game.gold == 0;
+
+    put_special_attack_scene('L');
+    game.max_level = game.dungeon_level;
+    kill_drop_test_monster();
+    uint8_t gold = find_floor_item_at(COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    ok = ok && game.monster_count == 0 && gold != NO_ITEM;
+    if (ok) {
+        const struct Item *item = get_item(gold);
+        ok = item->type == ITEM_TYPE_GOLD && !(item->flags & ITEM_ROOM_GOLD)
+          && item->properties.gold_amount >= GOLD_AMOUNT_MIN && item->properties.gold_amount <= leprechaun_gold_max;
+    }
 
     clear_combat_scene();
     return ok;

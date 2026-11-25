@@ -69,6 +69,10 @@ int test_strength_change(uint16_t i);
 int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_xeroc_reveal(uint16_t i);
+int test_aquator(uint16_t i);                   // a rozsda a viselt páncélt eggyel rontja, a határig; a védettet, a bőrpáncélt nem, a kikapcsolt Aquator sem; páncél nélkül nincs hatása
+int test_nymph(uint16_t i);                     // a nimfa egy használaton kívüli mágikus tárgyat lop, kötegből egy darabot (J31), az amulettet is, és eltűnik a tárgyaival; ha nincs mit, marad
+int test_leprechaun(uint16_t i);                // a leprechaun aranyat lop (pénz nélkül is), és eltűnik a tárgyaival; a megölt leprechaun aranya leesik
+int test_vanishing_monster_turn(uint16_t i);    // a lopás után eltűnő gyorsított nimfának nincs második lépése, a többi szörny egyszer lép, a TILE_MONSTER bitek rendben; a nimfa a tábla végén és elején
 int test_player_death(uint16_t i);
 int test_wielded_damage(uint16_t i);            // a kézben tartott tárgy sebzése az erő bónuszával: üres kéz 1x4, bot 2x3, pálca 1x1, más tárgy 0x0; a nem fegyver tárgy rekordja nem bónusz
 int test_player_armor(uint16_t i);              // a védelem a viselt páncélé, levéve a BASE_ARMOR; a státuszsorban a kezdő páncéllal Arm:4, levéve Arm:0

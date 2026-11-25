@@ -31,6 +31,7 @@
 #define ITEM_CURSED     0x01                    // átkozott: használatban nem vehető le, nem cserélhető (ISCURSED)
 #define ITEM_KNOWN      0x02                    // azonosítva: a nevében látszik a bónusza, a töltése, a gyűrűmódja (ISKNOW)
 #define ITEM_ROOM_GOLD  0x04                    // a szoba aranya: a szint berendezésekor lerakott arany, ezt őrzi a kapzsi szörny (ROOMGOLD)
+#define ITEM_PROTECTED  0x08                    // a páncél véd a rozsdától (ISPROT)
 
 // az étel altípusai
 #define FOOD_RATION  0
@@ -51,7 +52,8 @@
 #define WEAPON_DART       6
 #define WEAPON_SHURIKEN   7
 
-// a külön kezelt páncéltípus: a páncélok esélytáblájának (armor_chances) indexe
+// a külön kezelt páncéltípusok: a páncélok esélytáblájának (armor_chances) indexei
+#define ARMOR_LEATHER    0
 #define ARMOR_RING_MAIL  1
 
 // a külön kezelt gyűrűtípusok: a gyűrűk esélytáblájának (ring_chances) indexei
@@ -148,6 +150,10 @@ bool is_many_weapon(uint8_t which);             // kötegelt lövedék (ISMANY):
 bool has_ring_modifier(uint8_t which);          // modos gyűrű: protection, add strength, dexterity, increase damage
 int8_t get_armor_base_class(uint8_t which);     // a páncéltípus védelme (8.5)
 
+// mágikus tárgy (is_magic, 8.8): a bájital, a tekercs, a gyűrű, a pálca és az amulett mindig; a páncél, ha védett (ITEM_PROTECTED)
+// vagy a védelme eltér az alapértékétől; a fegyver, ha van találati vagy sebzésbónusza; az étel és az arany soha
+bool is_magic_item(const struct Item *item);
+
 // új tárgy a megadott típussal és altípussal, a minden létrehozáskor járó kezdőértékekkel (8.1): darabszám, kötegazonosító,
 // a páncél védelme, a gyűrű modja és átka, a pálca töltése; NO_ITEM, ha betelt a tábla
 uint8_t create_item(uint8_t type, uint8_t which);
@@ -159,7 +165,10 @@ void roll_curse_or_bonus(uint8_t index);
 // NO_ITEM, ha betelt a tábla: ekkor nincs dobás, és a számláló sem változik
 uint8_t create_random_item(void);
 
-// az arany (create_item(ITEM_TYPE_GOLD, 0)) mélység szerinti véletlen mennyisége;
+// a mélység szerinti véletlen aranymennyiség (GOLDCALC): rnd(GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL × mélység) + GOLD_AMOUNT_MIN
+uint16_t roll_gold_amount(void);
+
+// az arany (create_item(ITEM_TYPE_GOLD, 0)) mélység szerinti véletlen mennyisége (roll_gold_amount);
 // nem egy 8 bites visszatérésű create_gold része, mert annak az eredményét az Oscar64 1.32.273 a hívóban rossz helyről olvasta (README, Oscar64-hibák, 10.)
 void set_random_gold_amount(uint8_t index);
 

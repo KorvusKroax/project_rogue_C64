@@ -75,6 +75,10 @@ const char text_you_can_move_again[] = "you can move again";
 const char text_frozen_by[] = "you are frozen by \1";
 const char text_suddenly_weaker[] = "you suddenly feel weaker";
 const char text_bite_weaker[] = "you feel a bite in your leg and now feel weaker";
+const char text_armor_weaker[] = "your armor appears to be weaker now. Oh my!";
+const char text_rust_vanishes[] = "the rust vanishes instantly";
+const char text_purse_lighter[] = "your purse feels lighter";
+const char text_she_stole[] = "she stole \1!";
 const char text_killed_by[] = "killed by \1\2";
 
 const char *const text_death_causes[DEATH_CAUSE_COUNT] = { "hypothermia" };

@@ -18,6 +18,9 @@
 // rövid íj, nyílköteg; a páncél és a fegyverek azonosítva
 void create_starting_equipment(void);
 
+// a tárgy használatban van: a kézben tartott tárgy vagy a viselt páncél
+bool is_item_in_use(uint8_t index);
+
 // `w` előtt: ha a kézben tartott tárgy átkozott, „you can't. It appears to be cursed”, és nem cserélhető; igaz, ha átkozott
 bool report_cursed_wielded_item(void);
 

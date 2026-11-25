@@ -4,8 +4,10 @@
 #include <string.h>
 
 #include "platform/platform.h"
+#include "equipment.h"
 #include "explore.h"
 #include "game.h"
+#include "item_names.h"
 #include "items.h"
 #include "map.h"
 #include "message.h"
@@ -207,6 +209,43 @@ static void drop_monster_pack(struct Monster *monster)
     }
 }
 
+// a mágia elleni mentődobás (save_magic): igaz, ha a játékos ellenáll; magasabb szinten könnyebb
+static bool roll_magic_save(void)
+{
+    // ide jön: a protection gyűrűk módja is könnyít
+    return (int16_t)rnd(SAVING_THROW_SIDES) + 1 >= MAGIC_SAVE_TARGET - game.player.experience_level / 2;
+}
+
+// a leprechaun aranyának további dobásai összesen: LEPRECHAUN_EXTRA_GOLD_ROLLS külön aranydobás
+static uint16_t roll_extra_leprechaun_gold(void)
+{
+    uint16_t amount = 0;
+    for (uint8_t roll = 0; roll < LEPRECHAUN_EXTRA_GOLD_ROLLS; roll++) {
+        amount += roll_gold_amount();
+    }
+    return amount;
+}
+
+// a megölt leprechaun aranya a csomagjába kerül, így vele együtt leesik: ha a mezője körül van hova esnie, és a szint a legmélyebb
+// elért; egy aranydobásnyi, sikeres mágia elleni mentődobásnál a további dobásokkal több; kimarad, ha betelt a tárgytábla
+static void add_leprechaun_gold(struct Monster *leprechaun)
+{
+    // a hely a leeséskor dől el, itt csak az számít, hogy van-e
+    uint8_t x;
+    uint8_t y;
+    if (!choose_fall_position(leprechaun->x, leprechaun->y, &x, &y)) return;
+    if (game.dungeon_level < game.max_level) return;
+
+    uint8_t index = create_item(ITEM_TYPE_GOLD, 0);
+    if (index == NO_ITEM) return;
+    uint16_t amount = roll_gold_amount();
+    if (roll_magic_save()) {
+        amount += roll_extra_leprechaun_gold();
+    }
+    get_item(index)->properties.gold_amount = amount;
+    insert_item_after(&leprechaun->first_pack_item, NO_ITEM, index);
+}
+
 // a szörny halála (killed): a játékos megkapja az XP-jét, a csomagja a környező mezőkre esik, a szörny kikerül a táblából,
 // „you have defeated <név>”, és jöhet a szintlépés
 static void kill_monster(struct Monster *monster)
@@ -216,7 +255,9 @@ static void kill_monster(struct Monster *monster)
     if (monster->type == 'F') {
         game.flytrap_grip = 0;
     }
-    // ide jön: a leprechaun aranya a csomagjába kerül, és vele együtt leesik
+    if (monster->type == 'L') {
+        add_leprechaun_gold(monster);
+    }
     drop_monster_pack(monster);
 
     // a név a kivétel előtt, amíg a szörny még a helyén van
@@ -325,15 +366,106 @@ static void grip_player(void)
     }
 }
 
-// a szörny különleges hatása a sikeres találata után
-static void apply_special_attack(const struct Monster *monster, const char *monster_name)
+// az Aquator rozsdája a viselt páncélon: a védelme eggyel romlik („your armor appears to be weaker now. Oh my!”); páncél nélkül,
+// bőrpáncélon és RUST_ARMOR_CLASS_LIMIT védelemtől nincs hatása; a védett páncélról (ITEM_PROTECTED) f-harcon kívül
+// „the rust vanishes instantly”
+static void rust_armor(void)
+{
+    if (game.worn_armor == NO_ITEM) return;
+    struct Item *armor = get_item(game.worn_armor);
+    if (armor->which == ARMOR_LEATHER || armor->properties.armor_class >= RUST_ARMOR_CLASS_LIMIT) return;
+
+    // ide jön: a maintain armor gyűrű is megvédi
+    if (armor->flags & ITEM_PROTECTED) {
+        if (!is_fight_active) {
+            message(text_rust_vanishes);
+        }
+        return;
+    }
+    armor->properties.armor_class++;
+    message(text_armor_weaker);
+}
+
+// a szörny eltűnik a szintről (a nimfa és a leprechaun a lopás után): a tárgyai vele vesznek, és kikerül a táblából
+static void make_monster_vanish(struct Monster *monster)
+{
+    free_item_list(&monster->first_pack_item);
+    remove_monster(monster);
+}
+
+// a leprechaun aranyat lop: egy aranydobásnyit, sikertelen mágia elleni mentődobásnál a további dobásokkal többet, de a pénz
+// 0 alá nem megy; utána eltűnik; „your purse feels lighter”, ha a pénz csökkent
+static void steal_gold(struct Monster *leprechaun)
+{
+    uint16_t amount = roll_gold_amount();
+    if (!roll_magic_save()) {
+        amount += roll_extra_leprechaun_gold();
+    }
+    uint32_t gold_before = game.gold;
+    game.gold = game.gold > amount ? game.gold - amount : 0;
+
+    make_monster_vanish(leprechaun);
+    if (game.gold != gold_before) {
+        message(text_purse_lighter);
+    }
+}
+
+// a csomag egy használaton kívüli mágikus tárgya, egyenletes eséllyel; NO_ITEM, ha nincs ilyen
+static uint8_t choose_item_to_steal(void)
+{
+    uint8_t chosen = NO_ITEM;
+    uint8_t count = 0;
+    for (uint8_t index = game.first_pack_item; index != NO_ITEM; index = get_item(index)->next) {
+        if (is_item_in_use(index) || !is_magic_item(get_item(index))) continue;
+
+        count++;
+        if (rnd(count) == 0) {
+            chosen = index;
+        }
+    }
+    return chosen;
+}
+
+// a nimfa ellop egy használaton kívüli mágikus tárgyat, kötegből egy darabot (J31), és eltűnik vele; „she stole <a darab neve>!”;
+// ha nincs ilyen tárgy, nincs hatása
+static void steal_magic_item(struct Monster *nymph)
+{
+    uint8_t index = choose_item_to_steal();
+    if (index == NO_ITEM) return;
+
+    make_monster_vanish(nymph);
+
+    struct Item *item = get_item(index);
+    uint8_t count = item->count;
+    item->count = 1;
+    message_format(text_she_stole, format_item_name(item), NULL, 0);
+    if (count > 1) {
+        item->count = count - 1;
+    } else {
+        remove_item_from_list(&game.first_pack_item, index);
+        free_item(index);
+    }
+}
+
+// a szörny különleges hatása a sikeres találata után; a nimfa és a leprechaun közben eltűnhet, utána a mutató a következő szörnyre
+// mutat (remove_monster)
+static void apply_special_attack(struct Monster *monster, const char *monster_name)
 {
     switch (monster->type) {
+        case 'A':
+            rust_armor();
+            break;
         case 'F':
             grip_player();
             break;
         case 'I':
             freeze_player(monster_name);
+            break;
+        case 'L':
+            steal_gold(monster);
+            break;
+        case 'N':
+            steal_magic_item(monster);
             break;
         case 'R':
             if (!roll_poison_save()) {
@@ -352,7 +484,6 @@ static void apply_special_attack(const struct Monster *monster, const char *mons
                 drain_experience_level();
             }
             break;
-        // ide jön: az Aquator, a Leprechaun és a Nymph
     }
 }
 

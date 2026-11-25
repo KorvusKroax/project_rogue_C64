@@ -386,10 +386,30 @@ void roll_curse_or_bonus(uint8_t index)
     }
 }
 
+uint16_t roll_gold_amount(void)
+{
+    return rnd(GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * game.dungeon_level) + GOLD_AMOUNT_MIN;
+}
+
 void set_random_gold_amount(uint8_t index)
 {
-    uint16_t amount = rnd(GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * game.dungeon_level) + GOLD_AMOUNT_MIN;
+    uint16_t amount = roll_gold_amount();
     get_item(index)->properties.gold_amount = amount;
+}
+
+bool is_magic_item(const struct Item *item)
+{
+    switch (item->type) {
+        case ITEM_TYPE_ARMOR:
+            return (item->flags & ITEM_PROTECTED) || item->properties.armor_class != get_armor_base_class(item->which);
+        case ITEM_TYPE_WEAPON:
+            return item->properties.weapon.hit_bonus != 0 || item->properties.weapon.damage_bonus != 0;
+        case ITEM_TYPE_FOOD:
+        case ITEM_TYPE_GOLD:
+            return false;
+        default:
+            return true;
+    }
 }
 
 uint8_t create_random_item(void)
