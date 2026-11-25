@@ -155,8 +155,10 @@ find_dest(monster):
 
 > **C64-eltérés (E23):** a szoba aranyát a tárgy ROOMGOLD jelzője mutatja ([1.2.3](01_adatmodell_es_flagek.md#123-tárgy)). A szobarekordban nincs aranymező, és a `dest` mindig egy padlón fekvő tárgy vagy a játékos, mert a szörnyrekord csak tárgyindexet tárol ([1.4.8](01_adatmodell_es_flagek.md#148-szörnyrekord)). *Eredetileg* a szoba tárolta az arany helyét és mennyiségét, a kapzsi szörny célja a szoba arany-koordinátája volt, nem a tárgyé (ezért nem vette fel), és a szoba arany-jelzését csak a játékos aranyfelvétele törölte. Ritka esetekben ez másképp viselkedik:
 > - ha a kapzsi szörny tárgygyűjtőként (`find_dest`) indult a szoba aranyáért, eredetileg felvette, most ráül;
-> - ha a szoba aranyát egy másik szörny veszi fel, eredetileg a szoba továbbra is aranyasnak számított, és a rá tartó kapzsi szörny az üres mezőre ment; most a játékost veszi célba;
+> - ha egy tárgyat (a szoba aranyát is) egy szörny vesz fel, a többi rá tartó szörny eredetileg a tárgy üres helyére ment, és ott megállt (a szoba aranyánál a szoba továbbra is aranyasnak számított); most a játékost veszi célba;
 > - az aranyat őrző kapzsi szörny célja foglalja az aranyat, így tárgygyűjtő szörny nem választja (J3); eredetileg választhatta.
+>
+> A szörny által felvett arany elveszti a ROOMGOLD jelzőt ([6.6](#66-mozgás)), így ha a szörny halálakor leesik, már nem a szoba aranya. Az eredetiben sem lett az, mert ott a szoba aranya a szobarekord mezője volt.
 
 ## 6.6 Mozgás
 ```
@@ -165,12 +167,15 @@ runners():  // az AFTER fázisban, egyszer körönként
     if monster.ISHELD or !monster.ISRUN: continue
     old_pos = monster.pos
     if move_monst(monster) == MEGHALT: continue  // pl. a játékost támadva eltűnt (nimfa, leprechaun)
-    if monster.ISFLY and dist2(player, monster.pos) >= 3: move_monst(monster)
+    if monster.ISFLY and dist2(player, monster.pos) >= 3:
+       if move_monst(monster) == MEGHALT: continue
     if monster.ISTARGET volt és monster.pos != old_pos: ISTARGET le, 'f'-harc vége
 
-move_monst(monster):
-  if !monster.ISSLOW or monster.turn: do_chase(monster)
-  if monster.ISHASTE: do_chase(monster)
+move_monst(monster):  // → MEGHALT, ha a szörny közben kikerült a táblából
+  if !monster.ISSLOW or monster.turn:
+     if do_chase(monster) == MEGHALT: return MEGHALT
+  if monster.ISHASTE:
+     if do_chase(monster) == MEGHALT: return MEGHALT
   monster.turn = !monster.turn
 
 do_chase(monster):
@@ -192,10 +197,12 @@ do_chase(monster):
     break
   (next_pos, arrived) = chase(monster, goal)
   if arrived:                                                     // chase nem talált jobb mezőt
-     if goal == player.pos: return attack(monster)                // 7.1, 6.7
+     if goal == player.pos: return attack(monster)                // 7.1, 6.7; MEGHALT, ha a szörny a támadásában eltűnt
      if goal == monster.dest:
         if monster.dest egy padlón fekvő tárgy, és nem (monster.ISGREED and a tárgy ROOMGOLD):   // a szoba aranyára a kapzsi szörny ráül (E23)
-           felveszi a csomagjába, a mező FLOOR/PASSAGE lesz, a többi rá tartó szörny a játékost veszi célba (6.5)
+           felveszi a csomagjába (a ROOMGOLD jelző törlődik, E23), a mező FLOOR/PASSAGE lesz,
+           és ha a játékos látja a mezőt (cansee, 3.1), ez a jel azonnal kirajzolódik (J32);
+           a többi rá tartó szörny a játékost veszi célba (6.5)
            monster.dest = find_dest(monster)
         if monster.type != 'F': stop = true
   else if monster.type == 'F': return                             // a Venus flytrap soha nem mozdul el
@@ -228,6 +235,10 @@ rndmove(who):  // zavarodott mozgás (szörny és játékos is)
   return target
 ```
 > **C64-javítás (J22):** szörnynél a véletlen lépés a szörnyes mezőt (F_MONST) is kizárja, így az álcázott Xerocét is. *Eredetileg* a `step_ok` csak a képernyőjelet nézte, ezért a zavarodott szörny, a denevér és a phantom ráléphetett az álcázott Xerocra, és két szörny került egy mezőre. A játékos zavarodott lépése nem változik: az álcázott Xerocra lépve megtámadja.
+
+> **C64-javítás (J32):** ha a szörny olyan mezőn vesz fel tárgyat, amelyet a játékos lát, a mező azonnal padlóként (folyosón folyosóként) rajzolódik ki. Így a szörny alatti jel (`oldch`) is ez lesz, és továbblépéskor nem a tárgy jele kerül vissza. A rajzolás nem villan: a padlót még ugyanabban a lépésben felülírja a szörny jele, és a videomemóriába a változások csak a következő parancsbeolvasás előtt, egyszerre kerülnek ki ([3.5](03_latoter_es_megjelenites.md#35-nézőablak-görgetés), Rajzolás). *Eredetileg* a felvétel csak a térképet írta át, a képernyőn a tárgy jele maradt. Világos szobában, a játékostól távolabb a szörny ezt jegyezte meg, és továbblépéskor visszarajzolta: a játékos a tárgyat a helyén látta, amíg oda nem ment.
+
+- **Eltűnés a saját körében:** a nimfa és a leprechaun a támadásában eltűnhet ([6.7](#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)). A kivett szörny helyére a mögötte álló csúszik ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)), ezért utána a szörnyre semmi nem hivatkozhat. A további lépései (a gyorsított és a repülő második lépése), a `turn` váltása és az `f`-harc vizsgálata elmarad, a kör a következő szörnnyel folytatódik. Az üres körben (`waste_time`, [4.2.3](04_jatekciklus_es_parancsok.md#423-tárgyak)) is így van.
 - A szörny akkor támad, ha a legjobb lépés a játékos mezőjére vinne – vagyis ha szomszédos vele (átlósan csak `diag_ok` szerint).
 - Ha nincs közelebbi vagy azonos távolságú mező, helyben marad (`best` = saját mező).
 - A szörnyek nem lépnek egymásra (a szörny jele nem `step_ok`), tárgyra igen.
@@ -242,7 +253,7 @@ Ezután a szörny new_pos-ra kerül. A jele kirajzolódik, ha látható (`disgui
 ```
 A aquator: (dmg 0x0) rust_armor(cur_armor)
            rust_armor: if !armor or leather or arm >= 9: nincs hatás
-                       else if ISPROT or maintain armor gyűrű: "the rust vanishes instantly"
+                       else if ISPROT or maintain armor gyűrű: if !to_death: "the rust vanishes instantly"
                        else: arm++; "your armor appears to be weaker now. Oh my!"
 F flytrap: (dmg 0x0, J4) player.ISHELD = true; flytrap_grip++; hpt -= 1; if hpt <= 0: death(F)
            mellé ütéskor (7.1), az ISCANC-tól függetlenül: hpt -= flytrap_grip; if hpt <= 0: death(F)
@@ -253,11 +264,13 @@ I ice:     (dmg 0x0) player.ISRUN le; ha épp nem dermedt: "you are frozen by " 
 L leprech: gold -= rnd(50+10*level)+2
            if !save_magic(): gold -= 4 × (rnd(50+10*level)+2)  // négy külön dobás
            gold = max(gold, 0); "your purse feels lighter" (ha változott)
-           a leprechaun eltűnik a szintről, a nála lévő tárgyak elvesznek
+           a leprechaun eltűnik a szintről (MEGHALT, 6.6), a nála lévő tárgyak elvesznek
 M medusa:  a pillantás nem támadás, hanem a wake_monster része (6.4); a közelharci támadásai normálisan sebeznek
 N nymph:   (dmg 0x0) tárgy = egyenletesen egy mágikus tárgy (8.8) a csomagban, ami nincs használatban
            – az Amulett is mágikus, tehát ellophatja!
-           if van: elvesz egy darabot (kötegből egyet), a nimfa eltűnik vele; "she stole <tárgy>!"
+           if van: elvesz egy darabot (kötegből egyet, a köteg többi darabja marad, J31);
+                   a nimfa eltűnik vele (MEGHALT, 6.6), a nála lévő tárgyak is elvesznek;
+                   "she stole <tárgy>!" – az ellopott darab neve, pl. "she stole a potion of healing!"
            else: nincs hatás, a nimfa marad
 R rattle:  if !save_poison():
              if !sustain strength gyűrű: chg_str(-1) (5.6); "you feel a bite in your leg and now feel weaker"
@@ -286,7 +299,10 @@ D dragon:  lásd tűzokádás (7.6)
 
 > **C64-javítás (J17):** az Ice monster üzenete „you are frozen by the ice monster”. *Eredetileg* a szöveg „you are frozen by the ” + név volt, és mivel a név maga is „the”-vel kezdődik, „you are frozen by the the ice monster” jelent meg.
 
+> **C64-javítás (J31):** kötegből a nimfa egy darabot visz el, a köteg többi darabja a csomagban marad, és az üzenet az ellopott darabot nevezi meg. *Eredetileg* kötegnél csak a darabszám csökkent, és a köteg a csomagban maradt, de a lopás végén a rekordját mégis felszabadította: a csomag felszabadított memóriára mutatott. Az üzenet ráadásul a megmaradt darabszámot írta ki, például három bájitalból „she stole 2 potions of healing!”.
+
 ## 6.8 Szörny halála
+A kivett szörny csomagja megöléskor leesik (lent), eltűnéskor (nimfa, leprechaun, [6.7](#67-speciális-támadások-sikeres-találat-után-ha-nincs-iscanc)) elvész.
 ```
 kill_monster(monster):
   exp += monster.exp
@@ -295,8 +311,10 @@ kill_monster(monster):
      gold_amount = rnd(50+10*level)+2; if save_magic(): gold_amount += 4 × (rnd(50+10*level)+2)
      az arany a szörny csomagjába kerül (és vele együtt leesik)
   monster.pack minden tárgya: fall(item) – a szörny 3×3 környezetének egy véletlen üres
-     FLOOR/PASSAGE mezőjére (a játékosé kivételével); ha nincs hely, a tárgy elvész
-  eltávolítás, a mező helyére monster.oldch
+     FLOOR/PASSAGE mezőjére (a játékosé kivételével; a szörny saját mezője is lehet); ha nincs hely, a tárgy elvész
+     ha a játékos látja a mezőt (cansee, 3.1): ha szörny áll rajta (a haldokló is), az oldch-ja a tárgy jele lesz,
+        különben a tárgy kirajzolódik
+  eltávolítás, a mező helyére monster.oldch          // a saját mezőjére esett tárgy így jelenik meg
   "you have defeated " + név(monster) (7.7: nem látott szörnynél "something"); drain life-nál csak akkor, ha a szörny látható
   szintlépés-ellenőrzés (5.2)
 ```

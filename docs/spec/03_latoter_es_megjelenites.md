@@ -43,6 +43,13 @@ see_monst(monster):  // a játékos látja-e a szörnyet
      return true
   return monster.room == player.room and a szoba világos     // a labirintus és a folyosó sötét
 
+cansee(pos):  // a játékos látja-e a mezőt; pl. a szörny tárgyfelvételéhez (6.6) és a leeső tárgy kirajzolásához (6.8)
+  if ISBLIND: return false
+  if dist2(pos, player.pos) < 3:                              // szomszédos (lámpafény)
+     átlósan, folyosó-mezőn (F_PASS): ha a sarok egyik mezője sem léphető: return false
+     return true
+  return room(pos) == player.room and a szoba világos
+
 floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport): ez kerül a régi helyére
   ch = a MAP karaktere a játékos mezőjén
   if ch == FLOOR and PHANTOM(player.room): ch = PASSAGE
@@ -56,7 +63,7 @@ floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport
   > **C64-eltérés (E21):** nincs `seefloor` opció, a lámpafény mindig látszik. *Eredetileg* kikapcsolható volt (ekkor sötét szobában a padló sosem látszott), és 1200 baud vagy lassabb terminálon alapból ki volt kapcsolva, mert minden lépés kiírásokkal járt. C64-en a képernyőírás gyors, így az opciónak nincs szerepe.
 - **Átlós rálátás:** a `look` átlós korlátja enyhébb, mint a mozgás sarokvágás-tilalma ([4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás)): a rálátást csak az veszi el, ha mindkét köztes mező nem léphető, a lépést már egy is tiltja. Ami átlósan látszik, arra nem feltétlenül lehet átlósan lépni.
 - **Ami a SCREEN-en marad (memória):** falak, ajtók, folyosók, lépcső, felfedezett csapdák **és a már látott tárgyak**. Sötét szobából távozva *kizárólag a FLOOR karakterek* törlődnek.
-- **Tárgyak:** a látott tárgy emlékként a helyén marad akkor is, ha már nincs fény/rálátás. Az emlék nem frissül: ha közben egy szörny felveszi vagy elmozdítja, a képernyőn a régi jel marad, amíg a játékos újra nem látja a mezőt. Sötét szobában az új tárgy csak akkor jelenik meg, ha a 3×3-as környezetbe kerül; világos szobában belépéskor az összes látszik.
+- **Tárgyak:** a látott tárgy emlékként a helyén marad akkor is, ha már nincs fény/rálátás. Az emlék nem frissül: ha közben egy szörny felveszi vagy elmozdítja, a képernyőn a régi jel marad, amíg a játékos újra nem látja a mezőt. Ha a játékos látja a mezőt, a szörny felvétele azonnal látszik ([6.6](06_szornyek.md#66-mozgás), J32). Sötét szobában az új tárgy csak akkor jelenik meg, ha a 3×3-as környezetbe kerül; világos szobában belépéskor az összes látszik.
 - **A játékos jele** a SCREEN-be is bekerül, mint bármely más jel, így görgetéskor ([3.5](#35-nézőablak-görgetés)) is a helyén van. Alatta nincs eltárolt emlék (`oldch`, mint a szörnyeknél): a játékos mindig látja a saját mezőjét, ezért távozáskor a `floor_at` a MAP-ból adja a visszarajzolandó jelet.
 - **Szörnyek:** sosem maradnak emlékként. Csak akkor látszanak, ha *éppen* láthatók: világos szobában a játékossal azonos szobában, sötét szobában és folyosón csak a 3×3-ban (dist2 < 3), egyébként SEEMONST/CANSEE szabályai szerint. Ha nem látható, a helyén az alatta lévő emlékezett mező (`oldch`) jelenik meg.
   - **Ami mégis a képernyőn marad (mint az eredetiben):** az `erase_lamp` csak a FLOOR jeleket törli, ezért sötét szobában a lámpafényben látott szörny betűje a helyén marad, amikor a játékos továbblép; a szörny elmozdulásáig vagy a szoba elhagyásáig látszik. A `leave_room` a képernyőn látott nagybetűk alapján törli a szörnyeket, így a tárgyjellel álcázott xeroc jele a szoba elhagyása után is a helyén marad.

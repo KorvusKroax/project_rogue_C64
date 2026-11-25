@@ -175,7 +175,7 @@ Az eredeti ISREGEN flag (griff, troll, vámpír) hatástalan, elhagyható (E14).
 | ISMANY | kötegelt: nyíl, dobótőr, shuriken, arany |
 | ISFOUND | a tárgy már volt a csomagban (minden felvételkor beáll). A scare monster tekercs ebből tudja, hogy a következő felvételkor porrá kell válnia ([8.3](08_targyak.md#83-tekercsek-r)) |
 | ISPROT | páncél véd a rozsdától |
-| ROOMGOLD | a szoba aranya: a szoba berendezésekor lerakott arany ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)). A kapzsi szörny erre megy, és nem veszi fel, hanem ráül ([6.4](06_szornyek.md#64-ébresztés)–[6.6](06_szornyek.md#66-mozgás), E23) |
+| ROOMGOLD | a szoba aranya: a szoba berendezésekor lerakott arany ([2.7](02_szintgeneralas.md#27-arany-és-kezdő-szörnyek-szobánként-nem-fantom-szoba)). A kapzsi szörny erre megy, és nem veszi fel, hanem ráül ([6.4](06_szornyek.md#64-ébresztés)–[6.6](06_szornyek.md#66-mozgás), E23). Ha más szörny veszi fel, a jelző törlődik, így szörny csomagjában nincs ilyen tárgy, és a leeső arany nem lesz egy másik szoba aranya |
 
 ### 1.2.4 Mező
 | flag | jelentés |
@@ -251,7 +251,7 @@ Minden rekordfajta egy fix méretű táblában (pool) van; a rekordokra 1 bájto
 **A szörnytábla tömör, szörnylista nincs.** A szörnyek az 1..`monster_count` indexeken állnak, a létrehozás sorrendjében; az új szörny a tábla végére kerül. A szörnyek hátulról előre járódnak be, így a sorrend ugyanaz, mint az eredeti szörnylistáé, amelynek az elejére került az új szörny ([6.2](06_szornyek.md#62-generálás)): a legújabb cselekszik először.
 - **Kivétel:** a kivett szörny mögött állók egy hellyel előrecsúsznak, a `monster_count` eggyel csökken.
 - **Az indexek eltolódnak**, ezért szörnyindexet semmi nem tárol tartósan; a szörny célja ([6.5](06_szornyek.md#65-célpont)) tárgy vagy a játékos, más szörny soha.
-- **Halál a szörnyek köre közben:** a `runners` ([6.6](06_szornyek.md#66-mozgás)) bejárásának indexe egy globális változóban van, amíg a kör tart (különben 0). Ha egy kisebb indexű, még nem cselekedett szörny kerül ki (pl. a sárkány lángja megöli, [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)), a kivevő függvény ezt az indexet is eggyel csökkenti, különben a soron lévő szörny kétszer cselekedne. Ha maga a soron lévő vagy egy nagyobb indexű szörny kerül ki, nincs teendő. A szabály így egy helyen van, a hívónak nem kell vele törődnie; halott szörny nem marad a táblában, ezért jelölés és kihagyás sem kell a többi bejárásban.
+- **Halál a szörnyek köre közben:** a `runners` ([6.6](06_szornyek.md#66-mozgás)) bejárásának indexe egy globális változóban van, amíg a kör tart (különben 0). Ha egy kisebb indexű, még nem cselekedett szörny kerül ki (pl. a sárkány lángja megöli, [7.6](07_harc.md#76-elemi-sugár-lightning--fire--cold-pálca-sárkánytűz)), a kivevő függvény ezt az indexet is eggyel csökkenti, különben a soron lévő szörny kétszer cselekedne. Ha egy nagyobb indexű szörny kerül ki, nincs teendő. Ha maga a soron lévő (pl. a nimfa a lopással eltűnik), az indexen sincs, de a szörny lépései ott véget érnek ([6.6](06_szornyek.md#66-mozgás)). A szabály így egy helyen van, a hívónak nem kell vele törődnie; halott szörny nem marad a táblában, ezért jelölés és kihagyás sem kell a többi bejárásban.
 
 | tábla | méret | megjegyzés |
 |---|---|---|
