@@ -508,6 +508,16 @@ static void add_stick_name(const struct Item *item)
     }
 }
 
+// a használatban lévő tárgy utótagja: " (weapon in hand)", " (being worn)"; ide jön: a gyűrűké
+static void add_in_use_suffix(const struct Item *item)
+{
+    if (game.wielded_item != NO_ITEM && item == get_item(game.wielded_item)) {
+        add_text(text_weapon_in_hand);
+    } else if (game.worn_armor != NO_ITEM && item == get_item(game.worn_armor)) {
+        add_text(text_being_worn);
+    }
+}
+
 const char *format_item_name(const struct Item *item)
 {
     item_name_length = 0;
@@ -547,6 +557,7 @@ const char *format_item_name(const struct Item *item)
     if (item_name_has_article) {
         complete_article();
     }
+    add_in_use_suffix(item);
     item_name[item_name_length] = 0;
     return item_name;
 }

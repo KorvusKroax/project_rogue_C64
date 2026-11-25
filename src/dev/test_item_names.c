@@ -378,13 +378,30 @@ static bool are_other_names_valid(void)
     return is_example_named("the Amulet of Yendor");
 }
 
+// a kézben tartott tárgy és a viselt páncél neve után az utótag, a címke után is; az utótag a tárgytábla rekordján múlik
+static bool are_in_use_names_valid(void)
+{
+    clear_item_table();
+    uint8_t mace = create_item(ITEM_TYPE_WEAPON, WEAPON_MACE);
+    uint8_t armor = create_item(ITEM_TYPE_ARMOR, ARMOR_RING_MAIL);
+    get_item(mace)->label = example_name;
+    game.wielded_item = mace;
+    game.worn_armor = armor;
+
+    bool ok = strcmp(format_item_name(get_item(mace)), "a mace called " EXAMPLE_NAME " (weapon in hand)") == 0 &&
+        strcmp(format_item_name(get_item(armor)), "ring mail (being worn)") == 0;
+
+    clear_item_table();
+    return ok;
+}
+
 int test_item_names(uint16_t i)
 {
     example_name = store_name(EXAMPLE_NAME);
 
     bool ok = example_name != NO_NAME && are_potion_names_valid() && are_scroll_names_valid() && are_food_names_valid()
         && are_weapon_names_valid() && are_armor_names_valid() && are_ring_names_valid() && are_stick_names_valid()
-        && are_other_names_valid();
+        && are_other_names_valid() && are_in_use_names_valid();
 
     free_name(example_name);
     return ok;
@@ -409,9 +426,14 @@ static uint8_t find_longest_text(const char *const *list, uint8_t count)
 #define KNOWLEDGE_ROUND_COUNT  3                // ismeretlen, elnevezett és ismert típus
 
 // minden típus minden altípusa, ismeretlen, a long_name nevű és ismert típusként, a fegyver és a páncél a long_name címkével,
-// a leghosszabb álnévvel, 255 darabbal és a leghosszabban kiírt értékekkel
+// a leghosszabb álnévvel, 255 darabbal, a leghosszabban kiírt értékekkel és a használatban lévő tárgy utótagjával (a páncél
+// viselve, minden más a kézben); az utótag miatt a tárgytábla egy rekordján
 static bool do_all_names_fit(uint8_t long_name)
 {
+    clear_item_table();
+    uint8_t slot = allocate_item();
+    struct Item *item = get_item(slot);
+
     memset(game.potion_colors, find_longest_text(text_potion_colors, POTION_COLOR_COUNT), sizeof(game.potion_colors));
     memset(game.ring_stones, find_longest_text(text_ring_stones, RING_STONE_COUNT), sizeof(game.ring_stones));
     memset(game.stick_materials, find_longest_text(text_stick_materials, STICK_MATERIAL_COUNT), sizeof(game.stick_materials));
@@ -438,10 +460,15 @@ static bool do_all_names_fit(uint8_t long_name)
                 if (type == ITEM_TYPE_GOLD) {
                     example.properties.gold_amount = 65535;
                 }
-                if (strlen(format_item_name(&example)) > ITEM_NAME_LENGTH_MAX) return false;
+                *item = example;
+                bool is_armor = type == ITEM_TYPE_ARMOR;
+                game.worn_armor = is_armor ? slot : NO_ITEM;
+                game.wielded_item = is_armor ? NO_ITEM : slot;
+                if (strlen(format_item_name(item)) > ITEM_NAME_LENGTH_MAX) return false;
             }
         }
     }
+    clear_item_table();
     return true;
 }
 
@@ -452,7 +479,8 @@ int test_longest_item_name(uint16_t i)
     long_name[NAME_LENGTH_MAX] = 0;
     uint8_t long_name_index = store_name(long_name);
 
-    // a leghosszabb név (item_names.h): a leghosszabb nevű, elnevezett típusú bot a legtöbb töltéssel
+    // a leghosszabb név (item_names.h): a leghosszabb nevű, elnevezett típusú bot a legtöbb töltéssel, a kézben; az utótag miatt
+    // a tárgytábla rekordja
     uint8_t teleport_away = find_text(text_stick_names, STICK_SUBTYPE_COUNT, "teleport away");
     game.stick_materials[teleport_away] = find_text(text_stick_materials, STICK_MATERIAL_COUNT, "persimmon wood");
     game.stick_knowledge[teleport_away] = long_name_index;
@@ -460,11 +488,15 @@ int test_longest_item_name(uint16_t i)
     char expected[ITEM_NAME_SIZE];
     strcpy(expected, "a staff called ");
     strcat(expected, long_name);
-    strcat(expected, " [255 charges](persimmon wood)");
+    strcat(expected, " [255 charges](persimmon wood) (weapon in hand)");
 
-    set_example(ITEM_TYPE_STICK, teleport_away, 1, ITEM_KNOWN);
-    example.properties.charges = 255;
-    bool ok = long_name_index != NO_NAME && is_example_named(expected) && strlen(expected) <= ITEM_NAME_LENGTH_MAX;
+    clear_item_table();
+    uint8_t staff = create_item(ITEM_TYPE_STICK, teleport_away);
+    get_item(staff)->flags = ITEM_KNOWN;
+    get_item(staff)->properties.charges = 255;
+    game.wielded_item = staff;
+    bool ok = long_name_index != NO_NAME && strcmp(format_item_name(get_item(staff)), expected) == 0;
+    ok = ok && strlen(expected) <= ITEM_NAME_LENGTH_MAX;
 
     ok = ok && do_all_names_fit(long_name_index);
     free_name(long_name_index);

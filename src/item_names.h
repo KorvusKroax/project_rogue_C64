@@ -30,7 +30,7 @@ uint8_t *get_type_knowledge(uint8_t type);
 #define SCROLL_TITLE_LENGTH_MAX      30         // default: 30
 #define SCROLL_TITLE_SIZE            (SCROLL_TITLE_LENGTH_MAX + 1)
 
-// a leghosszabb név az elnevezett típussal és a használatban lévő tárgy (később jövő) utótagjával együtt:
+// a leghosszabb név az elnevezett típussal és a használatban lévő tárgy utótagjával együtt, a kézben tartott boté:
 // "a staff called " (15) + a 20 karakteres név + " [255 charges]" (14) + "(persimmon wood)" (16) + " (weapon in hand)" (17)
 #define ITEM_NAME_LENGTH_MAX  82
 #define ITEM_NAME_SIZE        (ITEM_NAME_LENGTH_MAX + 1)
@@ -58,7 +58,8 @@ void name_item(uint8_t index);
 // a tekercstípus felirata a game.scroll_title_seed-ből, nullával lezárva; out legalább SCROLL_TITLE_SIZE bájt; az RN-t nem hívja
 void write_scroll_title(char *out, uint8_t which);
 
-// a tárgy neve (8.8), kisbetűvel kezdve; az eredmény a következő hívásig él
+// a tárgy neve (8.8), kisbetűvel kezdve; a kézben tartott tárgyé és a viselt páncélé után az utótag: " (weapon in hand)",
+// " (being worn)", ezért ezek nevét a tárgytábla rekordjával kell kérni; az eredmény a következő hívásig él
 const char *format_item_name(const struct Item *item);
 
 #endif

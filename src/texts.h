@@ -119,5 +119,7 @@ extern const char text_rations_of_food[];           // "3 rations of food"
 extern const char text_fruit_name[];                // a gyümölcs neve; amíg nincs beállítása, rögzített
 extern const char text_gold_pieces[];               // "25 Gold pieces"
 extern const char text_amulet_name[];
+extern const char text_weapon_in_hand[];            // a használatban lévő tárgy utótagja: a kézben tartott tárgyé
+extern const char text_being_worn[];                // a viselt páncélé
 
 #endif

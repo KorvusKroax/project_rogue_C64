@@ -257,3 +257,5 @@ const char text_rations_of_food[] = " rations of food";
 const char text_fruit_name[] = "slime-mold";
 const char text_gold_pieces[] = " Gold pieces";
 const char text_amulet_name[] = "the Amulet of Yendor";
+const char text_weapon_in_hand[] = " (weapon in hand)";
+const char text_being_worn[] = " (being worn)";
