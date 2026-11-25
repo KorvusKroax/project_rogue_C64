@@ -72,6 +72,7 @@ int test_xeroc_reveal(uint16_t i);
 int test_aquator(uint16_t i);                   // a rozsda a viselt páncélt eggyel rontja, a határig; a védettet, a bőrpáncélt nem, a kikapcsolt Aquator sem; páncél nélkül nincs hatása
 int test_nymph(uint16_t i);                     // a nimfa egy használaton kívüli mágikus tárgyat lop, kötegből egy darabot (J31), az amulettet is, és eltűnik a tárgyaival; ha nincs mit, marad
 int test_leprechaun(uint16_t i);                // a leprechaun aranyat lop (pénz nélkül is), és eltűnik a tárgyaival; a megölt leprechaun aranya leesik
+int test_lit_room_drops(uint16_t i);            // világos szobában a megölt szörny tárgyai a játékostól két mezőre esve is azonnal kirajzolódnak
 int test_vanishing_monster_turn(uint16_t i);    // a lopás után eltűnő gyorsított nimfának nincs második lépése, a többi szörny egyszer lép, a TILE_MONSTER bitek rendben; a nimfa a tábla végén és elején
 int test_player_death(uint16_t i);
 int test_wielded_damage(uint16_t i);            // a kézben tartott tárgy sebzése az erő bónuszával: üres kéz 1x4, bot 2x3, pálca 1x1, más tárgy 0x0; a nem fegyver tárgy rekordja nem bónusz
@@ -104,6 +105,7 @@ int test_drop_full_table(uint16_t i);           // betelt tárgytáblánál a k�
 int test_amulet_carried(uint16_t i);            // az amulett felvéve a játékosnál van, lerakva nincs (a csomagból adódik, J29)
 int test_wield_item(uint16_t i);                // a `w`: a `*` lista csak fegyver; páncélra és használt tárgyra elmarad; bármi más kézbe vehető; az átkozott a kézben marad; üres kör nincs
 int test_wear_armor(uint16_t i);                // a `W`: a `*` lista csak páncél; nem páncélra üres kör nélkül; a páncél egy üres kör után kerül fel, azonosítva; második nem; halálnál elmarad
+int test_wear_stolen_armor(uint16_t i);         // a `W` üres körében a nimfa ellopja a felveendő páncélt: az nem kerül fel (J34)
 int test_take_off_armor(uint16_t i);            // a `T`: páncél nélkül nem visz időt; az átkozott rajta marad üres kör nélkül; egy üres kör után lekerül; halálnál elmarad
 int test_starting_equipment(uint16_t i);        // az i. seeddel: a kezdő csomag betűi és sorrendje, a típusok, a bónuszok, az azonosítás, a nyilak száma; a páncél viselve, a buzogány kézben
 int test_report_items_in_use(uint16_t i);       // a `)` és a `]`: „you are wielding nothing” / „wearing nothing”; különben a betű és a név, utótag nélkül

@@ -7,6 +7,7 @@
 static const struct DevTest equipment_tests[] = {
     { "EQUIP-WIELD", test_wield_item, 1 },
     { "EQUIP-WEAR", test_wear_armor, 1 },
+    { "EQUIP-WEAR STOLEN", test_wear_stolen_armor, 1 },
     { "EQUIP-TAKE OFF", test_take_off_armor, 1 },
     { "EQUIP-DROP IN USE", test_drop_item_in_use, 1 },
     { "EQUIP-STARTING", test_starting_equipment, STARTING_EQUIPMENT_TEST_SEED_COUNT },

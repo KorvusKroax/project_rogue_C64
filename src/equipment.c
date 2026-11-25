@@ -100,9 +100,9 @@ bool wear_armor(uint8_t index)
         return true;
     }
 
-    // az üres körben még a páncél nélküli állapot számít
+    // az üres körben még a páncél nélküli állapot számít; a páncél még nincs használatban, így a nimfa ellophatja: akkor nem kerül fel (J34)
     waste_time();
-    if (is_player_dead()) return true;
+    if (is_player_dead() || !is_item_in_pack(index)) return true;
 
     item->flags |= ITEM_KNOWN;
     // a név a felvétel előtt készül, így nincs utótagja (8.8)

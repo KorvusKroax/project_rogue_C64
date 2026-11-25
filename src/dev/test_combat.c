@@ -13,6 +13,7 @@
 #include "../explore.h"
 #include "../items.h"
 #include "../map.h"
+#include "../message.h"
 #include "../monsters.h"
 #include "../move.h"
 #include "../pack.h"
@@ -1144,8 +1145,9 @@ static void give_monster_food(void)
     insert_item_after(&game.monsters[0].first_pack_item, NO_ITEM, index);
 }
 
-// a kezdő csomag íja (d) +1-es, ezért mágikus; a buzogány kézben, az ing viselve, a nyilak +0-sak, az étel nem mágikus
-#define NYMPH_TEST_BOW_LETTER  'd'
+// a kezdő csomag íja (d) +1-es, ezért mágikus; a buzogány kézben, az ing viselve, a nyilak (e) +0-sak, az étel nem mágikus
+#define NYMPH_TEST_BOW_LETTER     'd'
+#define NYMPH_TEST_ARROWS_LETTER  'e'
 
 // a nimfa jelenetében az íj ne legyen mágikus: így csak a teszt tárgya lopható
 static void make_bow_plain(void)
@@ -1154,7 +1156,7 @@ static void make_bow_plain(void)
 }
 
 // a nimfa egy használaton kívüli mágikus tárgyat lop (a kezdő csomagból az íjat), és eltűnik vele, a saját tárgyaival együtt;
-// kötegből egy darabot (J31); az amulettet is ellopja; ha nincs mit lopnia, nem tűnik el
+// kötegből egy darabot, és az üzenet ezt a darabot nevezi meg (J31); az amulettet is ellopja; ha nincs mit lopnia, nem tűnik el
 int test_nymph(uint16_t i)
 {
     game.seed = COMBAT_TEST_SEED;
@@ -1165,13 +1167,18 @@ int test_nymph(uint16_t i)
     attack_player_until_monster_gone();
     bool ok = game.monster_count == 0 && !is_item_in_pack(bow) && game.item_count == item_count - 2;
 
+    // a +1-es nyílkötegből egy nyíl; a nimfa üzenete az utolsó, ezt a sáv törlése után visszahozva
     put_special_attack_scene('N');
     make_bow_plain();
-    uint8_t potions = create_item(ITEM_TYPE_POTION, 0);
-    get_item(potions)->count = 3;
-    add_item_to_pack(potions);
+    uint8_t arrows = find_pack_item_by_letter(NYMPH_TEST_ARROWS_LETTER);
+    struct Item *arrows_item = get_item(arrows);
+    arrows_item->properties.weapon.hit_bonus = 1;
+    uint8_t arrow_count = arrows_item->count;
     attack_player_until_monster_gone();
-    ok = ok && game.monster_count == 0 && is_item_in_pack(potions) && get_item(potions)->count == 2;
+    message_clear();
+    repeat_last_message();
+    ok = ok && game.monster_count == 0 && is_item_in_pack(arrows) && arrows_item->count == arrow_count - 1
+       && does_message_bar_start_with("She stole a +1,+0 arrow!");
 
     put_special_attack_scene('N');
     make_bow_plain();

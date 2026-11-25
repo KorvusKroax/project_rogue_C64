@@ -9,6 +9,7 @@
 #include "../items.h"
 #include "../map.h"
 #include "../monsters.h"
+#include "../move.h"
 #include "../pack.h"
 #include "../player.h"
 #include "../rooms.h"
@@ -564,6 +565,59 @@ int test_greedy_monster(uint16_t i)
         is_greedy_monster_chasing_after_gold_taken() &&
         is_room_gold_flag_cleared_by_monster_pickup() &&
         is_greedy_item_destination_checked();
+
+    clear_chase_level(saved_rooms);
+    return ok;
+}
+
+#define LIT_DROP_TEST_ITEM_COUNT  3
+#define LIT_DROP_TEST_TRIES_MAX   100           // ennyi ütésen belül a játékos biztosan eltalálja a zombit (rögzített maggal)
+
+// a világos 0. szobában a játékos megöli a mellette álló zombit; a zombi körül csak a saját mezője és a játékostól két mezőre lévő
+// oszlop szabad (a többi fal), így a három tárgyából legalább kettő oda esik; a szobában a játékos mindent lát, ezért ezek is
+// azonnal kirajzolódnak
+int test_lit_room_drops(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+    game.seed = 1;
+
+    put_chase_level();
+    put_chase_player(11, 9);
+    for (uint8_t y = 8; y <= 10; y += 2) {
+        set_map_character(CHASE_BASE_X + 11, CHASE_BASE_Y + y, CHAR_WALL_VERTICAL);
+        set_map_character(CHASE_BASE_X + 12, CHASE_BASE_Y + y, CHAR_WALL_VERTICAL);
+    }
+    create_monster('Z', CHASE_BASE_X + 12, CHASE_BASE_Y + 9);
+    // a rekord címe a táblából (README, Oscar64-hibák, 8.)
+    struct Monster *zombie = &game.monsters[0];
+    zombie->hit_points = 1;
+    for (uint8_t item = 0; item < LIT_DROP_TEST_ITEM_COUNT; item++) {
+        uint8_t index = create_item(ITEM_TYPE_FOOD, FOOD_RATION);
+        insert_item_after(&zombie->first_pack_item, NO_ITEM, index);
+    }
+    clear_seen_map();
+
+    uint8_t tries = 0;
+    while (game.monster_count > 0 && tries < LIT_DROP_TEST_TRIES_MAX) {
+        move_player(1, 0);
+        tries++;
+    }
+
+    bool ok = game.monster_count == 0;
+    uint8_t far_count = 0;
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct Item *item = get_item(index);
+        uint8_t x = item->location.floor_position.x;
+        uint8_t y = item->location.floor_position.y;
+        if (get_seen_character(x, y) != get_item_character(item->type)) {
+            ok = false;
+        }
+        if (x == CHASE_BASE_X + 13) {
+            far_count++;
+        }
+    }
+    ok = ok && far_count >= 2;
 
     clear_chase_level(saved_rooms);
     return ok;

@@ -157,6 +157,32 @@ int test_wear_armor(uint16_t i)
     return ok;
 }
 
+#define WEAR_THEFT_TRIES_MAX  100               // ennyi felvételi próba alatt a nimfa biztosan talál (rögzített maggal)
+
+// a `W` üres körében a játékos mellett álló nimfa ellopja a felveendő páncélt, mert az még nincs használatban (a védett páncél
+// mágikus): a páncél nem kerül fel, és nincs már a csomagban (J34); amíg a nimfa mellé üt, a páncél felkerül, ilyenkor újra le
+int test_wear_stolen_armor(uint16_t i)
+{
+    put_equipment_scene();
+    uint8_t armor = add_item_to_pack(create_item(ITEM_TYPE_ARMOR, EQUIPMENT_TEST_ARMOR));
+    get_item(armor)->flags |= ITEM_PROTECTED;
+    create_monster('N', EQUIPMENT_PLAYER_X + 1, EQUIPMENT_PLAYER_Y);
+    // a rekord címe a táblából (README, Oscar64-hibák, 8.)
+    start_monster_running(&game.monsters[game.monster_count - 1]);
+    game.seed = 1;
+
+    uint8_t tries = 0;
+    while (game.monster_count == 2 && tries < WEAR_THEFT_TRIES_MAX) {
+        game.worn_armor = NO_ITEM;
+        wear_armor(armor);
+        tries++;
+    }
+    bool ok = game.monster_count == 1 && game.worn_armor == NO_ITEM && !is_item_in_pack(armor);
+
+    clear_equipment_scene();
+    return ok;
+}
+
 int test_take_off_armor(uint16_t i)
 {
     struct Monster *monster = put_equipment_scene();

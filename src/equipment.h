@@ -30,7 +30,7 @@ bool wield_item(uint8_t index);
 
 // `W`: a csomag páncélja egy üres kör (waste_time) után felkerül, és azonosítódik („you are now wearing <név>”); ha már van rajta
 // páncél, „you are already wearing some. You'll have to take it off first”, nem páncélra „you can't wear that”; ha a játékos
-// az üres körben meghal, a parancs ott véget ér; igaz, ha időt vitt
+// az üres körben meghal, vagy a nimfa ellopja a páncélt (J34), a parancs ott véget ér; igaz, ha időt vitt
 bool wear_armor(uint8_t index);
 
 // a használatban lévő tárgy levétele, mielőtt a tárgy elhagyja a csomagot (`d`): az átkozott marad („you can't. It appears
