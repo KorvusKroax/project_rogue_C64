@@ -18,6 +18,7 @@ static const struct DevTest combat_tests[] = {
     { "FIGHT-TARGET MOVES", test_fight_target_moves, 1 },
     { "FIGHT-TARGET DIES", test_fight_target_death, 1 },
     { "COMBAT-KILL", test_monster_kill, 1 },
+    { "COMBAT-DROPS", test_monster_drops, 1 },
     { "COMBAT-REMOVAL", test_monster_removal, 1 },
     { "XP-LEVELS", test_experience_levels, 1 },
     { "SPECIAL-ICE", test_ice_monster, 1 },

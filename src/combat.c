@@ -16,6 +16,7 @@
 #include "rng.h"
 #include "state.h"
 #include "texts.h"
+#include "view.h"
 
 #if MONSTER_STRENGTH > STRENGTH_MAX
     #error "a szörnyek ereje nagyobb a legnagyobb erőnél"
@@ -149,7 +150,65 @@ bool roll_monster_attack(const struct Monster *monster)
                        type_data->damage, type_data->damage_segment_count, &game.player.hit_points);
 }
 
-// a szörny halála (killed): a játékos megkapja az XP-jét, a szörny kikerül a táblából, „you have defeated <név>”, és jöhet a szintlépés
+// a mező körüli 3×3 egy véletlen üres mezője, a mező maga is (fallpos): padló vagy folyosó jelű, és nem a játékosé;
+// hamis, ha nincs ilyen
+static bool choose_fall_position(uint8_t center_x, uint8_t center_y, uint8_t *x, uint8_t *y)
+{
+    // az első jelölt mindig felülírja (rnd(1) == 0); a kezdőérték csak a fordítónak kell, hogy lássa: az eredmény mindig kap értéket
+    *x = center_x;
+    *y = center_y;
+    uint8_t count = 0;
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
+            uint8_t tile_x = center_x + offset_x;
+            uint8_t tile_y = center_y + offset_y;
+            if (!is_on_map(tile_x, tile_y)) continue;
+            if (tile_x == game.player.x && tile_y == game.player.y) continue;
+            uint8_t character = get_map_character(tile_x, tile_y);
+            if (character != CHAR_FLOOR && character != CHAR_PASSAGE) continue;
+
+            // az eddigi jelöltek közül egyenletes eséllyel
+            count++;
+            if (rnd(count) == 0) {
+                *x = tile_x;
+                *y = tile_y;
+            }
+        }
+    }
+    return count != 0;
+}
+
+// a szörny csomagjának tárgyai a mezője köré esnek (fall), mielőtt a szörny kikerül a táblából; amelyiknek nincs helye, elvész;
+// ha a játékos látja a mezőt, a tárgy kirajzolódik, illetve ha szörny áll rajta (a haldokló is), az alatta lévő jel lesz a tárgyé,
+// így a haldokló mezőjére esett tárgy a kivételkor jelenik meg
+static void drop_monster_pack(struct Monster *monster)
+{
+    while (monster->first_pack_item != NO_ITEM) {
+        uint8_t index = monster->first_pack_item;
+        monster->first_pack_item = get_item(index)->next;
+
+        uint8_t x;
+        uint8_t y;
+        if (!choose_fall_position(monster->x, monster->y, &x, &y)) {
+            free_item(index);
+            continue;
+        }
+        put_item_on_floor(index, x, y);
+        if (!is_tile_visible(x, y)) continue;
+
+        uint8_t character = get_item_character(get_item(index)->type);
+        uint8_t monster_index = find_monster_at(x, y);
+        if (monster_index != NO_MONSTER) {
+            get_monster(monster_index)->character_below = character;
+        } else {
+            draw_tile(x, y, character);
+        }
+    }
+}
+
+// a szörny halála (killed): a játékos megkapja az XP-jét, a csomagja a környező mezőkre esik, a szörny kikerül a táblából,
+// „you have defeated <név>”, és jöhet a szintlépés
 static void kill_monster(struct Monster *monster)
 {
     game.player.experience = capped_add(game.player.experience, monster->experience);
@@ -157,7 +216,8 @@ static void kill_monster(struct Monster *monster)
     if (monster->type == 'F') {
         game.flytrap_grip = 0;
     }
-    // ide jön: a leprechaun aranya a csomagjába kerül; a csomagja a környező mezőkre esik
+    // ide jön: a leprechaun aranya a csomagjába kerül, és vele együtt leesik
+    drop_monster_pack(monster);
 
     // a név a kivétel előtt, amíg a szörny még a helyén van
     const char *monster_name = prepare_monster_name(monster);

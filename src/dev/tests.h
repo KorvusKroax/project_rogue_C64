@@ -57,6 +57,7 @@ int test_fight_hit_limit(uint16_t i);
 int test_fight_other_attack(uint16_t i);
 int test_fight_target_moves(uint16_t i);
 int test_monster_kill(uint16_t i);
+int test_monster_drops(uint16_t i);             // a megölt szörny tárgyai a körüli 3×3 üres mezőire esnek (a játékosé nem), a láthatók kirajzolódnak; szörny alá esve az alatta lévő jel a tárgyé; hely nélkül a tárgy elvész
 int test_monster_removal(uint16_t i);
 int test_fight_target_death(uint16_t i);
 int test_experience_levels(uint16_t i);

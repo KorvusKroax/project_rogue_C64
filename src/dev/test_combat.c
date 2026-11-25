@@ -536,6 +536,92 @@ int test_monster_kill(uint16_t i)
     return ok;
 }
 
+#define DROP_TEST_ITEM_COUNT  3
+
+static const uint8_t drop_test_item_types[DROP_TEST_ITEM_COUNT] = { ITEM_TYPE_POTION, ITEM_TYPE_SCROLL, ITEM_TYPE_FOOD };
+
+// a tábla első szörnyének csomagjába egy bájital, egy tekercs és egy étel; a rekord címe a táblából (README, Oscar64-hibák, 8.)
+static void give_drop_test_items(void)
+{
+    for (uint8_t i = 0; i < DROP_TEST_ITEM_COUNT; i++) {
+        uint8_t index = create_item(drop_test_item_types[i], 0);
+        insert_item_after(&game.monsters[0].first_pack_item, NO_ITEM, index);
+    }
+}
+
+// a játékos a jobb oldali szomszédját (a tábla első szörnyét) üti, amíg meg nem hal
+static void kill_drop_test_monster(void)
+{
+    game.monsters[0].hit_points = 1;
+    uint8_t monster_count = game.monster_count;
+    uint8_t tries = 0;
+    while (game.monster_count == monster_count && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+}
+
+// a szörny körüli 3×3 mind folyosó: a tárgyai különböző mezőkre esnek ezen belül, a játékosé kivételével; a sötét folyosón
+// a játékos mellettieket látja, ezek kirajzolódnak, a távolabbiak nem
+static bool are_dropped_items_scattered(void)
+{
+    put_combat_scene();
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            put_combat_tile(COMBAT_MONSTER_X + offset_x, COMBAT_MONSTER_Y + offset_y);
+        }
+    }
+    clear_seen_map();
+    give_drop_test_items();
+    kill_drop_test_monster();
+    if (game.monster_count != 0) return false;
+
+    uint8_t count = 0;
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct Item *item = get_item(index);
+        uint8_t x = item->location.floor_position.x;
+        uint8_t y = item->location.floor_position.y;
+        if (x < COMBAT_MONSTER_X - 1 || x > COMBAT_MONSTER_X + 1 || y < COMBAT_MONSTER_Y - 1 || y > COMBAT_MONSTER_Y + 1) return false;
+        if (x == game.player.x && y == game.player.y) return false;
+
+        uint8_t character = get_item_character(item->type);
+        if (get_map_character(x, y) != character) return false;
+        uint8_t expected_seen_character = is_tile_visible(x, y) ? character : CHAR_SOLID_ROCK;
+        if (get_seen_character(x, y) != expected_seen_character) return false;
+        count++;
+    }
+    return count == DROP_TEST_ITEM_COUNT;
+}
+
+// csak a haldokló mezője és egy másik szörnyé szabad: két tárgy ezekre esik, a harmadik elvész; a másik szörny alatti jel
+// a tárgyé lesz, a haldokló mezőjén a kivétel után a tárgy jele látszik
+static bool are_dropped_items_under_monsters(void)
+{
+    put_combat_scene();
+    put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_MONSTER_X, COMBAT_MONSTER_Y - 1);
+    give_drop_test_items();
+    uint8_t item_count = game.item_count;
+    kill_drop_test_monster();
+    if (game.monster_count != 1 || game.item_count != item_count - 1) return false;
+
+    uint8_t own_item = find_floor_item_at(COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    uint8_t other_item = find_floor_item_at(COMBAT_MONSTER_X, COMBAT_MONSTER_Y - 1);
+    if (own_item == NO_ITEM || other_item == NO_ITEM) return false;
+    if (get_seen_character(COMBAT_MONSTER_X, COMBAT_MONSTER_Y) != get_item_character(get_item(own_item)->type)) return false;
+    return game.monsters[0].character_below == get_item_character(get_item(other_item)->type);
+}
+
+int test_monster_drops(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    bool ok =
+        are_dropped_items_scattered() &&
+        are_dropped_items_under_monsters();
+
+    clear_combat_scene();
+    return ok;
+}
+
 // a középső szörny kivétele után a többi sorrendje marad, a kivett mezőjén nincs TILE_MONSTER bit, és a bitek a táblával egyeznek
 int test_monster_removal(uint16_t i)
 {
