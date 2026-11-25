@@ -216,6 +216,16 @@ void start_monster_running(struct Monster *monster)
     monster->destination_item = choose_monster_destination(monster);
 }
 
+void redirect_monsters_to_player(uint8_t item_index)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        struct Monster *monster = get_monster(index);
+        if (monster->destination_item == item_index) {
+            monster->destination_item = DESTINATION_PLAYER;
+        }
+    }
+}
+
 // a tárgy egy másik szörny célpontja-e (J3)
 static bool is_destination_of_other_monster(const struct Monster *monster, uint8_t item_index)
 {

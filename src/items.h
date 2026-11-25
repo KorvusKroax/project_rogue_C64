@@ -172,6 +172,6 @@ void free_item_list(uint8_t *list_first);       // a lista minden tárgyának he
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y);  // a pozíciója (x, y), a mezőn a jele, és a lista elejére kerül
 uint8_t find_floor_item_at(uint8_t x, uint8_t y);  // a padlón az x, y mezőn fekvő tárgy (egy mezőn legfeljebb egy van); NO_ITEM, ha ott nincs
-void take_item_from_floor(uint8_t index);       // a tárgy kikerül a listából, a mező jele folyosó-mezőn (TILE_PASSAGE) folyosó, különben padló
+void take_item_from_floor(uint8_t index);       // a tárgy kikerül a listából, a mező jele folyosó-mezőn (TILE_PASSAGE) folyosó, különben padló; a felé tartó szörnyek célpontja a játékos lesz
 
 #endif

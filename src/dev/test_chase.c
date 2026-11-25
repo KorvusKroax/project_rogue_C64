@@ -8,6 +8,7 @@
 #include "../items.h"
 #include "../map.h"
 #include "../monsters.h"
+#include "../pack.h"
 #include "../player.h"
 #include "../rooms.h"
 #include "../state.h"
@@ -408,6 +409,60 @@ static bool is_player_in_the_way_attacked(void)
 
     run_monster_turns(1);
     return is_monster_at(nymph, 20, 9) && game.first_floor_item == food && nymph->destination_item == food;
+}
+
+// két nimfa tart ugyanarra a tárgyra (a választás ezt nem adja, ezért kézzel): amelyik felveszi, a másik célpontja a játékos lesz;
+// a harmadik nimfa egy másik tárgyra tart, az övé marad
+static bool is_destination_cleared_by_monster_pickup(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t other_food = put_chase_item(12, 11);
+    uint8_t food = put_chase_item(17, 7);
+
+    struct Monster *picker = put_chase_monster('N', 18, 7);
+    struct Monster *follower = put_chase_monster('N', 20, 9);
+    follower->destination_item = food;
+    struct Monster *bystander = put_chase_monster('N', 20, 11);
+    bystander->destination_item = other_food;
+    if (picker->destination_item != food) return false;
+
+    run_monster_turns(1);
+    return picker->first_pack_item == food && follower->destination_item == DESTINATION_PLAYER
+        && bystander->destination_item == other_food;
+}
+
+// a játékos veszi fel a tárgyat, és az aranyat is (az utóbbi rekordja felszabadul): a rájuk tartó szörnyek célpontja a játékos lesz
+static bool is_destination_cleared_by_player_pickup(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t gold = create_item(ITEM_TYPE_GOLD, 0);
+    get_item(gold)->properties.gold_amount = 1;
+    put_item_on_floor(gold, CHASE_BASE_X + 15, CHASE_BASE_Y + 10);
+    uint8_t food = put_chase_item(17, 7);
+
+    struct Monster *food_nymph = put_chase_monster('N', 19, 7);
+    struct Monster *gold_nymph = put_chase_monster('N', 19, 11);
+    gold_nymph->destination_item = gold;
+    if (food_nymph->destination_item != food) return false;
+
+    pick_up_item(food);
+    pick_up_item(gold);
+    return food_nymph->destination_item == DESTINATION_PLAYER && gold_nymph->destination_item == DESTINATION_PLAYER;
+}
+
+int test_destination_taken(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_destination_cleared_by_monster_pickup() &&
+        is_destination_cleared_by_player_pickup();
+
+    clear_chase_level(saved_rooms);
+    return ok;
 }
 
 int test_monster_pickup(uint16_t i)

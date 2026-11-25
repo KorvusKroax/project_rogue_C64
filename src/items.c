@@ -2,6 +2,7 @@
 
 #include "item_names.h"
 #include "map.h"
+#include "monsters.h"
 #include "rng.h"
 
 #ifdef DEVMODE
@@ -470,5 +471,5 @@ void take_item_from_floor(uint8_t index)
     remove_item_from_list(&game.first_floor_item, index);
     // tárgy csak padlóra és folyosó-mezőre kerül
     set_map_character(x, y, (get_map_flags(x, y) & TILE_PASSAGE) ? CHAR_PASSAGE : CHAR_FLOOR);
-    // ide jön: minden szörny, amelyik a tárgy felé tartott, a játékost veszi célba
+    redirect_monsters_to_player(index);
 }

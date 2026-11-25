@@ -89,4 +89,8 @@ void start_monster_running(struct Monster *monster);
 // célpontja (J3); ha nincs ilyen, a játékos
 uint8_t choose_monster_destination(const struct Monster *monster);
 
+// a tárgy lekerült a padlóról (take_item_from_floor): minden szörny, amelyik felé tartott, a játékost veszi célba,
+// így a célpont mindig egy padlón fekvő tárgy vagy a játékos
+void redirect_monsters_to_player(uint8_t item_index);
+
 #endif

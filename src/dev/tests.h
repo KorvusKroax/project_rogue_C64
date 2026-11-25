@@ -43,6 +43,7 @@ int test_tile_visibility(uint16_t i);           // a mező látszik-e (cansee): 
 int test_monster_waking(uint16_t i);
 int test_monster_chase(uint16_t i);
 int test_monster_destination(uint16_t i);       // a célpont: a szoba tárgya, ha a játékos nincs a szobában és nem látja a szörnyet; a carry 0 típusé és a foglalt tárgy nem; J3
+int test_destination_taken(uint16_t i);          // ha a célpont tárgyat egy másik szörny vagy a játékos (az aranyat is) felveszi, a rá tartó szörnyek célpontja a játékos lesz, a más tárgyra tartóké marad
 int test_monster_pickup(uint16_t i);            // a szörny felveszi a célpont tárgyat, a mező padló; ha a játékos látja, a tárgy jele nem tér vissza (J32), ha nem, az emlék marad; az útjában álló játékost megtámadja (J33)
 int test_strength_bonuses(uint16_t i);
 int test_monster_names(uint16_t i);
