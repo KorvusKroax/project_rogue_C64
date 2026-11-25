@@ -192,7 +192,7 @@ static void place_gold_and_monsters(void)
             uint8_t gold_index = create_item(ITEM_TYPE_GOLD, 0);
             if (gold_index != NO_ITEM) {
                 set_random_gold_amount(gold_index);
-                // ide jön: a szoba aranya (ROOMGOLD), ezt őrzi a kapzsi szörny
+                get_item(gold_index)->flags |= ITEM_ROOM_GOLD;
                 put_item_on_floor(gold_index, x, y);
                 has_gold = true;
             }

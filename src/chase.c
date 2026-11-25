@@ -176,16 +176,18 @@ static bool is_destination_item_at(const struct Monster *monster, uint8_t x, uin
     return position->x == x && position->y == y;
 }
 
-// a szörny felveszi a célpont tárgyat, mielőtt a mezőjére lép: a tárgy a csomagjába kerül, a mező jele padló vagy folyosó lesz,
-// és ha a játékos látja a mezőt, azonnal így rajzolódik ki, hogy a szörny alá már ez kerüljön (J32); utána új célpontot választ
+// a szörny felveszi a célpont tárgyat, mielőtt a mezőjére lép: a tárgy a csomagjába kerül, a szoba aranyának jelzője törlődik,
+// a mező jele padló vagy folyosó lesz, és ha a játékos látja a mezőt, azonnal így rajzolódik ki, hogy a szörny alá már ez kerüljön
+// (J32); utána új célpontot választ
 static void pick_up_destination_item(struct Monster *monster)
 {
     uint8_t index = monster->destination_item;
-    const struct FloorPosition *position = &get_item(index)->location.floor_position;
-    uint8_t x = position->x;
-    uint8_t y = position->y;
+    struct Item *item = get_item(index);
+    uint8_t x = item->location.floor_position.x;
+    uint8_t y = item->location.floor_position.y;
 
     take_item_from_floor(index);
+    item->flags &= ~ITEM_ROOM_GOLD;
     insert_item_after(&monster->first_pack_item, NO_ITEM, index);
     if (is_tile_visible(x, y)) {
         draw_tile(x, y, get_map_character(x, y));
@@ -213,13 +215,24 @@ static void relocate_monster(struct Monster *monster, uint8_t x, uint8_t y)
     // ide jön: szörnyészleléssel (SEEMONST) a nem látható szörny típusa inverzen
 }
 
-// egy lépés a célpont felé; a játékos mellé érve megtámadja, a célpont tárgyat felveszi (do_chase)
+// a kapzsi szörny a szoba aranyát nem veszi fel, hanem ráül
+static bool is_guarding_room_gold(const struct Monster *monster)
+{
+    return (monster->flags & MONSTER_GREEDY) && (get_item(monster->destination_item)->flags & ITEM_ROOM_GOLD);
+}
+
+// egy lépés a célpont felé; a játékos mellé érve megtámadja, a célpont tárgyat felveszi, a kapzsi szörny a szoba aranyára ráül,
+// és nem fut tovább (do_chase)
 static void take_chase_step(struct Monster *monster)
 {
     // a játékos halála után a kör hátralévő részében már egy szörny sem lép (a gyorsított és a repülő második lépése sem)
     if (is_player_dead()) return;
 
-    // ide jön: a kapzsi szörny célpontja a játékos, ha a szobájában már nincs arany
+    // a tárgy felé tartó kapzsi szörny célpontja a játékos lesz, ha a szobájában már nem fekszik a szoba aranya
+    if ((monster->flags & MONSTER_GREEDY) && monster->destination_item != DESTINATION_PLAYER && find_room_gold(monster->room) == NO_ITEM) {
+        monster->destination_item = DESTINATION_PLAYER;
+    }
+
     uint8_t goal_x;
     uint8_t goal_y;
     choose_chase_goal(monster, &goal_x, &goal_y);
@@ -228,14 +241,18 @@ static void take_chase_step(struct Monster *monster)
     // az útjában áll (J33); a többi megérkezésnél a lépés maga a cél
     uint8_t step_x;
     uint8_t step_y;
+    bool is_sitting_down = false;
     if (choose_chase_step(monster, goal_x, goal_y, &step_x, &step_y)) {
         if (step_x == game.player.x && step_y == game.player.y) {
             attack_player(monster);
             return;
         }
-        // ide jön: a szoba aranyát a kapzsi szörny nem veszi fel, hanem ráül, és a lépés után nem fut tovább (ISRUN le)
         if (is_destination_item_at(monster, goal_x, goal_y)) {
-            pick_up_destination_item(monster);
+            if (is_guarding_room_gold(monster)) {
+                is_sitting_down = true;
+            } else {
+                pick_up_destination_item(monster);
+            }
         }
     } else if (monster->type == 'F') {
         // a Venus flytrap nem mozdul el
@@ -243,6 +260,9 @@ static void take_chase_step(struct Monster *monster)
     }
 
     relocate_monster(monster, step_x, step_y);
+    if (is_sitting_down) {
+        monster->flags &= ~MONSTER_RUNNING;
+    }
 }
 
 // a lassított szörny minden második körben lép, a gyorsított kétszer (move_monst)

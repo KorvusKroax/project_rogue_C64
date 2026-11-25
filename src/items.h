@@ -28,8 +28,9 @@
 #define NO_ITEM  0                              // tárgyindex helyett: nincs tárgy, a lista vége
 
 // tárgyflagek (1.2.3)
-#define ITEM_CURSED  0x01                       // átkozott: használatban nem vehető le, nem cserélhető (ISCURSED)
-#define ITEM_KNOWN   0x02                       // azonosítva: a nevében látszik a bónusza, a töltése, a gyűrűmódja (ISKNOW)
+#define ITEM_CURSED     0x01                    // átkozott: használatban nem vehető le, nem cserélhető (ISCURSED)
+#define ITEM_KNOWN      0x02                    // azonosítva: a nevében látszik a bónusza, a töltése, a gyűrűmódja (ISKNOW)
+#define ITEM_ROOM_GOLD  0x04                    // a szoba aranya: a szint berendezésekor lerakott arany, ezt őrzi a kapzsi szörny (ROOMGOLD)
 
 // az étel altípusai
 #define FOOD_RATION  0
@@ -172,6 +173,7 @@ void free_item_list(uint8_t *list_first);       // a lista minden tárgyának he
 // bejárás: for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next)
 void put_item_on_floor(uint8_t index, uint8_t x, uint8_t y);  // a pozíciója (x, y), a mezőn a jele, és a lista elejére kerül
 uint8_t find_floor_item_at(uint8_t x, uint8_t y);  // a padlón az x, y mezőn fekvő tárgy (egy mezőn legfeljebb egy van); NO_ITEM, ha ott nincs
+uint8_t find_room_gold(uint8_t room_index);     // a szobában (folyosórendszerben) fekvő, ITEM_ROOM_GOLD jelzőjű arany (szobánként legfeljebb egy); NO_ITEM, ha nincs
 void take_item_from_floor(uint8_t index);       // a tárgy kikerül a listából, a mező jele folyosó-mezőn (TILE_PASSAGE) folyosó, különben padló; a felé tartó szörnyek célpontja a játékos lesz
 
 #endif

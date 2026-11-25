@@ -201,11 +201,12 @@ void wake_monster(struct Monster *monster)
 
     // ide jön: a már ébren lévő Medusa pillantása (ISFOUND)
 
-    // a kapzsi szörnyet nem véletlen ébreszti, és a fogva tartás (MONSTER_HELD) sem tartja vissza
+    // a kapzsi szörnyet nem véletlen ébreszti, és a fogva tartás (MONSTER_HELD) sem tartja vissza; a célpontja a játékos szobájának
+    // aranya, ha ott fekszik, különben a játékos
     if ((monster->flags & MONSTER_GREEDY) && !(monster->flags & MONSTER_RUNNING)) {
         monster->flags |= MONSTER_RUNNING;
-        // ide jön: ha a játékos szobájában arany van, az a célpont
-        monster->destination_item = DESTINATION_PLAYER;
+        uint8_t gold_index = find_room_gold(game.player.room);
+        monster->destination_item = gold_index != NO_ITEM ? gold_index : DESTINATION_PLAYER;
     }
 }
 

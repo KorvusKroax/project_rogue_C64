@@ -17,6 +17,7 @@ static const struct DevTest monster_tests[] = {
     { "MONST-DESTINATION", test_monster_destination, 1 },
     { "MONST-PICKUP", test_monster_pickup, 1 },
     { "MONST-DEST TAKEN", test_destination_taken, 1 },
+    { "MONST-GREEDY", test_greedy_monster, 1 },
 };
 
 int main(void)

@@ -465,6 +465,109 @@ int test_destination_taken(uint16_t i)
     return ok;
 }
 
+// a szoba aranya a padlón, a tesztpálya megadott mezőjén
+static uint8_t put_chase_room_gold(uint8_t offset_x, uint8_t offset_y)
+{
+    uint8_t index = create_item(ITEM_TYPE_GOLD, 0);
+    struct Item *gold = get_item(index);
+    gold->properties.gold_amount = 1;
+    gold->flags |= ITEM_ROOM_GOLD;
+    put_item_on_floor(index, CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y);
+    return index;
+}
+
+// alvó ork a tesztpálya megadott mezőjén; a rekord címe a táblából jön (README, Oscar64-hibák, 8.)
+static struct Monster *put_chase_orc(uint8_t offset_x, uint8_t offset_y)
+{
+    create_monster('O', CHASE_BASE_X + offset_x, CHASE_BASE_Y + offset_y);
+    return &game.monsters[game.monster_count - 1];
+}
+
+// a 0. szobába lépő játékos felébreszti az orkot, amely a szoba aranyára megy, ráül, nem veszi fel, és nem fut tovább;
+// újra felébresztve is ott marad
+static bool is_greedy_monster_sitting_on_gold(void)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    uint8_t gold = put_chase_room_gold(17, 7);
+    struct Monster *orc = put_chase_orc(20, 10);
+
+    enter_room(game.player.x, game.player.y);
+    if (!(orc->flags & MONSTER_RUNNING) || orc->destination_item != gold) return false;
+
+    run_monster_turns(3);
+    if (!is_monster_at(orc, 17, 7) || (orc->flags & MONSTER_RUNNING)) return false;
+    if (game.first_floor_item != gold || orc->first_pack_item != NO_ITEM || orc->destination_item != gold) return false;
+    if (get_map_character(CHASE_BASE_X + 17, CHASE_BASE_Y + 7) != CHAR_GOLD) return false;
+
+    wake_monster(orc);
+    run_monster_turns(1);
+    return is_monster_at(orc, 17, 7) && !(orc->flags & MONSTER_RUNNING);
+}
+
+// az aranyára tartó ork a játékost üldözi, ha a játékos felveszi az aranyat
+static bool is_greedy_monster_chasing_after_gold_taken(void)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    uint8_t gold = put_chase_room_gold(17, 7);
+    struct Monster *orc = put_chase_orc(20, 10);
+    enter_room(game.player.x, game.player.y);
+
+    run_monster_turns(1);
+    pick_up_item(gold);
+    if (orc->destination_item != DESTINATION_PLAYER) return false;
+    run_monster_turns(1);
+    return is_monster_at(orc, 18, 9) && (orc->flags & MONSTER_RUNNING);
+}
+
+// a szoba aranyát egy nimfa felveszi: a jelzője törlődik, és az rá tartó ork célpontja a játékos lesz
+static bool is_room_gold_flag_cleared_by_monster_pickup(void)
+{
+    put_chase_level();
+    put_chase_player(11, 9);
+    uint8_t gold = put_chase_room_gold(17, 7);
+    struct Monster *orc = put_chase_orc(20, 10);
+    enter_room(game.player.x, game.player.y);
+    struct Monster *nymph = put_chase_monster('N', 16, 7);
+    nymph->destination_item = gold;
+
+    run_monster_turns(1);
+    return nymph->first_pack_item == gold && !(get_item(gold)->flags & ITEM_ROOM_GOLD) && orc->destination_item == DESTINATION_PLAYER;
+}
+
+// a tárgy felé tartó ork célpontja a játékos lesz, ha a szobájában nincs a szoba aranya; ha van, a tárgy marad a célpontja
+static bool is_greedy_item_destination_checked(void)
+{
+    put_chase_level();
+    put_chase_player(3, 2);
+    uint8_t food = put_chase_item(15, 8);
+    struct Monster *orc = put_chase_monster('O', 20, 10);
+    orc->destination_item = food;
+    run_monster_turns(1);
+    if (orc->destination_item != DESTINATION_PLAYER) return false;
+
+    put_chase_room_gold(12, 11);
+    orc->destination_item = food;
+    run_monster_turns(1);
+    return orc->destination_item == food;
+}
+
+int test_greedy_monster(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_greedy_monster_sitting_on_gold() &&
+        is_greedy_monster_chasing_after_gold_taken() &&
+        is_room_gold_flag_cleared_by_monster_pickup() &&
+        is_greedy_item_destination_checked();
+
+    clear_chase_level(saved_rooms);
+    return ok;
+}
+
 int test_monster_pickup(uint16_t i)
 {
     struct Room saved_rooms[ROOM_TABLE_SIZE];

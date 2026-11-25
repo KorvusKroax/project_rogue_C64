@@ -4,6 +4,7 @@
 #include "map.h"
 #include "monsters.h"
 #include "rng.h"
+#include "rooms.h"
 
 #ifdef DEVMODE
     #include "dev/dev.h"
@@ -458,6 +459,16 @@ uint8_t find_floor_item_at(uint8_t x, uint8_t y)
     for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
         const struct FloorPosition *position = &get_item(index)->location.floor_position;
         if (position->x == x && position->y == y) return index;
+    }
+    return NO_ITEM;
+}
+
+uint8_t find_room_gold(uint8_t room_index)
+{
+    for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
+        const struct Item *item = get_item(index);
+        if (!(item->flags & ITEM_ROOM_GOLD)) continue;
+        if (get_room_at(item->location.floor_position.x, item->location.floor_position.y) == room_index) return index;
     }
     return NO_ITEM;
 }

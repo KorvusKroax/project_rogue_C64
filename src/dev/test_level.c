@@ -518,7 +518,12 @@ static bool are_floor_items_valid(void)
         } else if (!is_item_type_and_subtype_valid(item->type, item->which)) {
             return false;
         }
-        if (!are_item_initial_values_valid(item)) return false;
+        // a szoba aranyának jelzője a lerakáskor jön, nem kezdőérték
+        struct Item initial_item = *item;
+        if (item->type == ITEM_TYPE_GOLD) {
+            initial_item.flags &= ~ITEM_ROOM_GOLD;
+        }
+        if (!are_item_initial_values_valid(&initial_item)) return false;
         uint8_t x = item->location.floor_position.x;
         uint8_t y = item->location.floor_position.y;
         if (get_map_character(x, y) != get_item_character(item->type)) return false;
@@ -537,7 +542,7 @@ static bool are_floor_items_valid(void)
     return count_occupied_items() == listed_count && game.item_count == listed_count;
 }
 
-// az arany: szobánként legfeljebb egy, a mennyisége a mélység szerinti tartományban;
+// az arany: szobánként legfeljebb egy, a szoba aranya (ITEM_ROOM_GOLD), a mennyisége a mélység szerinti tartományban;
 // az amulett: az AMULET_LEVEL mélységtől pontosan egy, ha nincs a játékosnál, különben egy sem;
 // az are_floor_items_valid után, mert az ellenőrzi, hogy a lista véges, és minden tárgy egy szoba falain belül van
 static bool are_gold_and_amulet_valid(void)
@@ -555,6 +560,7 @@ static bool are_gold_and_amulet_valid(void)
         }
         if (item->type != ITEM_TYPE_GOLD) continue;
 
+        if (!(item->flags & ITEM_ROOM_GOLD)) return false;
         uint16_t amount = item->properties.gold_amount;
         if (amount < GOLD_AMOUNT_MIN || amount > gold_amount_max) return false;
 
@@ -933,7 +939,8 @@ static bool are_monster_positions_valid(void)
     return true;
 }
 
-// minden foglalt tárgy egy listában van: a padlón, a játékos vagy egy szörny csomagjában; a padló tárgyainak mezőjén a jelük áll
+// minden foglalt tárgy egy listában van: a padlón, a játékos vagy egy szörny csomagjában; a padló tárgyainak mezőjén a jelük áll;
+// szörny csomagjában nincs a szoba aranya (a felvételkor a jelzője törlődik)
 static bool are_item_lists_valid(void)
 {
     uint8_t floor_count = count_list_items(game.first_floor_item);
@@ -942,6 +949,12 @@ static bool are_item_lists_valid(void)
 
     uint16_t listed_count = floor_count + pack_count + count_monster_pack_items();
     if (count_occupied_items() != listed_count || game.item_count != listed_count) return false;
+
+    for (uint8_t monster_index = 1; monster_index <= game.monster_count; monster_index++) {
+        for (uint8_t index = get_monster(monster_index)->first_pack_item; index != NO_ITEM; index = get_item(index)->next) {
+            if (get_item(index)->flags & ITEM_ROOM_GOLD) return false;
+        }
+    }
 
     for (uint8_t index = game.first_floor_item; index != NO_ITEM; index = get_item(index)->next) {
         const struct Item *item = get_item(index);
