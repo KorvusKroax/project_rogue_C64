@@ -9,6 +9,8 @@
 #include "screen.h"
 
 // memóriatérkép
+// $0400-$07FF  az RNG szorzótáblái (rng.c)
+//              – a rng_tables régió, lásd a #pragma region sort
 // $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
 //              – a main régió, lásd a #pragma region sort
 // $C000-$C3FF  képernyőmemória (VIC 3. bank)
@@ -21,6 +23,10 @@
 
 #pragma region(main, 0x0880, 0xc000, , , {code, data, bss, heap, stack})
 #pragma heapsize(0)
+
+// kezdőérték nélküli (bss) szakasz: a lemezre nem kerül, és induláskor nem nullázódik, a tábláit az rng_init tölti fel
+#pragma section(rng_tables, 0, , , bss)
+#pragma region(rng_tables, 0x0400, 0x0800, , , {rng_tables})
 
 // a texts szakasz (texts.c) a lemezen külön fájl (az 1-es overlay), a neve a régió neve; induláskor a load_texts tölti be
 #pragma region(texts, 0xd000, 0xfffa, , 1, {texts})

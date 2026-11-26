@@ -16,11 +16,14 @@
 #define RN_INCREMENT_LOW_BYTE    (RN_INCREMENT & 0xFF)      // default: 0x19
 #define RN_INCREMENT_HIGH_BYTE   (RN_INCREMENT >> 8)        // default: 0x36
 
-// i * RN_MULTIPLIER_LOW_BYTE és i * RN_MULTIPLIER_HIGH_BYTE alsó és felső bájtja, minden i bájtra (4 × 256 bájt)
+// i * RN_MULTIPLIER_LOW_BYTE és i * RN_MULTIPLIER_HIGH_BYTE alsó és felső bájtja, minden i bájtra (4 × 256 bájt);
+// a fő régión kívül, a rng_tables szakaszban ($0400-$07FF, platform.c)
+#pragma bss(rng_tables)
 static uint8_t low_byte_product_low[256];
 static uint8_t low_byte_product_high[256];
 static uint8_t high_byte_product_low[256];
 static uint8_t high_byte_product_high[256];
+#pragma bss(bss)
 
 void rng_init(void)
 {
