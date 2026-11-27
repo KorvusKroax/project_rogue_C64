@@ -122,7 +122,6 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J10 | a nyíl- és dartcsapdánál a viselt páncél és a védelem-gyűrű is számít | [7.5](07_harc.md#75-csapda-támadás-nyíldart) |
 | J11 | a státuszsor Arm értéke a védelem-gyűrűt is tartalmazza | [3.3](03_latoter_es_megjelenites.md#33-státuszsor) |
 | J12 | a dobott tárgy, a sugár és a lövedék nem repül át az álcázott Xerocon | [7.4](07_harc.md#74-hajítás-t) |
-| J13 | a Medusa pillantásához a Medusa szobájának világossága számít | [6.4](06_szornyek.md#64-ébresztés) |
 | J14 | a haste self ivása is időbe kerül | [8.2](08_targyak.md#82-bájitalok-q) |
 | J15 | `f` szabálytalan átlós irányba nem visz el időt | [4.2.2](04_jatekciklus_es_parancsok.md#422-harc-és-célzás) |
 | J16 | lépcső nem kerül rejtett csapdára (a lépcső a csapdák előtt kerül le) | [2.10](02_szintgeneralas.md#210-lépcső) |
@@ -144,3 +143,6 @@ dist2(a, b)     -> (a.x-b.x)^2 + (a.y-b.y)^2  // legfeljebb 79²+21² = 6682, 16
 | J32 | a szörny tárgyfelvétele látható mezőn azonnal kirajzolódik, így a szörny továbblépése után nem tér vissza a tárgy jele (eredetileg világos szobában a felvett tárgy a helyén látszott, amíg a játékos oda nem ment) | [6.6](06_szornyek.md#66-mozgás) |
 | J33 | a tárgy felé tartó szörny megtámadja az útjában álló játékost (eredetileg a tárgyat távolról felvette, és a játékos mezőjére lépett) | [6.6](06_szornyek.md#66-mozgás) |
 | J34 | ha a nimfa a `W` üres körében ellopja a felveendő páncélt, az nem kerül fel (eredetileg az ellopott, felszabadított tárgy lett a viselt páncél) | [4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok) |
+| J35 | a poison és az extra healing a hallucináció időzítőjét is törli (eredetileg a régi időzítő egy újabb hallucinációt idő előtt megszüntethetett) | [4.1.1](04_jatekciklus_es_parancsok.md#411-időzített-hatások-fuse-ok), [8.2](08_targyak.md#82-bájitalok-q) |
+| J36 | a raise level a legmagasabb szinten csak az üzenetet adja (eredetileg az XP 1 lett, és a játékos az 1. szintre esett) | [8.2](08_targyak.md#82-bájitalok-q) |
+| J37 | a zavarodott véletlen lépés véget vet az `f`-harcnak (eredetileg a harc a régi irányba folytatódott, és végtelen ciklusba is kerülhetett) | [4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás) |

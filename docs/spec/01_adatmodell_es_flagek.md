@@ -136,14 +136,16 @@ GameState {
 | ISHUH | zavarodott: mozgásnál 80% véletlen irány (`rndmove`, [6.6](06_szornyek.md#66-mozgás): előbb `dy`, aztán `dx = rnd(3)-1`; (0,0) nem visz időt), dobásnál/`^`-nál 20% véletlen irány | bájital, Medusa | időzítő; időtartamok összeadódnak |
 | CANHUH | a következő sikeres ütés összezavarja a szörnyet | Monster confusion tekercs | első sikeres ütés (közel vagy dobás) |
 | CANSEE | látja a láthatatlant; **C64-javítás (J5):** akkor áll fenn, ha a see invisible időzítő fut *vagy* see invisible gyűrű van valamelyik kézen | bájital, gyűrű | ha egyik forrás sincs már |
-| ISBLIND | vak: térkép nem frissül | bájital | időzítő, gyógyítás |
+| ISBLIND | vak: térkép nem frissül | bájital | időzítő; healing, extra healing, see invisible |
 | ISLEVIT | lebeg: csapdák hatástalanok, nem ébreszt, nem lépcsőzhet, nem vehet fel | bájital | időzítő |
-| ISHALU | hallucinál: szörnyek/tárgyak véletlen jellel, minden körben újrarajzolva | bájital | időzítő, extra gyógyítás |
+| ISHALU | hallucinál: szörnyek/tárgyak véletlen jellel, minden körben újrarajzolva | bájital | időzítő; extra healing, poison (J35) |
 | SEEMONST | szörnyek látszanak falon át (inverz), ISINVIS nem | bájital (20 kör) | időzítő |
-| ISHASTE | 2 akció / kör | bájital | időzítő |
+| ISHASTE | 2 akció / kör | bájital | időzítő; gyorsítás-ájulás |
 | ISHELD | nem léphet el a mezőről, csak a flytrapot támadhatja meg lépéssel (harc, tárgyhasználat mehet). Pontosan akkor áll fenn, amikor `flytrap_grip > 0` (J4), ezért nem kell tárolni | Venus flytrap | flytrap halála, teleport, új szint, egyes pálcák flytrapra; mindegyik a `flytrap_grip`-et is nullázza |
 
 *C64-javítás (J1):* az eredetiben a játékos ISRUN nélkül kezdett, és az éhség-állapotváltás, valamint a 0 körös gyorsítás-ájulás is törölte ([5.4](05_jatekos.md#54-éhség)).
+
+Az ISHUH, ISHALU, ISBLIND, ISLEVIT, ISHASTE és SEEMONST pontosan akkor áll fenn, amikor az időzítője fut (`GameState.timers`, [4.1.1](04_jatekciklus_es_parancsok.md#411-időzített-hatások-fuse-ok)): ami idő előtt megszünteti, az időzítőt nullázza. Ezért ezeket sem kell tárolni, mint az ISRUN-t és az ISHELD-et. A CANSEE a J5 szerint a see invisible időzítőjéből és a gyűrűkből adódik.
 
 ### 1.2.2 Szörny
 | flag | jelentés |

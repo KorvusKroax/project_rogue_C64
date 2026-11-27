@@ -111,11 +111,11 @@ wake_monster(monster):
   // 2. Medusa pillantása – minden hívásnál próbálkozik, amíg el nem sütötte (ISFOUND)
   if monster.type == 'M' and !player.ISBLIND and !player.ISHALU
      and !monster.ISFOUND and !monster.ISCANC and monster.ISRUN:
-       if (monster.room == player.room and a szoba világos) or dist2(monster, player) < 3:   // J13
+       if (a játékos szobája világos) or dist2(monster, player) < 3:   // folyosón és labirintusban sötét (3.1)
           monster.flags |= ISFOUND                      // a mentődobás előtt → csak egy esély
           if !save_magic():
              ISHUH; ha már zavarodott: az időzítő +spread(20), különben új időzítő spread(20)
-             név(monster) + "'s gaze has confused you"  // pl. "the medusa's gaze …"; ha név(monster) == "it": "its gaze …"
+             név(monster) + "'s gaze has confused you"  // pl. "the medusa's gaze …"; nem látott Medusánál (7.7) "something's gaze …"
   // 3. kapzsi szörny – nincs 2/3 esély, a stealth és a lebegés sem védi ki, ISHELD-et sem nézi
   if monster.ISGREED and !monster.ISRUN:
        monster.flags |= ISRUN
@@ -124,8 +124,6 @@ wake_monster(monster):
 runto(monster):  // a "kényszerített" ébresztés
   monster.flags |= ISRUN; monster.flags &= ~ISHELD; monster.dest = find_dest(monster)
 ```
-
-> **C64-javítás (J13):** a pillantáshoz a Medusának látnia kell a játékost: vagy ugyanabban a világos szobában vannak, vagy szomszédosak. *Eredetileg* csak a *játékos* szobájának világosságát nézte, így egy sötét szobában vagy folyosón álló Medusa is elsüthette a pillantását, ha a játékos egy világos szobában állt (pl. szobába lépéskor a fal túloldaláról).
 
 **Nem ISMEAN és nem ISGREED szörny** (B, C, I, J, L, N, P, W, X, Y) a `wake_monster`-től **soha nem ébred fel**, akármilyen közel megy hozzá a játékos, vagy akárhányszor lép be a szobájába. Csak `runto` indítja el, ezek pedig:
 - a játékos megtámadja (közelharc, dobott tárgy – `fight()` eleje);

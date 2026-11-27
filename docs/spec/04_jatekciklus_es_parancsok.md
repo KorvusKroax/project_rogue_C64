@@ -43,18 +43,26 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 | hatás | időtartam | lejáratkor |
 |---|---|---|
 | confusion | spread(20) (összeadódik) | ISHUH le, „you feel less confused now” |
-| hallucination | spread(850) | ISHALU le, képernyő újrarajzolás |
-| see invisible (bájital) | spread(850); ha már fut, spread(850)-nel meghosszabbodik | a bájital-forrás megszűnik; a CANSEE csak akkor kapcsol ki, ha nincs see invisible gyűrű a kézen (J5) |
-| blindness | spread(850) | ISBLIND le, képernyő frissítés |
-| levitation | spread(30) | ISLEVIT le |
-| haste self | rnd(4)+4 | ISHASTE le |
-| monster detection | 20 | SEEMONST le, inverz szörnyek eltűnnek |
+| hallucination | spread(850) (összeadódik) | ISHALU le, a látható tárgyak és szörnyek visszarajzolása, „Everything looks SO boring now.”; vakon csak a flag törlődik (`come_down`, [3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre)) |
+| see invisible (bájital) | spread(850) (összeadódik) | a bájital-forrás megszűnik; a CANSEE csak akkor kapcsol ki, ha nincs see invisible gyűrű a kézen (J5) |
+| blindness | spread(850) (összeadódik) | ISBLIND le, képernyő frissítés, „the veil of darkness lifts” (`sight`, [3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre)) |
+| levitation | spread(30) (összeadódik) | ISLEVIT le, „you float gently to the ground” |
+| haste self | rnd(4)+4 | ISHASTE le, „you feel yourself slowing down” |
+| monster detection | 20; ha már fut, nem változik | SEEMONST le, inverz szörnyek eltűnnek |
 | sleep (tekercs) | rnd(5)+4 | ISRUN vissza |
 | sleeping gas | 5 | ISRUN vissza |
 | bear trap | 3 | – |
 | ájulás (haste ütközés) | rnd(8); 0 körnél nincs ájulás, az ISRUN megmarad (J1) | ISRUN vissza |
 | ájulás (éhség) | rnd(8)+4 | ISRUN vissza |
 | fagyás (Ice monster) | rnd(2)+2 összeadódik | ISRUN vissza |
+
+A lejárati üzenetek hallucinált változatai a [függelékben](fuggelek_uzenetkatalogus.md#éhség-és-lejáró-hatások) vannak.
+
+A bájitalok hét időzítője (a táblázat első hét sora) az AFTER fázisban ketyeg: ha a hatás a játékos akciójában indul, az időzítő ugyanannak a körnek az AFTER fázisában már egyet lép, és ahol 0-ra ér, ott ér véget a hatás. A többi sor nem időzítő: az alvás, az ájulás és a fagyás a `turns_unable_to_act` számlálóban van, amely akciónként fogy ([4.1](#41-fő-játékciklus)), a medvecsapda lépésenként ([4.2.1](#421-mozgás)). A vándorló szörny időzítőjét a [6.2](06_szornyek.md#62-generálás) írja le.
+
+Az ISHUH, ISHALU, ISBLIND, ISLEVIT, ISHASTE és SEEMONST pontosan akkor áll fenn, amikor az időzítője fut ([1.2.1](01_adatmodell_es_flagek.md#121-játékos)). Ami a hatást idő előtt megszünteti, az időzítőt is nullázza: a hallucinációt a poison és az extra healing (J35), a vakságot a healing, az extra healing és a see invisible, a gyorsítást a gyorsítás-ájulás ([8.2](08_targyak.md#82-bájitalok-q)). A monster detection újabb ivása az eredetiben új fuse-t indított, de a korábbi járt le előbb, így a hatás nem hosszabbodott; ezt adja, hogy a futó időzítő nem változik.
+
+> **C64-javítás (J35):** a poison és az extra healing a hallucinációval együtt az időzítőjét is törli. *Eredetileg* a `come_down` csak a flaget törölte, a fuse a listán maradt. Ha a játékos a régi lejárat előtt újra hallucinációs bájitalt ivott, az új hatás új fuse-t kapott, de a régi járt le előbb, és az új hallucinációt idő előtt megszüntette.
 
 > **C64-javítás (J5):** a see invisible bájital és a see invisible gyűrű két független forrás; a CANSEE akkor áll fenn, ha legalább az egyik él. *Eredetileg* az időzítő lejárta a gyűrű ellenére is levette a CANSEE-t; ha iváskor már volt CANSEE (pl. gyűrűtől), nem indult időzítő; a gyűrű levétele pedig a bájital hátralévő hatását is megszüntette.
 
@@ -106,8 +114,8 @@ A démonok és időzítők az eredetiben egy általános démon/fuse-listában v
 move(dir):
   if bear_trap > 0: bear_trap--; "you are still stuck in the bear trap"; uses turn
   if ISHUH and rnd(5) != 0:
-     target = rndmove(player)                                          // 6.6: ha a véletlen cél nem járható (fal, kő, szabálytalan átló,
-     if target == player.pos: no time; futás és 'f'-harc vége; return  //  szörny, scare monster tekercs), helyben marad
+     target = rndmove(player); 'f'-harc vége (J37)                     // 6.6: ha a véletlen cél nem járható (fal, kő, szabálytalan átló,
+     if target == player.pos: no time; futás vége; return              //  szörny, scare monster tekercs), helyben marad
   else: target = player.pos + dir                                      // target: a mező, ahová lépni akar
   if target a pályán kívül (0. sor, 23. sor, oszlop < 0 vagy ≥ 80): mint falnál (lent)
   átlós lépés tilos, ha bármelyik ortogonális szomszéd fal/kő (sarokvágás tilalom) – ajtón átlósan sem lehet ki/be lépni; no time
@@ -126,6 +134,8 @@ move(dir):
   else: no time
 ```
 A zavarodott véletlen lépés soha nem támad szörnyre (a szörny jele nem járható), és Scare monster tekercsre sem lép. A „pálya széle” a logikai 80×22-es térkép széle, nem a nézőablaké.
+
+> **C64-javítás (J37):** a zavarodott véletlen lépés mindig véget vet az `f`-harcnak. *Eredetileg* csak akkor, ha a játékost helyben hagyta. Ha elvitte, a harc az új helyről a régi irányba folytatódott: a játékos továbblépett, vagy egy másik szörnyet támadott meg. Rendszerint a célpont követő lépése leállította (a célpont elmozdult), de ha a célpont nem mozdult el (például a Hold monster tekercs megdermesztette), és a zavarodottság elmúltával a harc iránya falba ütközött, a program végtelen ciklusba került: a falba ütköző lépés nem vitt időt, és az `f`-harcot semmi nem állította le.
 
 A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a játékos szobája a régi pozícióból számolódott újra; ez ugyanazt adja, mert F_PASS mezőn (a labirintusban is) mindig a folyosóhálózat jön ki ([1.4.7](01_adatmodell_es_flagek.md#147-kijáratok-és-folyosók)).
 
@@ -158,7 +168,7 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 ### 4.2.2 Harc és célzás
 | parancs | leírás |
 |---|---|
-| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, a játékos fogva tartva nem léphet oda (J25), vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
+| f + irány | harc a célponttal, amíg: valaki meg nem hal, a célpont elmozdul, más szörny támad, a játékos fogva tartva nem léphet oda (J25), zavarodottan véletlen lépést tesz (J37, [4.2.1](#421-mozgás)), vagy `hpt <= max_hit_this_fight`. Csak látott (vagy SEEMONST-tal érzékelt) szörnyre, különben „I see no monster there” (nincs idő). Szabálytalan átlós célnál semmi nem történik, és nem telik idő (J15). Nincsenek hit/miss üzenetek. A harc végén, bármi okozza, a célpont jelölése (ISTARGET) törlődik (J23). |
 | SHIFT-f + irány | ugyanez, HP-ellenőrzés nélkül („kamikaze”); a kamikaze csak erre a harcra szól, minden `f` és `F` újra eldönti (J24) |
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
@@ -375,7 +385,7 @@ F<dir>  fight till either of you dies
 ```
 Az egyes irányok nagybetűs és CTRL-os változatainak („run left”, „run left until adjacent”, …) saját súgósora is van az egy billentyűs súgóban, de a `*` listában nem szerepelnek. Ezek a sorok nem tárolódnak, kiíráskor állnak össze: „run ” + az irány leírása a `h`…`n` sorából, CTRL-nál még „ until adjacent”.
 
-**Felvétel részletei:** lebegve semmi nem vehető fel (rálépéskor csendben nem történik semmi, a `,` parancsra „You can't. You're floating off the ground!”). Arany: „you found <n> gold pieces”, és a szoba aranya 0 lesz (a kapzsi szörnyek ettől a játékos felé fordulnak). `m` irány: „you moved onto <név>”. `,` üres mezőn: „there is nothing here to pick up”.
+**Felvétel részletei:** lebegve semmi nem vehető fel. Rálépéskor csendben nem történik semmi (az `m`-nél a „moved onto” üzenet sem jön), a `,` parancsra „You can't. You're floating off the ground!”, ha a mezőn tárgy van; üres mezőn lebegve is „there is nothing here to pick up”. Arany: „you found <n> gold pieces”, és a szoba aranya 0 lesz (a kapzsi szörnyek ettől a játékos felé fordulnak). `m` irány: „you moved onto <név>”. `,` üres mezőn: „there is nothing here to pick up”.
 
 ---
 

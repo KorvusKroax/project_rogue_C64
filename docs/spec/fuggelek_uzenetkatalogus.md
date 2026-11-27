@@ -41,7 +41,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | flytrap fogja | you are being held | |
 | `m` tárgyra; tele csomagnál a „there's no room in your pack” után | you moved onto <név> | |
 | `,` üres mezőn | there is nothing here to pick up | |
-| lebegve `,` `>` `<` | You can't. You're floating off the ground! | |
+| lebegve `>` `<`, és `,` tárgyon (üres mezőn lebegve is „there is nothing here to pick up”) | You can't. You're floating off the ground! | |
 | `>` nem lépcsőn, vagy a 254. szinten | I see no way down | |
 | `<` nem lépcsőn | I see no way up | |
 | `<` amulett nélkül | your way is magically blocked | |
@@ -177,7 +177,7 @@ A játék összes üzenete, a megjelenés helyzetével. Szabályok ([3.4](03_lat
 | Vampire / Wraith szívás | you suddenly feel weaker | |
 | Leprechaun | your purse feels lighter | |
 | Nymph | she stole <név>! | |
-| Medusa pillantása | <szörny>'s gaze has confused you (pl. the medusa's gaze …; ha nem látható: its gaze has confused you) | |
+| Medusa pillantása | <szörny>'s gaze has confused you (pl. the medusa's gaze …; ha nem látható: something's gaze has confused you) | |
 | rozsda (Aquator, csapda) | your armor appears to be weaker now. Oh my! | |
 | rozsda – védett páncél | the rust vanishes instantly | |
 | szörnynév, ha nem látható | something | |

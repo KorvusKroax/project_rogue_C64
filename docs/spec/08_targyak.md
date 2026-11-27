@@ -20,26 +20,30 @@ A típusonkénti kezdőérték két részből áll: ami minden létrehozáskor j
 ## 8.2 Bájitalok (`q`)
 | # | név | esély | érték | hatás |
 | --- | --- | --- | --- | --- |
-| 0 | confusion | 7 | 5 | ISHUH, +spread(20) kör (ha nem hallucinál, üzenet) |
-| 1 | hallucination | 8 | 5 | ISHALU, spread(850) |
-| 2 | poison | 8 | 5 | ha nincs sustain strength: chg_str(-(rnd(3)+1)), „you feel very sick now”, és a hallucináció is megszűnik (`come_down`); sustain strength-tel: „you feel momentarily sick” |
+| 0 | confusion | 7 | 5 | ISHUH, spread(20); ha már zavarodott, az időzítőhöz adódik ([4.1.1](04_jatekciklus_es_parancsok.md#411-időzített-hatások-fuse-ok)) |
+| 1 | hallucination | 8 | 5 | ISHALU, spread(850); ha már hallucinál, az időzítőhöz adódik |
+| 2 | poison | 8 | 5 | ha nincs sustain strength: chg_str(-(rnd(3)+1)), „you feel very sick now”, és a hallucináció is megszűnik, az időzítőjével együtt (`come_down`, J35); sustain strength-tel: „you feel momentarily sick” |
 | 3 | gain strength | 13 | 150 | chg_str(+1) |
 | 4 | see invisible | 3 | 100 | CANSEE, spread(850) ([4.1.1](04_jatekciklus_es_parancsok.md#411-időzített-hatások-fuse-ok)) – az időzítő gyűrű mellett is elindul vagy meghosszabbodik (J5); a vakság is megszűnik; „this potion tastes like <fruit> juice” |
 | 5 | healing | 13 | 130 | hpt += ROLL(lvl,4); ha > maxhp: maxhp++, hpt = maxhp; vakság le |
-| 6 | monster detection | 6 | 130 | SEEMONST 20 kör |
-| 7 | magic detection | 6 | 105 | mágia-képernyő ([3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre)) |
-| 8 | raise level | 2 | 250 | exp = xp_next[lvl-1] + 1; szintlépés |
-| 9 | extra healing | 5 | 200 | hpt += ROLL(lvl,8); ha > maxhp: (hpt > maxhp+lvl+1 ? maxhp+=2 : maxhp+=1); hpt = maxhp; vakság, hallucináció le |
-| 10 | haste self | 5 | 190 | ha már ISHASTE: hatás le, ájulás rnd(8) kör; különben ISHASTE rnd(4)+4. Az ivás – mint minden bájitalé – 1 körbe kerül (J14) |
-| 11 | restore strength | 13 | 130 | str = str_max |
-| 12 | blindness | 5 | 5 | ISBLIND spread(850) |
-| 13 | levitation | 6 | 75 | ISLEVIT spread(30) |
+| 6 | monster detection | 6 | 130 | SEEMONST 20 kör; ha már fut, az időzítő nem változik |
+| 7 | magic detection | 6 | 105 | ha a szint padlóján van tárgy (az arany is): a padló és a szörnyek csomagjainak mágikus tárgyai a mágia-képernyőn ([3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre)); üres padlónál semmi |
+| 8 | raise level | 2 | 250 | exp = xp_next[lvl-1] + 1; szintlépés; a legmagasabb szinten csak az üzenet (J36) |
+| 9 | extra healing | 5 | 200 | hpt += ROLL(lvl,8); ha > maxhp: (hpt > maxhp+lvl+1 ? maxhp+=2 : maxhp+=1); hpt = maxhp; vakság, hallucináció le, az időzítőjükkel együtt (J35) |
+| 10 | haste self | 5 | 190 | ha már ISHASTE: a gyorsítás az időzítőjével együtt le (lassulás-üzenet sem jön), ájulás rnd(8) kör; különben ISHASTE rnd(4)+4. Az ivás – mint minden bájitalé – 1 körbe kerül (J14) |
+| 11 | restore strength | 13 | 130 | str = str_max ([5.6](05_jatekos.md#56-erő)) |
+| 12 | blindness | 5 | 5 | ISBLIND spread(850); ha már vak, az időzítőhöz adódik |
+| 13 | levitation | 6 | 75 | ISLEVIT spread(30); ha már lebeg, az időzítőhöz adódik |
 
-**Automatikus azonosítás iváskor:** azonosítódik: poison, gain strength, healing, extra healing, raise level, haste self, hallucination, blindness, levitation; confusion csak ha a játékos nem hallucinál; magic detection csak ha mutatott valamit. **Nem** azonosítódik: see invisible, monster detection, restore strength. Ha a típus ivás után sem ismert és nincs még elnevezve, a játék megkérdezi: „what do you want to call it?” (`call_it`); betelt névkészletnél a kérdés helyett „you have no room for more names. Remove a name from something first” ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)). Ha viszont ismert, a korábbi `c`-név törlődik (azonosító tekercsnél is). Ugyanez a tekercseknél.
+**Automatikus azonosítás iváskor:** azonosítódik: poison, gain strength, healing, extra healing, raise level, haste self, hallucination, blindness, levitation; confusion csak ha a játékos nem hallucinál; magic detection csak ha mutatott valamit. **Nem** azonosítódik: see invisible, monster detection, restore strength. Ha a típus ivás után sem ismert és nincs még elnevezve, a játék megkérdezi: „what do you want to call it?” (`call_it`); betelt névkészletnél a kérdés helyett „you have no room for more names. Remove a name from something first” ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)). A beviteli mező ugyanaz, mint a `c`-nél ([4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok)): üresen indul, legfeljebb 20 karakter; üres beírásra vagy ESC-re a típus név nélkül marad. *Eredetileg* üres beírásra a név a játék közös munkapufferében (`prbuf`) épp ott lévő szöveg lett, a see invisible után például „this potion tastes like slime-mold juice”. Ha viszont ismert, a korábbi `c`-név törlődik (azonosító tekercsnél is). Ugyanez a tekercseknél.
+
+**Az üzenetek sorrendje,** ha egy ivás több üzenetet ad: healing: a vakság megszűnésének üzenete, utána „you begin to feel better”; extra healing: a vakság, utána a hallucináció megszűnésének üzenete, végül „you begin to feel much better”; poison: „you feel very sick now”, utána a hallucináció megszűnésének üzenete; see invisible: „this potion tastes like <fruit> juice”, utána a vakság megszűnésének üzenete; raise level: „you suddenly feel much more skillful”, utána „welcome to level <n>”. A megszűnés üzenetei a [3.2](03_latoter_es_megjelenites.md#32-állapotok-hatása-a-kijelzésre) szerint (vakon a hallucináció megszűnése csendes).
 
 > **C64-javítás (J14):** *eredetileg* a haste self ivása nem vitt el időt (a gyorsítás egy plusz akciót adott még ugyanabban a körben, mert az ivás „visszaadta” a saját akcióját). Most az ivás 1 kör, és a gyorsítás a következő körtől hat.
 
 > **C64-javítás (J5):** a see invisible bájital iváskor mindig elindítja az időzítőt (ha már fut, spread(850)-nel meghosszabbítja), akkor is, ha a játékoson see invisible gyűrű van. *Eredetileg* ha már volt CANSEE, nem indult időzítő, így a gyűrű későbbi levételekor a bájital hatása is elveszett.
+
+> **C64-javítás (J36):** a raise level a legmagasabb (21.) szinten csak az üzenetet adja, az `exp` nem változik. *Eredetileg* az `xp_next` végén álló 0 miatt az `exp` 1 lett, és mivel a szint az `exp`-ből újraszámolódott, a játékos az 1. szintre esett. A max. HP megmaradt, a szintek visszaszerzésekor pedig újra megkapta a HP-kockákat.
 
 Nem megfelelő tárgyra a `q`, `r` és `e` is időbe kerül („yuk! Why would you want to drink that?”, „there is nothing on it to read”, „ugh, you would get ill if you ate that”). Ha a megivott, elolvasott vagy megevett tárgy a kézben volt, a kéz kiürül, akkor is, ha a kötegből marad ([4.2.6](04_jatekciklus_es_parancsok.md#426-tárgyválasztás-listák-és-tárgyparancsok)).
 
