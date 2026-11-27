@@ -154,7 +154,7 @@ Mélységenként (átlag / leglassabb, képkocka):
 | 40 | 22,78 / 44,17 | 33,66 / 57,46 | 32,76 / 60,01 | 36,11 / 67,42 |
 
 - Mind a négy változat ugyanazt a 100 szintet adja (összesített ellenőrzőösszeg: `765E36E1`), és mind bőven belül van a 3 másodperces (150 képkockás) kereten ([10.8](docs/spec/10_platform.md#108-erőforrás-keretek)).
-- Az Oscar64 mindkét szempontból jobb: már a `-Os` beállítása is kisebb és gyorsabb kódot ad, mint az llvm-mos bármelyike. Az llvm-mos kódja 1,7-szer (`-Os`; `-Oz`-vel 6 309 bájt) vagy 3,3-szor (`-O2`) akkora. Ha ez az arány a teljes játékra is áll, a becsült 28–34 KB kód llvm-mos-szal 48–58 KB lenne, és nem férne el a 46 976 bájtos fő régióban.
+- Az Oscar64 mindkét szempontból jobb: már a `-Os` beállítása is kisebb és gyorsabb kódot ad, mint az llvm-mos bármelyike. Az llvm-mos kódja 1,7-szer (`-Os`; `-Oz`-vel 6 309 bájt) vagy 3,3-szor (`-O2`) akkora. Ha ez az arány a teljes játékra is áll, az akkor becsült 28–34 KB kód llvm-mos-szal 48–58 KB lenne, és nem férne el a 46 976 bájtos fő régióban (a 2026-11-27-i becslés szerint a kód ennél is nagyobb lesz, [10.8](docs/spec/10_platform.md#108-erőforrás-keretek)).
 - Az Oscar64-en belül a `-Os` 10%-kal kisebb, de kb. 40%-kal lassabb kódot ad, mint az `-O2`.
 - Az llvm-mos `-O2` a gyári zero page-kerettel (`-mlto-zp=110`) nem linkelhető (`relocation R_MOS_ADDR8 out of range`), 61 bájtig igen; a `compare.bat` 32-t ad meg.
 - A fordítási idő a keretprogramon mindkettőnél 1 másodperc alatti.
