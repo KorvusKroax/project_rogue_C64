@@ -18,8 +18,9 @@ set VICE=C:\GTK3VICE-3.10-win64\bin\x64sc.exe
 rem --- az interaktiv tesztprogramok ---
 set INTERACTIVE_PROGRAMS= screens
 
-rem ennyi ciklus utan a VICE leall, ha a tesztprogram nem ert veget (pl. egy DEV_CHECK megallitotta); a szint-onteszt kb. 1/6-a
-set CYCLE_LIMIT=6000000000
+rem ennyi ciklus utan a VICE leall, ha a tesztprogram nem ert veget (pl. egy DEV_CHECK megallitotta); a leghosszabb, a szint-onteszt
+rem (level) 2026-11-27-en kb. 5,7 milliard ciklus volt, a hatar kb. fele
+set CYCLE_LIMIT=12000000000
 
 setlocal
 rem a "call :build_and_run" alatt a %%0 a cimke, ezert a mappa elore elmentve
