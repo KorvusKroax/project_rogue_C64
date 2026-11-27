@@ -41,7 +41,7 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 **Szövegek:** minden játékszöveg ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)) a `$D000–$FFF9` alatti RAM-ban van (12 282 bájt; a rezidens szövegek a végén kb. 10,2 KB-ot foglalnak, 2026-11-24-én 4 825 bájtot). A szövegek és a tábláik egy külön szakaszban (`texts`) vannak, amelynek régiója `$D000`-nál kezdődik. A folytatásukra a `$C400–$C7FF` már nem jöhet szóba, mert ott pufferek vannak.
 - **Kiolvasás:** a megszakítás tiltása, `$01 = $30`, a szöveg átmásolása a hívó pufferébe a fő régióban, legfeljebb a megadott hosszig, a `$01` visszaállítása, végül a megszakítás régi állapota (tiltott megszakítás mellett hívva tiltva marad). Bármely címről olvas, mert `$01 = $30` mellett a fő régió ugyanúgy látszik, így a hívónak nem kell tudnia, hol a szöveg. Táblaelemnél a mutató kiolvasása és a szöveg másolása egy lapozásban történik; ha a táblaelem címe továbbadódik (pl. üzenet mintájaként vagy helyőrzőjeként), csak a mutató olvasódik ki, és a szöveget a felhasználás helye másolja.
 - **Betöltés:** induláskor, az első szövegkiírás előtt, a játékban és minden tesztprogramban, arról az egységről, amelyről a játék betöltődött (8 alatti egységszámnál a 8-asról). A fájl a `$D000`-s betöltési címmel kezdődik. A `LOAD` a `$D000–$DFFF` alá nem írhat, mert ott az I/O látszik, ezért a fájl 256 bájtos darabokban a `$C400`-as pufferbe olvasódik, és minden darab `$01 = $30` mellett másolódik a helyére. A betöltés csak akkor sikeres, ha a betöltési cím `$D000`, és pontosan a szakasz hossza jött, utána a fájl véget ért. Közben a 0. sorban „loading...” látszik, hibánál „insert the game disk and press space”, és szóközre újra ([10.7](#107-lemezkezelés)). A 4,8 KB-os fájl kb. 9–12 másodperc. Szöveg nélküli programban (pl. egy tesztprogramban) a szakasz üres, és a betöltés elmarad.
-- **Tömörítés:** nincs. Ha a szövegek kinőnék a helyet, akkor jöhet szóba, például szótáras tömörítés.
+- **Tömörítés:** még nincs. A szövegkatalógus generálása után bájtpár-kódolással tömörülnek, hogy a ROM-ok alatt kódnak is jusson hely ([10.8](#108-erőforrás-keretek)).
 
 **Játékállapot:** a teljes perzisztens állapot ([1.4.5](01_adatmodell_es_flagek.md#145-térképrétegek)) egyetlen összefüggő blokk (kb. 8,5 KB), mert a mentés és a betöltés ezt egyben írja és olvassa ([10.7](#107-lemezkezelés)). Ami nem kerül bele:
 - a beállításblokk, mert a képernyőmodul is használja; a mentés ettől még kiírja ([10.10](#1010-képernyőmodul));
@@ -126,8 +126,8 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 ## 10.8 Erőforrás-keretek
 | tétel | becslés / cél |
 |---|---|
-| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak. Az RNG szorzótáblái (1 KB) és a pufferek (kb. 0,7 KB) a fő régión kívül vannak ([10.2](#102-memória)). Mérve (2026-11-27): az áthelyezésük a szabad helyet a játékban 4 264-ről 5 984, a fejlesztői buildben 0-ról 1 744 bájtra növelte. |
-| kód | 28–34 KB; durva becslés, nem mérés, mérföldkövenként mérni kell |
+| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak. Az RNG szorzótáblái (1 KB) és a pufferek (kb. 0,7 KB) a fő régión kívül vannak ([10.2](#102-memória)). Mérve (2026-11-27): az áthelyezésük a szabad helyet a játékban 4 264-ről 5 984, a fejlesztői buildben 0-ról 1 744 bájtra növelte. A fejlesztői buildben a térképírás ellenőrzésének kivétele és a fejlesztői fájlok méretre fordítása ([10.9](#109-fejlesztői-build-és-determinizmus)) után 2 672 bájt szabad. |
+| kód | 2026-11-27-én kb. 31 KB; a hátralévő részre kb. 15–24 KB a becslés (lásd lent, a hely tervénél), mérföldkövenként mérni kell |
 | szövegek (üzenetek, nevek, súgó, szótagok) | kb. 11,5 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,5 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,0 KB (a súgósorok jel + leírás formában, a futássorok kiíráskor összerakva), győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$D000–$FFF9` alatti RAM-ban (12 282 bájt, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak, így a ROM-ok alatt kb. 10,2 KB foglalt. Mérve (2026-11-24): a szövegek és a tábláik 4 825 bájtot foglalnak a ROM-ok alatt. Az áthelyezésük a betöltővel együtt a szabad helyet a játékban 4 376-ról 8 216, a fejlesztői buildben 192-ről 3 944 bájtra növelte. |
 | képernyőmodul | kb. 3 KB kód és szöveg; a játékállapot-blokk helyére töltődik, így nem foglal külön helyet ([10.10](#1010-képernyőmodul)) |
 | állandó táblák (szörnyek, tárgyak, erő, xp) | kb. 1,5 KB |
@@ -139,6 +139,47 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 | **görgetés** | legfeljebb 2 képkocka |
 
 A szabad memóriát a fordítás írja ki (a `.map` fájlból), a táblák foglaltságát a fejlesztői mód mutatja ([1.4.1](01_adatmodell_es_flagek.md#141-táblák-és-listák)).
+
+**A hely terve** (2026-11-27): a becslés szerint a játék végéig több kód jön, mint amennyi hely van, ezért a lehetőségek fel vannak mérve, és eldőlt, melyik mikor jön.
+
+**A hátralévő kód becslése:** az eredeti forrás függvényei megjegyzések, szóközök és szövegek nélkül, karakterben mérve, készre és hátralévőre osztva. A kész rész a mi kódunkban átlagosan kb. 0,5 bájt eredeti karakterenként, a legutóbb elkészült felszerelés és a szörnyek tárgyai 0,83, mert sok bennük a különleges eset. A hátralévő rész (29 572 karakter) így kb. 15–24 KB kód. A 2026-11-23-i becslés ugyanerre a részre 12,7–18,8 KB volt.
+
+| feladat | KB |
+|---|---|
+| bájitalok, időzítők, kijelzési hatások | 3,6–5,9 |
+| tekercsek | 2,2–3,6 |
+| gyűrűk, hajítás | 1,3–2,1 |
+| pálcák, sugarak | 2,2–3,7 |
+| csapdák, éhség, regeneráció, vándorlók | 1,7–2,8 |
+| játék vége, lemez, mentés | 0,9–1,5 |
+| beállítások, súgó, jel magyarázata (`/`) | 1,6–2,6 |
+| a parancsfeldolgozás hátralévő része | 1,1–1,8 |
+| C64-es többletek: kétfeles észlelés-képernyők (E11), lemezírás, a képernyőmodul hívása, a szövegek kibontása, a KERNAL kilapozása | kb. 1,2 |
+| táblák, a játékállapot bővülése | 0,5–1 |
+| **összesen** | **kb. 16,5–26** |
+
+**A lehetőségek** (a forrás másolatán mérve; a szabad hely a játékban, illetve a fejlesztői buildben; a kör ideje a képkocka százalékában, a szintgenerálás a leglassabb szint képkockában, az 1., 10., 26. és 40. mélységen, [10.9](#109-fejlesztői-build-és-determinizmus)):
+
+| lehetőség | szabad hely | sebesség | tesztek |
+|---|---|---|---|
+| a mostani állapot | 5 984 / 2 672 bájt | kör: 60 / 53 / 62 / 86%; szint: 58 / 112 / 130 / 110 | átmennek |
+| méretre fordítás, szűk kör: `item_names`, `pack`, `text_list`, `discoveries`, `equipment`, `input`, `status`, `player`, `state`, `main`, `platform`, `disk` | +440 / +328 bájt | kör: 1–2%-kal lassabb; szint: változatlan | átmennek |
+| méretre fordítás, bővebb kör: a szűk kör, valamint `game`, `combat`, `message`, `monsters`, `items` | +1 432 / +1 376 bájt | kör: 64 / 57 / 66 / 94%, 5–9%-kal lassabb; szint: változatlan | átmennek |
+| teljes `-Os` | +3 760 / +3 816 bájt | kör: kb. 25%-kal lassabb; szint: a 26. mélységen 150, a keret határán | egy teszt csak az Oscar64 hibájának megkerülésével megy át (lásd lent) |
+| a fejlesztői build kettéosztása (szörnyek és térkép, illetve tárgyak) | – / +848, illetve +1 032 bájt | – | – |
+| szövegtömörítés: bájtpár-kódolás, legfeljebb 128 pár a szövegekben nem használt 128–255 kódokon | a ROM-ok alatt: a mostani szövegeken 33%, egy nagyobb katalógusmintán 38–42%; a kibontó kb. 72 bájt; a tervezett kb. 10,2 KB szövegnél kb. 3,3–3,7 KB | a kiolvasás lassulása nincs mérve | – |
+| kód a KERNAL alatt (`$E000–$FFF9`, a szövegek után): játék közben kilapozott KERNAL, saját IRQ-belépés | tömörítés nélkül kb. 2 KB, tömörítéssel kb. 5,5 KB | a kód nem lassul; a betöltés KB-onként kb. 2 másodperccel hosszabb | – |
+| ritkán használt kód lemezes modulként (mentés és betöltés, beállítások, súgó) | kb. 1–2 KB | betöltés minden használatkor | – |
+
+A méretre fordítás veszélye az Oscar64 egy hibája: ha egy függvény a saját paraméterének címét adja át, és a hívott függvény ezen át megváltoztatja, a hívó a következő hívásnál elavult értéket használ ([README, Oscar64-hibák](../../README.md#oscar64-hibák-és-megkerülésük)). A méretre fordított fájlokban ezért a paramétert előbb helyi változóba kell másolni.
+
+**Döntés**, ebben a sorrendben:
+1. Most, a bájitalok előtt: méretre fordítás a bővebb körre. Az új, ritkán futó kód (pl. a bájitalok, a tekercsek, a beállítások) is eleve méretre fordul; a körönként futó és a szintgeneráló kód marad `-O2`.
+2. A szövegkatalógus generálása után: szövegtömörítés, a KERNAL játék közben kilapozva, kód a KERNAL alatt.
+3. Ha a fejlesztői build újra betelik: a fejlesztői build `-Os`-sel fordul.
+4. Végső tartalékként: a játék is `-Os`-sel fordul (a bővebb kör után még kb. +2,3 KB, a kör kb. 25%-kal lassabb), utána a ritkán használt kód lemezes modulként.
+
+A négy lépés a lemezes modulok nélkül kb. 15 KB helyet ad (a mostani 5 984 bájt, a bővebb kör +1,4 KB, a tömörítés és a kód a KERNAL alatt kb. +5,5 KB, a teljes `-Os` kb. +2,3 KB), és a méretre fordított új kód kb. 8%-kal kisebb. Ez a becslés alsó végéhez elég, a felsőhöz nem: kb. 1–10 KB hiányozhat. Ennek egy részét a lemezes modulok adhatják (kb. 1–2 KB), a többire a kód egyszerűsítése jöhet szóba. A becslést mérföldkövenként a mért kódméret alapján újra kell nézni.
 
 ## 10.9 Fejlesztői build és determinizmus
 - A játéklogika (0–9. fejezet) csak a platformrétegen át éri el a hardvert, így a hardverközeli kód egy helyen van.
