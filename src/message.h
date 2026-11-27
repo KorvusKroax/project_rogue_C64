@@ -16,6 +16,7 @@ void message_format_without_recall(const char *text, const char *first_text, con
 // (a slow lista megszakítása): ekkor a sor elmarad, a sáv üres, és az eredmény hamis
 bool message_list_row(const char *text, bool is_escape_allowed);
 void repeat_last_message(void);                 // az utolsó üzenet vagy listasor (a kérdések nem) újra a sávba; ha még nem volt, üres
+void clear_last_message(void);                  // új játéknál: a CTRL-P ezután üres sávot hoz, amíg nem jön üzenet vagy listasor
 void message_prompt(const char *text);          // kérdés a sávba, záró pont nélkül; a képernyő kurzora a szöveg végén marad; a válasszal látszik, amíg a következő üzenet vagy törlés le nem váltja
 void message_prompt_format(const char *text, const char *first_text);  // mint a message_prompt, a \1 helyén a szöveg
 void message_reserve_input_space(uint8_t length);   // a kurzortól length karakter helyét lefoglalja a sávban, legfeljebb a sáv utolsó soráig; az újonnan lefoglalt sorok üresek

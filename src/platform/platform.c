@@ -14,7 +14,8 @@
 // $0880-$BFFF  kód, állandó adatok, változók (benne a GameState), verem
 //              – a main régió, lásd a #pragma region sort
 // $C000-$C3FF  képernyőmemória (VIC 3. bank)
-// $C400-$C7FF  szabad; induláskor a szövegek betöltésének puffere
+// $C400-$C7FF  pufferek; induláskor előbb a szövegek betöltésének puffere
+//              – a buffers régió, lásd a #pragma region sort
 // $C800-$CFFF  saját karakterkészlet
 // $D000-$DFFF  I/O, alatta szövegek
 // $E000-$FFF9  KERNAL ROM, alatta szövegek
@@ -28,6 +29,12 @@
 #pragma section(rng_tables, 0, , , bss)
 #pragma region(rng_tables, 0x0400, 0x0800, , , {rng_tables})
 
+// kezdőérték nélküli (bss) szakasz, amelynek elejét induláskor a szövegek betöltése is használja (TEXT_LOAD_BUFFER), és utána a
+// szövegfájl utolsó darabja marad benne: csak olyan puffer kerülhet ide, amely a betöltés közben nem kell, és amelybe olvasás
+// előtt mindig írás történik
+#pragma section(buffers, 0, , , bss)
+#pragma region(buffers, 0xc400, 0xc800, , , {buffers})
+
 // a texts szakasz (texts.c) a lemezen külön fájl (az 1-es overlay), a neve a régió neve; induláskor a load_texts tölti be
 #pragma region(texts, 0xd000, 0xfffa, , 1, {texts})
 #pragma overlay(texts, 1)
@@ -35,7 +42,7 @@
 extern void texts_section_start, texts_section_end;
 
 #define TEXTS_FILE_NAME       "TEXTS"               // a régió neve, PETSCII-ben nagybetűvel
-#define TEXT_LOAD_BUFFER      ((char *)0xc400)
+#define TEXT_LOAD_BUFFER      ((char *)0xc400)      // a buffers régió eleje
 #define TEXT_LOAD_CHUNK_SIZE  256
 #define LOADING_ROW           0                     // a szövegek betöltésének állapotsora, mint a „saving...”-é (10.7)
 

@@ -272,8 +272,10 @@ void name_item(uint8_t index)
 }
 
 // a név a formázás alatt; a puffer a leghosszabb nevet is elbírja (ITEM_NAME_LENGTH_MAX), ezért a karakterek és a számok írása
-// nem ellenőrzi a hosszt
+// nem ellenőrzi a hosszt; a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static char item_name[ITEM_NAME_SIZE];
+#pragma bss(bss)
 static uint8_t item_name_length;
 static bool item_name_has_article;              // a név az "a " névelővel kezdődik, ezt a végén a complete_article igazítja
 

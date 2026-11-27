@@ -93,7 +93,10 @@ static bool roll_attack(uint8_t attacker_level, int16_t hit_bonus, int16_t damag
     return did_hit;
 }
 
+// a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static char monster_name_text[MONSTER_NAME_TEXT_SIZE];
+#pragma bss(bss)
 
 const char *prepare_monster_name(const struct Monster *monster)
 {

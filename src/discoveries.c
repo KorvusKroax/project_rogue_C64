@@ -45,7 +45,10 @@ static const struct DiscoveryType discovery_types[DISCOVERY_TYPE_COUNT] = {
     #error "a tétel nem fér el egy bájtban"
 #endif
 
+// a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static uint8_t entries[ENTRY_COUNT_MAX];
+#pragma bss(bss)
 static uint8_t entry_count;
 
 // a sorrend keverőjének állapota (roll_xorshift): hívásról hívásra megy tovább, és nem kerül a mentésbe; az első híváskor

@@ -25,11 +25,16 @@
 #define PLACEHOLDER_SECOND_TEXT '\2'
 #define PLACEHOLDER_NUMBER      '\3'
 
+// a pufferek a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static char message_text[MESSAGE_TEXT_SIZE];
-static char last_message_text[MESSAGE_TEXT_SIZE];   // kiírt alakjában, a CTRL-P-hez
+static char last_message_text[MESSAGE_TEXT_SIZE];   // kiírt alakjában, a CTRL-P-hez; új játéknál üres (clear_last_message)
+#pragma bss(bss)
 static uint8_t message_text_length;
 static bool is_last_message_list_row;           // a CTRL-P listasorként hozza vissza
+#pragma bss(buffers)
 static char message_bar_text[SCREEN_WIDTH * MESSAGE_ROW_COUNT + 1];
+#pragma bss(bss)
 static uint16_t message_bar_length;
 static bool is_message_bar_list_row;            // a sáv szövege listasor: semmi nem fűződik hozzá
 static uint8_t message_bar_end_column;
@@ -318,6 +323,12 @@ bool message_list_row(const char *text, bool is_escape_allowed)
     strcpy(last_message_text, text);
     is_last_message_list_row = true;
     return true;
+}
+
+void clear_last_message(void)
+{
+    last_message_text[0] = 0;
+    is_last_message_list_row = false;
 }
 
 void repeat_last_message(void)

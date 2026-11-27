@@ -22,6 +22,7 @@ int test_text_list_rows(uint16_t i);            // a 40 oszlopos lista sorai: a 
 int test_text_list_window_fit(uint16_t i);      // az overwrite ablakba fér-e: az üres oszlop és a lista végének sora is kell; a teli csomag hosszú nevekkel nem fér el
 int test_window_restore(uint16_t i);            // az ideiglenes ablak bezárása után a képernyő bájtra azonos a megnyitás előttivel (a megnyitás az üzenetsávot törli)
 int test_list_row_not_joined(uint16_t i);       // a tárgylista-sor után a kérdés új sávban kezdődik, és a listasor sem fűződik az előző üzenethez; más üzenetek összefűződnek
+int test_cleared_last_message(uint16_t i);      // új játéknál (clear_last_message) a CTRL-P üres sávot hoz, az üzenet és a listasor után is
 int test_prompt_input_space(uint16_t i);        // a kérdés csak akkor fűződik az előző üzenethez, ha a beviteli mezője is elfér mögötte
 int test_message_chars_fitting_row(uint16_t i);
 int test_message_chars_fitting_bar(uint16_t i);

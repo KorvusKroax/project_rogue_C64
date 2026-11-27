@@ -24,7 +24,10 @@
 #define FULL_MAP_BORDER_COLOR  2   // piros: a teljes térkép be van kapcsolva
 
 static bool full_map_shown = false;
+// a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static uint8_t full_map_row[VIEW_WINDOW_WIDTH];
+#pragma bss(bss)
 static uint8_t normal_border_color;
 
 // a titkos folyosó-mező a játékban üresnek, a titkos ajtó falnak látszik

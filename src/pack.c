@@ -216,7 +216,10 @@ bool drop_item(uint8_t index)
 #define PACK_LIST_PREFIX_LENGTH  3
 #define PACK_LIST_ENTRY_SIZE     (PACK_LIST_PREFIX_LENGTH + ITEM_NAME_SIZE)
 
+// a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static char pack_list_entry[PACK_LIST_ENTRY_SIZE];
+#pragma bss(bss)
 
 static uint8_t pack_list_filter;                // PACK_FILTER_
 

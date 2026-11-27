@@ -263,6 +263,31 @@ int test_list_row_not_joined(uint16_t i)
     return ok;
 }
 
+int test_cleared_last_message(uint16_t i)
+{
+    save_screen(test_program_screen);
+    set_message_more_wait(false);
+
+    message_clear();
+    message("you hit it");
+    clear_last_message();
+    message_clear();
+    repeat_last_message();
+    bool ok = is_message_bar_empty();
+
+    message_clear();
+    message_list_row("a) a mace", false);
+    clear_last_message();
+    message_clear();
+    repeat_last_message();
+    ok = ok && is_message_bar_empty();
+
+    message_clear();
+    set_message_more_wait(true);
+    load_screen(test_program_screen);
+    return ok;
+}
+
 #define PROMPT_TEST_INPUT_LENGTH  (NAME_LENGTH_MAX + 1)     // a `c` beviteli mezője a kurzor helyével
 
 // a két eset a két 40 karakteres sorra van kiszámolva: a rövid régi névvel a kérdés után 31 hely marad, a hosszúval 16

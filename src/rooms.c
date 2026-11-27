@@ -150,7 +150,10 @@ struct MazeCell {
     uint8_t y;
 };
 
+// a buffers szakaszban ($C400-$C7FF, platform.c)
+#pragma bss(buffers)
 static struct MazeCell maze_stack[MAZE_STACK_SIZE];
+#pragma bss(bss)
 
 // a lépések sorrendje: x + 2, x - 2, y + 2, y - 2
 static const int8_t maze_step_x[4] = { 2, -2, 0, 0 };

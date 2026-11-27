@@ -552,6 +552,7 @@ void run_game(void)
 {
     init_player();
     init_item_names();
+    clear_last_message();
     last_code = 0;
     last_item_index = NO_ITEM;
     game.dungeon_level = 1;
