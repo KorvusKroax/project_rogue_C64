@@ -50,7 +50,8 @@ extern void texts_section_start, texts_section_end;
     #error "a szövegek betöltésének puffere nem fér el a $C400-$C7FF területen"
 #endif
 
-// a fordító becsült veremmélysége a .map fájl STACK sorában (a régió vége − a sor kezdete); mérve 194 bájt volt a dev buildben
+// a main régió végén: a függvények rögzített helyű keretei, alattuk a dinamikus verem; a .map fájl STACK sora a megmaradt dinamikus
+// verem, a keretek a sor vége (StackEnd) és a régió vége között vannak, 2026-11-27-én mérve a dev buildben 383, a játékban 293 bájt
 #pragma stacksize(512)
 
 #define IRQ_VECTOR            (*(void **)0x0314)

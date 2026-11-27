@@ -26,17 +26,19 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 | `$0000–$00FF` | zero page – a KERNAL lemezrutinjai által használt címeket meg kell hagyni, vagy lemezművelet előtt elmenteni |
 | `$0100–$01FF` | hardveres verem (256 bájt: rekurzió nincs, [2.5](02_szintgeneralas.md#25-szobák-rajzolása)) |
 | `$0200–$03FF` | KERNAL munkaterület |
-| `$0400–$07FF` | szabad (az alapértelmezett képernyő áthelyezve): pl. pufferek, bevitel |
+| `$0400–$07FF` | az RNG bájtonkénti szorzótáblái (4 × 256 bájt, [10.5](#105-aritmetika)); az alapértelmezett képernyő áthelyezve. A lemezre nem kerülnek, és induláskor nem nullázódnak: az `rng_init` tölti fel őket |
 | `$0801–$087F` | BASIC-indítósor |
-| `$0880–$BFFF` | fő régió (46 976 bájt): kód, állandó adatok, változók, a fordító szoftveres verme (512 bájt, `#pragma stacksize`; a dev buildben mérve 194 bájt kell); a játékállapot-blokk helyére a címképernyő idején a képernyőmodul töltődik ([10.10](#1010-képernyőmodul)) |
+| `$0880–$BFFF` | fő régió (46 976 bájt): kód, állandó adatok, változók, a fordító szoftveres verme (512 bájt, `#pragma stacksize`, lásd lent); a játékállapot-blokk helyére a címképernyő idején a képernyőmodul töltődik ([10.10](#1010-képernyőmodul)) |
 | `$C000–$C3FF` | képernyőmemória (VIC 3. bank) |
-| `$C400–$C7FF` | szabad (1 KB, lapozás nélkül elérhető): induláskor a szövegek betöltésének puffere (lásd lent), utána pl. pufferek, ritkán használt táblák |
+| `$C400–$C7FF` | pufferek (1 KB, lapozás nélkül elérhető): induláskor a szövegek betöltésének puffere (lásd lent), utána az üzenetek, a nevek, a listasor, a felfedezések listája és a labirintus verme (2026-11-27-én a `$C6E7`-ig, 280 bájt szabad). A lemezre nem kerülnek, és induláskor nem nullázódnak, sőt a betöltés után a szövegfájl utolsó darabja marad itt. Ezért csak olyan puffer kerülhet ide, amely a betöltés közben nem kell, és amelybe olvasás előtt mindig írás történik; az előző üzenetet (CTRL-P) a játék új játéknál és betöltés után üríti |
 | `$C800–$CFFF` | saját karakterkészlet (2 KB) |
 | `$D000–$DFFF` | I/O, színmemória (`$D800`); alatta RAM: szövegek |
 | `$E000–$FFF9` | KERNAL ROM; alatta RAM: szövegek |
 | `$FFFA–$FFFF` | KERNAL ROM; alatta RAM: az NMI-, RESET- és IRQ-vektor a kilapozott ROM idejére |
 
-**Szövegek:** minden játékszöveg ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)) a `$D000–$FFF9` alatti RAM-ban van (12 282 bájt; a rezidens szövegek a végén kb. 10,2 KB-ot foglalnak, 2026-11-24-én 4 825 bájtot). A szövegek és a tábláik egy külön szakaszban (`texts`) vannak, amelynek régiója `$D000`-nál kezdődik. Ha egyszer nem férnének el, a `$C400–$C7FF` jöhet szóba a folytatásukra.
+**Verem:** a fordító szoftveres vermének 512 bájtja a régió végén van. A teteje a függvények rögzített helyű keretei a helyi változóiknak, alattuk a dinamikus verem. A `.map` fájl STACK sora a megmaradt dinamikus verem, a keretek a sor vége (`StackEnd`) és a régió vége között vannak. 2026-11-27-én mérve a keretek a fejlesztői buildben 383, a játékban 293 bájtot foglalnak.
+
+**Szövegek:** minden játékszöveg ([1.4.4](01_adatmodell_es_flagek.md#144-szövegek)) a `$D000–$FFF9` alatti RAM-ban van (12 282 bájt; a rezidens szövegek a végén kb. 10,2 KB-ot foglalnak, 2026-11-24-én 4 825 bájtot). A szövegek és a tábláik egy külön szakaszban (`texts`) vannak, amelynek régiója `$D000`-nál kezdődik. A folytatásukra a `$C400–$C7FF` már nem jöhet szóba, mert ott pufferek vannak.
 - **Kiolvasás:** a megszakítás tiltása, `$01 = $30`, a szöveg átmásolása a hívó pufferébe a fő régióban, legfeljebb a megadott hosszig, a `$01` visszaállítása, végül a megszakítás régi állapota (tiltott megszakítás mellett hívva tiltva marad). Bármely címről olvas, mert `$01 = $30` mellett a fő régió ugyanúgy látszik, így a hívónak nem kell tudnia, hol a szöveg. Táblaelemnél a mutató kiolvasása és a szöveg másolása egy lapozásban történik; ha a táblaelem címe továbbadódik (pl. üzenet mintájaként vagy helyőrzőjeként), csak a mutató olvasódik ki, és a szöveget a felhasználás helye másolja.
 - **Betöltés:** induláskor, az első szövegkiírás előtt, a játékban és minden tesztprogramban, arról az egységről, amelyről a játék betöltődött (8 alatti egységszámnál a 8-asról). A fájl a `$D000`-s betöltési címmel kezdődik. A `LOAD` a `$D000–$DFFF` alá nem írhat, mert ott az I/O látszik, ezért a fájl 256 bájtos darabokban a `$C400`-as pufferbe olvasódik, és minden darab `$01 = $30` mellett másolódik a helyére. A betöltés csak akkor sikeres, ha a betöltési cím `$D000`, és pontosan a szakasz hossza jött, utána a fájl véget ért. Közben a 0. sorban „loading...” látszik, hibánál „insert the game disk and press space”, és szóközre újra ([10.7](#107-lemezkezelés)). A 4,8 KB-os fájl kb. 9–12 másodperc. Szöveg nélküli programban (pl. egy tesztprogramban) a szakasz üres, és a betöltés elmarad.
 - **Tömörítés:** nincs. Ha a szövegek kinőnék a helyet, akkor jöhet szóba, például szótáras tömörítés.
@@ -64,8 +66,8 @@ Ez a fejezet a hardverközeli követelményeket írja le: memória, képernyő, 
 
 ## 10.5 Aritmetika
 - **RN:** `seed = seed × 11109 + 13849` (mod 2³²): 32×16 bites szorzás + 32 bites összeadás; az eredmény felső 16 bitje az RN ([0.2](00_attekintes.md#02-alapprimitívek)).
-  - **Bájtonkénti szorzótáblák:** a seed minden bájtjának a szorzó alsó (`$65`) és felső (`$2B`) bájtjával vett szorzata táblából jön (4 × 256 bájt, induláskor feltöltve, `rng_init`), és a szorzat bájtoszloponként, átvitellel adódik össze, mint az írásbeli szorzásnál; a 3. bájt fölötti rész elveszik. Egy `RN` kb. 170 µs (az Oscar64 általános 32 bites szorzójával kb. 750 µs), bitre ugyanazzal a sorozattal.
-  - **Ha kell a memória:** tábla nélkül eltolással és összeadással is számolható (`$2B65`: az alsó bájt 0., 2., 5., 6., a felső 0., 1., 3., 5. bitje), kb. 410 µs.
+  - **Bájtonkénti szorzótáblák:** a seed minden bájtjának a szorzó alsó (`$65`) és felső (`$2B`) bájtjával vett szorzata táblából jön (4 × 256 bájt a fő régión kívül, a `$0400–$07FF` területen, [10.2](#102-memória); induláskor feltöltve, `rng_init`), és a szorzat bájtoszloponként, átvitellel adódik össze, mint az írásbeli szorzásnál; a 3. bájt fölötti rész elveszik. Egy `RN` kb. 170 µs (az Oscar64 általános 32 bites szorzójával kb. 750 µs), bitre ugyanazzal a sorozattal.
+  - **Tábla nélkül:** eltolással és összeadással is számolható (`$2B65`: az alsó bájt 0., 2., 5., 6., a felső 0., 1., 3., 5. bitje), kb. 410 µs. A fő régióban ez már nem adna helyet, mert a táblák nem ott vannak, csak a `$0400–$07FF` szabadulna fel.
 - **rnd(n):** 16 bites előjel nélküli maradékos osztás.
 - **32 bites előjel nélküli** összeadás/kivonás telítéssel (felül 16 777 215-nél, alul 0-nál: exp, arany, pontszám), **16 bites előjeles** összeadás/kivonás és összehasonlítás (hp, food_left), 16×8 bites szorzás (értékszámítás).
 - **Táblázatok szorzás helyett:**
@@ -124,7 +126,7 @@ Elrejtés: `c[i] = b[i] XOR key[i mod len(key)] XOR c[i−1]` (`c[−1] = 0`), a
 ## 10.8 Erőforrás-keretek
 | tétel | becslés / cél |
 |---|---|
-| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak |
+| fő régió (`$0880–$BFFF`) | 46 976 bájt; ebbe kell beférnie a kódnak, az állandó tábláknak és a játékállapotnak. Az RNG szorzótáblái (1 KB) és a pufferek (kb. 0,7 KB) a fő régión kívül vannak ([10.2](#102-memória)). Mérve (2026-11-27): az áthelyezésük a szabad helyet a játékban 4 264-ről 5 984, a fejlesztői buildben 0-ról 1 744 bájtra növelte. |
 | kód | 28–34 KB; durva becslés, nem mérés, mérföldkövenként mérni kell |
 | szövegek (üzenetek, nevek, súgó, szótagok) | kb. 11,5 KB tömörítés nélkül, a specifikációból mérve: üzenetek 6,5 KB, nevek és szótagok 2,8 KB, súgó és jelleírások 1,0 KB (a súgósorok jel + leírás formában, a futássorok kiíráskor összerakva), győzelmi képernyő és sírkő 1,1 KB. A fő régión kívül vannak, a `$D000–$FFF9` alatti RAM-ban (12 282 bájt, [10.2](#102-memória)). A címképernyő, a győzelmi képernyő, a sírkő és a ranglista szövegei (kb. 1,3 KB) a képernyőmodulban vannak, így a ROM-ok alatt kb. 10,2 KB foglalt. Mérve (2026-11-24): a szövegek és a tábláik 4 825 bájtot foglalnak a ROM-ok alatt. Az áthelyezésük a betöltővel együtt a szabad helyet a játékban 4 376-ról 8 216, a fejlesztői buildben 192-ről 3 944 bájtra növelte. |
 | képernyőmodul | kb. 3 KB kód és szöveg; a játékállapot-blokk helyére töltődik, így nem foglal külön helyet ([10.10](#1010-képernyőmodul)) |
@@ -180,6 +182,6 @@ A címképernyő, a győzelmi képernyő, a sírkő és a ranglista egy külön 
   - a modul betöltési és indítási címét;
   - az átadó blokk és a beállításblokk címét és elrendezését.
 
-  Ezekre a modul nem írhat: a játék kódja, az IRQ-kezelő, a képernyő, a karakterkészlet, a szövegek és a két blokk. A modulba saját képernyő-, billentyű- és lemezrutinok fordulnak. A játék a modul hívása előtt elmenti a fordító által használt zero page-területet, és visszatérés után visszaírja. Ezeket a hibákat a fordító nem jelzi, ezért a modul első elkészültekor külön ki kell próbálni őket.
+  Ezekre a modul nem írhat: a játék kódja, az IRQ-kezelő, a képernyő, a karakterkészlet, a szövegek, az RNG szorzótáblái (mert csak induláskor töltődnek fel) és a két blokk. A `$C400–$C7FF` puffereit használhatja, mert a játék ezekbe olvasás előtt mindig ír, az előző üzenetet (CTRL-P) pedig új játéknál és betöltés után üríti ([10.2](#102-memória)). A modulba saját képernyő-, billentyű- és lemezrutinok fordulnak. A játék a modul hívása előtt elmenti a fordító által használt zero page-területet, és visszatérés után visszaírja. Ezeket a hibákat a fordító nem jelzi, ezért a modul első elkészültekor külön ki kell próbálni őket.
 - **Betöltés:** a játék lemezéről, arról az egységről, amelyről a játék betöltődött. Ha nem sikerül, „insert the game disk and press space” ([10.7](#107-lemezkezelés)).
 - **Későbbi döntés:** az első induláskor a modul a játék PRG-jébe ágyazva eleve a helyén lehetne, így induláskor nem kellene külön betölteni. Ennek feltétele, hogy a játékállapot-blokk ne legyen induláskor nullázott terület. Erről akkor döntünk, amikor a modul elkészült. Címképernyő-grafikával valószínűleg nem fér be.
