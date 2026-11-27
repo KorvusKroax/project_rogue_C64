@@ -11,6 +11,10 @@
 #include "text_list.h"
 #include "texts.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // az arany mennyisége az üzenetben előjeles 16 bites szám (message_format)
 #if GOLD_AMOUNT_BASE + GOLD_AMOUNT_PER_LEVEL * DUNGEON_LEVEL_MAX + GOLD_AMOUNT_MIN - 1 > 0x7fff
     #error "az arany mennyisége nem fér az üzenet számába"
@@ -277,3 +281,5 @@ bool show_pack_list(uint8_t filter)
     show_text_list(get_pack_list_entry);
     return true;
 }
+
+#pragma optimize(pop)

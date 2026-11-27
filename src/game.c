@@ -29,6 +29,10 @@
     #include "dev/dev.h"
 #endif
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 #define KEY_NAME_SIZE  3    // legfeljebb két karakter és a lezáró nulla
 
 #define REPEAT_COUNT_MAX  255
@@ -580,3 +584,5 @@ void run_game(void)
     }
     wait_for_key_and_clear_message();
 }
+
+#pragma optimize(pop)

@@ -12,6 +12,10 @@
 #include "texts.h"
 #include "view.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // a sáv legalább egy sor, és nem érhet a státuszsorig
 #if MESSAGE_ROW_COUNT < 1 || MESSAGE_ROW + MESSAGE_ROW_COUNT > STATUS_ROW
     #error "az üzenetsáv nem fér el a képernyőn"
@@ -402,3 +406,5 @@ uint8_t wait_for_key_and_clear_message(void)
     message_clear();
     return code;
 }
+
+#pragma optimize(pop)

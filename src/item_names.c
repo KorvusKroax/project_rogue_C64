@@ -13,6 +13,10 @@
 #include "rng.h"
 #include "texts.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // minden típusnak jut álnév, így a választó ciklusok véget érnek
 #if POTION_COLOR_COUNT < POTION_SUBTYPE_COUNT || RING_STONE_COUNT < RING_SUBTYPE_COUNT
     #error "kevesebb az álnév, mint a típus"
@@ -576,3 +580,5 @@ const char *format_item_name_without_suffix(const struct Item *item)
     item_name[item_name_length] = 0;
     return item_name;
 }
+
+#pragma optimize(pop)

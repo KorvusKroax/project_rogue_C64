@@ -5,6 +5,10 @@
 #include "platform/screen.h"
 #include "message.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 #define INPUT_CURSOR (' ' + INVERSE_OFFSET)    // inverz szóköz
 
 static uint8_t field_x;
@@ -96,3 +100,5 @@ uint8_t ask_key(const char *prompt)
 
     return code;
 }
+
+#pragma optimize(pop)

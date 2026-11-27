@@ -20,6 +20,10 @@
 #include "texts.h"
 #include "view.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 #if MONSTER_STRENGTH > STRENGTH_MAX
     #error "a szörnyek ereje nagyobb a legnagyobb erőnél"
 #endif
@@ -582,3 +586,5 @@ bool take_fight_step(void)
     }
     return true;
 }
+
+#pragma optimize(pop)

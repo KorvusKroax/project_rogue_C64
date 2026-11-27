@@ -2,6 +2,10 @@
 
 #include <c64/kernalio.h>
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 #define CURRENT_DEVICE     (*(volatile uint8_t *)0x00ba)    // a KERNAL legutóbb használt egysége: induláskor az, amelyről a játék betöltődött
 #define FIRST_DISK_DEVICE  8
 #define READ_FILE_NUMBER   2                                // a KERNAL fájlszáma
@@ -34,3 +38,5 @@ void close_file(void)
 {
     krnio_close(READ_FILE_NUMBER);
 }
+
+#pragma optimize(pop)

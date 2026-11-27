@@ -64,6 +64,10 @@ extern void texts_section_start, texts_section_end;
 // a memóriatérképet változtatja (mint az Oscar64 mmap_set-jében)
 #define MEMORY_CONFIGURATION  (*(volatile __memmap uint8_t *)0x01)
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 volatile uint8_t frame_count;
 
 // ide mutat a $0314: lépteti a képkocka-számlálót, lefuttatja a billentyűkezelést, nyugtázza a VIC-et, lépteti a jiffy órát, majd a KERNAL-on át visszatér
@@ -272,3 +276,5 @@ const char *get_text_from_table(const char *const *table, uint8_t index)
     }
     return text;
 }
+
+#pragma optimize(pop)

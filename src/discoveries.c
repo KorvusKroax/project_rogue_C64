@@ -13,6 +13,10 @@
 #include "text_list.h"
 #include "texts.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // a text_discovery_type_error ezeket a jeleket sorolja fel
 #if CHAR_POTION != '!' || CHAR_SCROLL != '?' || CHAR_RING != '=' || CHAR_STICK != '/'
     #error "a text_discovery_type_error a !?=/ jeleket sorolja fel"
@@ -146,3 +150,5 @@ void show_discoveries(void)
     }
     show_text_list(get_discovery_entry);
 }
+
+#pragma optimize(pop)

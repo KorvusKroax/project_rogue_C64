@@ -10,6 +10,10 @@
     #include "dev/dev.h"
 #endif
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 #define TABLE_LENGTH(table)  (sizeof(table) / sizeof((table)[0]))
 
 static const uint8_t item_type_chances[RANDOM_ITEM_TYPE_COUNT] = {
@@ -504,3 +508,5 @@ void take_item_from_floor(uint8_t index)
     set_map_character(x, y, (get_map_flags(x, y) & TILE_PASSAGE) ? CHAR_PASSAGE : CHAR_FLOOR);
     redirect_monsters_to_player(index);
 }
+
+#pragma optimize(pop)

@@ -9,6 +9,10 @@
 #include "texts.h"
 #include "view.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // clear módban egy oldal ennyi sor; a képernyő utolsó sora a TEXT_PRESS_SPACE-é
 #define CLEAR_PAGE_ROW_COUNT  (SCREEN_HEIGHT - 1)
 
@@ -153,3 +157,5 @@ void show_text_list(TextListEntryFunction get_entry)
     }
     close_temporary_window();
 }
+
+#pragma optimize(pop)

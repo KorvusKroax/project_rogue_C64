@@ -12,6 +12,10 @@
 #include "state.h"
 #include "texts.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // a kezdőfelszerelés fegyvere: a bónuszai, és azonosítva
 static void set_starting_weapon(uint8_t index, int8_t hit_bonus, int8_t damage_bonus)
 {
@@ -166,3 +170,5 @@ void report_worn_armor(void)
 {
     report_item_in_use(game.worn_armor, text_wearing_item, text_wearing_nothing);
 }
+
+#pragma optimize(pop)

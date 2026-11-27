@@ -10,6 +10,10 @@
     #include "dev/dev.h"
 #endif
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 int main(void)
 {
     platform_init();
@@ -33,3 +37,5 @@ int main(void)
         run_game();
     }
 }
+
+#pragma optimize(pop)

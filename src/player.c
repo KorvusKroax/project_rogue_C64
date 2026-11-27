@@ -8,6 +8,10 @@
 #include "state.h"
 #include "texts.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT] = {
     10, 20, 40, 80, 160, 320, 640, 1300, 2600, 5200, 13000, 26000,
     50000, 100000, 200000, 400000, 800000, 2000000, 4000000, 8000000
@@ -90,3 +94,5 @@ void update_experience_level(void)
     game.player.experience_level = level;
     message_format(text_welcome_to_level, NULL, NULL, level);
 }
+
+#pragma optimize(pop)

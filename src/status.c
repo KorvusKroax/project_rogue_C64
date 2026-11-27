@@ -4,6 +4,10 @@
 #include "player.h"
 #include "state.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 // a hunger_state szerint: 0 rendben (üres), 1 Hungry, 2 Weak, 3 Faint
 static const char *const hunger_state_words[] = { "", "Hungry", "Weak", "Faint" };
 
@@ -35,3 +39,5 @@ void draw_status(void)
     put_int(game.player.experience, 0);
     clear_to_row_end();
 }
+
+#pragma optimize(pop)

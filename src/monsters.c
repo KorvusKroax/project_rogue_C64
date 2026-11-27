@@ -11,6 +11,10 @@
 #include "rooms.h"
 #include "view.h"
 
+// nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
+#pragma optimize(push)
+#pragma optimize(size)
+
 const struct MonsterType monster_types[MONSTER_TYPE_COUNT] = {
     //      carry  flags                           level armor  exp  segments
     /* A */ {   0, MONSTER_MEAN,                       5,   2,   20, 2, { { 0, 0 }, { 0, 0 } } },
@@ -252,3 +256,5 @@ uint8_t choose_monster_destination(const struct Monster *monster)
     }
     return DESTINATION_PLAYER;
 }
+
+#pragma optimize(pop)
