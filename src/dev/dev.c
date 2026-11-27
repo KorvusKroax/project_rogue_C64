@@ -2,6 +2,10 @@
 
 #include "../platform/screen.h"
 
+// ritkán futó fejlesztői kód: méretre fordítva, a sebessége nem számít
+#pragma optimize(push)
+#pragma optimize(size)
+
 void dev_fail(const char *message, const char *file, int line)
 {
     // a __FILE__ teljes útvonalából csak a fájlnév kell
@@ -44,3 +48,5 @@ bool convert_text_to_number(const char *text, uint32_t max_value, uint32_t *numb
     *number = value;
     return true;
 }
+
+#pragma optimize(pop)

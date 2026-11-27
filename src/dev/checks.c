@@ -6,6 +6,10 @@
 #include "../monsters.h"
 #include "../state.h"
 
+// ritkán futó fejlesztői kód: méretre fordítva, a sebessége nem számít
+#pragma optimize(push)
+#pragma optimize(size)
+
 bool are_monster_tiles_valid(void)
 {
     uint16_t flagged_tile_count = 0;
@@ -26,3 +30,5 @@ bool are_monster_tiles_valid(void)
     // ha két szörny egy mezőn állna, kevesebb jelölt mező lenne, mint szörny
     return flagged_tile_count == game.monster_count;
 }
+
+#pragma optimize(pop)

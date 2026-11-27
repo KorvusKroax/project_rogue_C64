@@ -6,6 +6,10 @@
 #include "../num.h"
 #include "../state.h"
 
+// ritkán futó fejlesztői kód: méretre fordítva, a sebessége nem számít
+#pragma optimize(push)
+#pragma optimize(size)
+
 // a seed előjel nélküli, a put_int előjeles: az utolsó jegy külön, így a többi elfér 31 biten
 static void put_seed(uint32_t seed)
 {
@@ -56,3 +60,5 @@ void dev_run_start_screen(void)
         }
     }
 }
+
+#pragma optimize(pop)

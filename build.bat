@@ -2,7 +2,7 @@
 rem A jatek forditasa: build\rogue.prg es build\rogue.d64
 rem "build.bat dev": fejlesztoi build (DEVMODE), build\rogue_dev.prg es build\rogue_dev.d64
 rem "build.bat dev 12345": ugyanez rogzitett seeddel (DEV_SEED)
-rem "build.bat test core": a src\dev\main_test_core.c tesztprogram, build\test_core.prg es build\test_core.d64
+rem "build.bat test core": a src\dev\main_test_core.c tesztprogram (DEVMODE es TEST_PROGRAM), build\test_core.prg es build\test_core.d64
 rem Barhonnan indithato, mert a sajat mappajaba (a projekt gyokerebe) lep.
 rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreolvassa)
 
@@ -34,7 +34,7 @@ rem "build.bat dev 12345": fejlesztoi build rogzitett seeddel
 if /i "%~1"=="dev" if not "%~2"=="" set DEFS=%DEFS% -dDEV_SEED=%~2UL
 if /i "%~1"=="test" (
     set NAME=test_%~2
-    set DEFS=-dDEVMODE
+    set DEFS=-dDEVMODE -dTEST_PROGRAM
     set SOURCES=src\dev\main_test_%~2.c %GAME_SOURCES% %DEV_SOURCES% %TEST_SOURCES%
 )
 

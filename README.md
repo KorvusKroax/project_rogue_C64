@@ -38,15 +38,17 @@ A `texts`-et a fordító ugyanabban a menetben írja ki, mint a játékot, a lem
 ### Fejlesztői build
 
 A `dev` paraméterrel a fordító a `DEVMODE` makróval fordít ([M00-04](https://github.com/KorvusKroax/project_rogue_C64/issues/4), [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus)). A fejlesztői build a játék, és mellette csak ennyi; a kiadási buildbe ezekből semmi nem kerül:
-- **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A kiadási buildben nincs ilyen makró, ezért játékfájlban csak `#ifdef DEVMODE` alatt használható (jelenleg csak a `map.c` térképírás-ellenőrzése, ideiglenesen).
+- **`DEV_CHECK(feltétel, "üzenet")`** (`src/dev/dev.h`): hamis feltételnél kiírja az üzenetet és a forrásbeli helyet (fájl:sor), majd a program megáll; a képernyő és a memória marad, így a VICE monitorában megnézhető. A kiadási buildben nincs ilyen makró, ezért játékfájlban csak `#ifdef DEVMODE` alatt használható. Jelenleg csak a `map.c` térképírás-ellenőrzése használja, ideiglenesen, és mivel a fejlesztői buildben nincs rá hely, csak a tesztprogramokban (`#ifdef TEST_PROGRAM`).
 - **Seed:** induláskor kiíródik; az `S` billentyűvel kézzel megadható, vagy a második paraméterrel (`build.bat dev 12345`) fordításkor rögzíthető, így egy hiba ugyanazzal a seeddel újra előidézhető. RETURN-re indul a játék.
 - **Fejlesztői parancsok** játék közben, az F-billentyűkön (`src/dev/dev_commands.c`; a kiadási buildben az F-billentyűk nem adnak kódot), pl. új szint, ugrás mélységre, szörny és tárgy létrehozása, teljes térkép. A lista: [10.9](docs/spec/10_platform.md#109-fejlesztői-build-és-determinizmus). Egyik sem visz el időt.
+
+A `src/dev/` fejlesztői fájljai (`dev.c`, `dev_commands.c`, `start_screen.c`, `checks.c`) ritkán futnak, ezért méretre fordulnak (`#pragma optimize(size)`); a teszteké nem.
 
 Az öntesztek és a tesztképernyők nem a fejlesztői buildben vannak, hanem külön tesztprogramokban ([M05-05](https://github.com/KorvusKroax/project_rogue_C64/issues/55)), így a fejlesztői build memóriáját nem terhelik.
 
 ### Tesztprogramok
 
-Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE` makróval fordul. A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja. Ahol a tesztek üzenetet adó játékkódot futtatnak (pl. szörnytámadás), a program a sáv alatt kezdi a kiírást, és kikapcsolja a `--More--` várakozását (`set_message_more_wait(false)`, csak a `DEVMODE` fordításban létezik), mert a tesztben nincs, aki szóközt nyomjon. A billentyűre váró játékkódnak (pl. a `c` beviteli mezője) a teszt a `set_test_keys` leütéseit adja, ez is csak a `DEVMODE` fordításban létezik. A tesztprogramok a játékhoz hasonlóan induláskor betöltik a szövegeiket a lemezképükről (a szöveget nem használóké üres, ott a betöltés elmarad), ezért a `.d64`-ről kell indítani őket; a `test.bat` is így teszi.
+Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev/main_test_<név>.c`), és a `DEVMODE`, valamint a `TEST_PROGRAM` makróval fordul; az utóbbi alatt azok az ellenőrzések vannak, amelyekre a fejlesztői buildben nincs hely (most a térképírásé). A forráslista mindegyiknél a teljes játék és az összes tesztfájl (`build.bat`, `TEST_SOURCES`), de az Oscar64 csak azt fordítja bele, amit a program hív. Új tesztfájlt a `TEST_SOURCES`-ba kell felvenni; új tesztprogramhoz elég egy új `main_test_<név>.c`, a `test.bat` magától megtalálja. Ahol a tesztek üzenetet adó játékkódot futtatnak (pl. szörnytámadás), a program a sáv alatt kezdi a kiírást, és kikapcsolja a `--More--` várakozását (`set_message_more_wait(false)`, csak a `DEVMODE` fordításban létezik), mert a tesztben nincs, aki szóközt nyomjon. A billentyűre váró játékkódnak (pl. a `c` beviteli mezője) a teszt a `set_test_keys` leütéseit adja, ez is csak a `DEVMODE` fordításban létezik. A tesztprogramok a játékhoz hasonlóan induláskor betöltik a szövegeiket a lemezképükről (a szöveget nem használóké üres, ott a betöltés elmarad), ezért a `.d64`-ről kell indítani őket; a `test.bat` is így teszi.
 
 | név | mit tesztel | szabad hely (2026-11-27) |
 |---|---|---|
@@ -60,7 +62,7 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 29 752 bájt |
 | `turns` | 100 generált szinten (a `level` magjaival és mélységeivel) körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; utána mélységenként egy kör ideje | 10 984 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 5 984, a fejlesztői build (`build.bat dev`) 1 744 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 5 984, a fejlesztői build (`build.bat dev`) 2 672 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
@@ -372,6 +374,23 @@ uint8_t index = get_command_item(…);
 return index != NO_ITEM && wear_armor(index);
 ```
 Hol: `src/game.c` (`execute_drop_command`, `execute_wear_command`). Ellenőrzés: a `build/<név>.asm` fájlokban a 8 bites függvények azon kilépő blokkjai, amelyek a `@stack`-ből állítják vissza a regisztereket, és nem `STA ACCU + 0`-val kezdődnek. Ha egy ág közvetlenül előttük az A-ba tölti az eredményt, az elvész. Nincs bejelentve.
+
+**15. A címével átadott, közben megváltozott paraméter a hívóban elavult értékkel** – futáskor, csendben; csak méretre fordítva (`-Os` vagy `#pragma optimize(size)`); VICE-ben és a generált kódban ellenőrizve, a forrás `-Os`-sel fordított másolatán. Ha egy függvény a saját paraméterének címét adja át, és a hívott függvény ezen át megváltoztatja, a hívó a következő hívás argumentumait a zero page paraméterregisztereiből számolja tovább (pl. `DEC P8`), mintha azokban még az előző hívás argumentumai lennének. A `test_passage_turn` két egymás utáni `is_test_turn` hívása így a második hívásnak (0, −1) helyett (−1, 0)-t adott át, egy utána következő `put_int(2, 0)` pedig −16777214-et írt ki. `-O2`-n a segédfüggvény a hívóba olvad, a paraméterei a keretben vannak, és helyes.
+```c
+// rossz méretre fordítva: a step_x és a step_y regiszterét a find_passage_turn átírja,
+// a hívó a következő hívás argumentumait mégis a régi értékből számolja
+static bool is_test_turn(int8_t step_x, int8_t step_y, int8_t expected_x, int8_t expected_y)
+{
+    if (!find_passage_turn(BASE_X + 2, BASE_Y + 2, &step_x, &step_y)) return false;
+    return step_x == expected_x && step_y == expected_y;
+}
+
+// jó: a paraméter helyi változóba másolva, annak a címe megy át
+int8_t turn_x = step_x;
+int8_t turn_y = step_y;
+if (!find_passage_turn(BASE_X + 2, BASE_Y + 2, &turn_x, &turn_y)) return false;
+```
+Hol: csak a forrás `-Os`-sel fordított másolatán jött elő (`src/dev/test_explore.c`); a build `-O2`-vel fordít. Méretre csak a fejlesztői fájlok fordulnak ([Fejlesztői build](#fejlesztői-build)), ezekben egyik függvény sem adja át a saját paraméterének címét; ha ott ilyen hívás kell, a paramétert előbb helyi változóba kell másolni. Nincs bejelentve.
 
 **Tárgytalan platformcsapdák.** Ezek nem fordítóhibák voltak, és a BASIC-be visszatérés elhagyásával megszűntek ([10.1](docs/spec/10_platform.md#101-célgép)):
 ```c

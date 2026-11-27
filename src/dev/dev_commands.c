@@ -19,6 +19,10 @@
 #include "../view.h"
 #include "checks.h"
 
+// ritkán futó fejlesztői kód: méretre fordítva, a sebessége nem számít
+#pragma optimize(push)
+#pragma optimize(size)
+
 #define DEPTH_DIGITS_MAX  3         // 1..DUNGEON_LEVEL_MAX (254)
 
 #define FULL_MAP_BORDER_COLOR  2   // piros: a teljes térkép be van kapcsolva
@@ -358,3 +362,5 @@ bool dev_execute_command(uint8_t code)
 
     return false;
 }
+
+#pragma optimize(pop)

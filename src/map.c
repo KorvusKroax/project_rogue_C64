@@ -6,7 +6,8 @@
 
 // ideiglenes: amíg a térképre író kód (szörnyek, tárgyak, varázslatok) el nem készül
 // a térképen kívüli írás a játékállapot más részét rontaná el; az olvasás nincs ellenőrizve, az csak rossz értéket ad
-#ifdef DEVMODE
+// csak a tesztprogramokban: a fejlesztői buildben nincs rá hely
+#ifdef TEST_PROGRAM
     #include "dev/dev.h"
 
     #define CHECK_MAP_WRITE_POSITION(x, y) \
