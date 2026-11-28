@@ -7,6 +7,7 @@
 #include "message.h"
 #include "monsters.h"
 #include "pack.h"
+#include "player.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -396,7 +397,7 @@ static bool is_player_on_stairs(void)
 
 void go_down_stairs(void)
 {
-    // ide jön: lebegve nem lehet
+    if (report_floating_off_ground()) return;
     if (!is_player_on_stairs() || game.dungeon_level == DUNGEON_LEVEL_MAX) {
         message(text_no_way_down);
         return;
@@ -408,7 +409,7 @@ void go_down_stairs(void)
 
 void go_up_stairs(void)
 {
-    // ide jön: lebegve nem lehet
+    if (report_floating_off_ground()) return;
     if (!is_player_on_stairs()) {
         message(text_no_way_up);
         return;

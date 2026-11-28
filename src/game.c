@@ -403,15 +403,15 @@ static void execute_name_command(bool is_repeat)
     }
 }
 
-// `,`: a játékos mezőjén fekvő tárgy felvétele; üres mezőn csak üzenet
+// `,`: a játékos mezőjén fekvő tárgy felvétele; üres mezőn (lebegve is) és lebegve csak üzenet
 static void pick_up_item_here(void)
 {
-    // ide jön: lebegve „You can't. You're floating off the ground!”
     uint8_t index = find_floor_item_at(game.player.x, game.player.y);
     if (index == NO_ITEM) {
         message(text_nothing_to_pick_up);
         return;
     }
+    if (report_floating_off_ground()) return;
     pick_up_item(index);
 }
 

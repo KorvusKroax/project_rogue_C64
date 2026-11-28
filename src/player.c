@@ -53,6 +53,14 @@ uint8_t get_death_cause(void)
     return death_cause;
 }
 
+bool report_floating_off_ground(void)
+{
+    if (game.timers[TIMER_LEVITATION] == 0) return false;
+
+    message(text_floating_off_ground);
+    return true;
+}
+
 // ide jön: a védelem-gyűrűk
 int8_t calculate_player_armor(void)
 {

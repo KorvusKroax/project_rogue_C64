@@ -197,8 +197,9 @@ uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y)
 
 void wake_monster(struct Monster *monster)
 {
-    // ide jön: lopakodás-gyűrűvel (R_STEALTH) vagy lebegve (ISLEVIT) az aljas szörny nem ébred
-    if (!(monster->flags & (MONSTER_RUNNING | MONSTER_HELD)) && (monster->flags & MONSTER_MEAN) && rnd(3) != 0) {
+    // lebegve az aljas szörny nem ébred; ide jön: lopakodás-gyűrűvel (R_STEALTH) sem
+    if (!(monster->flags & (MONSTER_RUNNING | MONSTER_HELD)) && (monster->flags & MONSTER_MEAN) && game.timers[TIMER_LEVITATION] == 0 &&
+        rnd(3) != 0) {
         monster->destination_item = DESTINATION_PLAYER;
         monster->flags |= MONSTER_RUNNING;
     }

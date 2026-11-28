@@ -42,6 +42,9 @@ void kill_player(uint8_t cause);
 bool is_player_dead(void);
 uint8_t get_death_cause(void);          // a kill_player oka; csak halál után értelmes
 
+// lebegve „you can't. You're floating off the ground!” (a lépcső és a `,` előtt); igaz, ha a játékos lebeg (levit_check)
+bool report_floating_off_ground(void);
+
 int8_t calculate_player_armor(void);    // a viselt páncél védelme (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
 
 // az erő változása (chg_str): STRENGTH_MIN és STRENGTH_MAX között marad, és ha a gyűrűk nélküli erő a legnagyobb

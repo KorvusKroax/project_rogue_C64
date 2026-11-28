@@ -22,7 +22,7 @@ void generate_level(void);
 // új szint: a látott térkép törlése, generate_level, majd a nézőablak a játékosra áll, teljes újrarajzolással
 void new_level(void);
 
-// a > és a < parancs: lépcsőn le, illetve fel; nem visz időt
+// a > és a < parancs: lépcsőn le, illetve fel; lebegve nem lehet; nem visz időt
 void go_down_stairs(void);
 void go_up_stairs(void);
 

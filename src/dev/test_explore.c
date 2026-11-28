@@ -454,6 +454,24 @@ static bool is_sleeping_monster_waking_valid(void)
     return !(centaur->flags & MONSTER_RUNNING) && !(hobgoblin->flags & MONSTER_RUNNING);
 }
 
+#define LEVITATION_TEST_TURNS  1000             // a lebegés ideje: a teszt alatt nem jár le (az időzítők itt nem ketyegnek)
+
+// a lebegő játékosra az aljas szörny (hobgoblin) sem belépéskor, sem a játékos mellett nem ébred; a kapzsi (ork) igen
+static bool is_levitating_waking_valid(void)
+{
+    put_see_test_room(ROOM_DARK);
+    struct Monster *hobgoblin = put_see_test_monster('H', 2, 3);
+    struct Monster *orc = put_see_test_monster('O', 6, 2);
+    game.timers[TIMER_LEVITATION] = LEVITATION_TEST_TURNS;
+
+    for (uint8_t round = 0; round < WAKE_TEST_ROUNDS; round++) {
+        enter_room(game.player.x, game.player.y);
+        look_around();
+    }
+    game.timers[TIMER_LEVITATION] = 0;
+    return !(hobgoblin->flags & MONSTER_RUNNING) && (orc->flags & MONSTER_RUNNING);
+}
+
 // a kapzsi szörny (ork) mindig ébred: belépéskor, kilépéskor és a játékos mellett, a célpontja a játékos;
 // a look_around csak a szomszédosat ébreszti
 static bool is_greedy_monster_waking_valid(void)
@@ -514,6 +532,7 @@ int test_monster_waking(uint16_t i)
     bool ok =
         is_mean_monster_waking_valid() &&
         is_sleeping_monster_waking_valid() &&
+        is_levitating_waking_valid() &&
         is_greedy_monster_waking_valid() &&
         is_passage_entry_waking_valid() &&
         is_forced_waking_valid();

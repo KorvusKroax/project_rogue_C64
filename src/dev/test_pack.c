@@ -244,6 +244,41 @@ int test_pickup_full_pack(uint16_t i)
     return ok;
 }
 
+#define LEVITATION_TEST_TURNS  1000             // a lebegés ideje: a teszt alatt nem jár le (az időzítők itt nem ketyegnek)
+
+int test_pickup_levitating(uint16_t i)
+{
+    put_pickup_scene();
+    uint8_t potion = create_item(ITEM_TYPE_POTION, 0);
+    put_item_on_floor(potion, PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y);
+    uint8_t scroll = create_item(ITEM_TYPE_SCROLL, 0);
+    put_item_on_floor(scroll, PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y);
+    game.timers[TIMER_LEVITATION] = LEVITATION_TEST_TURNS;
+    message_clear();
+
+    // futva a tárgyra lépve a futás megáll, de a tárgy a padlón marad, és nincs üzenet
+    start_running(1, 0, false);
+    bool ok =
+        move_player(1, 0) &&
+        !is_running() &&
+        game.player.x == PICKUP_PLAYER_X + 1 &&
+        find_floor_item_at(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == potion &&
+        get_map_character(PICKUP_PLAYER_X + 1, PICKUP_PLAYER_Y) == CHAR_POTION &&
+        game.first_pack_item == NO_ITEM &&
+        is_message_bar_empty();
+
+    // az `m` lépése a „moved onto” üzenetet sem adja
+    ok = ok &&
+        move_player_without_pickup(1, 0) &&
+        game.player.x == PICKUP_PLAYER_X + 2 &&
+        find_floor_item_at(PICKUP_PLAYER_X + 2, PICKUP_PLAYER_Y) == scroll &&
+        is_message_bar_empty();
+
+    game.timers[TIMER_LEVITATION] = 0;
+    clear_pickup_scene();
+    return ok;
+}
+
 // a felvétel tesztmezőin, a csomagban egy PACK_TEST_POTION_COUNT darabos bájitalköteg; az eredmény a köteg
 static uint8_t put_drop_scene(void)
 {

@@ -127,8 +127,8 @@ static bool take_player_step(int8_t step_x, int8_t step_y, bool is_pickup_wanted
     }
 
     // ide jön: csapda kioldása
-    // ide jön: lebegve a tárgyra lépés csendben nem csinál semmit
-    if (is_item_target) {
+    // lebegve a tárgyra lépés csendben nem csinál semmit
+    if (is_item_target && game.timers[TIMER_LEVITATION] == 0) {
         // a tárgy jele alatt mindig van tárgy a padlón
         uint8_t item_index = find_floor_item_at(target_x, target_y);
         if (is_pickup_wanted) {
