@@ -114,6 +114,7 @@ int test_drop_item_in_use(uint16_t i);          // a `d` a használt tárggyal: 
 int test_timer_expiry(uint16_t i);              // a bájitalok időzítői körönként egyet lépnek, az üres körben is; az egy körben lejárók üzenetei a TIMER_ sorrendben; vakon a hallucináció csendben ér véget; a see invisible és a monster detection vége üzenet nélkül
 int test_quaff_item(uint16_t i);                // a `q`: a `*` lista csak bájital; a nem bájital marad; kötegből egy darab fogy, a kéz kiürül; az utolsó darab rekordja felszabadul
 int test_potion_messages(uint16_t i);           // mind a 14 bájital üzenetei a leírt sorrendben, futó vaksággal, hallucinációval, gyorsítással is, és amit a bájital megszüntet, annak az időzítője 0; a szörnyérzékelés üzenete csak nem látott szörny nélkül
+int test_magic_detection(uint16_t i);           // a magic detection csak tárgyas padlónál mutat: a padló vagy egy szörny csomagjának mágikus tárgya; ekkor azonosítódik, és a típus neve felszabadul, különben „strange feeling”
 int test_potion_durations(uint16_t i);          // ismételt iváskor az idő összeadódik, a monster detectioné nem változik; a poison és az extra healing a hallucináció időzítőjét is törli (J35); gyorsítva újra megitatva ájulás, utána nincs lassulás-üzenet
 int test_potion_values(uint16_t i);             // az i. seeddel: a poison, a gain strength és a restore strength ereje; a healing és az extra healing HP-ja és max. HP-ja a dobás szerint; a raise level, a 21. szinten csak az üzenet (J36)
 

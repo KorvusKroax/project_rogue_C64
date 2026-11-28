@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "../game.h"
+#include "../item_names.h"
 #include "../items.h"
 #include "../map.h"
 #include "../message.h"
@@ -187,6 +188,60 @@ int test_potion_messages(uint16_t i)
     message_clear();
     drink_new_potion(POTION_MONSTER_DETECTION);
     ok = ok && is_message_bar_empty();
+
+    clear_potion_scene();
+    return ok;
+}
+
+#define MAGIC_TEST_FLOOR_X  (POTION_PLAYER_X + 3)   // a padlón fekvő tárgy helye
+
+// a magic detection megivása az ismeretlen típussal: ha van mit mutatni, azonosítódik, és nincs üzenet, különben ismeretlen marad,
+// és „you have a strange feeling for a moment, then it passes”; utána a típus újra ismeretlen
+static bool is_magic_detection_right(bool is_shown)
+{
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
+    message_clear();
+    drink_new_potion(POTION_MAGIC_DETECTION);
+
+    bool ok;
+    if (is_shown) {
+        ok = game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_IDENTIFIED && is_message_bar_empty();
+    } else {
+        ok = game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_UNKNOWN;
+        ok = ok && is_message_bar_text("You have a strange feeling for a moment, then it passes.");
+    }
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
+    return ok;
+}
+
+int test_magic_detection(uint16_t i)
+{
+    put_potion_scene();
+
+    // üres padlónál semmi, akkor sem, ha egy szörnynél mágikus tárgy van
+    create_monster(POTION_TEST_MONSTER, POTION_PLAYER_X + 1, POTION_PLAYER_Y);
+    uint8_t carried = create_item(ITEM_TYPE_POTION, POTION_HEALING);
+    insert_item_after(&game.monsters[0].first_pack_item, NO_ITEM, carried);
+    bool ok = is_magic_detection_right(false);
+
+    // ha a padlón van tárgy, akár nem mágikus is (a létrehozott buzogány +0-s), a szörny mágikus tárgya számít
+    uint8_t mace = create_item(ITEM_TYPE_WEAPON, WEAPON_MACE);
+    put_item_on_floor(mace, MAGIC_TEST_FLOOR_X, POTION_PLAYER_Y);
+    ok = ok && is_magic_detection_right(true);
+
+    // a szörny tárgya nélkül a nem mágikus padló nem mutat semmit; a bónuszos fegyver mágikus
+    free_item_list(&game.monsters[0].first_pack_item);
+    ok = ok && is_magic_detection_right(false);
+    get_item(mace)->properties.weapon.hit_bonus = 1;
+    ok = ok && is_magic_detection_right(true);
+
+    // az azonosítás felszabadítja a típus nevét
+    uint8_t name_index = store_name("x");
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = name_index;
+    drink_new_potion(POTION_MAGIC_DETECTION);
+    ok = ok && game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_IDENTIFIED && store_name("y") == name_index;
+    free_name(name_index);
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
 
     clear_potion_scene();
     return ok;

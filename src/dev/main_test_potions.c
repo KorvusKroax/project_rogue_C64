@@ -10,6 +10,7 @@ static const struct DevTest potion_tests[] = {
     { "TIMER-EXPIRY", test_timer_expiry, 1 },
     { "POTION-QUAFF", test_quaff_item, 1 },
     { "POTION-MESSAGES", test_potion_messages, 1 },
+    { "MAGIC-DETECTION", test_magic_detection, 1 },
     { "POTION-DURATIONS", test_potion_durations, 1 },
     { "POTION-VALUES", test_potion_values, POTION_VALUE_TEST_SEED_COUNT },
 };

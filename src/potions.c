@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "explore.h"
+#include "item_names.h"
 #include "items.h"
 #include "message.h"
 #include "monsters.h"
@@ -72,6 +73,27 @@ static bool has_unseen_monster(void)
     return false;
 }
 
+// a tárgylistában (a padlón lévő tárgyak, egy szörny csomagja) van-e mágikus tárgy (is_magic_item)
+static bool has_magic_item(uint8_t list_first)
+{
+    for (uint8_t index = list_first; index != NO_ITEM; index = get_item(index)->next) {
+        if (is_magic_item(get_item(index))) return true;
+    }
+    return false;
+}
+
+// a magic detection mutatna-e valamit: csak ha a padlón van tárgy (az arany is), és akkor a padló vagy valamelyik szörny csomagja
+// mágikus tárgyat tartalmaz (3.2)
+static bool has_magic_to_show(void)
+{
+    if (game.first_floor_item == NO_ITEM) return false;
+    if (has_magic_item(game.first_floor_item)) return true;
+    for (uint8_t index = game.monster_count; index != NO_MONSTER; index--) {
+        if (has_magic_item(get_monster(index)->first_pack_item)) return true;
+    }
+    return false;
+}
+
 // a gyorsítás: ha már fut, üzenet nélkül véget ér, és a játékos elájul; különben elindul
 static void haste_player(void)
 {
@@ -131,7 +153,12 @@ static void apply_potion_effect(uint8_t which)
             }
             break;
         case POTION_MAGIC_DETECTION:
-            // ide jön: a padló és a szörnyek csomagjainak mágikus tárgyai, vagy „you have a strange feeling for a moment, then it passes”
+            if (has_magic_to_show()) {
+                // ide jön: a mágia-képernyő a padló és a szörnyek csomagjainak mágikus tárgyaival, „You sense the presence of magic on this level”
+                identify_item_type(ITEM_TYPE_POTION, POTION_MAGIC_DETECTION);
+            } else {
+                message_format(text_passing_feeling, text_strange, NULL, 0);
+            }
             break;
         case POTION_RAISE_LEVEL:
             message(text_more_skillful);

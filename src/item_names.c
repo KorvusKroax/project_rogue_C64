@@ -225,6 +225,14 @@ uint8_t *get_type_knowledge(uint8_t type)
     return NULL;
 }
 
+void identify_item_type(uint8_t type, uint8_t which)
+{
+    uint8_t *knowledge = get_type_knowledge(type) + which;
+    if (*knowledge == SUBTYPE_IDENTIFIED) return;
+    free_name(*knowledge);
+    *knowledge = SUBTYPE_IDENTIFIED;
+}
+
 // a név helye: bájitalnál, tekercsnél, gyűrűnél és pálcánál a típus ismerete, amely az ismeretlen típus nevének indexét is tárolja,
 // fegyvernél és páncélnál a tárgy címkéje
 static uint8_t *get_name_holder(struct Item *item)

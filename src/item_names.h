@@ -21,6 +21,10 @@ uint8_t *get_type_knowledge(uint8_t type);
     #error "a névindex nem fér el a típusismeret mellett"
 #endif
 
+// a bájital-, tekercs-, gyűrű- vagy pálcatípus azonosítása (know): ezután a valódi nevével látszik, és ha a játékos elnevezte (`c`),
+// a neve felszabadul
+void identify_item_type(uint8_t type, uint8_t which);
+
 // a tekercsfelirat SCROLL_TITLE_WORDS_MIN + rnd(SCROLL_TITLE_WORDS_RANGE) szó, mindegyik SCROLL_WORD_SYLLABLES_MIN + rnd(SCROLL_WORD_SYLLABLES_RANGE)
 // szótagból, legfeljebb SCROLL_TITLE_LENGTH_MAX karakter; az a szótag, amelyik már nem fér el, és minden utána következő, kimarad
 #define SCROLL_TITLE_WORDS_MIN       2          // default: 2
