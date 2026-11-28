@@ -1,8 +1,11 @@
 #include "tests.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
+#include "../platform/key.h"
 #include "../game.h"
 #include "../item_names.h"
 #include "../items.h"
@@ -22,7 +25,8 @@
 
 #define POTION_TEST_MONSTER  'Z'
 
-// a próbák előtt: a kezdőértékű játékos az 1. mélységen, üres térképen, üres csomaggal, szörny nélkül; az üzenetsáv üres
+// a próbák előtt: a kezdőértékű játékos az 1. mélységen, üres térképen, üres csomaggal, szörny nélkül; az üzenetsáv üres;
+// minden bájitaltípus azonosítva, így az ivás után nincs kérdés, amelyre a tesztnek leütést kellene adnia
 static void put_potion_scene(void)
 {
     clear_map();
@@ -33,10 +37,11 @@ static void put_potion_scene(void)
     game.player.x = POTION_PLAYER_X;
     game.player.y = POTION_PLAYER_Y;
     game.player.room = get_room_at(POTION_PLAYER_X, POTION_PLAYER_Y);
+    memset(game.potion_knowledge, SUBTYPE_IDENTIFIED, sizeof(game.potion_knowledge));
     message_clear();
 }
 
-// a próbák után: a játékos kezdőértékekkel, nincs szörny és tárgy
+// a próbák után: a játékos kezdőértékekkel, nincs szörny és tárgy, a bájitaltípusok ismeretlenek, a névkészlet üres
 static void clear_potion_scene(void)
 {
     message_clear();
@@ -44,6 +49,8 @@ static void clear_potion_scene(void)
     clear_item_table();
     clear_map();
     init_player();
+    memset(game.potion_knowledge, SUBTYPE_UNKNOWN, sizeof(game.potion_knowledge));
+    memset(game.name_pool, 0, sizeof(game.name_pool));
 }
 
 // egy új which bájital a csomagba; az eredmény a csomag tárgya, amelyben most van
@@ -195,22 +202,25 @@ int test_potion_messages(uint16_t i)
 
 #define MAGIC_TEST_FLOOR_X  (POTION_PLAYER_X + 3)   // a padlón fekvő tárgy helye
 
-// a magic detection megivása az ismeretlen típussal: ha van mit mutatni, azonosítódik, és nincs üzenet, különben ismeretlen marad,
-// és „you have a strange feeling for a moment, then it passes”; utána a típus újra ismeretlen
+// a magic detection megivása elnevezett típussal, így kérdés egyik esetben sincs: ha van mit mutatni, azonosítódik, a neve felszabadul,
+// és nincs üzenet; különben a neve marad, és „you have a strange feeling for a moment, then it passes”; utána a típus újra azonosított
 static bool is_magic_detection_right(bool is_shown)
 {
-    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
+    uint8_t name_index = store_name("x");
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = name_index;
     message_clear();
     drink_new_potion(POTION_MAGIC_DETECTION);
 
     bool ok;
     if (is_shown) {
         ok = game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_IDENTIFIED && is_message_bar_empty();
+        ok = ok && store_name("y") == name_index;
     } else {
-        ok = game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_UNKNOWN;
+        ok = game.potion_knowledge[POTION_MAGIC_DETECTION] == name_index;
         ok = ok && is_message_bar_text("You have a strange feeling for a moment, then it passes.");
     }
-    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
+    free_name(name_index);
+    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_IDENTIFIED;
     return ok;
 }
 
@@ -235,13 +245,77 @@ int test_magic_detection(uint16_t i)
     get_item(mace)->properties.weapon.hit_bonus = 1;
     ok = ok && is_magic_detection_right(true);
 
-    // az azonosítás felszabadítja a típus nevét
-    uint8_t name_index = store_name("x");
-    game.potion_knowledge[POTION_MAGIC_DETECTION] = name_index;
-    drink_new_potion(POTION_MAGIC_DETECTION);
-    ok = ok && game.potion_knowledge[POTION_MAGIC_DETECTION] == SUBTYPE_IDENTIFIED && store_name("y") == name_index;
-    free_name(name_index);
-    game.potion_knowledge[POTION_MAGIC_DETECTION] = SUBTYPE_UNKNOWN;
+    clear_potion_scene();
+    return ok;
+}
+
+// a kérdés leütései
+#define NAMING_KEY_ESCAPE  "\033"
+#define NAMING_KEY_RETURN  "\r"
+
+// egy új which bájital megivása a keys leütéseivel; igaz, ha a leütések mind elfogytak, vagyis jött a kérdés, és válaszolt rá
+static bool drink_new_potion_with_keys(uint8_t which, const char *keys)
+{
+    set_test_keys(keys);
+    drink_new_potion(which);
+    bool ok = read_key() == 0;
+    set_test_keys(NULL);
+    return ok;
+}
+
+// iváskor azonosítódik-e a típus, az üres padlós jelenetben, hallucináció nélkül (8.2)
+static bool is_identified_by_drinking(uint8_t which)
+{
+    return which != POTION_SEE_INVISIBLE && which != POTION_MONSTER_DETECTION && which != POTION_MAGIC_DETECTION
+        && which != POTION_RESTORE_STRENGTH;
+}
+
+int test_potion_identification(uint16_t i)
+{
+    put_potion_scene();
+    memset(game.potion_knowledge, SUBTYPE_UNKNOWN, sizeof(game.potion_knowledge));
+    bool ok = true;
+
+    // ami iváskor azonosítódik, azt nem kérdezi; a többinél jön a kérdés, és ESC-re a típus név nélkül marad
+    for (uint8_t which = 0; which < POTION_SUBTYPE_COUNT; which++) {
+        init_player();
+        bool is_asked = drink_new_potion_with_keys(which, NAMING_KEY_ESCAPE);
+        if (is_identified_by_drinking(which)) {
+            ok = ok && !is_asked && game.potion_knowledge[which] == SUBTYPE_IDENTIFIED;
+        } else {
+            ok = ok && is_asked && game.potion_knowledge[which] == SUBTYPE_UNKNOWN;
+        }
+    }
+
+    // hallucinálva a confusion nem azonosítódik
+    game.potion_knowledge[POTION_CONFUSION] = SUBTYPE_UNKNOWN;
+    init_player();
+    game.timers[TIMER_HALLUCINATION] = POTION_TEST_TIMER_TURNS;
+    ok = ok && drink_new_potion_with_keys(POTION_CONFUSION, NAMING_KEY_ESCAPE) && game.potion_knowledge[POTION_CONFUSION] == SUBTYPE_UNKNOWN;
+    init_player();
+
+    // a beírt szöveg a típus neve lesz, utána az elnevezett típus nem kérdez; üres beírásra nincs név
+    ok = ok && drink_new_potion_with_keys(POTION_SEE_INVISIBLE, "ab" NAMING_KEY_RETURN);
+    uint8_t name_index = game.potion_knowledge[POTION_SEE_INVISIBLE];
+    ok = ok && name_index != NO_NAME && name_index != SUBTYPE_IDENTIFIED && strcmp(get_name(name_index), "ab") == 0;
+    ok = ok && !drink_new_potion_with_keys(POTION_SEE_INVISIBLE, NAMING_KEY_ESCAPE);
+    ok = ok && game.potion_knowledge[POTION_SEE_INVISIBLE] == name_index;
+    ok = ok && drink_new_potion_with_keys(POTION_RESTORE_STRENGTH, NAMING_KEY_RETURN);
+    ok = ok && game.potion_knowledge[POTION_RESTORE_STRENGTH] == SUBTYPE_UNKNOWN;
+
+    // az ivással azonosított típus neve felszabadul
+    uint8_t healing_name_index = store_name("x");
+    game.potion_knowledge[POTION_HEALING] = healing_name_index;
+    ok = ok && !drink_new_potion_with_keys(POTION_HEALING, NAMING_KEY_ESCAPE);
+    ok = ok && game.potion_knowledge[POTION_HEALING] == SUBTYPE_IDENTIFIED && store_name("y") == healing_name_index;
+
+    // betelt névkészletnél a kérdés helyett az üzenet jön (a „strange feeling” mellé nem fér, ezért új sávban)
+    while (store_name("f") != NO_NAME) {
+    }
+    message_clear();
+    ok = ok && !drink_new_potion_with_keys(POTION_MONSTER_DETECTION, NAMING_KEY_ESCAPE);
+    ok = ok && game.potion_knowledge[POTION_MONSTER_DETECTION] == SUBTYPE_UNKNOWN;
+    ok = ok && is_message_bar_text("You have no room for more names. Remove a name from something first.");
 
     clear_potion_scene();
     return ok;

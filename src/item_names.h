@@ -59,6 +59,11 @@ bool can_be_named(uint8_t type);                // a `c` mindent elnevez, kivév
 // a kérdés helyett „you have no room for more names. Remove a name from something first”
 void name_item(uint8_t index);
 
+// ivás után (call_it): ha a típus nem ismert, és nincs neve, a kérdése, mint a `c`-nél a név nélküli típusé: „what do you want to call
+// it?”, üres beírásra vagy ESC-re név nélkül marad, betelt névkészletnél a kérdés helyett „you have no room for more names. Remove
+// a name from something first”; az azonosított és az elnevezett típusnál nem történik semmi
+void ask_type_name(uint8_t type, uint8_t which);
+
 // a tekercstípus felirata a game.scroll_title_seed-ből, nullával lezárva; out legalább SCROLL_TITLE_SIZE bájt; az RN-t nem hívja
 void write_scroll_title(char *out, uint8_t which);
 

@@ -192,6 +192,24 @@ static void apply_potion_effect(uint8_t which)
     }
 }
 
+// a megivott bájital azonosítása (8.2): a see invisible, a monster detection és a restore strength nem azonosítódik, a confusion csak
+// akkor, ha a játékos nem hallucinál; a magic detectiont a hatása azonosítja, ha mutatott valamit
+static void identify_drunk_potion(uint8_t which)
+{
+    switch (which) {
+        case POTION_SEE_INVISIBLE:
+        case POTION_MONSTER_DETECTION:
+        case POTION_MAGIC_DETECTION:
+        case POTION_RESTORE_STRENGTH:
+            return;
+        case POTION_CONFUSION:
+            // a hatása a hallucinációt nem érinti, így ez az ivás előtti állapot
+            if (game.timers[TIMER_HALLUCINATION] > 0) return;
+            break;
+    }
+    identify_item_type(ITEM_TYPE_POTION, which);
+}
+
 void quaff_potion(uint8_t index)
 {
     const struct Item *item = get_item(index);
@@ -200,11 +218,12 @@ void quaff_potion(uint8_t index)
         return;
     }
 
-    // az altípus a darab elfogyása előtt: az utolsó darab rekordja felszabadul
+    // az altípus a darab elfogyása előtt: az utolsó darab rekordja felszabadul, ezért a kérdés is a típusé
     uint8_t which = item->which;
     use_up_pack_item(index);
     apply_potion_effect(which);
-    // ide jön: az automatikus azonosítás, és ha a típus így sem ismert, és nincs elnevezve, a „what do you want to call it?” kérdés
+    identify_drunk_potion(which);
+    ask_type_name(ITEM_TYPE_POTION, which);
 }
 
 #pragma optimize(pop)

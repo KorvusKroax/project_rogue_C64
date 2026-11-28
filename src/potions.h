@@ -23,7 +23,8 @@
 #define EXTRA_HEALING_DIE_SIDES  8              // default: 8
 
 // `q`: a csomag tárgyának megivása; nem bájitalra „yuk! Why would you want to drink that?”, és a tárgy marad; különben egy darab
-// elfogy (use_up_pack_item), és utána a bájital hatása (8.2) az üzeneteivel, a leírt sorrendben; a hívó számára mindig időbe kerül (J14)
+// elfogy (use_up_pack_item), utána a bájital hatása (8.2) az üzeneteivel, a leírt sorrendben, végül az automatikus azonosítás, és ha
+// a típus így sem ismert, és nincs neve, a kérdése (ask_type_name); a hívó számára mindig időbe kerül (J14)
 void quaff_potion(uint8_t index);
 
 #endif

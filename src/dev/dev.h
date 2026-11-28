@@ -11,7 +11,7 @@
     void dev_run_start_screen(void);    // a seed kiírása, S-re kézi megadása; RETURN-re visszatér
     bool dev_execute_command(uint8_t code); // fejlesztői parancs játék közben, F-billentyűre: F1 új szint a bekért mélységen (üres mezőn ugyanazon), F2 szörny a játékos mellé betű alapján, F3 az inven opció váltása, F4 a szint összes szörnyének üldözése, F5 teljes térkép, F6 a szint összes szörnyének lassítása ki és be, F7 tárgy a játékos mellé jel és altípus alapján, F8 a follow_passages és a jump_to_run_end váltása körbe; igaz, ha időt vitt (egyik sem)
     void update_item_count_peak(void);  // a tárgytábla foglaltságának csúcsértéke a program indulása óta: minden foglalás után (allocate_item)
-    void report_name_pool_usage(void);  // a névkészlet foglaltsága az üzenetsorba („names: 5/32”): a `c` után, ha tárgyat kapott
+    void report_name_pool_usage(void);  // a névkészlet foglaltsága az üzenetsorba („names: 5/32”): a `c` és a `q` után, ha tárgyat kapott
 
     // a teljes térkép (F5): a MAP jele, a titkos folyosó-mező inverz folyosóként, a titkos ajtó inverz ajtóként, a szörnyek a betűjükkel, az ébren lévők inverzen
     bool is_full_map_shown(void);

@@ -242,6 +242,22 @@ static uint8_t *get_name_holder(struct Item *item)
     return &knowledge[item->which];
 }
 
+// a név nélküli hely (a típus ismerete vagy a tárgy címkéje) új neve: betelt névkészletnél a kérdés helyett „you have no room for more
+// names. Remove a name from something first”, különben „what do you want to call it?”; üres beírásra vagy ESC-re név nélkül marad
+static void ask_new_name(uint8_t *name_holder)
+{
+    if (is_name_pool_full()) {
+        message(text_no_room_for_names);
+        return;
+    }
+
+    // a kérdés előtt volt szabad hely
+    char text[NAME_SIZE];
+    if (ask_text(text_what_to_call_it, text, NAME_LENGTH_MAX) && text[0] != 0) {
+        *name_holder = store_name(text);
+    }
+}
+
 void name_item(uint8_t index)
 {
     struct Item *item = get_item(index);
@@ -256,30 +272,31 @@ void name_item(uint8_t index)
         message(text_already_identified);
         return;
     }
-    // az átnevezés nem foglal új helyet
-    if (name_index == NO_NAME && is_name_pool_full()) {
-        message(text_no_room_for_names);
+    if (name_index == NO_NAME) {
+        ask_new_name(name_holder);
         return;
     }
 
-    if (name_index != NO_NAME) {
-        message_format(text_was_called, get_name(name_index), NULL, 0);
-    }
-
+    // az átnevezés nem foglal új helyet
+    message_format(text_was_called, get_name(name_index), NULL, 0);
     char text[NAME_SIZE];
     if (!ask_text(text_what_to_call_it, text, NAME_LENGTH_MAX)) return;
 
     if (text[0] == 0) {
-        if (name_index != NO_NAME) {
-            free_name(name_index);
-            *name_holder = NO_NAME;
-            message(text_name_removed);
-        }
-    } else if (name_index == NO_NAME) {
-        // a kérdés előtt volt szabad hely
-        *name_holder = store_name(text);
+        free_name(name_index);
+        *name_holder = NO_NAME;
+        message(text_name_removed);
     } else {
         set_name(name_index, text);
+    }
+}
+
+void ask_type_name(uint8_t type, uint8_t which)
+{
+    uint8_t *knowledge = get_type_knowledge(type) + which;
+    // az azonosított és az elnevezett típus nem kérdez
+    if (*knowledge == SUBTYPE_UNKNOWN) {
+        ask_new_name(knowledge);
     }
 }
 

@@ -381,6 +381,9 @@ static bool execute_quaff_command(bool is_repeat)
     if (index == NO_ITEM) return false;
     // a nem bájital is időbe kerül, és a gyorsítás ivása is (J14)
     quaff_potion(index);
+    #ifdef DEVMODE
+        report_name_pool_usage();
+    #endif
     return true;
 }
 
