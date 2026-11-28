@@ -3,6 +3,7 @@ rem A jatek forditasa: build\rogue.prg es build\rogue.d64
 rem "build.bat dev": fejlesztoi build (DEVMODE), build\rogue_dev.prg es build\rogue_dev.d64
 rem "build.bat dev 12345": ugyanez rogzitett seeddel (DEV_SEED)
 rem "build.bat test core": a src\dev\main_test_core.c tesztprogram (DEVMODE es TEST_PROGRAM), build\test_core.prg es build\test_core.d64
+rem A vegen kiirja a szabad helyet, es figyelmeztet, ha a dinamikus verembol kevesebb maradt a legnagyobb igenynel (STACK_NEED).
 rem Barhonnan indithato, mert a sajat mappajaba (a projekt gyokerebe) lep.
 rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreolvassa)
 
@@ -20,6 +21,11 @@ set DEV_SOURCES=src\dev\dev.c src\dev\dev_commands.c src\dev\start_screen.c src\
 
 rem --- a tesztek; mindegyik tesztprogram az egeszet kapja, a nem hivott reszeket az Oscar64 kihagyja ---
 set TEST_SOURCES=src\dev\test_runner.c src\dev\test_rng.c src\dev\test_num.c src\dev\test_key.c src\dev\test_view.c src\dev\test_message.c src\dev\test_map.c src\dev\test_explore.c src\dev\test_chase.c src\dev\test_level.c src\dev\test_monsters.c src\dev\test_combat.c src\dev\test_items.c src\dev\test_item_names.c src\dev\test_pack.c src\dev\test_equipment.c src\dev\test_text_list.c src\dev\test_screens.c src\dev\test_platform.c src\dev\test_timers.c src\dev\test_potions.c
+
+rem --- a dinamikus verem legnagyobb igenye bajtban: a listak visszahivasai (show_text_list es draw_list_entries 3-3 bajt),
+rem a tesztprogramokban a tesztfuttato is (run_test_table 4 bajt); ha ennel kevesebb marad, a forditas figyelmeztet ---
+set STACK_NEED=6
+if /i "%~1"=="test" set STACK_NEED=10
 
 rem --- kiadasi, fejlesztoi vagy teszt build ---
 set NAME=rogue
@@ -52,6 +58,23 @@ if errorlevel 1 goto fail
 
 for /f "tokens=1,3" %%a in ('findstr /c:"HEAP, heap" build\%NAME%.map') do set /a FREE=0x%%b-0x%%a
 echo Szabad hely: %FREE% bajt
+
+rem a dinamikus verem: a .map STACK sora; a verem 2 bajttal a sor vege elott indul, ezert ennyivel kevesebb hasznalhato;
+rem a STACK_WARNING-ot a test.bat gyujti ossze
+set STACK_WARNING=
+set STACK_LEFT=
+for /f "tokens=1,3" %%a in ('findstr /c:": STACK, stack" build\%NAME%.map') do set /a STACK_LEFT=0x%%b-0x%%a-2
+if not defined STACK_LEFT (
+    set STACK_WARNING=1
+    echo FIGYELMEZTETES: a build\%NAME%.map fajlban nincs STACK sor, a dinamikus verem nem ellenorizheto
+    goto stack_checked
+)
+if %STACK_LEFT% LSS %STACK_NEED% (
+    set STACK_WARNING=1
+    echo FIGYELMEZTETES: a dinamikus verembol csak %STACK_LEFT% bajt hasznalhato, a legnagyobb igeny %STACK_NEED% bajt; a verem merete: src\platform\platform.c, stacksize
+)
+:stack_checked
+
 echo Kesz: build\%NAME%.prg, build\%NAME%.d64
 popd
 exit /b 0

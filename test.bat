@@ -8,7 +8,8 @@ rem A tesztprogramok a src\dev\main_test_*.c fajlok, igy az uj program magatol b
 rem A nem interaktiv programok VICE-ben, warp modban, a -debugcart kapcsoloval futnak: a tesztprogram vegen kiirt eredmeny
 rem a VICE kilepesi kodja (0 = minden teszt sikerult); a kilepeskori kepernyo build\test_<nev>.png, a VICE naploja build\test_<nev>.log.
 rem Az interaktiv programok (INTERACTIVE_PROGRAMS) csak akkor nyilnak meg VICE-ben, ha nevvel kerjuk oket; kulonben csak lefordulnak.
-rem A vegen azoknak a listaja, amelyek nem fordultak le, vagy valamelyik tesztjuk nem sikerult, es ilyenkor hibakoddal lep ki.
+rem A vegen azoknak a listaja, amelyek nem fordultak le, vagy valamelyik tesztjuk nem sikerult, es ilyenkor hibakoddal lep ki;
+rem kulon azoke is, amelyeknel a build.bat a dinamikus veremre figyelmeztetett (ez nem hiba).
 rem Barhonnan indithato, mert a sajat mappajaba (a projekt gyokerebe) lep.
 rem (ebben a fajlban csak ASCII karakter legyen, mert a cmd az ekezeteket felreolvassa)
 
@@ -61,9 +62,11 @@ goto next_named_program
 
 set PROGRAM_COUNT=0
 set FAILED_PROGRAMS=
+set STACK_WARNED_PROGRAMS=
 for %%f in (src\dev\main_test_*.c) do call :build_and_run %%~nf
 
 echo.
+if defined STACK_WARNED_PROGRAMS echo FIGYELMEZTETES: keves a dinamikus verem:%STACK_WARNED_PROGRAMS%
 if defined FAILED_PROGRAMS (
     echo HIBA:%FAILED_PROGRAMS%
     popd
@@ -126,6 +129,8 @@ if errorlevel 1 (
     set FAILED_PROGRAMS=%FAILED_PROGRAMS% test_%PROGRAM%[forditas]
     goto :eof
 )
+rem a build.bat figyelmeztetese a dinamikus veremre: nem hiba, de a vegen is kiirodik
+if defined STACK_WARNING set STACK_WARNED_PROGRAMS=%STACK_WARNED_PROGRAMS% test_%PROGRAM%
 
 call :is_in_list "%SKIP_PROGRAMS%" %PROGRAM%
 if not errorlevel 1 (

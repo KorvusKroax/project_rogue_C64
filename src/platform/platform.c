@@ -51,7 +51,8 @@ extern void texts_section_start, texts_section_end;
 #endif
 
 // a main régió végén: a függvények rögzített helyű keretei, alattuk a dinamikus verem; a .map fájl STACK sora a megmaradt dinamikus
-// verem, a keretek a sor vége (StackEnd) és a régió vége között vannak, 2026-11-27-én mérve a dev buildben 485, a játékban 359 bájt
+// verem, a keretek a sor vége (StackEnd) és a régió vége között vannak, 2026-11-28-án mérve a dev buildben 474, a játékban 360 bájt;
+// a build.bat figyelmeztet, ha a dinamikus veremből kevesebb marad a legnagyobb igénynél
 #pragma stacksize(512)
 
 #define IRQ_VECTOR            (*(void **)0x0314)
