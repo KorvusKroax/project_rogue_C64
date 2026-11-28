@@ -70,6 +70,9 @@ int test_strength_change(uint16_t i);
 int test_flytrap(uint16_t i);
 int test_flytrap_hold(uint16_t i);
 int test_xeroc_reveal(uint16_t i);
+int test_confused_steps(uint16_t i);            // zavarodottan a lépések 80%-a véletlen, a 3×3 mezői egyforma eséllyel; a helyben maradás nem visz időt, és a futás véget ér
+int test_confused_monsters(uint16_t i);         // a zavarodott véletlen lépés szörnyre és kőzetbe nem lép, a körülzárt játékos helyben marad idő nélkül; az álcázott xerocot megtámadja
+int test_confused_fight(uint16_t i);            // zavarodottan az f-harc a véletlen lépésnél véget ér, az ellépőnél is (J37)
 int test_aquator(uint16_t i);                   // a rozsda a viselt páncélt eggyel rontja, a határig; a védettet, a bőrpáncélt nem, a kikapcsolt Aquator sem; páncél nélkül nincs hatása
 int test_nymph(uint16_t i);                     // a nimfa egy használaton kívüli mágikus tárgyat lop, kötegből egy darabot (J31), az amulettet is, és eltűnik a tárgyaival; ha nincs mit, marad
 int test_leprechaun(uint16_t i);                // a leprechaun aranyat lop (pénz nélkül is), és eltűnik a tárgyaival; a megölt leprechaun aranya leesik

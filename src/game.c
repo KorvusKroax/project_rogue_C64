@@ -20,6 +20,7 @@
 #include "move.h"
 #include "pack.h"
 #include "potions.h"
+#include "rng.h"
 #include "view.h"
 #include "player.h"
 #include "state.h"
@@ -236,8 +237,8 @@ static void cancel_command(void)
     repeat_count = 0;
 }
 
-// az irányt kérő parancs iránya: az `a` ismétlésnél a tárolt, különben a bekért; DIRECTION_COUNT, ha a kérdés ESC-vel elmaradt
-// (cancel_command)
+// az irányt kérő parancs iránya: az `a` ismétlésnél a tárolt, különben a bekért; zavarodottan 20% eséllyel véletlen irány, de a
+// tárolt irány a bekért marad; DIRECTION_COUNT, ha a kérdés ESC-vel elmaradt (cancel_command)
 static uint8_t get_command_direction(bool is_repeat)
 {
     if (!is_repeat) {
@@ -248,7 +249,7 @@ static uint8_t get_command_direction(bool is_repeat)
         }
         last_direction_index = direction_index;
     }
-    // ide jön: zavarodottan 20% eséllyel véletlen irány
+    if (game.timers[TIMER_CONFUSION] > 0 && rnd(5) == 0) return rnd(DIRECTION_COUNT);
     return last_direction_index;
 }
 
@@ -261,14 +262,15 @@ static bool execute_fight_command(uint8_t code, bool is_repeat)
     return start_fight(direction_steps_x[direction_index], direction_steps_y[direction_index], code == 'F');
 }
 
-// m + irány: lépés felvétel nélkül; a számprefixes ismétlés innen ennek az iránynak a lépése, az irányt nem kérdezi újra; igaz, ha időt vitt
+// m + irány: lépés felvétel nélkül; a számprefixes ismétlés innen a bekért irány lépése (a zavarodott véletlen irány csak erre az egy
+// lépésre szól), az irányt nem kérdezi újra; igaz, ha időt vitt
 static bool execute_move_without_pickup_command(bool is_repeat)
 {
     uint8_t direction_index = get_command_direction(is_repeat);
     if (direction_index == DIRECTION_COUNT) return false;
 
     is_pickup_skipped = true;
-    repeat_code = direction_letters[direction_index];
+    repeat_code = direction_letters[last_direction_index];
     return execute_direction_command(repeat_code, direction_index);
 }
 

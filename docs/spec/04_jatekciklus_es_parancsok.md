@@ -173,9 +173,11 @@ A szobaváltás a célmezőből számol. *Eredetileg* folyosójelre lépve a já
 | t + irány | hajítás ([7.4](07_harc.md#74-hajítás-t)) |
 | z + irány | pálca/bot használata ([8.7](08_targyak.md#87-pálcákbotok-z)) |
 
-**Irány bekérése** (`get_dir`; az `f`, `F`, `t`, `z`, `^` és `m` parancsnál): „which direction?”. Csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad. ESC-re a parancs elmarad, nem visz időt, az utolsó parancs az előző marad ([4.2.5](#425-rendszer)), és a számprefixes ismétlés is véget ér (J27). Az `a` ismétlésnél nem kérdez újra, hanem a tárolt irányt használja. ISHUH alatt 20% eséllyel véletlen irány, ismétlésnél is.
+**Irány bekérése** (`get_dir`; az `f`, `F`, `t`, `z`, `^` és `m` parancsnál): „which direction?”. Csak az irány betűje (kis- vagy nagybetű) és az ESC számít, más billentyűre a kérdés marad. ESC-re a parancs elmarad, nem visz időt, az utolsó parancs az előző marad ([4.2.5](#425-rendszer)), és a számprefixes ismétlés is véget ér (J27). Az `a` ismétlésnél nem kérdez újra, hanem a tárolt irányt használja. ISHUH alatt 20% eséllyel véletlen irány, ismétlésnél is: a parancs erre hat (J38), de a tárolt irány a bekért marad, így az `a` ismétlés és az `m` számprefixes ismétlése azt kapja.
 
 > **C64-javítás (J27):** az irány vagy a tárgy bekérésénél ([4.2.6](#426-tárgyválasztás-listák-és-tárgyparancsok)) leütött ESC a számprefixes ismétlést is leállítja. *Eredetileg* a szám megmaradt, és a parancs minden hátralévő ismétlésnél újra kérdezett: az `5m` után ötször kellett ESC-et nyomni.
+
+> **C64-javítás (J38):** zavarodottan a véletlen irány az egész parancsra szól: az `f` abban az irányban keresi a célpontot, és arra is harcol, az `m` arra lép. *Eredetileg* az `f` a véletlen irányban kereste és jelölte meg a célpontot, de a harc a beütött irányba indult: ha ott egy másik szörny állt, azt ütötte, ha szabad mező volt, a játékos arra lépett. Az `m` a véletlen irányt figyelmen kívül hagyta.
 
 > **C64-javítás (J15):** *eredetileg* a szabálytalan átlós irányba indított `f` nem csinált semmit, de a kör elment.
 

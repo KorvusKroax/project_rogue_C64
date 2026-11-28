@@ -9,7 +9,9 @@
 bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint8_t to_y);
 
 // a játékos lépése a step_x, step_y irányba (-1, 0, 1); fogva tartva csak a flytrapot támadhatja meg, más lépése helyben marad,
-// de időbe kerül; tárgyra lépve a futás megáll, és a tárgyat felveszi; igaz, ha időt vitt
+// de időbe kerül; tárgyra lépve a futás megáll, és a tárgyat felveszi; igaz, ha időt vitt;
+// zavarodottan 80% eséllyel egy véletlen szomszédos mezőre lép, és az f-harc véget ér (J37): szörnyre ekkor nem lép (az álcázott
+// xerocot megtámadja); ha nem léphet oda, helyben marad, nem telik idő, és a futás is véget ér
 bool move_player(int8_t step_x, int8_t step_y);
 
 // ugyanez az `m` parancsnak: tárgyra lépve nem veszi fel, csak kiírja („you moved onto <név>”)

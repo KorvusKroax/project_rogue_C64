@@ -8,6 +8,7 @@
 #include "message.h"
 #include "monsters.h"
 #include "pack.h"
+#include "rng.h"
 #include "rooms.h"
 #include "state.h"
 #include "texts.h"
@@ -27,10 +28,49 @@ bool is_diagonal_step_allowed(uint8_t from_x, uint8_t from_y, uint8_t to_x, uint
     return is_walkable_character(get_map_character(to_x, from_y)) && is_walkable_character(get_map_character(from_x, to_y));
 }
 
+// a zavarodott véletlen lépés (rndmove) a játékos mezőjéről a step_x, step_y irányba: nem helyben maradás, a célmező a térképen van,
+// járható, nem sarkon át vezet, és nem áll rajta szörny; az álcázott xerocra léphet, azt megtámadja
+static bool is_random_step_allowed(int8_t step_x, int8_t step_y)
+{
+    if (step_x == 0 && step_y == 0) return false;
+
+    // a 0. oszlop (sor) előtti mező 255 lesz, azt az is_on_map kívülinek veszi
+    uint8_t player_x = game.player.x;
+    uint8_t player_y = game.player.y;
+    uint8_t target_x = player_x + step_x;
+    uint8_t target_y = player_y + step_y;
+    if (!is_on_map(target_x, target_y)) return false;
+    if (!is_diagonal_step_allowed(player_x, player_y, target_x, target_y)) return false;
+    if (!is_walkable_character(get_map_character(target_x, target_y))) return false;
+
+    uint8_t monster_index = find_monster_at(target_x, target_y);
+    if (monster_index != NO_MONSTER) {
+        // csak az álcázott xeroc jele nem a saját betűje
+        const struct Monster *monster = get_monster(monster_index);
+        if (monster->disguise == monster->type) return false;
+    }
+    // ide jön: scare monster tekercsre nem lép
+    return true;
+}
+
 // a lépés; tárgyra lépve a tárgyat felveszi, vagy (az `m` parancsnál) csak kiírja; igaz, ha időt vitt
 static bool take_player_step(int8_t step_x, int8_t step_y, bool is_pickup_wanted)
 {
-    // ide jön: medvecsapda, zavarodottságban véletlen irány
+    // ide jön: medvecsapda
+
+    // zavarodottan 80% eséllyel véletlen lépés, előbb az y, aztán az x; minden véletlen lépés véget vet az f-harcnak (J37);
+    // ha helyben hagyná, nem visz időt, és a futás is véget ér
+    if (game.timers[TIMER_CONFUSION] > 0 && rnd(5) != 0) {
+        stop_fight();
+        int8_t random_step_y = rnd(3) - 1;
+        int8_t random_step_x = rnd(3) - 1;
+        if (!is_random_step_allowed(random_step_x, random_step_y)) {
+            stop_running();
+            return false;
+        }
+        step_x = random_step_x;
+        step_y = random_step_y;
+    }
 
     // a 0. oszlop (sor) előtti mező 255 lesz, azt az is_on_map kívülinek veszi
     uint8_t player_x = game.player.x;

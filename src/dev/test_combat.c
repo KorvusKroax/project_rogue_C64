@@ -2,6 +2,7 @@
 #include "checks.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -1072,6 +1073,175 @@ int test_xeroc_reveal(uint16_t i)
     ok = ok && game.monsters[0].disguise == 'X';
 
     clear_combat_scene();
+    return ok;
+}
+
+#define CONFUSED_TEST_TIMER_TURNS   1000        // a zavarodottság ideje: a teszt alatt nem jár le (az időzítők itt nem ketyegnek)
+#define CONFUSED_TEST_STEPS         900         // ennyi zavarodott lépés a lépések eloszlásához
+#define CONFUSED_TEST_TOLERANCE     (CONFUSED_TEST_STEPS / 20)
+#define CONFUSED_BLOCKED_TEST_STEPS 100         // ennyi lépés a körülzárt játékossal; ennyin belül a xeroc mezőjére is lép (rögzített maggal)
+#define CONFUSED_FIGHT_TEST_FIGHTS  20          // ennyi harcból legalább egy ellépő véletlen lépéssel ér véget (rögzített maggal)
+
+// a zavarodott játékos a tesztmezőjén, körülötte a 3×3 mind folyosó
+static void put_confused_scene(void)
+{
+    put_combat_player();
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            put_combat_tile(COMBAT_PLAYER_X + offset_x, COMBAT_PLAYER_Y + offset_y);
+        }
+    }
+    game.timers[TIMER_CONFUSION] = CONFUSED_TEST_TIMER_TURNS;
+}
+
+static void clear_confused_scene(void)
+{
+    game.timers[TIMER_CONFUSION] = 0;
+    stop_running();
+    stop_fight();
+    clear_combat_scene();
+}
+
+static void put_player_at_start(void)
+{
+    game.player.x = COMBAT_PLAYER_X;
+    game.player.y = COMBAT_PLAYER_Y;
+}
+
+static bool is_count_close(uint16_t count, uint16_t expected)
+{
+    return count + CONFUSED_TEST_TOLERANCE >= expected && count <= expected + CONFUSED_TEST_TOLERANCE;
+}
+
+// zavarodottan a lépések 80%-a véletlen, a 3×3 kilenc mezője (a saját is) egyforma eséllyel: a jobbra indított lépés 20% + 80%/9
+// eséllyel visz jobbra, 80%/9 eséllyel marad helyben; a helyben maradás nem visz időt, és a futás véget ér; a többi lépés időbe kerül,
+// és a futás tart
+int test_confused_steps(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_confused_scene();
+
+    bool ok = true;
+    uint16_t stay_count = 0;
+    uint16_t right_count = 0;
+    for (uint16_t step = 0; step < CONFUSED_TEST_STEPS; step++) {
+        put_player_at_start();
+        start_running(1, 0, false);
+        bool took_time = move_player(1, 0);
+        bool has_stayed = is_player_at_start();
+        if (has_stayed) {
+            stay_count++;
+        }
+        if (game.player.x == COMBAT_PLAYER_X + 1 && game.player.y == COMBAT_PLAYER_Y) {
+            right_count++;
+        }
+        ok = ok && took_time == !has_stayed && is_running() == !has_stayed;
+    }
+    // 80%/9 = 4/45
+    ok = ok &&
+        is_count_close(stay_count, CONFUSED_TEST_STEPS * 4 / 45) &&
+        is_count_close(right_count, CONFUSED_TEST_STEPS / 5 + CONFUSED_TEST_STEPS * 4 / 45);
+
+    clear_confused_scene();
+    return ok;
+}
+
+// a zavarodott játékos jobbra kőzet, a többi szomszédján alvó kestrelek; a nyolcadik szomszéd a xeroc, ha van
+static struct Monster *put_blocked_confused_scene(bool has_xeroc)
+{
+    put_combat_player();
+    struct Monster *xeroc = NULL;
+    for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
+        for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
+            if (offset_x == 0 && offset_y == 0) continue;
+            if (offset_x == 1 && offset_y == 0) continue;
+
+            bool is_xeroc_tile = has_xeroc && offset_x == -1 && offset_y == 0;
+            struct Monster *monster = put_combat_monster(is_xeroc_tile ? 'X' : COMBAT_TEST_MONSTER, COMBAT_PLAYER_X + offset_x, COMBAT_PLAYER_Y + offset_y);
+            if (is_xeroc_tile) {
+                xeroc = monster;
+            }
+        }
+    }
+    game.timers[TIMER_CONFUSION] = CONFUSED_TEST_TIMER_TURNS;
+    return xeroc;
+}
+
+// egy kestrel sem ébredt fel, azaz a játékos egyiket sem támadta meg
+static bool are_kestrels_asleep(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        if (monster->type == COMBAT_TEST_MONSTER && (monster->flags & MONSTER_RUNNING)) return false;
+    }
+    return true;
+}
+
+// a zavarodott véletlen lépés nem támad szörnyre, és nem lép kőzetbe: a körülzárt játékos minden lépése helyben marad, és nem visz
+// időt (a jobbra indított, nem véletlen lépés a kőzetbe ütközik); az álcázott xerocra viszont lép, azaz megtámadja: leleplezi,
+// és ez időbe kerül
+int test_confused_monsters(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_blocked_confused_scene(false);
+
+    bool ok = true;
+    for (uint8_t step = 0; step < CONFUSED_BLOCKED_TEST_STEPS; step++) {
+        ok = ok && !move_player(1, 0) && is_player_at_start();
+    }
+    ok = ok && are_kestrels_asleep();
+    clear_confused_scene();
+
+    struct Monster *xeroc = put_blocked_confused_scene(true);
+    bool took_time = false;
+    uint8_t step = 0;
+    while (!took_time && step < CONFUSED_BLOCKED_TEST_STEPS) {
+        took_time = move_player(1, 0);
+        step++;
+    }
+    ok = ok && took_time && xeroc->disguise == 'X' && is_player_at_start() && are_kestrels_asleep();
+
+    message_clear();
+    clear_confused_scene();
+    return ok;
+}
+
+// a zavarodott f-harc egy lépése után: ha a játékos ellépett vagy helyben maradt, és ez nem vitt időt, az véletlen lépés volt, és a harc
+// véget ért, jelölt célpont nélkül (J37); különben a kestrelt ütötte, és a harc tart
+static bool is_confused_fight_step_right(bool took_time)
+{
+    if (!is_player_at_start() || !took_time) return !is_fighting() && !has_fight_target();
+    return is_fighting();
+}
+
+// zavarodottan az f-harc a véletlen lépésnél véget ér (J37), akkor is, ha a játékos ellép; a kestrel körül szabad mezők vannak,
+// és nem üt vissza (a szörnyek itt nem lépnek), a HP-ja sem fogy el, így a harcot más nem állítja le
+int test_confused_fight(uint16_t i)
+{
+    game.seed = COMBAT_TEST_SEED;
+    put_confused_scene();
+    struct Monster *monster = put_combat_monster(COMBAT_TEST_MONSTER, COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    monster->hit_points = FIGHT_TEST_HIT_POINTS;
+
+    bool ok = true;
+    uint8_t moved_end_count = 0;
+    for (uint8_t fight = 0; fight < CONFUSED_FIGHT_TEST_FIGHTS; fight++) {
+        put_player_at_start();
+        ok = ok && is_confused_fight_step_right(start_fight(FIGHT_STEP_X, FIGHT_STEP_Y, false));
+        uint8_t round = 0;
+        while (is_fighting() && round < FIGHT_TEST_ROUNDS_MAX) {
+            ok = ok && is_confused_fight_step_right(take_fight_step());
+            round++;
+        }
+        ok = ok && !is_fighting();
+        if (!is_player_at_start()) {
+            moved_end_count++;
+        }
+    }
+    ok = ok && moved_end_count > 0;
+
+    message_clear();
+    clear_confused_scene();
     return ok;
 }
 
