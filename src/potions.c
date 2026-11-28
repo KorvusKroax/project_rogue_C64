@@ -138,12 +138,17 @@ static void apply_potion_effect(uint8_t which)
             change_strength(1);
             message(text_feel_stronger);
             break;
-        case POTION_SEE_INVISIBLE:
-            // ide jön: ha eddig nem volt CANSEE, a látható láthatatlan szörnyek kirajzolása
+        case POTION_SEE_INVISIBLE: {
+            // ha eddig nem látta a láthatatlant, a látható láthatatlan szörnyek kirajzolódnak; a vakság csak utána ér véget
+            bool could_see_invisible = can_player_see_invisible();
             extend_timer(TIMER_SEE_INVISIBLE, SEE_INVISIBLE_DURATION);
+            if (!could_see_invisible) {
+                show_invisible_monsters();
+            }
             message_format(text_tastes_like_juice, text_fruit_name, NULL, 0);
             end_timer_early(TIMER_BLINDNESS);
             break;
+        }
         case POTION_HEALING:
             heal_player(false);
             end_timer_early(TIMER_BLINDNESS);

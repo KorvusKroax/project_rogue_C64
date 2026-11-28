@@ -6,8 +6,11 @@
 
 #include "state.h"
 
-// a játékos látja-e a szörnyet: vakon egyiket sem, a láthatatlant nem; a szomszédosat (átlósan sarkon át nem), a távolabbit csak a saját
-// világos szobájában (see_monst)
+// a szörny a játékos látókörében van-e, a láthatatlanságát nem nézve: vakon egyik sem; a szomszédos (átlósan sarkon át nem), a távolabbi
+// csak a játékos világos szobájában
+bool is_monster_in_sight(const struct Monster *monster);
+
+// a játékos látja-e a szörnyet: a látókörében van, és nem láthatatlan, vagy a játékos látja a láthatatlant (see_monst)
 bool is_monster_visible(const struct Monster *monster);
 
 // a játékos látja-e a mezőt: vakon egyiket sem; a szomszédosat (folyosó-mezőn átlósan sarkon át nem), a távolabbit csak a saját világos

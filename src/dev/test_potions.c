@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "../platform/key.h"
+#include "../explore.h"
 #include "../game.h"
 #include "../item_names.h"
 #include "../items.h"
@@ -18,6 +19,7 @@
 #include "../rng.h"
 #include "../rooms.h"
 #include "../state.h"
+#include "../view.h"
 
 // a játékos helye: a mellette álló szörny látszik
 #define POTION_PLAYER_X  10
@@ -206,6 +208,40 @@ int test_potion_messages(uint16_t i)
     drink_new_potion(POTION_MONSTER_DETECTION);
     ok = ok && is_message_bar_empty();
 
+    clear_potion_scene();
+    return ok;
+}
+
+int test_see_invisible(uint16_t i)
+{
+    put_potion_scene();
+    uint8_t x = POTION_PLAYER_X + 1;
+    uint8_t y = POTION_PLAYER_Y;
+    draw_tile(x, y, CHAR_FLOOR);
+    create_monster('P', x, y);
+    const struct Monster *phantom = &game.monsters[game.monster_count - 1];
+
+    bool ok = !is_monster_visible(phantom);
+    drink_new_potion(POTION_SEE_INVISIBLE);
+    ok = ok && is_monster_visible(phantom) && get_seen_character(x, y) == 'P';
+
+    // futó hatásnál az újabb ivás nem rajzol
+    draw_tile(x, y, CHAR_FLOOR);
+    drink_new_potion(POTION_SEE_INVISIBLE);
+    ok = ok && get_seen_character(x, y) == CHAR_FLOOR;
+
+    // a hatás végén a helyére az alatta lévő jel kerül
+    draw_tile(x, y, 'P');
+    game.timers[TIMER_SEE_INVISIBLE] = 1;
+    waste_time();
+    ok = ok && !is_monster_visible(phantom) && get_seen_character(x, y) == CHAR_FLOOR;
+
+    // hallucinálva a bájital nem rajzol, de a phantom látható; a próba végéig az időzítők nem ketyegnek
+    game.timers[TIMER_HALLUCINATION] = 1;
+    drink_new_potion(POTION_SEE_INVISIBLE);
+    ok = ok && is_monster_visible(phantom) && get_seen_character(x, y) == CHAR_FLOOR;
+
+    clear_seen_map();
     clear_potion_scene();
     return ok;
 }

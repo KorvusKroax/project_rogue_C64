@@ -96,6 +96,28 @@ void remove_monster(struct Monster *monster)
     game.monster_count--;
 }
 
+void show_invisible_monsters(void)
+{
+    if (game.timers[TIMER_HALLUCINATION] > 0) return;
+
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        if ((monster->flags & MONSTER_INVISIBLE) && is_monster_visible(monster)) {
+            draw_tile(monster->x, monster->y, monster->disguise);
+        }
+    }
+}
+
+void hide_invisible_monsters(void)
+{
+    for (uint8_t index = 1; index <= game.monster_count; index++) {
+        const struct Monster *monster = get_monster(index);
+        if ((monster->flags & MONSTER_INVISIBLE) && is_monster_in_sight(monster)) {
+            draw_tile(monster->x, monster->y, monster->character_below);
+        }
+    }
+}
+
 // a típusok a mélységgel nehezedő sorrendben; a mélység körüli véletlen pozíció választ közülük
 #define MONSTER_TYPE_ORDER_LENGTH  26
 #define NOT_WANDERING              '0'          // a vándorló sorrendben: ezen a helyen nincs vándorló szörny

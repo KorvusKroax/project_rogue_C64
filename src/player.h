@@ -45,6 +45,9 @@ uint8_t get_death_cause(void);          // a kill_player oka; csak halál után 
 // lebegve „you can't. You're floating off the ground!” (a lépcső és a `,` előtt); igaz, ha a játékos lebeg (levit_check)
 bool report_floating_off_ground(void);
 
+// a játékos látja-e a láthatatlan szörnyeket (CANSEE): a see invisible bájital időzítője fut, vagy see invisible gyűrű van rajta (J5)
+bool can_player_see_invisible(void);
+
 int8_t calculate_player_armor(void);    // a viselt páncél védelme (vagy a BASE_ARMOR) a védelem-gyűrűkkel együtt; kisebb = jobb
 
 // az erő változása (chg_str): STRENGTH_MIN és STRENGTH_MAX között marad, és ha a gyűrűk nélküli erő a legnagyobb

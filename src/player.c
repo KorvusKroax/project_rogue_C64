@@ -61,6 +61,12 @@ bool report_floating_off_ground(void)
     return true;
 }
 
+bool can_player_see_invisible(void)
+{
+    // ide jön: a see invisible gyűrű mint második forrás
+    return game.timers[TIMER_SEE_INVISIBLE] > 0;
+}
+
 // ide jön: a védelem-gyűrűk
 int8_t calculate_player_armor(void)
 {

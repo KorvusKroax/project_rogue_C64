@@ -4,6 +4,8 @@
 
 #include "explore.h"
 #include "message.h"
+#include "monsters.h"
+#include "player.h"
 #include "rng.h"
 #include "state.h"
 #include "texts.h"
@@ -30,6 +32,12 @@ static void end_timed_effect(uint8_t timer)
                 message(text_looks_boring);
             }
             break;
+        case TIMER_SEE_INVISIBLE:
+            // a láthatatlan-látásnak más forrása is lehet (J5)
+            if (!can_player_see_invisible()) {
+                hide_invisible_monsters();
+            }
+            break;
         case TIMER_BLINDNESS:
             // szobában a szoba újra kirajzolódik, mintha most lépne be; a folyosórendszerben a következő look_around rajzol
             if (!(game.rooms[game.player.room].flags & ROOM_PHANTOM)) {
@@ -43,8 +51,7 @@ static void end_timed_effect(uint8_t timer)
         case TIMER_HASTE:
             message(text_slowing_down);
             break;
-        // ide jön: a see invisible végén a látható láthatatlan szörnyek eltűnése, ha nincs see invisible gyűrű; a monster detection
-        // végén a nem látott szörnyek eltűnése
+        // ide jön: a monster detection végén a nem látott szörnyek eltűnése
     }
 }
 

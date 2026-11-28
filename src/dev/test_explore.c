@@ -430,6 +430,23 @@ static bool is_passage_drawing_valid(void)
     return is_monster_visible(near) && !is_monster_visible(far);
 }
 
+// láthatatlan-látással a phantom is látszik, és belépéskor kirajzolódik; vakon akkor sem látszik; az időzítők itt nem ketyegnek
+static bool is_see_invisible_drawing_valid(void)
+{
+    put_see_test_room(0);
+    struct Monster *phantom = put_see_test_monster('P', 6, 3);
+    game.timers[TIMER_SEE_INVISIBLE] = 1;
+
+    enter_room(game.player.x, game.player.y);
+    bool ok = is_monster_visible(phantom) && get_test_seen_character(6, 3) == 'P';
+    game.timers[TIMER_BLINDNESS] = 1;
+    ok = ok && !is_monster_visible(phantom);
+
+    game.timers[TIMER_BLINDNESS] = 0;
+    game.timers[TIMER_SEE_INVISIBLE] = 0;
+    return ok;
+}
+
 int test_monster_visibility(uint16_t i)
 {
     struct Room saved_rooms[ROOM_TABLE_SIZE];
@@ -438,7 +455,8 @@ int test_monster_visibility(uint16_t i)
     bool ok =
         is_lit_room_drawing_valid() &&
         is_dark_room_drawing_valid() &&
-        is_passage_drawing_valid();
+        is_passage_drawing_valid() &&
+        is_see_invisible_drawing_valid();
 
     memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
     clear_monsters();

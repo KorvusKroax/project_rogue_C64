@@ -4,6 +4,7 @@
 #include "map.h"
 #include "message.h"
 #include "monsters.h"
+#include "player.h"
 #include "rng.h"
 #include "rooms.h"
 #include "state.h"
@@ -21,11 +22,9 @@ static bool is_room_lit(uint8_t room_index)
     return !(game.rooms[room_index].flags & ROOM_DARK);
 }
 
-bool is_monster_visible(const struct Monster *monster)
+bool is_monster_in_sight(const struct Monster *monster)
 {
     if (game.timers[TIMER_BLINDNESS] > 0) return false;
-    // ide jön: láthatatlan-látással (CANSEE) a láthatatlan is
-    if (monster->flags & MONSTER_INVISIBLE) return false;
 
     int8_t offset_x = monster->x - game.player.x;
     int8_t offset_y = monster->y - game.player.y;
@@ -39,6 +38,12 @@ bool is_monster_visible(const struct Monster *monster)
     }
 
     return monster->room == game.player.room && is_room_lit(monster->room);
+}
+
+bool is_monster_visible(const struct Monster *monster)
+{
+    if ((monster->flags & MONSTER_INVISIBLE) && !can_player_see_invisible()) return false;
+    return is_monster_in_sight(monster);
 }
 
 bool is_tile_visible(uint8_t x, uint8_t y)

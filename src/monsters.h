@@ -66,6 +66,12 @@ uint8_t find_monster_at(uint8_t x, uint8_t y);  // az x, y mezőn álló szörny
 // ha ő volt az f-harc célpontja, a harc véget ér; a mögötte állók egy hellyel előrecsúsznak, így a mutató utána a következőre mutat
 void remove_monster(struct Monster *monster);
 
+// a láthatatlan-látás bekapcsolásakor (invis_on): a látható láthatatlan szörnyek kirajzolódnak; hallucinálva nem
+void show_invisible_monsters(void);
+
+// a láthatatlan-látás kikapcsolásakor (unsee): a játékos látókörében álló láthatatlan szörnyek helyére az alattuk lévő jel kerül
+void hide_invisible_monsters(void);
+
 // a game.dungeon_level mélységhez illő típus ('A'..'Z'), a kezdő vagy a vándorló sorrendből
 uint8_t choose_monster_type(bool wandering);
 
