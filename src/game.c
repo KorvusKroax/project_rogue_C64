@@ -534,13 +534,13 @@ void waste_time(void)
     run_after_phase();
 }
 
-// egy kör: a BEFORE fázis, a játékos akciói, az AFTER fázis
+// egy kör: a BEFORE fázis, a játékos akciói (gyorsítva kettő), az AFTER fázis
 static void play_turn(void)
 {
     run_before_phase();
 
-    // az ingyenes parancs nem fogyaszt akciót
-    uint8_t actions = 1;
+    // a kör elején dől el: a kör közben megivott gyorsítás a következő körtől hat (J14); az ingyenes parancs nem fogyaszt akciót
+    uint8_t actions = game.timers[TIMER_HASTE] > 0 ? 2 : 1;
     while (actions) {
         look_around();
         // futás és ismétlés közben jump_to_run_end mellett a képernyő csak a végén frissül; az f-harc minden köre kirajzolódik
