@@ -78,7 +78,7 @@ uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y);
 
 // a játékos meglátja (look_around), vagy belép a szobájába, illetve kilép onnan (enter_room, leave_room):
 // az alvó aljas szörny 2/3 eséllyel felébred (a lebegő játékosra nem), a kapzsi mindig, és a játékos szobájának aranyára megy; a többit csak
-// a start_monster_running indítja el
+// a start_monster_running indítja el; az ébren lévő Medusa pillantása egyszer, mentődobás ellenében megzavarhatja a játékost
 void wake_monster(struct Monster *monster);
 
 // a szörny mindenképp felébred és üldöz (runto), a fogva tartás (MONSTER_HELD) is megszűnik: pl. ha a játékos megtámadja;

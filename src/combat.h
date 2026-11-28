@@ -17,6 +17,9 @@
 #define POISON_SAVE_TARGET  14                  // a mérgezés elleni mentődobás célja (default: 14)
 #define MAGIC_SAVE_TARGET   17                  // a mágia elleni mentődobás célja (default: 17)
 
+// a mágia elleni mentődobás (save_magic): igaz, ha a játékos ellenáll; magasabb szinten könnyebb
+bool roll_magic_save(void);
+
 // a nem cselekvő védőt (alvó szörnyet, cselekvésképtelen játékost) ennyivel könnyebb eltalálni
 #define INACTIVE_DEFENDER_HIT_BONUS  4          // (default: 4)
 

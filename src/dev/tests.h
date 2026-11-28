@@ -42,6 +42,7 @@ int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
 int test_tile_visibility(uint16_t i);           // a mező látszik-e (cansee): világos szobában az egész szoba, sötétben és folyosón a szomszédos, folyosón átlósan sarkon át nem
 int test_monster_waking(uint16_t i);
+int test_medusa_gaze(uint16_t i);               // a Medusa pillantása egyszeri esély, a sikeres mentődobás után sem próbálkozik újra; világos szobában messziről, sötétben és folyosón csak a szomszédból; vakon, hallucinálva és kikapcsolva nem; a nem látott neve "something"
 int test_monster_chase(uint16_t i);
 int test_monster_destination(uint16_t i);       // a célpont: a szoba tárgya, ha a játékos nincs a szobában és nem látja a szörnyet; a carry 0 típusé és a foglalt tárgy nem; J3
 int test_greedy_monster(uint16_t i);            // az ébredő ork a szoba aranyára megy, ráül, nem veszi fel; ha a játékos felveszi, őt üldözi; más szörny felveheti, és a jelző törlődik; tárgy célpontnál arany nélküli szobában a játékos a célpont

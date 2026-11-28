@@ -1,5 +1,6 @@
 #include "monsters.h"
 
+#include <stddef.h>
 #include <string.h>
 
 #include "combat.h"
@@ -7,13 +8,20 @@
 #include "items.h"
 #include "level.h"
 #include "map.h"
+#include "message.h"
+#include "num.h"
+#include "potions.h"
 #include "rng.h"
 #include "rooms.h"
+#include "texts.h"
+#include "timers.h"
 #include "view.h"
 
 // nem időkritikus kód: méretre fordítva, itt a hely fontosabb a sebességnél
 #pragma optimize(push)
 #pragma optimize(size)
+
+#define MEDUSA_GAZE_DISTANCE_SQUARED  3         // sötétben ennél közelebbről, azaz a szomszédos mezőről néz (LAMPDIST, default: 3)
 
 const struct MonsterType monster_types[MONSTER_TYPE_COUNT] = {
     //      carry  flags                           level armor  exp  segments
@@ -195,6 +203,27 @@ uint8_t generate_monster(bool wandering, uint8_t x, uint8_t y)
     return create_monster(choose_monster_type(wandering), x, y);
 }
 
+// a Medusa pillantása: az ébren lévő, ki nem kapcsolt Medusáé, ha a játékos nem vak és nem hallucinál, és a játékos szobája világos,
+// vagy a Medusa mellette áll; egyetlen esély: a mentődobás előtt elsül, így a sikeres mentődobás után sem próbálkozik újra;
+// a sikertelennél a zavarodottság ideje spread(20)-szal nő
+static void try_medusa_gaze(struct Monster *monster)
+{
+    if (monster->type != 'M') return;
+    if ((monster->flags & (MONSTER_RUNNING | MONSTER_CANCELLED | MONSTER_ABILITY_USED)) != MONSTER_RUNNING) return;
+    if (game.timers[TIMER_BLINDNESS] > 0 || game.timers[TIMER_HALLUCINATION] > 0) return;
+
+    // a folyosórendszer sötét, és a labirintus mezőin is az a játékos szobája
+    bool is_player_room_lit = !(game.rooms[game.player.room].flags & ROOM_DARK);
+    if (!is_player_room_lit &&
+        calculate_distance_squared(monster->x, monster->y, game.player.x, game.player.y) >= MEDUSA_GAZE_DISTANCE_SQUARED) return;
+
+    monster->flags |= MONSTER_ABILITY_USED;
+    if (roll_magic_save()) return;
+
+    extend_timer(TIMER_CONFUSION, CONFUSION_DURATION);
+    message_format(text_medusa_gaze, prepare_monster_name(monster), NULL, 0);
+}
+
 void wake_monster(struct Monster *monster)
 {
     // lebegve az aljas szörny nem ébred; ide jön: lopakodás-gyűrűvel (R_STEALTH) sem
@@ -204,7 +233,7 @@ void wake_monster(struct Monster *monster)
         monster->flags |= MONSTER_RUNNING;
     }
 
-    // ide jön: a már ébren lévő Medusa pillantása (ISFOUND)
+    try_medusa_gaze(monster);
 
     // a kapzsi szörnyet nem véletlen ébreszti, és a fogva tartás (MONSTER_HELD) sem tartja vissza; a célpontja a játékos szobájának
     // aranya, ha ott fekszik, különben a játékos

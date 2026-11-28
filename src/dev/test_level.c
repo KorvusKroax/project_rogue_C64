@@ -1005,6 +1005,9 @@ int test_level_monster_moves(uint16_t i)
 
     game.seed = LEVEL_TEST_FIRST_SEED + i;
     game.dungeon_level = level_test_depths[depth_index];
+    // a szintek függetlenek: az előző szint hatása (pl. a Medusa pillantásától a zavarodottság) nem öröklődik, mert az időzítők itt
+    // nem ketyegnek
+    memset(game.timers, 0, sizeof(game.timers));
     clear_seen_map();
     generate_level();
     // mint a new_level: a kezdőszoba és a look_around kezdőpontja; hogy melyik szörny van ébren, azt lent a teszt dönti el

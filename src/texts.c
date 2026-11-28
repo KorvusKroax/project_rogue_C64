@@ -19,6 +19,7 @@ const char text_which_direction[] = "which direction?";
 const char text_no_monster_there[] = "I see no monster there";
 const char text_being_held[] = "you are being held";
 const char text_xeroc_revealed[] = "wait! That's a xeroc!";
+const char text_medusa_gaze[] = "\1's gaze has confused you";
 const char text_found_gold[] = "you found \3 gold pieces";
 const char text_you_now_have[] = "you now have \1 (\2)";
 const char text_no_room_in_pack[] = "there's no room in your pack";

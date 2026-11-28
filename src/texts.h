@@ -27,6 +27,7 @@ extern const char text_which_direction[];
 extern const char text_no_monster_there[];
 extern const char text_being_held[];
 extern const char text_xeroc_revealed[];
+extern const char text_medusa_gaze[];               // \1: a szörny neve
 extern const char text_found_gold[];                // \3: a mennyiség
 extern const char text_you_now_have[];              // \1: a tárgy neve, \2: a betűje
 extern const char text_no_room_in_pack[];

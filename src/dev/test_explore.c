@@ -5,6 +5,7 @@
 
 #include "../explore.h"
 #include "../map.h"
+#include "../message.h"
 #include "../monsters.h"
 #include "../move.h"
 #include "../state.h"
@@ -537,6 +538,133 @@ int test_monster_waking(uint16_t i)
         is_passage_entry_waking_valid() &&
         is_forced_waking_valid();
 
+    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
+    clear_monsters();
+    clear_map();
+    clear_seen_map();
+    return ok;
+}
+
+#define GAZE_TEST_SEED      1
+#define GAZE_TEST_TRIALS    40                  // ennyi Medusa néz a játékosra; a mentődobás az 1. szinten 4/20 eséllyel sikerül
+#define GAZE_TEST_REPEATS   20                  // az elsütött pillantás után ennyi újabb ébresztés sem próbálkozik
+#define GAZE_TEST_TIMER_TURNS  1000             // a vakság és a hallucináció ideje a tesztben
+
+// ébren lévő Medusa a tesztszoba offset_x, offset_y mezőjén; a játékos nem zavarodott, az üzenetsáv üres; a rekord címe a táblából
+// jön, nem egy hívás eredményéből (README, Oscar64-hibák, 8.)
+static struct Monster *put_gaze_test_medusa(uint8_t room_flags, uint8_t offset_x, uint8_t offset_y)
+{
+    put_see_test_room(room_flags);
+    put_see_test_monster('M', offset_x, offset_y);
+    struct Monster *medusa = &game.monsters[game.monster_count - 1];
+    medusa->flags |= MONSTER_RUNNING;
+    game.timers[TIMER_CONFUSION] = 0;
+    message_clear();
+    return medusa;
+}
+
+// a pillantás elsült-e: a jelzője áll, és a játékos zavarodott, a text üzenettel, vagy (sikeres mentődobásnál) nem zavarodott,
+// üzenet nélkül; után GAZE_TEST_REPEATS újabb ébresztés sem változtat a zavarodottságon; a zavarodottat a confused_count számolja
+static bool is_gaze_fired(struct Monster *medusa, const char *text, uint8_t *confused_count)
+{
+    wake_monster(medusa);
+    if (!(medusa->flags & MONSTER_ABILITY_USED)) return false;
+
+    uint16_t confusion = game.timers[TIMER_CONFUSION];
+    bool ok = confusion > 0 ? is_message_bar_text(text) : is_message_bar_empty();
+    if (confusion > 0) {
+        (*confused_count)++;
+    }
+    for (uint8_t repeat = 0; repeat < GAZE_TEST_REPEATS; repeat++) {
+        wake_monster(medusa);
+    }
+    return ok && game.timers[TIMER_CONFUSION] == confusion;
+}
+
+// a pillantás nem sül el: GAZE_TEST_REPEATS ébresztés után sincs jelzője, és a játékos nem zavarodott
+static bool is_gaze_held_back(struct Monster *medusa)
+{
+    for (uint8_t repeat = 0; repeat < GAZE_TEST_REPEATS; repeat++) {
+        wake_monster(medusa);
+    }
+    return !(medusa->flags & MONSTER_ABILITY_USED) && game.timers[TIMER_CONFUSION] == 0;
+}
+
+// világos szobában a távoli Medusa is néz, egyszer: a mentődobás többnyire nem sikerül, de néha igen, és utána sem próbálkozik újra
+static bool is_lit_room_gaze_valid(void)
+{
+    game.seed = GAZE_TEST_SEED;
+    uint8_t confused_count = 0;
+    for (uint8_t trial = 0; trial < GAZE_TEST_TRIALS; trial++) {
+        struct Monster *medusa = put_gaze_test_medusa(0, 6, 2);
+        if (!is_gaze_fired(medusa, "The medusa's gaze has confused you.", &confused_count)) return false;
+    }
+    return confused_count > 0 && confused_count < GAZE_TEST_TRIALS;
+}
+
+// sötét szobában és folyosón csak a szomszédos Medusa néz; a nem látott Medusa neve "something"
+static bool is_dark_gaze_valid(void)
+{
+    uint8_t confused_count = 0;
+
+    // sötét szoba: a távoli nem, a szomszédos igen
+    struct Monster *medusa = put_gaze_test_medusa(ROOM_DARK, 6, 2);
+    if (!is_gaze_held_back(medusa)) return false;
+    medusa = put_gaze_test_medusa(ROOM_DARK, 2, 3);
+    if (!is_gaze_fired(medusa, "The medusa's gaze has confused you.", &confused_count)) return false;
+
+    // folyosón a világos szoba Medusája csak az ajtóban, a játékos mellett néz
+    medusa = put_gaze_test_medusa(0, 6, 2);
+    game.player.x = BASE_X - 1;
+    game.player.y = BASE_Y + SEE_DOOR_Y;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
+    if (!is_gaze_held_back(medusa)) return false;
+
+    medusa = put_gaze_test_medusa(0, 0, SEE_DOOR_Y);
+    game.player.x = BASE_X - 1;
+    game.player.y = BASE_Y + SEE_DOOR_Y;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
+    if (!is_gaze_fired(medusa, "The medusa's gaze has confused you.", &confused_count)) return false;
+
+    // a világos szobából a sötét folyosó Medusája nem látszik, de néz; addig próbálja, amíg a pillantás meg nem zavarja a játékost
+    uint8_t unseen_confused_count = 0;
+    for (uint8_t trial = 0; trial < GAZE_TEST_TRIALS && unseen_confused_count == 0; trial++) {
+        medusa = put_gaze_test_medusa(0, (uint8_t)-1, SEE_DOOR_Y);
+        if (!is_gaze_fired(medusa, "Something's gaze has confused you.", &unseen_confused_count)) return false;
+    }
+    return unseen_confused_count > 0;
+}
+
+// vakon, hallucinálva és kikapcsolva a Medusa nem néz
+static bool is_gaze_prevented_valid(void)
+{
+    struct Monster *medusa = put_gaze_test_medusa(0, 6, 2);
+    game.timers[TIMER_BLINDNESS] = GAZE_TEST_TIMER_TURNS;
+    bool ok = is_gaze_held_back(medusa);
+    game.timers[TIMER_BLINDNESS] = 0;
+
+    medusa = put_gaze_test_medusa(0, 6, 2);
+    game.timers[TIMER_HALLUCINATION] = GAZE_TEST_TIMER_TURNS;
+    ok = ok && is_gaze_held_back(medusa);
+    game.timers[TIMER_HALLUCINATION] = 0;
+
+    medusa = put_gaze_test_medusa(0, 6, 2);
+    medusa->flags |= MONSTER_CANCELLED;
+    return ok && is_gaze_held_back(medusa);
+}
+
+int test_medusa_gaze(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_lit_room_gaze_valid() &&
+        is_dark_gaze_valid() &&
+        is_gaze_prevented_valid();
+
+    game.timers[TIMER_CONFUSION] = 0;
+    message_clear();
     memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
     clear_monsters();
     clear_map();

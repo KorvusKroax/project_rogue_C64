@@ -216,8 +216,7 @@ static void drop_monster_pack(struct Monster *monster)
     }
 }
 
-// a mágia elleni mentődobás (save_magic): igaz, ha a játékos ellenáll; magasabb szinten könnyebb
-static bool roll_magic_save(void)
+bool roll_magic_save(void)
 {
     // ide jön: a protection gyűrűk módja is könnyít
     return (int16_t)rnd(SAVING_THROW_SIDES) + 1 >= MAGIC_SAVE_TARGET - game.player.experience_level / 2;
