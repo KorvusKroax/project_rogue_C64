@@ -86,6 +86,12 @@ extern const char text_armor_weaker[];
 extern const char text_rust_vanishes[];
 extern const char text_purse_lighter[];
 extern const char text_she_stole[];
+// a bájitalok időzítőinek lejárata (timers.c)
+extern const char text_less_confused[];
+extern const char text_looks_boring[];
+extern const char text_darkness_lifts[];
+extern const char text_float_to_ground[];
+extern const char text_slowing_down[];
 extern const char text_killed_by[];                 // ideiglenes, a játék végéig (M10-01); \1: névelő ("the " vagy üres), \2: a halál oka
 extern const char *const text_death_causes[DEATH_CAUSE_COUNT];     // a nem szörny okozta halál okai, a DEATH_CAUSE_ kódok sorrendjében
 extern const char *const text_monster_names[MONSTER_TYPE_COUNT];   // a szörnytípusok neve, a betűjük sorrendjében ('A'..'Z')

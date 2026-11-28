@@ -24,6 +24,7 @@
 #include "state.h"
 #include "status.h"
 #include "texts.h"
+#include "timers.h"
 
 #ifdef DEVMODE
     #include "dev/dev.h"
@@ -503,6 +504,7 @@ static void run_after_phase(void)
 {
     move_monsters();
     // ide jön: az éhség; az állapotváltása (Hungry, Weak, Faint) a futást, az ismétlést és az f-harcot is megszakítja
+    tick_timers();
 }
 
 void waste_time(void)

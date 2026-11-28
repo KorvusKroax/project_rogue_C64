@@ -89,15 +89,16 @@ GameState {
   flytrap_grip           // a Venus flytrap szorítása (eredetileg vf_hit): a flytrap mellé ütése ennyit sebez; > 0, amíg a játékos fogva van (6.7, J4)
   has_amulet             // nem tárolt: igaz, ha az amulett a játékos csomagjában van (8.10, J29)
   str_max                // a játékos legnagyobb elért ereje gyűrűk nélkül; a státuszsoron "Str:cur(max)" (5.6)
-  timers: {              // hátralévő körök az egyes hatásokból (4.1.1)
+  turns_unable_to_act    // alvás/ájulás/fagyás: ennyi körig nem cselekedhet a játékos (eredetileg no_command); akciónként fogy (4.1)
+  bear_trap              // ennyi körig nem léphet el a medvecsapdából (9.1); lépésenként fogy
+  timers: {              // a bájitalok időzítői: hátralévő körök, a hatás addig tart, amíg nem 0; az AFTER fázisban ketyegnek,
+                         // és ha egy körben több is lejár, ebben a sorrendben érnek véget (4.1.1)
     confused             // zavarodottság (ISHUH)
     hallucinating        // hallucináció (ISHALU)
     see_invis            // láthatatlan-látás a bájitaltól (CANSEE, J5)
     blind                // vakság (ISBLIND)
     levitating           // lebegés (ISLEVIT)
     hasted               // gyorsítás (ISHASTE)
-    turns_unable_to_act  // alvás/ájulás/fagyás: ennyi körig nem cselekedhet a játékos (eredetileg no_command)
-    bear_trap            // ennyi körig nem léphet el a medvecsapdából (9.1)
     monster_detect       // szörnyérzékelés (SEEMONST)
   }
   wander_timer           // időzítő a vándorló szörny démon indulásáig (6.2)

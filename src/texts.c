@@ -79,6 +79,11 @@ const char text_armor_weaker[] = "your armor appears to be weaker now. Oh my!";
 const char text_rust_vanishes[] = "the rust vanishes instantly";
 const char text_purse_lighter[] = "your purse feels lighter";
 const char text_she_stole[] = "she stole \1!";
+const char text_less_confused[] = "you feel less confused now";
+const char text_looks_boring[] = "Everything looks SO boring now.";
+const char text_darkness_lifts[] = "the veil of darkness lifts";
+const char text_float_to_ground[] = "you float gently to the ground";
+const char text_slowing_down[] = "you feel yourself slowing down";
 const char text_killed_by[] = "killed by \1\2";
 
 const char *const text_death_causes[DEATH_CAUSE_COUNT] = { "hypothermia" };

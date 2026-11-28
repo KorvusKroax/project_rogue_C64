@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include "items.h"
 #include "message.h"
@@ -33,6 +34,7 @@ void init_player(void)
     game.player.experience = 0;
     game.turns_unable_to_act = 0;
     game.flytrap_grip = 0;
+    memset(game.timers, 0, sizeof(game.timers));
     game.gold = 0;
 }
 

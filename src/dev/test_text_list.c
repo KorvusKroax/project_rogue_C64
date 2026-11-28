@@ -216,6 +216,27 @@ bool does_message_bar_start_with(const char *text)
     return true;
 }
 
+bool is_message_bar_text(const char *text)
+{
+    uint8_t row = MESSAGE_ROW;
+    while (true) {
+        uint8_t length = SCREEN_WIDTH;
+        while (length > 0 && get_screen_character(length - 1, row) == ' ') {
+            length--;
+        }
+        for (uint8_t x = 0; x < length; x++) {
+            if (get_screen_character(x, row) != *text) return false;
+            text++;
+        }
+        if (!*text) return true;
+
+        // a sortörés szóköze nem látszik
+        if (*text != ' ' || row == MESSAGE_ROW + MESSAGE_ROW_COUNT - 1) return false;
+        text++;
+        row++;
+    }
+}
+
 bool is_message_bar_empty(void)
 {
     for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {

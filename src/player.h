@@ -27,7 +27,7 @@
 
 extern const uint32_t experience_thresholds[EXPERIENCE_THRESHOLD_COUNT];
 
-void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0, él
+void init_player(void);                 // új játékhoz: kezdőértékek, szint 1, tapasztalat és arany 0, él, nincs időzített hatás
 
 // a halál oka: a szörny típusa ('A'..'Z'), vagy ha nem szörny okozta, egy DEATH_CAUSE_ kód (a text_death_causes indexe)
 #define DEATH_CAUSE_HYPOTHERMIA  0              // fagyás (az Ice monster túl sokszor fagyasztott)

@@ -178,6 +178,16 @@ struct Exit {
     uint8_t passage_number;                     // a folyosórendszer sorszáma, amelyhez az ajtó csatlakozik, vagy NO_PASSAGE_NUMBER
 };
 
+// a bájitalok időzítői (4.1.1): a GameState.timers indexei; ha egy körben több is lejár, ebben a sorrendben érnek véget
+#define TIMER_CONFUSION          0              // zavarodottság (ISHUH)
+#define TIMER_HALLUCINATION      1              // hallucináció (ISHALU)
+#define TIMER_SEE_INVISIBLE      2              // láthatatlan-látás a bájitaltól, a CANSEE egyik forrása (J5)
+#define TIMER_BLINDNESS          3              // vakság (ISBLIND)
+#define TIMER_LEVITATION         4              // lebegés (ISLEVIT)
+#define TIMER_HASTE              5              // gyorsítás (ISHASTE)
+#define TIMER_MONSTER_DETECTION  6              // szörnyérzékelés (SEEMONST)
+#define TIMER_COUNT              7
+
 // a játékállapot-blokk: a mentés és a betöltés egyben írja és olvassa (kezdőcím: &game, méret: sizeof(game))
 // csak ide kerülhet perzisztens adat; mutató nem, csak index
 // a legmélyebb szint, innen nincs lefelé út; a mélység 8 bites, és a kincses szoba szörnyei egy szinttel mélyebb szint szerint jönnek létre
@@ -195,6 +205,7 @@ struct GameState {
     uint8_t  hunger_state;                      // 0: rendben, 1: Hungry, 2: Weak, 3: Faint
     uint8_t  turns_unable_to_act;               // alvás, ájulás, fagyás: ennyi körig nem cselekedhet a játékos
     uint8_t  flytrap_grip;                      // a Venus flytrap szorítása: ennyit sebez a mellé ütése; ha nagyobb 0-nál, a játékos fogva van
+    uint16_t timers[TIMER_COUNT];               // a bájitalok időzítői (TIMER_): hátralévő körök; a hatás pontosan addig tart, amíg nem 0
 
     // a tárgytípusok ismerete és álneve (item_names.h); az álnév egy lista indexe (texts.h)
     uint8_t  potion_knowledge[POTION_SUBTYPE_COUNT];    // altípusonként SUBTYPE_UNKNOWN, a játékos adta név indexe vagy SUBTYPE_IDENTIFIED (know)

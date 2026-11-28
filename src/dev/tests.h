@@ -111,6 +111,7 @@ int test_take_off_armor(uint16_t i);            // a `T`: páncél nélkül nem 
 int test_starting_equipment(uint16_t i);        // az i. seeddel: a kezdő csomag betűi és sorrendje, a típusok, a bónuszok, az azonosítás, a nyilak száma; a páncél viselve, a buzogány kézben
 int test_report_items_in_use(uint16_t i);       // a `)` és a `]`: „you are wielding nothing” / „wearing nothing”; különben a betű és a név, utótag nélkül
 int test_drop_item_in_use(uint16_t i);          // a `d` a használt tárggyal: az átkozott marad; a kéz kiürül, egy darabnál is; hely nélkül a köteg a kézben marad; a páncél üres körrel; halálnál elmarad
+int test_timer_expiry(uint16_t i);              // a bájitalok időzítői körönként egyet lépnek, az üres körben is; az egy körben lejárók üzenetei a TIMER_ sorrendben; vakon a hallucináció csendben ér véget; a see invisible és a monster detection vége üzenet nélkül
 
 #define SCROLL_TITLE_TEST_SEED_COUNT  200       // ennyi seeddel indul új játék a tekercsfeliratok tesztjében
 #define STARTING_EQUIPMENT_TEST_SEED_COUNT  100 // ennyi seeddel készül a kezdőfelszerelés a tesztjében (a nyilak száma véletlen)
@@ -123,6 +124,9 @@ uint8_t get_tested_subtype_count(uint8_t type);                     // a típus 
 bool is_item_list(uint8_t list_first, const uint8_t *expected, uint8_t count);  // a lista elemei sorban éppen az expected első count eleme, utána vége (test_items.c)
 bool does_message_bar_start_with(const char *text);     // az üzenetsáv első sora ezzel a szöveggel kezdődik (test_text_list.c)
 bool is_message_bar_empty(void);                        // az üzenetsáv első sora üres (test_text_list.c)
+// az üzenetsáv sorai a záró szóközök nélkül, a sortörésnél szóközzel összefűzve éppen ez a szöveg; a sor, amelyben véget ér, utána üres,
+// a következő sorokat nem nézi (test_text_list.c)
+bool is_message_bar_text(const char *text);
 
 // szint-önteszt: hosszú, VICE-ben warp módban
 #define LEVEL_TEST_LEVEL_COUNT  1000            // ennyi véletlen szint, rögzített magokkal
