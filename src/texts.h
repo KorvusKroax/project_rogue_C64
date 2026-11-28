@@ -88,28 +88,35 @@ extern const char text_armor_weaker[];
 extern const char text_rust_vanishes[];
 extern const char text_purse_lighter[];
 extern const char text_she_stole[];
-// a bájitalok időzítőinek lejárata (timers.c)
+// a bájitalok időzítőinek lejárata (timers.c); utánuk a confusion, a vakság és a lebegés végének hallucinált változata
 extern const char text_less_confused[];
 extern const char text_looks_boring[];
 extern const char text_darkness_lifts[];
 extern const char text_float_to_ground[];
 extern const char text_slowing_down[];
-// a bájitalok hatásai (potions.c)
+extern const char text_less_trippy[];
+extern const char text_cosmic_again[];
+extern const char text_hit_the_ground[];
+// a bájitalok hatásai (potions.c); a hallucinált változat a normál után
 extern const char text_huh_what_who[];
+extern const char text_trippy_feeling[];
 extern const char text_seems_cosmic[];
 extern const char text_very_sick[];
 extern const char text_feel_stronger[];
 extern const char text_tastes_like_juice[];         // \1: a gyümölcs neve
 extern const char text_feel_better[];
-extern const char text_passing_feeling[];           // \1: az érzés szava (text_strange)
+extern const char text_passing_feeling[];           // \1: az érzés szava (text_strange, hallucinálva text_normal)
 extern const char text_strange[];
+extern const char text_normal[];
 extern const char text_more_skillful[];
 extern const char text_feel_much_better[];
 extern const char text_moving_faster[];
 extern const char text_faint_from_exhaustion[];
 extern const char text_feel_warm[];
 extern const char text_cloak_of_darkness[];
+extern const char text_everything_dark[];
 extern const char text_start_to_float[];
+extern const char text_floating_wow[];
 extern const char text_killed_by[];                 // ideiglenes, a játék végéig (M10-01); \1: névelő ("the " vagy üres), \2: a halál oka
 extern const char *const text_death_causes[DEATH_CAUSE_COUNT];     // a nem szörny okozta halál okai, a DEATH_CAUSE_ kódok sorrendjében
 extern const char *const text_monster_names[MONSTER_TYPE_COUNT];   // a szörnytípusok neve, a betűjük sorrendjében ('A'..'Z')

@@ -109,13 +109,19 @@ static void haste_player(void)
     message(text_faint_from_exhaustion);
 }
 
-// a bájital hatása (8.2); ide jön: hallucinálva az üzenetek hallucinált változata
+// a „strange feeling” üzenete (monster detection, magic detection, ha nincs mit mutatni); hallucinálva „normal feeling”
+static void report_passing_feeling(void)
+{
+    message_format(text_passing_feeling, choose_hallucinated_text(text_strange, text_normal), NULL, 0);
+}
+
+// a bájital hatása (8.2)
 static void apply_potion_effect(uint8_t which)
 {
     switch (which) {
         case POTION_CONFUSION:
             extend_timer(TIMER_CONFUSION, CONFUSION_DURATION);
-            message(text_huh_what_who);
+            message(choose_hallucinated_text(text_huh_what_who, text_trippy_feeling));
             break;
         case POTION_HALLUCINATION:
             // ide jön: ha eddig nem hallucinált, a szörnyérzékelés jeleinek és a hallucinációnak a kirajzolása
@@ -149,7 +155,7 @@ static void apply_potion_effect(uint8_t which)
                 game.timers[TIMER_MONSTER_DETECTION] = MONSTER_DETECTION_DURATION;
             }
             if (!has_unseen_monster()) {
-                message_format(text_passing_feeling, text_strange, NULL, 0);
+                report_passing_feeling();
             }
             break;
         case POTION_MAGIC_DETECTION:
@@ -157,7 +163,7 @@ static void apply_potion_effect(uint8_t which)
                 // ide jön: a mágia-képernyő a padló és a szörnyek csomagjainak mágikus tárgyaival, „You sense the presence of magic on this level”
                 identify_item_type(ITEM_TYPE_POTION, POTION_MAGIC_DETECTION);
             } else {
-                message_format(text_passing_feeling, text_strange, NULL, 0);
+                report_passing_feeling();
             }
             break;
         case POTION_RAISE_LEVEL:
@@ -183,11 +189,11 @@ static void apply_potion_effect(uint8_t which)
         case POTION_BLINDNESS:
             // ide jön: a kijelzés frissítése
             extend_timer(TIMER_BLINDNESS, BLINDNESS_DURATION);
-            message(text_cloak_of_darkness);
+            message(choose_hallucinated_text(text_cloak_of_darkness, text_everything_dark));
             break;
         case POTION_LEVITATION:
             extend_timer(TIMER_LEVITATION, LEVITATION_DURATION);
-            message(text_start_to_float);
+            message(choose_hallucinated_text(text_start_to_float, text_floating_wow));
             break;
     }
 }

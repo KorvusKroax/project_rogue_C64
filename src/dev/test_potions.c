@@ -154,6 +154,15 @@ static const struct PotionMessageTestCase potion_message_test_cases[] = {
     { POTION_RESTORE_STRENGTH, 0, 0, "Hey, this tastes great. It makes you feel warm all over." },
     { POTION_BLINDNESS, 0, 0, "A cloak of darkness falls around you." },
     { POTION_LEVITATION, 0, 0, "You start to float in the air." },
+    { POTION_MAGIC_DETECTION, 0, 0, "You have a strange feeling for a moment, then it passes." },
+
+    // hallucinálva a hallucinált változatok
+    { POTION_CONFUSION, HALLUCINATION_BIT, 0, "What a trippy feeling!" },
+    { POTION_MONSTER_DETECTION, HALLUCINATION_BIT, 0, "You have a normal feeling for a moment, then it passes." },
+    { POTION_MAGIC_DETECTION, HALLUCINATION_BIT, 0, "You have a normal feeling for a moment, then it passes." },
+    { POTION_BLINDNESS, HALLUCINATION_BIT, 0, "Oh, bummer! Everything is dark! Help!" },
+    { POTION_LEVITATION, HALLUCINATION_BIT, 0, "Oh, wow! You're floating in the air!" },
+    { POTION_HEALING, HALLUCINATION_BIT | BLINDNESS_BIT, BLINDNESS_BIT, "Far out! Everything is all cosmic again. You begin to feel better." },
 };
 
 // a próba futó időzítői az ivás után: a véget érők 0-k, a többi változatlan

@@ -19,8 +19,8 @@ struct TimerTestCase {
 };
 
 static const struct TimerTestCase timer_test_cases[] = {
-    // az egy körben lejárók üzenetei a TIMER_ sorrendben jönnek
-    { TIMER_CONFUSION, 1, TIMER_HALLUCINATION, 1, "You feel less confused now. Everything looks SO boring now." },
+    // az egy körben lejárók üzenetei a TIMER_ sorrendben jönnek; a confusion végén a hallucináció még fut
+    { TIMER_CONFUSION, 1, TIMER_HALLUCINATION, 1, "You feel less trippy now. Everything looks SO boring now." },
     { TIMER_CONFUSION, 1, TIMER_BLINDNESS, 1, "You feel less confused now. The veil of darkness lifts." },
     { TIMER_HALLUCINATION, 1, TIMER_LEVITATION, 1, "Everything looks SO boring now. You float gently to the ground." },
     { TIMER_BLINDNESS, 1, TIMER_LEVITATION, 1, "The veil of darkness lifts. You float gently to the ground." },
@@ -29,6 +29,12 @@ static const struct TimerTestCase timer_test_cases[] = {
     // vakon a hallucináció üzenet nélkül ér véget, akkor is, ha a vakság ugyanabban a körben jár le
     { TIMER_HALLUCINATION, 1, TIMER_BLINDNESS, 1, "The veil of darkness lifts." },
     { TIMER_HALLUCINATION, 1, TIMER_BLINDNESS, 2, "" },
+
+    // hallucinálva a confusion, a vakság és a lebegés vége a hallucinált szöveggel jön, a gyorsításé ugyanaz
+    { TIMER_CONFUSION, 1, TIMER_HALLUCINATION, 2, "You feel less trippy now." },
+    { TIMER_BLINDNESS, 1, TIMER_HALLUCINATION, 2, "Far out! Everything is all cosmic again." },
+    { TIMER_LEVITATION, 1, TIMER_HALLUCINATION, 2, "Bummer! You've hit the ground." },
+    { TIMER_HASTE, 1, TIMER_HALLUCINATION, 2, "You feel yourself slowing down." },
 
     // a see invisible és a monster detection vége nem ad üzenetet
     { TIMER_SEE_INVISIBLE, 1, TIMER_MONSTER_DETECTION, 1, "" },
