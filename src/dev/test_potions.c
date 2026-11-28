@@ -95,11 +95,12 @@ int test_quaff_item(uint16_t i)
     ok = ok && is_item_in_pack(potion) && get_item(potion)->count == QUAFF_TEST_STACK_COUNT - 1 && game.wielded_item == NO_ITEM;
     ok = ok && game.item_count == item_count;
 
-    // az utolsó darab után a tárgy kikerül a csomagból, és a rekordja felszabadul
+    // az utolsó darab után a tárgy kikerül a csomagból, és a rekordja felszabadul; a kézben tartott utolsó darab után is üres a kéz
+    game.wielded_item = potion;
     for (uint8_t count = 1; count < QUAFF_TEST_STACK_COUNT; count++) {
         quaff_potion(potion);
     }
-    ok = ok && !is_item_in_pack(potion) && game.item_count == item_count - 1;
+    ok = ok && !is_item_in_pack(potion) && game.item_count == item_count - 1 && game.wielded_item == NO_ITEM;
 
     clear_potion_scene();
     return ok;
