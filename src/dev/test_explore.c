@@ -9,6 +9,7 @@
 #include "../monsters.h"
 #include "../move.h"
 #include "../state.h"
+#include "../timers.h"
 #include "../view.h"
 
 // az esetek a térkép közepén, a BASE_X, BASE_Y mezőtől jobbra lefelé épülnek
@@ -245,6 +246,75 @@ int test_passage_turn(uint16_t i)
     return true;
 }
 
+static bool is_test_player_at(uint8_t offset_x, uint8_t offset_y)
+{
+    return game.player.x == BASE_X + offset_x && game.player.y == BASE_Y + offset_y;
+}
+
+// a vakon indított óvatos futás végig sima futás: az ajtó mellett sem áll meg, akkor sem, ha közben visszatér a látás; látva ugyanez
+// a futás az első ajtónál megáll
+static bool is_blind_careful_run_valid(void)
+{
+    put_test_floor();
+    put_test_tile(2, 1, CHAR_DOOR);
+    put_test_tile(3, 3, CHAR_DOOR);
+    game.player.x = BASE_X;
+    game.player.y = BASE_Y + 2;
+
+    // a vakság a próba alatt nem jár le: az időzítők itt nem ketyegnek
+    game.timers[TIMER_BLINDNESS] = 1;
+    start_running(1, 0, true);
+    bool ok = take_run_step() && take_run_step() && is_running();
+    game.timers[TIMER_BLINDNESS] = 0;
+    ok = ok && take_run_step() && is_running() && is_test_player_at(3, 2);
+    stop_running();
+
+    game.player.x = BASE_X;
+    start_running(1, 0, true);
+    return ok && take_run_step() && take_run_step() && !is_running() && is_test_player_at(2, 2);
+}
+
+// vakon a futás a kanyarban nem fordul be, hanem megáll; látva befordul
+static bool is_blind_passage_turn_valid(void)
+{
+    clear_map();
+    put_test_passage(0, 2);
+    put_test_passage(1, 2);
+    put_test_passage(2, 2);
+    put_test_passage(2, 1);
+    game.player.x = BASE_X + 1;
+    game.player.y = BASE_Y + 2;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
+
+    game.timers[TIMER_BLINDNESS] = 1;
+    start_running(1, 0, false);
+    bool ok = take_run_step() && !take_run_step() && !is_running() && is_test_player_at(2, 2);
+    game.timers[TIMER_BLINDNESS] = 0;
+
+    game.player.x = BASE_X + 1;
+    start_running(1, 0, false);
+    ok = ok && take_run_step() && take_run_step() && is_test_player_at(2, 1);
+    stop_running();
+    return ok;
+}
+
+int test_blind_run(uint16_t i)
+{
+    clear_monsters();
+    uint8_t saved_option_flags = options.flags;
+    options.flags = OPTION_FOLLOW_PASSAGES;
+
+    bool ok =
+        is_blind_careful_run_valid() &&
+        is_blind_passage_turn_valid();
+
+    stop_running();
+    game.timers[TIMER_BLINDNESS] = 0;
+    options.flags = saved_option_flags;
+    clear_map();
+    return ok;
+}
+
 // a tesztszoba: a 0. szoba a BASE_X, BASE_Y sarokkal, falakkal együtt 9 × 5; a bal falán, a 2. sorban ajtó, előtte folyosó-mező
 #define SEE_ROOM_WIDTH   9
 #define SEE_ROOM_HEIGHT  5
@@ -406,6 +476,83 @@ int test_tile_visibility(uint16_t i)
     put_test_passage(1, 6);
     ok = ok && is_test_tile_visible(1, 6) && is_test_tile_visible(1, 7);
 
+    memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
+    clear_monsters();
+    clear_map();
+    clear_seen_map();
+    return ok;
+}
+
+// a vakság a próbák alatt nem jár le: az időzítők itt nem ketyegnek
+#define BLIND_TEST_TURNS  1
+
+// vakon a világos szobába lépve sem a szoba, sem a szörnyei nem rajzolódnak ki, de a szörnyek felébredhetnek; a látás visszatértekor
+// a szoba a szörnyekkel kirajzolódik, „the veil of darkness lifts”
+static bool is_blind_room_entry_valid(void)
+{
+    put_see_test_room(0);
+    struct Monster *bat = put_see_test_monster('B', 6, 2);
+    struct Monster *orc = put_see_test_monster('O', 6, 3);
+    game.timers[TIMER_BLINDNESS] = BLIND_TEST_TURNS;
+    message_clear();
+
+    if (is_monster_visible(bat) || is_test_tile_visible(3, 2)) return false;
+    enter_room(game.player.x, game.player.y);
+    if (get_test_seen_character(6, 2) != CHAR_SOLID_ROCK || get_test_seen_character(3, 2) != CHAR_SOLID_ROCK) return false;
+    if (!(orc->flags & MONSTER_RUNNING)) return false;
+
+    end_timer_early(TIMER_BLINDNESS);
+    return get_test_seen_character(6, 2) == 'B' && get_test_seen_character(6, 3) == 'O' && get_test_seen_character(3, 2) == CHAR_FLOOR
+        && is_message_bar_text("The veil of darkness lifts.");
+}
+
+// vakon a sötét szobában a look_around csak a játékos jelét rajzolja, a szomszédos szörnyét nem, de a szörny felébredhet; a lámpafény
+// nem törlődik; kilépéskor a padló marad, és a képernyőn látott szörnyjel helyére padló kerül
+static bool is_blind_dark_room_valid(void)
+{
+    put_see_test_room(ROOM_DARK);
+    forget_previous_position();
+    look_around();
+    game.timers[TIMER_BLINDNESS] = BLIND_TEST_TURNS;
+
+    struct Monster *orc = put_see_test_monster('O', 4, 2);
+    game.player.x++;
+    look_around();
+    if (get_test_seen_character(1, 1) != CHAR_FLOOR) return false;
+    if (get_test_seen_character(4, 2) != CHAR_SOLID_ROCK || get_test_seen_character(3, 2) != CHAR_PLAYER) return false;
+    if (!(orc->flags & MONSTER_RUNNING)) return false;
+
+    draw_tile(BASE_X + 5, BASE_Y + 2, 'E');
+    game.player.x = BASE_X;
+    leave_room(BASE_X - 1, BASE_Y + SEE_DOOR_Y);
+    return get_test_seen_character(1, 1) == CHAR_FLOOR && get_test_seen_character(5, 2) == CHAR_FLOOR;
+}
+
+// a látás visszatértekor a folyosón nincs mit kirajzolni
+static bool is_blind_passage_sight_valid(void)
+{
+    put_see_test_room(0);
+    game.player.x = BASE_X - 1;
+    game.player.y = BASE_Y + SEE_DOOR_Y;
+    game.player.room = PASSAGE_ROOM_INDEX(TEST_PASSAGE_NUMBER);
+    game.timers[TIMER_BLINDNESS] = BLIND_TEST_TURNS;
+
+    end_timer_early(TIMER_BLINDNESS);
+    return get_test_seen_character(3, 2) == CHAR_SOLID_ROCK;
+}
+
+int test_blind_view(uint16_t i)
+{
+    struct Room saved_rooms[ROOM_TABLE_SIZE];
+    memcpy(saved_rooms, game.rooms, sizeof(saved_rooms));
+
+    bool ok =
+        is_blind_room_entry_valid() &&
+        is_blind_dark_room_valid() &&
+        is_blind_passage_sight_valid();
+
+    game.timers[TIMER_BLINDNESS] = 0;
+    message_clear();
     memcpy(game.rooms, saved_rooms, sizeof(saved_rooms));
     clear_monsters();
     clear_map();

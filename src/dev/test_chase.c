@@ -169,6 +169,29 @@ static bool is_same_room_chase_valid(void)
     return is_monster_at(zombie, 12, 9);
 }
 
+// vakon a sötét szobában lépő zombi nem rajzolódik ki; az új mezőjének emléke a képernyő jele marad (itt padló, nem törlődik), és ez
+// kerül vissza, amikor továbblép
+static bool is_blind_relocation_valid(void)
+{
+    put_chase_level();
+    game.rooms[0].flags = ROOM_DARK;
+    put_chase_player(11, 9);
+    struct Monster *zombie = put_chase_monster('Z', 20, 9);
+    zombie->character_below = CHAR_FLOOR;
+    draw_tile(CHASE_BASE_X + 19, CHASE_BASE_Y + 9, CHAR_FLOOR);
+    // a vakság a próba alatt nem jár le: itt csak a szörnyek lépnek, az időzítők nem ketyegnek
+    game.timers[TIMER_BLINDNESS] = 1;
+
+    run_monster_turns(1);
+    bool ok = is_monster_at(zombie, 19, 9) && zombie->character_below == CHAR_FLOOR
+        && get_chase_seen_character(19, 9) == CHAR_FLOOR && get_chase_seen_character(20, 9) == CHAR_FLOOR;
+    run_monster_turns(1);
+    ok = ok && is_monster_at(zombie, 18, 9) && get_chase_seen_character(19, 9) == CHAR_FLOOR;
+
+    game.timers[TIMER_BLINDNESS] = 0;
+    return ok;
+}
+
 // a 0. szobában a (20, 9) mezőről két kör alatt megtett lépések, ha a játékos a (11, 9) mezőn áll
 static uint8_t count_steps_in_two_turns(uint8_t type, uint16_t added_flags)
 {
@@ -281,6 +304,7 @@ int test_monster_chase(uint16_t i)
 
     bool ok =
         is_same_room_chase_valid() &&
+        is_blind_relocation_valid() &&
         are_monster_speeds_valid() &&
         is_exit_chase_valid() &&
         is_bat_movement_chaotic();

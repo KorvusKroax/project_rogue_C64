@@ -187,7 +187,7 @@ static void apply_potion_effect(uint8_t which)
             message(text_feel_warm);
             break;
         case POTION_BLINDNESS:
-            // ide jön: a kijelzés frissítése
+            // nincs rajzolás: a már kirajzolt jelek, a szörnyeké is, a helyükön maradnak
             extend_timer(TIMER_BLINDNESS, BLINDNESS_DURATION);
             message(choose_hallucinated_text(text_cloak_of_darkness, text_everything_dark));
             break;

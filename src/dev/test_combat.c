@@ -1072,6 +1072,23 @@ int test_xeroc_reveal(uint16_t i)
     attack_player(&game.monsters[0]);
     ok = ok && game.monsters[0].disguise == 'X';
 
+    // vakon nincs leleplezés: a játékos lépései normál támadások, és a xeroc támadása után is marad az álca; a vakság a próba alatt
+    // nem jár le, mert az időzítők itt nem ketyegnek
+    put_combat_player();
+    put_combat_monster('X', COMBAT_MONSTER_X, COMBAT_MONSTER_Y);
+    xeroc->hit_points = FIGHT_TEST_HIT_POINTS;
+    xeroc->max_hit_points = FIGHT_TEST_HIT_POINTS;
+    game.timers[TIMER_BLINDNESS] = 1;
+    tries = 0;
+    while (xeroc->hit_points == FIGHT_TEST_HIT_POINTS && tries < KILL_TEST_TRIES_MAX) {
+        move_player(FIGHT_STEP_X, FIGHT_STEP_Y);
+        tries++;
+    }
+    ok = ok && xeroc->hit_points < FIGHT_TEST_HIT_POINTS && xeroc->disguise != 'X';
+    attack_player(&game.monsters[0]);
+    ok = ok && game.monsters[0].disguise != 'X';
+    game.timers[TIMER_BLINDNESS] = 0;
+
     clear_combat_scene();
     return ok;
 }

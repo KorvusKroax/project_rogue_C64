@@ -273,11 +273,10 @@ static void kill_monster(struct Monster *monster)
     update_experience_level();
 }
 
-// az álcázott xeroc leleplezése: a jele a saját betűje lesz; igaz, ha álcázva volt
+// az álcázott xeroc leleplezése: a jele a saját betűje lesz; igaz, ha álcázva volt; vakon nincs leleplezés, az álca marad
 static bool reveal_xeroc(struct Monster *monster)
 {
-    // ide jön: vakon nincs leleplezés
-    if (monster->type != 'X' || monster->disguise == 'X') return false;
+    if (monster->type != 'X' || monster->disguise == 'X' || game.timers[TIMER_BLINDNESS] > 0) return false;
 
     monster->disguise = 'X';
     // ide jön: hallucinálva a jele azonnal egy véletlen nagybetű

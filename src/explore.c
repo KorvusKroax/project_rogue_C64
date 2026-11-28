@@ -23,7 +23,7 @@ static bool is_room_lit(uint8_t room_index)
 
 bool is_monster_visible(const struct Monster *monster)
 {
-    // ide jön: vakon egyik sem látszik
+    if (game.timers[TIMER_BLINDNESS] > 0) return false;
     // ide jön: láthatatlan-látással (CANSEE) a láthatatlan is
     if (monster->flags & MONSTER_INVISIBLE) return false;
 
@@ -43,7 +43,8 @@ bool is_monster_visible(const struct Monster *monster)
 
 bool is_tile_visible(uint8_t x, uint8_t y)
 {
-    // ide jön: vakon egyik sem látszik
+    if (game.timers[TIMER_BLINDNESS] > 0) return false;
+
     int8_t offset_x = x - game.player.x;
     int8_t offset_y = y - game.player.y;
     bool is_adjacent = offset_x >= -1 && offset_x <= 1 && offset_y >= -1 && offset_y <= 1;
@@ -87,8 +88,7 @@ void enter_room(uint8_t x, uint8_t y)
     game.player.room = get_room_at(x, y);
     wake_room_monsters(game.player.room);
 
-    // ide jön: vakon nem rajzol
-    if (!is_room_lit(game.player.room)) return;
+    if (!is_room_lit(game.player.room) || game.timers[TIMER_BLINDNESS] > 0) return;
 
     // az egész szoba a falakkal együtt; a szörnyek alatt a mező jele lesz az emlék
     const struct Room *room = &game.rooms[game.player.room];
@@ -110,9 +110,9 @@ void leave_room(uint8_t x, uint8_t y)
 {
     uint8_t left_room_index = game.player.room;
     const struct Room *room = &game.rooms[left_room_index];
-    bool is_dark = (room->flags & ROOM_DARK) != 0;
-    // ide jön: vakon a padló marad
-    uint8_t floor_character = is_dark ? CHAR_SOLID_ROCK : CHAR_FLOOR;
+    // sötét szobában a padló törlődik, vakon nem
+    bool is_floor_erased = (room->flags & ROOM_DARK) && game.timers[TIMER_BLINDNESS] == 0;
+    uint8_t floor_character = is_floor_erased ? CHAR_SOLID_ROCK : CHAR_FLOOR;
 
     game.player.room = get_room_at(x, y);
 
@@ -121,7 +121,7 @@ void leave_room(uint8_t x, uint8_t y)
             uint8_t seen_character = get_seen_character(tile_x, tile_y);
 
             if (seen_character == CHAR_FLOOR) {
-                if (is_dark) {
+                if (is_floor_erased) {
                     draw_tile(tile_x, tile_y, CHAR_SOLID_ROCK);
                 }
             } else if (seen_character >= 'A' && seen_character <= 'Z') {
@@ -135,10 +135,10 @@ void leave_room(uint8_t x, uint8_t y)
     wake_room_monsters(left_room_index);
 }
 
-// sötét, nem fantom szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével; folyosón nem
+// sötét, nem fantom szobában a pozíció körüli 3×3 padlója törlődik, a játékos mezője kivételével; folyosón és vakon nem
 static void erase_lamp_light(uint8_t x, uint8_t y, uint8_t room_index)
 {
-    // ide jön: vakon nem töröl
+    if (game.timers[TIMER_BLINDNESS] > 0) return;
     if ((game.rooms[room_index].flags & (ROOM_PHANTOM | ROOM_DARK)) != ROOM_DARK) return;
 
     for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
@@ -189,7 +189,8 @@ void look_around(void)
         previous_room = game.player.room;
     }
 
-    // ide jön: vakon csak a játékos mezője, de a szomszédos szörnyek ébresztése vakon is
+    // vakon csak a játékos mezője rajzolódik, de a szomszédos szörnyek ébresztése akkor is lefut
+    bool is_blind = game.timers[TIMER_BLINDNESS] > 0;
     for (int8_t offset_y = -1; offset_y <= 1; offset_y++) {
         for (int8_t offset_x = -1; offset_x <= 1; offset_x++) {
             // a 0. oszlop (sor) előtti mező 255 lesz: azt az is_on_map kívülinek veszi
@@ -205,7 +206,9 @@ void look_around(void)
                 wake_monster(get_monster(monster_index));
             }
             // ide jön: szörny nélküli mezőn hallucinálva véletlen tárgyjel (trip_ch)
-            draw_tile(x, y, get_visible_character(x, y));
+            if (!is_blind) {
+                draw_tile(x, y, get_visible_character(x, y));
+            }
         }
     }
 

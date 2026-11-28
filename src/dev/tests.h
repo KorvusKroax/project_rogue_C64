@@ -33,6 +33,7 @@ int test_diagonal_step(uint16_t i);
 int test_neighbor_visibility(uint16_t i);
 int test_careful_run(uint16_t i);
 int test_passage_turn(uint16_t i);
+int test_blind_run(uint16_t i);                 // a vakon indított óvatos futás ajtó mellett sem áll meg, a látás visszatérte után sem; vakon nincs kanyarkövetés
 int test_search(uint16_t i);
 int test_monster_types(uint16_t i);
 int test_monster_table(uint16_t i);
@@ -41,6 +42,7 @@ int test_monster_generation(uint16_t i);
 int test_monster_tiles(uint16_t i);
 int test_monster_visibility(uint16_t i);
 int test_tile_visibility(uint16_t i);           // a mező látszik-e (cansee): világos szobában az egész szoba, sötétben és folyosón a szomszédos, folyosón átlósan sarkon át nem
+int test_blind_view(uint16_t i);                // vakon semmi nem látszik: a szobába lépés és a look_around nem rajzol (az ébresztés lefut), a lámpafény és kilépéskor a padló marad; a látás visszatértekor szobában a szoba kirajzolódik, folyosón nem
 int test_monster_waking(uint16_t i);
 int test_medusa_gaze(uint16_t i);               // a Medusa pillantása egyszeri esély, a sikeres mentődobás után sem próbálkozik újra; világos szobában messziről, sötétben és folyosón csak a szomszédból; vakon, hallucinálva és kikapcsolva nem; a nem látott neve "something"
 int test_monster_chase(uint16_t i);

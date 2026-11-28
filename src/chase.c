@@ -154,13 +154,13 @@ static bool choose_chase_step(struct Monster *monster, uint8_t goal_x, uint8_t g
     return best_distance == 0 || (best_x == game.player.x && best_y == game.player.y);
 }
 
-// az új mező emléke (oldch): a képernyő jele; sötét szobában (folyosón is) üres mező, ha az új vagy az előző emlék padló;
-// különben a játékos körüli 3×3-ban a MAP jele
+// az új mező emléke (oldch): a képernyő jele; ha a játékos nem vak, sötét szobában (folyosón is) üres mező, ha az új vagy az előző
+// emlék padló, különben a játékos körüli 3×3-ban a MAP jele
 static uint8_t calculate_character_below(const struct Monster *monster, uint8_t x, uint8_t y)
 {
     uint8_t character = get_seen_character(x, y);
+    if (game.timers[TIMER_BLINDNESS] > 0) return character;
 
-    // ide jön: vakon a képernyő jele marad
     bool is_dark = (game.rooms[monster->room].flags & ROOM_DARK) != 0;
     if (is_dark && (monster->character_below == CHAR_FLOOR || character == CHAR_FLOOR)) return CHAR_SOLID_ROCK;
     if (is_beside_player(x, y)) return get_map_character(x, y);

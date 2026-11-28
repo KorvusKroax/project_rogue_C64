@@ -18,12 +18,12 @@ bool move_player(int8_t step_x, int8_t step_y);
 bool move_player_without_pickup(int8_t step_x, int8_t step_y);
 
 // futás a step_x, step_y irányba: az indítás nem visz időt, a lépéseket a take_run_step teszi meg;
-// az óvatos (CTRL) futás minden lépés után megáll, ha valami érdekes van a játékos mellett
+// az óvatos (CTRL) futás minden lépés után megáll, ha valami érdekes van a játékos mellett; vakon indítva végig sima futás
 void start_running(int8_t step_x, int8_t step_y, bool is_careful);
 void stop_running(void);
 bool is_running(void);
 
-// a futás következő lépése; ha nem sikerül, a futás véget ér; igaz, ha időt vitt
+// a futás következő lépése, a kanyarkövetéssel (vakon nem); ha nem sikerül, a futás véget ér; igaz, ha időt vitt
 bool take_run_step(void);
 
 // kanyarkövetés (follow_passages): ha az x, y F_PASS mezőről a step_x, step_y irányú ortogonális lépés falba (kőzetbe, a pálya szélén túlra) ütközne,

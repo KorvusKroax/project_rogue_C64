@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "explore.h"
 #include "message.h"
 #include "rng.h"
 #include "state.h"
@@ -30,7 +31,10 @@ static void end_timed_effect(uint8_t timer)
             }
             break;
         case TIMER_BLINDNESS:
-            // ide jön: a képernyő frissítése
+            // szobában a szoba újra kirajzolódik, mintha most lépne be; a folyosórendszerben a következő look_around rajzol
+            if (!(game.rooms[game.player.room].flags & ROOM_PHANTOM)) {
+                enter_room(game.player.x, game.player.y);
+            }
             message(choose_hallucinated_text(text_darkness_lifts, text_cosmic_again));
             break;
         case TIMER_LEVITATION:

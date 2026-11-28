@@ -12,6 +12,7 @@ static const struct DevTest monster_tests[] = {
     { "MONST-TILES", test_monster_tiles, 1 },
     { "MONST-SEE", test_monster_visibility, 1 },
     { "TILE-SEE", test_tile_visibility, 1 },
+    { "BLIND-SEE", test_blind_view, 1 },
     { "MONST-WAKE", test_monster_waking, 1 },
     { "MONST-MEDUSA", test_medusa_gaze, 1 },
     { "MONST-CHASE", test_monster_chase, 1 },

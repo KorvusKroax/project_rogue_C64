@@ -8,6 +8,7 @@ static const struct DevTest explore_tests[] = {
     { "LOOK-NEIGHBORS", test_neighbor_visibility, 1 },
     { "RUN-CAREFUL", test_careful_run, 1 },
     { "RUN-PASSAGE TURN", test_passage_turn, 1 },
+    { "RUN-BLIND", test_blind_run, 1 },
     { "SEARCH-HIDDEN", test_search, 1 },
 };
 

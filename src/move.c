@@ -155,7 +155,8 @@ void start_running(int8_t step_x, int8_t step_y, bool is_careful)
     is_run_active = true;
     run_step_x = step_x;
     run_step_y = step_y;
-    is_run_careful = is_careful;
+    // vakon indítva az óvatos futás is sima futás, akkor is, ha közben visszatér a látás
+    is_run_careful = is_careful && game.timers[TIMER_BLINDNESS] == 0;
     has_run_stepped = false;
 }
 
@@ -183,9 +184,9 @@ static void mark_passage_turn(void)
 
 bool take_run_step(void)
 {
-    // ide jön: vakon nincs kanyarkövetés
-    // az első lépés iránya mindig az, amerre a játékos indította a futást
-    if (has_run_stepped && (options.flags & OPTION_FOLLOW_PASSAGES) && find_passage_turn(game.player.x, game.player.y, &run_step_x, &run_step_y)) {
+    // az első lépés iránya mindig az, amerre a játékos indította a futást; vakon nincs kanyarkövetés
+    if (has_run_stepped && (options.flags & OPTION_FOLLOW_PASSAGES) && game.timers[TIMER_BLINDNESS] == 0 &&
+        find_passage_turn(game.player.x, game.player.y, &run_step_x, &run_step_y)) {
         mark_passage_turn();
     }
 
@@ -195,7 +196,6 @@ bool take_run_step(void)
     }
     has_run_stepped = true;
 
-    // ide jön: vakon a CTRL-futás is SHIFT-futás
     if (is_run_careful && is_something_interesting_beside(game.player.x, game.player.y, run_step_x, run_step_y)) {
         stop_running();
     }
