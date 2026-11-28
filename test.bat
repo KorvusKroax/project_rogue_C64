@@ -152,10 +152,11 @@ if not errorlevel 1 (
 
 echo Fut VICE-ben...
 if exist "build\test_%PROGRAM%.png" del "build\test_%PROGRAM%.png"
-rem a batch megvarja, amig a VICE kilep; a kilepesi kod az errorlevel
+rem a batch megvarja, amig a VICE kilep; a kilepesi kod az errorlevel: minden nem 0 kod hiba, a negativ is (a kivulrol leallitott
+rem VICE -1-gyel lep ki, azt az "if errorlevel 1" nem venne eszre)
 rem a VICE a naplojat kulonben a konzolra irna, az atiranyitast megkerulve: ezert -no-redirect-streams, +logtostdout es a naplo fajlba
 "%VICE%" -default -sounddev dummy -warp -debugcart -limitcycles %CYCLE_LIMIT% -no-redirect-streams +logtostdout -logfile "build\test_%PROGRAM%.log" -exitscreenshot "build\test_%PROGRAM%.png" -autostart "build\test_%PROGRAM%.d64" >nul 2>&1
-if errorlevel 1 (
+if %errorlevel% neq 0 (
     echo HIBA: valamelyik teszt nem sikerult, vagy a program nem ert veget; a kepernyo: build\test_%PROGRAM%.png, a VICE naploja: build\test_%PROGRAM%.log
     set FAILED_PROGRAMS=%FAILED_PROGRAMS% test_%PROGRAM%[teszt]
     goto :eof
