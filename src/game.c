@@ -137,6 +137,7 @@ static bool is_repeatable_command(uint8_t code)
         case 'a':
         case 's':
         case 'm':
+        case 'q':
             return true;
         default:
             return false;

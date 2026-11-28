@@ -65,7 +65,7 @@ Minden tesztprogramnak saját belépési pontja és teszttáblája van (`src/dev
 | `screens` | interaktív tesztképernyők, menüből: karakterkészlet (`C`), billentyűzet (`K`), üzenetsáv és nézőablak (`M`), státuszsor (`S`); mindegyikből ESC-re vissza a menübe | 29 864 bájt |
 | `turns` | 100 generált szinten (a `level` magjaival és mélységeivel) körök a játékos lépésével, előbb 5, aztán minden szörny üldöz: a lépéseik után is érvényesek a szörnymezők; utána mélységenként egy kör ideje; a szintek függetlenek, az időzítők (pl. a Medusa pillantásától a zavarodottság) minden szint elején nullázódnak | 11 008 bájt |
 
-Összehasonlításul: a játék (`build.bat`) 5 344, a fejlesztői build (`build.bat dev`) 1 952 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
+Összehasonlításul: a játék (`build.bat`) 5 336, a fejlesztői build (`build.bat dev`) 1 944 bájt szabad helyet hagy. A pontos érték minden fordítás végén kiíródik.
 
 A `test.bat` a nem interaktív programokat VICE-ben futtatja, warp módban, a saját VICE-beállításaid nélkül (`-default`); a VICE ablaka magától bezárul. A tesztprogram a végén a $D7FF címre írja az eredményt (0 = minden teszt sikerült), és a VICE a `-debugcart` kapcsoló miatt ezzel a kilépési kóddal lép ki; valódi C64-en ez a cím egy nem használt SID-regiszter tükre, az írás hatástalan. Programonként kiíródik a szabad hely és az eredmény, a végén pedig a hibás programok listája (`[forditas]`: nem fordult le, `[teszt]`: valamelyik teszt nem sikerült, vagy a program nem ért véget, pl. egy `DEV_CHECK` megállította), ilyenkor a `test.bat` kilépési kódja 1. A kilépéskori képernyő `build\test_<név>.png`, a VICE naplója `build\test_<név>.log`: hiba esetén ezekből látszik, melyik teszt nem sikerült.
 
