@@ -216,6 +216,21 @@ bool drop_item(uint8_t index)
     return true;
 }
 
+void use_up_pack_item(uint8_t index)
+{
+    if (index == game.wielded_item) {
+        game.wielded_item = NO_ITEM;
+    }
+
+    struct Item *item = get_item(index);
+    if (item->count > 1) {
+        item->count--;
+        return;
+    }
+    remove_item_from_list(&game.first_pack_item, index);
+    free_item(index);
+}
+
 // a listasor a betűvel kezdődik: "a) a mace"
 #define PACK_LIST_PREFIX_LENGTH  3
 #define PACK_LIST_ENTRY_SIZE     (PACK_LIST_PREFIX_LENGTH + ITEM_NAME_SIZE)
@@ -236,6 +251,8 @@ static bool is_item_in_pack_list(const struct Item *item)
             return item->type == ITEM_TYPE_WEAPON;
         case PACK_FILTER_ARMOR:
             return item->type == ITEM_TYPE_ARMOR;
+        case PACK_FILTER_POTION:
+            return item->type == ITEM_TYPE_POTION;
         default:
             return true;
     }

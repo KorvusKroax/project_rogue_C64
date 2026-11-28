@@ -19,6 +19,7 @@
 #include "monsters.h"
 #include "move.h"
 #include "pack.h"
+#include "potions.h"
 #include "view.h"
 #include "player.h"
 #include "state.h"
@@ -370,6 +371,19 @@ static bool execute_wear_command(bool is_repeat)
     return index != NO_ITEM && wear_armor(index);
 }
 
+// q: bájital ivása (quaff_potion); igaz, ha időt vitt
+static bool execute_quaff_command(bool is_repeat)
+{
+    // az üres csomag és az elfogyott tárgy időbe kerül
+    if (report_missing_command_item(is_repeat)) return true;
+
+    uint8_t index = get_command_item(is_repeat, text_item_purpose_quaff, PACK_FILTER_POTION);
+    if (index == NO_ITEM) return false;
+    // a nem bájital is időbe kerül, és a gyorsítás ivása is (J14)
+    quaff_potion(index);
+    return true;
+}
+
 // c: a tárgy vagy a típusa elnevezése (name_item); nem visz időt, az üres csomag és az elfogyott tárgy sem
 static void execute_name_command(bool is_repeat)
 {
@@ -440,6 +454,8 @@ static bool execute_command(uint8_t code)
             return execute_wear_command(is_repeat);
         case 'T':
             return take_off_armor();
+        case 'q':
+            return execute_quaff_command(is_repeat);
         case ')':
             report_wielded_item();
             return false;

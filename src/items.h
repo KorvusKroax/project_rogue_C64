@@ -44,6 +44,22 @@
 #define WEAPON_SUBTYPE_COUNT  9
 #define ARMOR_SUBTYPE_COUNT   8
 
+// a bájitalok altípusai: a bájitalok esélytáblájának (potion_chances) indexei
+#define POTION_CONFUSION          0
+#define POTION_HALLUCINATION      1
+#define POTION_POISON             2
+#define POTION_GAIN_STRENGTH      3
+#define POTION_SEE_INVISIBLE      4
+#define POTION_HEALING            5
+#define POTION_MONSTER_DETECTION  6
+#define POTION_MAGIC_DETECTION    7
+#define POTION_RAISE_LEVEL        8
+#define POTION_EXTRA_HEALING      9
+#define POTION_HASTE_SELF         10
+#define POTION_RESTORE_STRENGTH   11
+#define POTION_BLINDNESS          12
+#define POTION_LEVITATION         13
+
 // a külön kezelt fegyvertípusok: a fegyverek esélytáblájának (weapon_chances) indexei; a többi neve az első használatánál jön
 #define WEAPON_MACE       0
 #define WEAPON_SHORT_BOW  2

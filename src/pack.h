@@ -51,11 +51,16 @@ void report_moving_onto_item(uint8_t index);
 // egy üres kör után kerül le; igaz, ha időt vitt
 bool drop_item(uint8_t index);
 
+// a csomag bájitalából, tekercséből vagy ételéből egy darab elfogy: kötegből egy darab, különben a tárgy kikerül a csomagból, és a rekordja
+// felszabadul; ha a tárgy a kézben volt, a kéz kiürül, akkor is, ha a kötegből marad (4.2.6)
+void use_up_pack_item(uint8_t index);
+
 // a csomaglista szűrője: mely tárgyak kerülnek a listába
 #define PACK_FILTER_ALL       0                 // minden tárgy (`i`, `d`)
 #define PACK_FILTER_NAMEABLE  1                 // ami elnevezhető (`c`, can_be_named)
 #define PACK_FILTER_WEAPON    2                 // a fegyverek (`w`)
 #define PACK_FILTER_ARMOR     3                 // a páncélok (`W`)
+#define PACK_FILTER_POTION    4                 // a bájitalok (`q`)
 
 // `i` és a tárgy bekérésének `*` listája: a csomag szűrőn átjutó tárgyainak listája (text_list.h), soronként a betű és a név („a) a mace”);
 // ha nincs ilyen tárgy, PACK_FILTER_ALL mellett „you are empty handed”, különben „you don't have anything appropriate”, és az eredmény hamis

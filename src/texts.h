@@ -66,6 +66,8 @@ extern const char text_wielding_item[];             // \1: a kézben tartott tá
 extern const char text_wielding_nothing[];
 extern const char text_wearing_item[];              // \1: a viselt páncél betűje, \2: a neve
 extern const char text_wearing_nothing[];
+extern const char text_item_purpose_quaff[];
+extern const char text_undrinkable[];
 
 // a harci üzenetek: a találat és a hiba szövege véletlenül választva a változatok közül; \1 a támadó, \2 a megtámadott
 #define ATTACK_TEXT_VARIANT_COUNT  4
@@ -92,6 +94,22 @@ extern const char text_looks_boring[];
 extern const char text_darkness_lifts[];
 extern const char text_float_to_ground[];
 extern const char text_slowing_down[];
+// a bájitalok hatásai (potions.c)
+extern const char text_huh_what_who[];
+extern const char text_seems_cosmic[];
+extern const char text_very_sick[];
+extern const char text_feel_stronger[];
+extern const char text_tastes_like_juice[];         // \1: a gyümölcs neve
+extern const char text_feel_better[];
+extern const char text_passing_feeling[];           // \1: az érzés szava (text_strange)
+extern const char text_strange[];
+extern const char text_more_skillful[];
+extern const char text_feel_much_better[];
+extern const char text_moving_faster[];
+extern const char text_faint_from_exhaustion[];
+extern const char text_feel_warm[];
+extern const char text_cloak_of_darkness[];
+extern const char text_start_to_float[];
 extern const char text_killed_by[];                 // ideiglenes, a játék végéig (M10-01); \1: névelő ("the " vagy üres), \2: a halál oka
 extern const char *const text_death_causes[DEATH_CAUSE_COUNT];     // a nem szörny okozta halál okai, a DEATH_CAUSE_ kódok sorrendjében
 extern const char *const text_monster_names[MONSTER_TYPE_COUNT];   // a szörnytípusok neve, a betűjük sorrendjében ('A'..'Z')
