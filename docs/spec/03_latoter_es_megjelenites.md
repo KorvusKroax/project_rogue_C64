@@ -7,7 +7,8 @@ A 3.1–3.2 a logikai SCREEN réteget írja le (mit lát és mire emlékszik a j
 enter_room(pos):  // ajtón át belépéskor, teleportkor, új szinten
   player.room = a pos-t tartalmazó szoba; door_open(player.room) (ébresztés, 6.4)
   if !DARK(player.room) and !ISBLIND:
-     a teljes szoba (falakkal) MAP → SCREEN, a szörnyek helyén a látható szörnyek (see_monst)
+     a teljes szoba (falakkal) MAP → SCREEN, trip_ch nélkül (hallucinálva is a valódi jelek, 3.2);
+     a szörnyek helyén a látható szörnyek jele (disguise), SEEMONST mellett a nem látottaké inverzen
 
 leave_room(pos):  // szobából ajtón át folyosóra lépéskor
   if MAZE(player.room): return
@@ -71,14 +72,25 @@ floor_at():  // a játékos mezőjének jele, amikor elhagyja (lépés, teleport
 - A láthatóság logikai fogalom: egy szörny akkor is „látható”, ha a mezője éppen kívül esik a nézőablakon ([3.5](#35-nézőablak-görgetés)). A nézőablak csak a kirajzolást vágja, a játékszabályokat nem befolyásolja.
 
 ## 3.2 Állapotok hatása a kijelzésre
-- **ISBLIND:** a `look` csak a játékos saját mezőjét frissíti, szoba nem világosodik ki, szörny nem látszik (`see_monst` hamis). Visszanyeréskor (`sight`): ha a játékos szobában van, `enter_room`; „the veil of darkness lifts” (hallucinálva: „far out! Everything is all cosmic again”).
-- **ISHALU** – két része van:
+- **ISBLIND:** a `look` csak a játékos saját mezőjét frissíti, szoba nem világosodik ki, szörny nem látszik (`see_monst` hamis). Bekapcsoláskor nincs rajzolás: a már kirajzolt jelek, a szörnyeké is, a helyükön maradnak; a szörny jele akkor tűnik el, amikor elmozdul (`relocate`, [6.6](06_szornyek.md#66-mozgás)). Visszanyeréskor (`sight`): ha a játékos szobában van, `enter_room`; „the veil of darkness lifts” (hallucinálva: „far out! Everything is all cosmic again”).
+- **ISHALU:**
+  - Bekapcsoláskor, ha eddig nem hallucinált: `seen_stairs = seen_stairs()` (lent). Rajzolás nincs: a jelek a következő kör elején sorsolódnak (`visuals`), a szomszédos mezők a következő `look`-ban.
   - `look` közben (`trip_ch`): minden látott mező, ami nem padló, üres, folyosó, fal, ajtó vagy csapda – és nem a már látott lépcső –, véletlen tárgyjelként (`rnd_thing`, [6.2](06_szornyek.md#62-generálás)) rajzolódik; a látható szörnyek véletlen nagybetűként.
   - minden kör elején (`visuals` démon, BEFORE fázis; futás közben `jump_to_run_end` mellett kimarad): a látható tárgyak, a még nem látott lépcső és a látható szörnyek újrasorsolódnak (az álcázott Xeroc tárgyjelet kap); SEEMONST mellett a falon túli szörnyek is véletlen betűt kapnak. Ez a teljes szintre vonatkozik, nem csak a nézőablakra (a dobások száma így nem függ a nézőablak helyzetétől).
+  - A szobába lépés (`enter_room`, [3.1](#31-felderítés)) a valódi jeleket rajzolja, a következő kör eleje sorsolja újra őket.
   - Lejáratkor (`come_down`; a poison és az extra healing is ezt hívja, J35): a látható tárgyak és szörnyek a valódi jelükkel rajzolódnak vissza; „Everything looks SO boring now.” Ha a játékos épp vak, csak a flag törlődik: nincs visszarajzolás és üzenet sem.
+  - **A látott lépcső** (`seen_stairs`, [1.1.4](01_adatmodell_es_flagek.md#114-gamestate)): a hallucináció a már látott lépcsőt nem cseréli le. Új szinten hamis ([2.10](02_szintgeneralas.md#210-lépcső)), igaz lesz, amikor a játékos a lépcsőre lép ([4.2.1](04_jatekciklus_es_parancsok.md#421-mozgás)), a hallucináció kezdetén pedig ez dönt:
+    ```
+    seen_stairs():  // látta-e már a játékos a lépcsőt
+      if SCREEN[stairs] == STAIRS or player.pos == stairs: return true
+      if szörny áll a lépcsőn:
+         if see_monst(szörny) and szörny.ISRUN: return true    // látható és ébren van: odalépett, így a lépcső előtte látszhatott
+         if SEEMONST and szörny.oldch == STAIRS: return true   // alatta a lépcső emléke
+      return false
+    ```
 - **SEEMONST** (monster detection): bekapcsoláskor minden szörny a valódi típusjelével (hallucinálva véletlen betűvel) rajzolódik, a nem látottak inverzen; lejártakor a nem látott szörnyek helyére az `oldch` kerül. Ha egyetlen nem látott szörny sincs: „you have a strange feeling for a moment, then it passes” (hallucinálva „normal”).
 - **CANSEE:** bekapcsoláskor (`invis_on`) a látható ISINVIS szörnyek kirajzolódnak (hallucinálva nem); kikapcsoláskor (`unsee`) helyükre az `oldch` kerül. A CANSEE két forrásból állhat fenn (bájital-időzítő, gyűrű), és csak akkor kapcsol ki, ha egyik sincs már (J5, [1.2.1](01_adatmodell_es_flagek.md#121-játékos)).
-- **Mágia-észlelés:** külön képernyőn a szint és a szörnyek csomagjainak mágikus tárgyai `$` jellel; „You sense the presence of magic on this level”, utána `--More--`, billentyűre visszaáll; nem telik idő. *Megjegyzés:* mint az eredetiben, csak akkor, ha a szint padlóján van legalább egy tárgy (az arany is); üres padlónál a szörnyeknél lévő mágikus tárgyak sem jelennek meg, és a bájital nem azonosítódik ([8.2](08_targyak.md#82-bájitalok-q)).
+- **Mágia-észlelés:** külön képernyőn a szint és a szörnyek csomagjainak mágikus tárgyai `$` jellel; „You sense the presence of magic on this level”, utána `--More--`, szóközre visszaáll (E11, lent); nem telik idő. *Megjegyzés:* mint az eredetiben, csak akkor, ha a szint padlóján van legalább egy tárgy (az arany is); üres padlónál a szörnyeknél lévő mágikus tárgyak sem jelennek meg, és a bájital nem azonosítódik ([8.2](08_targyak.md#82-bájitalok-q)).
 - **Étel-észlelés:** ugyanígy, az ételek `:` jellel ([8.3](08_targyak.md#83-tekercsek-r)).
 - **Térképezés:** a MAP adott részei közvetlenül a SCREEN-re ([8.3](08_targyak.md#83-tekercsek-r)).
 - A hallucinált üzenetváltozatok (`choose_str`): több üzenetnek van „trippy” párja (pl. „you feel less trippy now”, „the munchies are interfering with your motor capabilities”); ezeket az adott üzenetnél zárójelben jelöli a specifikáció, ahol eltérnek.

@@ -112,6 +112,8 @@ GameState {
   scroll_title_seed      // ebből állnak elő a tekercsfeliratok minden kiíráskor; a feliratok nem tárolódnak (8.8)
   rooms[9], passages[]   // a 9 szoba és a folyosórendszerek; C64-en egy tábla, a rendszerek a szobák után (1.1.1, 1.4.7)
   exits                  // a közös ajtótábla (1.4.7)
+  stairs                 // a lépcső helye (2.10)
+  seen_stairs            // látta-e már a játékos a lépcsőt: a hallucináció a látott lépcsőt nem cseréli le (3.2)
   monsters               // a szinten lévő szörnyek listája
   floor_items            // a padlón lévő tárgyak listája
   last_command           // az előző parancs, az 'a' ismétléshez (4.2.5)

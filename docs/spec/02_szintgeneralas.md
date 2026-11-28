@@ -9,7 +9,7 @@ new_level():
   do_rooms()                    // 2.2–2.5: szobák
   connect_rooms()               // 2.4, 2.6: összekötés és folyosók; minden folyosó-mező látható
   assign_passage_numbers()      // 2.4: a folyosórendszerek sorszáma (F_PNUM)
-  place_stairs()                // 2.10; seenstairs = false; a szobák még üresek
+  place_stairs()                // 2.10: a helye eltárolódik, seen_stairs = false; a szobák még üresek
   choose_player_position()      // 2.11; a szobákban még csak a lépcső van
   hide_passages()               // 2.6: titkos folyosó-mezők, a játékos mezője nélkül
   put_gold_and_monsters()       // 2.7: szobánként arany + kezdő szörny
@@ -440,6 +440,7 @@ if rnd(10) < level:
 ```
 pos = find_floor(null, item)  // bármely nem fantom szoba, labirintus is (ott járat-mező); a szobák még üresek, ezért mindig talál
 MAP[pos] = STAIRS
+stairs = pos; seen_stairs = false  // a hallucinációhoz (3.2)
 ```
 
 > **C64-javítás (J16):** a lépcső a csapdák előtt kerül le (2., J19), és a csapda csak `FLOOR` jelű mezőre kerülhet, így a lépcső soha nincs rejtett csapdán. *Eredetileg* a lépcső a csapdák után jött, a `find_floor` csak a jelet nézte, és a rejtett csapda jele `FLOOR`. Ezért a lépcső rejtett csapda mezőjére is kerülhetett, a mező flagjei (csapdatípus, F_REAL nélkül) pedig megmaradtak.

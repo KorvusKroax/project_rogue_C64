@@ -105,7 +105,7 @@ Az ISHUH, ISHALU, ISBLIND, ISLEVIT, ISHASTE és SEEMONST pontosan akkor áll fen
 | h j k l y u b n | lépés; szörnyre lépés = támadás; tárgyra lépve automatikus felvétel |
 | m + irány | lépés felvétel nélkül („moved onto …”); számprefixszel az irányt egyszer kérdezi, és minden lépés felvétel nélküli |
 | SHIFT + irány | futás (lásd lent) |
-| CTRL + irány | óvatos futás: ezen felül ajtó mellett, elágazásnál és bármi érdekes mellett is megáll (lásd lent); vakon ugyanaz, mint a SHIFT |
+| CTRL + irány | óvatos futás: ezen felül ajtó mellett, elágazásnál és bármi érdekes mellett is megáll (lásd lent); ha vakon indul, végig ugyanaz, mint a SHIFT, akkor is, ha közben visszatér a látás |
 | `>` * | lefelé lépcsőn (ha a lépcsőn áll és nem lebeg) |
 | `<` * | felfelé lépcsőn (ha a lépcsőn áll, nem lebeg, és `has_amulet`) |
 
@@ -129,6 +129,7 @@ move(dir):
      else if target F_PASS and a régi mező DOOR: leave_room(target)  // ajtóról folyosóra ki (3.1, 6.4)
      else if target F_PASS: player.room = room(target)               // folyosón és labirintusban: a folyosórendszer
      player.pos = target; follow_view_window() (3.5)
+     if STAIRS: seen_stairs = true                                   // 3.2
      if TRAP: trigger (9)
      if item and not 'm' and not ISLEVIT: pick_up
   else: no time

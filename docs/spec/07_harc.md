@@ -142,7 +142,9 @@ A sugár egy körben legfeljebb egyszer hat valakire, utána a „cél” felvá
 ```
 név(monster):  // set_mname
   if !see_monst(monster) and !SEEMONST: return "something"
-  if ISHALU: a képernyőn látott (véletlen) betűhöz tartozó szörnynév
+  if ISHALU: típus = a SCREEN-en a szörny mezőjén álló nagybetű (az inverz is betű);
+             ha ott nem nagybetű áll (pl. az álcázott xeroc tárgyjele): véletlen típus
+             return "the " + típus.name
   return "the " + monster.name
 
 hit(támadó, célpont):  // támadó/célpont: null = "you"
